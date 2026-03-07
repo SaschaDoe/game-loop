@@ -343,4 +343,20 @@ describe('localStorage integration', () => {
 		saveGame(makeTestState());
 		expect(localStorage.getItem(SAVE_KEY)).not.toBeNull();
 	});
+
+	it('preserves bestiary through save/load', () => {
+		const state = makeTestState({
+			bestiary: {
+				Goblin: { timesSeen: 5, timesKilled: 3, rareEncountered: true, rareKilled: false },
+				Rat: { timesSeen: 2, timesKilled: 2, rareEncountered: false, rareKilled: false }
+			}
+		});
+		saveGame(state);
+		const restored = loadGame();
+		expect(restored).not.toBeNull();
+		expect(restored!.bestiary['Goblin'].timesSeen).toBe(5);
+		expect(restored!.bestiary['Goblin'].timesKilled).toBe(3);
+		expect(restored!.bestiary['Goblin'].rareEncountered).toBe(true);
+		expect(restored!.bestiary['Rat'].timesKilled).toBe(2);
+	});
 });

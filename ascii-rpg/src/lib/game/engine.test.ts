@@ -1860,4 +1860,39 @@ describe('achievement tracking', () => {
 		const result = handleInput(state, 'e');
 		expect(result.stats.landmarksExamined).toBe(1);
 	});
+
+	it('records kill in bestiary on melee kill', () => {
+		const state = makeTestState({
+			enemies: [{ pos: { x: 6, y: 5 }, char: 'G', color: '#0f0', name: 'Goblin', hp: 1, maxHp: 5, attack: 0, statusEffects: [] }]
+		});
+		state.player.attack = 50;
+		const orig = Math.random;
+		Math.random = () => 0.99;
+		try {
+			const result = handleInput(state, 'd');
+			expect(result.bestiary['Goblin']).toBeDefined();
+			expect(result.bestiary['Goblin'].timesKilled).toBe(1);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('bestiary persists through level transition', () => {
+		const state = makeTestState({
+			enemies: [{ pos: { x: 6, y: 5 }, char: 'G', color: '#0f0', name: 'Goblin', hp: 1, maxHp: 5, attack: 0, statusEffects: [] }]
+		});
+		state.player.attack = 50;
+		state.bestiary = { Rat: { timesSeen: 2, timesKilled: 1, rareEncountered: false, rareKilled: false } };
+		const orig = Math.random;
+		Math.random = () => 0.99;
+		try {
+			// Kill the goblin first
+			const afterKill = handleInput(state, 'd');
+			expect(afterKill.bestiary['Rat']).toBeDefined();
+			expect(afterKill.bestiary['Rat'].timesKilled).toBe(1);
+			expect(afterKill.bestiary['Goblin']).toBeDefined();
+		} finally {
+			Math.random = orig;
+		}
+	});
 });
