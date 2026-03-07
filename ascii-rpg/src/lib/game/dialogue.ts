@@ -1,10 +1,10 @@
-import type { DialogueTree, DialogueNode, DialogueCondition, Rumor, Story } from './types';
+import type { DialogueTree, DialogueNode, DialogueCondition, SocialCheck, Rumor, Story } from './types';
 
 function node(id: string, npcText: string, options: DialogueNode['options'], language?: string): DialogueNode {
 	return { id, npcText, options, language };
 }
 
-function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean; showIf?: DialogueCondition }): DialogueNode['options'][0] {
+function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean; showIf?: DialogueCondition; socialCheck?: SocialCheck }): DialogueNode['options'][0] {
 	return { text, nextNode, color, ...extras };
 }
 
@@ -471,6 +471,8 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('Tell me about the dungeon below.', 'dungeon', '#ff4'),
 				opt('Heard any good rumors lately?', 'rumors_menu', '#ff4'),
 				opt('Got any good stories?', 'stories_menu', '#c8f'),
+				opt('I\'m on an urgent mission. I need a drink on the house.', 'social_persuade', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 10, successNode: 'persuade_drink_ok', failNode: 'persuade_drink_fail' }, once: true }),
+				opt('You WILL tell me everything about this dungeon. Now.', 'social_intimidate', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 12, successNode: 'intimidate_barkeep_ok', failNode: 'intimidate_barkeep_fail' }, once: true }),
 				opt('Who are the other patrons?', 'patrons', '#8cf'),
 				opt('Nice place you\'ve got here.', 'tavern_story', '#8cf'),
 				opt('Just passing through.', 'farewell', '#0ff'),
@@ -636,6 +638,31 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 			'*He drops his voice.* The Hooded Stranger says it\'s the dungeon acknowledging you. Like a nod from a predator that respects its prey. The deeper you go, the louder it gets. Garvus said at level fifteen it was deafening. Like standing inside a bell. And the Eye... *He catches himself.* You\'ll know when you feel it. Everyone does. Just... remember who you are. The dungeon has a way of making people forget. Your name, your reasons, your way back. Hold onto those.',
 			[
 				opt('I will. I promise.', 'farewell', '#4f4'),
+			]
+		),
+		persuade_drink_ok: node('persuade_drink_ok',
+			'*He sizes you up, then nods slowly.* You know what? You DO look like you\'re on a mission. And I\'ve been in this business long enough to know when someone genuinely needs liquid courage. *He pours a double from the top shelf.* Here. The good stuff. Don\'t tell anyone I gave you this for free \u2014 I have a reputation as a ruthless capitalist to maintain.',
+			[
+				opt('You\'re a good man, Barkeep. [Take the good stuff]', 'return', '#4f4', { onSelect: { hp: 6, message: 'The Barkeep\'s top-shelf special warms your bones! +6 HP' } }),
+			]
+		),
+		persuade_drink_fail: node('persuade_drink_fail',
+			'*He raises an eyebrow.* An "urgent mission," huh? That\'s what they ALL say. Last week a man claimed he was on an "urgent mission" to find his lost cat. He drank seventeen ales and passed out under the table. The cat was on his head. *He shakes his head.* Nice try. You want a drink, you ask politely like everyone else.',
+			[
+				opt('Fair enough. I\'ll take a regular drink. [Accept heal]', 'drink', '#4f4', { onSelect: { hp: 3, message: 'The Barkeep pours you a drink! +3 HP' } }),
+				opt('Worth a shot.', 'return', '#fff'),
+			]
+		),
+		intimidate_barkeep_ok: node('intimidate_barkeep_ok',
+			'*He takes a step back, eyes widening.* Whoa, whoa. Easy there. No need for... whatever that tone was. *He glances nervously at your weapon.* Look, I\'ll tell you what I know. The dungeon\'s getting worse. More creatures. Stranger ones. And there\'s something on level five that wasn\'t there before \u2014 something that hums. The hooded stranger won\'t shut up about it. Whatever\'s down there, it\'s WAKING UP. Happy? Please stop looking at me like that.',
+			[
+				opt('Thank you for your cooperation. [Rumor learned]', 'return', '#4f4', { onSelect: { mood: 'afraid', rumor: RUMORS.potions_matter, message: 'The Barkeep nervously reveals dungeon secrets.' } }),
+			]
+		),
+		intimidate_barkeep_fail: node('intimidate_barkeep_fail',
+			'*He leans forward, unfazed.* Listen, friend. I\'ve been running a bar next to a monster-infested dungeon for fifteen years. I\'ve had ACTUAL demons try to intimidate me. One of them ordered a drink, complained about the temperature, and BREATHED FIRE on my bar counter. I charged him for the damage AND the drink. You\'re going to have to try a LOT harder than that.',
+			[
+				opt('...I respect that.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 		farewell: node('farewell',
@@ -1046,6 +1073,8 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 				opt('Know any dungeon rumors?', 'drunk_rumors', '#ff4'),
 				opt('Got any stories for me?', 'drunk_stories', '#c8f'),
 				opt('Are you okay?', 'okay', '#4f4'),
+				opt('Garvus, you need to sober up. People need what you know.', 'social_persuade_garvus', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 14, successNode: 'persuade_garvus_ok', failNode: 'persuade_garvus_fail' }, once: true }),
+				opt('TELL ME ABOUT THE EYE. NOW.', 'social_intimidate_garvus', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 8, successNode: 'intimidate_garvus_ok', failNode: 'intimidate_garvus_fail' }, once: true }),
 				opt('Sorry to bother you.', 'farewell', '#0ff'),
 			]
 		),
@@ -1058,6 +1087,7 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 				opt('[Deepscript] I can read the old writing, Garvus.', 'deepscript_shock', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
 				opt('How are you holding up?', 'okay', '#4f4'),
 				opt('Any advice for me?', 'advice', '#ff4'),
+				opt('Garvus, you need to sober up. People need what you know.', 'social_persuade_garvus', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 14, successNode: 'persuade_garvus_ok', failNode: 'persuade_garvus_fail' }, once: true }),
 				opt('I\'ll leave you to it.', 'farewell', '#0ff'),
 			]
 		),
@@ -1343,6 +1373,38 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 				opt('Sentient gouda. Classic Thessaly.', 'farewell', '#4f4'),
 			]
 		),
+		persuade_garvus_ok: node('persuade_garvus_ok',
+			'*He sets down the mug. Actually SETS IT DOWN. His eyes clear like a fog lifting from a mountain lake.* You\'re... you\'re right. You sound like Thessaly. She used to say that. "The world needs your mind more than the tavern needs your coin, Garvus." *He takes a deep breath.* Alright. Listen carefully, because I don\'t know how long the clarity lasts. Level five has a hidden armory behind the southeast wall of the boss room. Level ten\'s library has a cipher key for Deepscript carved into the floor \u2014 most people step right over it. And level fifteen... *His voice drops.* The Eye has a blind spot. Due north. It can\'t see due north. Thessaly figured that out. It\'s the only reason four of us made it home.',
+			[
+				opt('The Eye has a blind spot?! [Rumor learned]', 'return', '#ff4', { onSelect: { rumor: RUMORS.potions_matter, message: 'Garvus reveals the Eye\'s blind spot \u2014 due north!', mood: 'friendly' } }),
+			]
+		),
+		persuade_garvus_fail: node('persuade_garvus_fail',
+			'*He clutches his mug tighter.* Shober up? SHOBER UP?! I tried shober once. Lasted three hoursh. The nightmares came back. The Eye, shtaring. The wallsh, whispering my name. Thessaly\'sh voice saying "come back, Garvush, come see what I found." *He shudders.* Shober is where the monstersh live. In HERE \u2014 *He taps the mug.* \u2014 is where the monstersh CAN\'T reach. Mosht of them. The shentient gouda found me even here. Persistent cheese.',
+			[
+				opt('I understand. I\'m sorry.', 'return', '#4f4', { onSelect: { mood: 'sad' } }),
+				opt('...sentient gouda?', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		intimidate_garvus_ok: node('intimidate_garvus_ok',
+			'*He flinches violently, ale sloshing everywhere.* OKAY OKAY DON\'T HURT ME! *He starts babbling at incredible speed.* The Eye is on level twenty not fifteen like I usually say I lied about that it\'s deeper than anyone thinks and it\'s not sleeping it\'s WAITING and the Anchor Stones are the only things keeping it contained and there are SEVEN of them and Aldric wants to remove them all because he thinks he can CONTROL it and he\'s WRONG and Thessaly knew that\'s why she stayed behind to GUARD them and \u2014 *He gasps for air.* ...please don\'t hit me. I bruise like a peach. A very drunk peach.',
+			[
+				opt('Anchor Stones... seven of them? [Rumor learned]', 'return', '#ff4', { onSelect: { rumor: RUMORS.singing_walls, message: 'Garvus reveals there are seven Anchor Stones containing the Eye!', mood: 'afraid' } }),
+			]
+		),
+		intimidate_garvus_fail: node('intimidate_garvus_fail',
+			'*He squints at you, entirely unimpressed.* Really? You\'re going to shout at the man who shtared down a cathedral-shized eyeball? Who watched his besht friend walk into cosmic oblivion? Who once arm-wreshtled a Minotaur for a bar tab? *He flexes.* I may be drunk, but I ushed to be Garvush the BOLD. The Bold! That\'sh not just a name. I EARNED that. By being bold. And by killing a LOT of thingsh. *He pats your arm condescendingly.* Nice try though, shweetie.',
+			[
+				opt('...did you win the arm wrestle?', 'arm_wrestle', '#ff4'),
+				opt('Fair enough, Garvus.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		arm_wrestle: node('arm_wrestle',
+			'*He grins enormously.* YESH. It took four hoursh and I dislocated my shoulder, but I WON. The Minotaur bought me a drink after. Very shportshmanlike, Minotaursh. Better manner\'sh than mosht humans. It\'sh now my shingle greatesht achievement, shurpassing even the time I convinced a Dragon Turtle that I was a health inspector and it needed to vacate the premises for "code violations." Guild card, very official-looking. Thesshaly forged it.',
+			[
+				opt('Thessaly forged a health inspector card for you?', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+			]
+		),
 	}
 };
 
@@ -1359,6 +1421,7 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 				opt('How do I get out of here?', 'escape', '#ff4'),
 				opt('How long have you been here?', 'how_long', '#8cf'),
 				opt('Hang tight, I\'ll get us both out.', 'rescue', '#4f4'),
+				opt('A scholar of YOUR caliber deserves better than this. Share your greatest discovery with me.', 'social_persuade_thessaly', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 13, successNode: 'persuade_thessaly_ok', failNode: 'persuade_thessaly_fail' }, once: true }),
 				opt('[Say nothing and leave]', '__exit__', '#0ff'),
 			]
 		),
@@ -1370,6 +1433,7 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 				opt('What were you doing before you got captured?', 'research', '#8cf'),
 				opt('Tell me a scholarly tale.', 'thessaly_stories', '#c8f'),
 				opt('Tell me about what lies below.', 'below', '#f44'),
+				opt('The Athenaeum sent me to retrieve you. Scholar Aldric authorized the rescue mission personally.', 'social_deceive_thessaly', '#c4f', { socialCheck: { skill: 'deceive', difficulty: 15, successNode: 'deceive_thessaly_ok', failNode: 'deceive_thessaly_fail' }, once: true }),
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
 		),
@@ -1753,6 +1817,53 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 				opt('I\'ll take that exam when the time comes.', 'return', '#ff4'),
 			]
 		),
+		persuade_thessaly_ok: node('persuade_thessaly_ok',
+			'*She studies your face for a long moment, then something softens.* You remind me of myself, before the chains and the goblin cuisine. Alright. My greatest discovery. *She lowers her voice.* The dungeon has a heartbeat. Not a metaphor \u2014 a literal cardiac rhythm. 72 beats per minute, same as a human at rest. I measured it with resonance crystals across three levels. The dungeon is alive. Not "alive" like a forest or an ecosystem. Alive like a PERSON. It has moods. It has preferences. And I believe \u2014 though I could never prove it \u2014 that it\'s lonely. It creates monsters and traps not to kill adventurers, but to make them STAY.',
+			[
+				opt('The dungeon is lonely? That\'s... heartbreaking. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.potions_matter, message: 'Thessaly reveals her greatest discovery: the dungeon has a heartbeat!', mood: 'friendly' } }),
+			]
+		),
+		persuade_thessaly_fail: node('persuade_thessaly_fail',
+			'*She gives you the look of a professor whose student just tried to submit a paper written entirely in crayon.* Flattery? Really? I\'ve been an academic for twenty years. I\'ve been flattered by department chairs angling for my research grants. I\'ve been flattered by grad students hoping I\'d forget their missing dissertations. I\'ve been flattered by a sentient gouda that wanted me to sign its memoir. Your attempt ranks somewhere between the gouda and the time a goblin told me I looked "only slightly edible." Points for effort, though. D-plus.',
+			[
+				opt('A sentient gouda wrote a memoir?!', 'gouda_memoir', '#ff4'),
+				opt('I deserved that.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		gouda_memoir: node('gouda_memoir',
+			'*She almost smiles.* Oh yes. "Whey of the World: A Cheese\'s Journey to Sentience." Three hundred pages. Surprisingly well-written, if a bit dairy-centric. It argued that consciousness is just organized fermentation, which is \u2014 frankly \u2014 not the worst theory I\'ve encountered in peer review. The Athenaeum rejected it on grounds of "being cheese." Thessaly \u2014 the other Thessaly, the one who stayed behind \u2014 she voted to publish. She always was the bravest of us.',
+			[
+				opt('Wait, there\'s another Thessaly?', 'two_thessalys', '#8cf'),
+				opt('I need to find that gouda.', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		two_thessalys: node('two_thessalys',
+			'*She sighs.* The Athenaeum had a naming convention problem. There were three of us, actually. Thessaly of Grey Reaches \u2014 that\'s me. Thessaly of the Northern Spires \u2014 she\'s the one who went into the Eye. And Thessaly the Younger, who got tired of the confusion and legally changed her name to "Not Thessaly." She works in accounting now. The mail situation was a NIGHTMARE.',
+			[
+				opt('Three Thessalys and a sentient cheese. Academia is wild.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		deceive_thessaly_ok: node('deceive_thessaly_ok',
+			'*Her eyes widen with genuine shock.* Aldric sent \u2014 ALDRIC?! That backstabbing, window-coveting, grant-stealing \u2014 *She catches herself.* Actually... if Aldric sent a rescue team, things must be dire. He wouldn\'t spend the budget unless the Anchor Stones situation is critical. *She grabs your arm through the bars.* Listen carefully. Under the Athenaeum library, third sub-basement, behind the painting of Scholar Venn \u2014 there\'s a vault. Inside is my complete research on the Severance. The password is "the gouda was right." Aldric must NOT get those notes. If you\'re truly from the Athenaeum, you\'ll ensure they reach Scholar Maren instead. She\'s the only one I trust.',
+			[
+				opt('I\'ll make sure Maren gets them. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.singing_walls, message: 'Thessaly reveals the location of her secret Severance research!', mood: 'friendly' } }),
+			]
+		),
+		deceive_thessaly_fail: node('deceive_thessaly_fail',
+			'*Her expression goes cold as ice.* Aldric sent you. How interesting. Because I happen to know that Aldric has been ACTIVELY BLOCKING rescue expeditions to this dungeon for the past six months. He filed three separate motions with the Council to designate my section as "acceptable losses." He ALSO stole my favorite quill. The red one with the phoenix feather. *She narrows her eyes.* You\'re either lying or you\'re one of Aldric\'s pawns. Either way, I am DEEPLY unimpressed. The goblins are better liars than you, and their best deception was wearing a fake mustache and pretending to be a health inspector.',
+			[
+				opt('That health inspector story keeps coming up...', 'return', '#ff4', { onSelect: { mood: 'hostile' } }),
+				opt('I\'m sorry. I shouldn\'t have lied to you.', 'deceive_apology', '#4f4'),
+			]
+		),
+		deceive_apology: node('deceive_apology',
+			'*She studies you for a long moment, then exhales.* At least you have the decency to admit it. That puts you above most academics I\'ve known. *A tired smile.* I\'ve been down here long enough to recognize desperation. Whatever you\'re looking for, I respect honesty more than cleverness. Ask me a real question and I\'ll give you a real answer. Scholar\'s honor.',
+			[
+				opt('What is the Severance?', 'below', '#f44'),
+				opt('How do I survive the deeper levels?', 'escape', '#ff4'),
+				opt('Thank you for understanding.', 'return', '#4f4', { onSelect: { mood: 'neutral' } }),
+			]
+		),
 	}
 };
 
@@ -1768,6 +1879,8 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('How are you alive down here?', 'alive', '#ff4'),
 				opt('Do you have anything useful?', 'wares', '#ff4'),
 				opt('This seems like a terrible business model.', 'business', '#8cf'),
+				opt('My guild will DOUBLE your standard rate for priority access to your best wares.', 'social_deceive_morrigan', '#c4f', { socialCheck: { skill: 'deceive', difficulty: 16, successNode: 'deceive_morrigan_ok', failNode: 'deceive_morrigan_fail' }, once: true }),
+				opt('Give me your best supplies. Free. Or I start breaking merchandise.', 'social_intimidate_morrigan', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 20, successNode: 'intimidate_morrigan_ok', failNode: 'intimidate_morrigan_fail' }, once: true }),
 				opt('Goodbye.', 'farewell', '#0ff'),
 			]
 		),
@@ -1993,6 +2106,44 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('This is the weirdest economy ever. [Story collected]', 'morrigan_stories', '#4f4', { onSelect: { story: STORIES.morrigan_economy } }),
 			]
 		),
+		deceive_morrigan_ok: node('deceive_morrigan_ok',
+			'*Her eyes light up with barely contained avarice.* DOUBLE rate?! Priority access?! Guild-backed funding?! *She\'s already rummaging through her bags.* Oh, you wonderful, deep-pocketed darling! For a premium client I have the SPECIAL stock. *She produces a glowing vial from a hidden pocket.* Morrigan\'s Miracle Elixir. Cures what ails you, prevents what doesn\'t, and makes your hair shinier as a bonus side effect. Normally I charge a king\'s ransom. For YOU \u2014 complimentary sample. Gotta hook \'em with the free taste, as my mentor always said. She sold potions to dragons. DRAGONS. They don\'t even have pockets.',
+			[
+				opt('Take the Miracle Elixir. [+8 HP, +2 ATK]', 'return', '#4f4', { onSelect: { hp: 8, atk: 2, message: 'Morrigan\'s Miracle Elixir surges through you! +8 HP, +2 ATK!' } }),
+			]
+		),
+		deceive_morrigan_fail: node('deceive_morrigan_fail',
+			'*She gives you a look that could curdle milk at forty paces.* "Guild-backed funding." Oh sweetie. I have sold haunted mirrors to ghosts. I have convinced a dragon that he needed fire insurance. I once sold a bucket of AIR to a suffocating fish-man and upsold him on a "premium breathing package." You think you can out-lie the woman who convinced an entire goblin tribe that invisible armor was the next big fashion trend? *She cackles.* They\'re still wearing it! Walking around naked, thinking they look FABULOUS! I am the QUEEN of deception, darling. Bow to the throne or buy something with real coin.',
+			[
+				opt('...I bow to the throne.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('Invisible armor. Genius.', 'invisible_armor', '#ff4'),
+			]
+		),
+		invisible_armor: node('invisible_armor',
+			'*She preens.* My magnum opus! I even gave them a certificate of authenticity. "This certifies that the bearer is wearing EXTREMELY invisible armor of GREAT quality." They FRAMED it. It hangs in the Goblin Chief\'s throne room. Right next to his "Employee of the Month" award \u2014 which I ALSO sold him. He\'s the only employee. Won every month. Very proud of it. *She wipes a tear.* Customer retention is about making them feel SPECIAL. Even if what you\'re selling is technically nothing.',
+			[
+				opt('You are a menace to society.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		intimidate_morrigan_ok: node('intimidate_morrigan_ok',
+			'*She blinks. Her eye twitches. For the first time in her career, Morrigan looks genuinely unsettled.* I... well. *She swallows.* Nobody\'s ever actually scared me before. Even the Minotaur who threatened to sit on me \u2014 I sold him a cushion. But you... you\'ve got something in your eyes that even the monsters don\'t have. *She slowly pulls out a health potion.* Here. Take it. On the house. And please... please stop looking at me like that. I have a very active imagination and it\'s currently showing me things I don\'t enjoy.',
+			[
+				opt('Smart choice. [+6 HP]', 'return', '#4f4', { onSelect: { hp: 6, message: 'Morrigan nervously hands over a premium health potion! +6 HP', mood: 'afraid' } }),
+			]
+		),
+		intimidate_morrigan_fail: node('intimidate_morrigan_fail',
+			'*She stares at you. Then she starts laughing. Then she KEEPS laughing. Then she\'s on the floor, tears streaming.* Oh... oh my... YOU? Intimidate ME? Dearie, I have stared down a LICH over a disputed invoice. I have threatened a BEHOLDER with a bad Yelp review. I once told an ANCIENT RED DRAGON that his payment was overdue and charged him a LATE FEE. He paid! WITH INTEREST! *She wipes her eyes.* You\'re adorable. Here, have a consolation cookie. *She produces a stale cookie from somewhere.* It\'s only slightly cursed.',
+			[
+				opt('...slightly cursed?', 'cursed_cookie', '#f44'),
+				opt('I\'ll pass on the cursed cookie.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		cursed_cookie: node('cursed_cookie',
+			'*She waves dismissively.* Minor curse. You might see colors slightly differently for an hour. Or hear a faint humming. Or develop a temporary fondness for interpretive dance. The goblin I got the recipe from said it was "mostly harmless," which in goblin translates to "only two previous customers died, and one of them was already dead." Very encouraging odds, relatively speaking. The undead customer actually LEFT a positive review. Said the cookie was "life-changing." Which, given he was a skeleton, had a very literal meaning.',
+			[
+				opt('I\'m going to pass. Firmly.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
 	}
 };
 
@@ -2008,6 +2159,8 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 				opt('The stairs are usually in the largest room.', 'directions', '#4f4'),
 				opt('How did you get lost?', 'lost_story', '#ff4'),
 				opt('You look rough. Are you okay?', 'condition', '#4f4'),
+				opt('I know these tunnels well. Follow my lead and I\'ll get us both to the stairs.', 'social_persuade_corwin', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 9, successNode: 'persuade_corwin_ok', failNode: 'persuade_corwin_fail' }, once: true }),
+				opt('I\'m actually a dungeon inspector. This level failed code. We need to evacuate immediately.', 'social_deceive_corwin', '#c4f', { socialCheck: { skill: 'deceive', difficulty: 11, successNode: 'deceive_corwin_ok', failNode: 'deceive_corwin_fail' }, once: true }),
 				opt('Sorry, can\'t help. Good luck.', 'farewell_cold', '#f44', { onSelect: { mood: 'sad' } }),
 			]
 		),
@@ -2303,6 +2456,38 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 			'*They pull out a blank parchment with a traumatized expression.* Level four. My map started UPDATING ITSELF. Lines appeared that I hadn\'t drawn. Accurate lines. Rooms I hadn\'t visited. At first I was thrilled! Free cartography! Then the map drew a room. With a stick figure inside it. The stick figure was holding a map. The map in the drawing had a SMALLER stick figure. Holding a SMALLER map. It was maps all the way down. *They shudder.* I burned the map. The ashes reformed into a smaller, smugger-looking map. I burned THAT. It reformed again. Smaller. SMUGGER. I eventually sealed it in a jar and threw it into a pit. I can still hear it... rustling.',
 			[
 				opt('A sentient, smug map. [Story collected]', 'corwin_stories', '#4f4', { onSelect: { story: STORIES.corwin_map } }),
+			]
+		),
+		persuade_corwin_ok: node('persuade_corwin_ok',
+			'*Their face floods with relief so intense it\'s almost physical.* You KNOW these tunnels? Oh thank every god and several minor deities. *They grab your sleeve.* I have been going in circles for SO LONG. The walls here all look the same. Stone. More stone. Slightly different stone. I have a degree in cartography and I can\'t tell the difference. *They pull out a crumpled notebook.* Here \u2014 take these. My notes on every level I\'ve mapped. The maps are useless because the dungeon cheats, but the NOTES are good. Monster patrol patterns, safe rest spots, which walls sound hollow when you knock. Three weeks of paranoid observation, all yours.',
+			[
+				opt('Take Corwin\'s field notes. [+3 ATK from tactical knowledge]', 'return', '#4f4', { onSelect: { atk: 3, message: 'Corwin\'s field notes reveal monster patrol patterns! +3 ATK', mood: 'friendly' } }),
+			]
+		),
+		persuade_corwin_fail: node('persuade_corwin_fail',
+			'*They squint at you suspiciously.* You "know these tunnels well"? Really? Because I\'ve been mapping dungeons for the Cartographers\' Guild for seven years, and the NUMBER ONE thing I\'ve learned is that NOBODY knows these tunnels well. The tunnels don\'t even know themselves well. I once watched a corridor have an existential crisis and turn into a different corridor. *They fold their arms.* Nice try, but I\'d rather be lost honestly than found dishonestly. That\'s... actually the Cartographers\' Guild motto. We\'re a very on-brand organization.',
+			[
+				opt('Fair point. The tunnels ARE unpredictable.', 'return', '#4f4'),
+				opt('What\'s a corridor existential crisis look like?', 'corridor_crisis', '#ff4'),
+			]
+		),
+		corridor_crisis: node('corridor_crisis',
+			'*They gesture wildly.* You know how walls are supposed to be WALLS? Stationary? Load-bearing? Having a fixed position in three-dimensional space? Well, this corridor apparently disagreed with the concept. It started vibrating. Then it sort of... shimmered. Then every stone in the wall rearranged itself into what I can only describe as a worried expression. A WALL. Looking WORRIED. Then it reformed into a completely different corridor going a completely different direction, and I swear \u2014 I SWEAR \u2014 it looked relieved afterwards. Like it had been holding in a sneeze for centuries and finally let it out.',
+			[
+				opt('The architecture has emotions. Wonderful.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		deceive_corwin_ok: node('deceive_corwin_ok',
+			'*Their eyes go wide.* A dungeon INSPECTOR?! Failed CODE?! *They look around in a panic.* I KNEW IT. I KNEW something was structurally unsound! Did you see the support beams on level three? NONEXISTENT. And the ventilation! Don\'t get me started on the ventilation! I filed a complaint with the Cartographers\' Guild six months ago. "Dear Guild: the dungeon appears to be in violation of thirty-seven building codes and also contains monsters. Please advise." They sent back a form letter. *They start packing.* Where\'s the emergency exit? Is there an emergency exit? Are WE the emergency?',
+			[
+				opt('Stay calm. Take this passage north. [Gain a rumor]', 'return', '#4f4', { onSelect: { rumor: RUMORS.merchant_everywhere, message: 'Corwin, panicking about building codes, shares everything they know about the dungeon layout!', mood: 'afraid' } }),
+			]
+		),
+		deceive_corwin_fail: node('deceive_corwin_fail',
+			'*They pause mid-panic.* Wait. Wait wait wait. A dungeon inspector? *They slowly look you up and down.* Where\'s your clipboard? Inspectors ALWAYS have clipboards. And the little hat. The inspector hat. With the badge. And where are your forms? You need Form 7-B for structural assessment, Form 12-C for monster density evaluation, and Form 42-Q for "ambient dread levels." I dated an inspector once. VERY boring dinners. But I learned the bureaucracy. *They narrow their eyes.* You, my friend, are no inspector. Garvus tried the same trick with a Dragon Turtle and at least HE had a forged badge.',
+			[
+				opt('...Garvus told me about that, actually.', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+				opt('You caught me. I just wanted to help.', 'return', '#4f4'),
 			]
 		),
 	}

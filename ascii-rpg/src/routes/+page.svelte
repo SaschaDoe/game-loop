@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
@@ -438,7 +438,7 @@
 								}}
 							>
 								<span class="option-key">[{i + 1}]</span>
-								{option.text}
+								{#if option.socialCheck}<span class="social-tag" style="color:{SOCIAL_SKILL_DISPLAY[option.socialCheck.skill]?.color ?? '#ccc'}">[{SOCIAL_SKILL_DISPLAY[option.socialCheck.skill]?.label}]</span> {/if}{option.text}
 								{#if isGiftOption} (already received){/if}
 								{#if dlg.visitedNodes.has(option.nextNode)} *{/if}
 							</div>
@@ -1291,6 +1291,12 @@
 		color: #bbb;
 		font-size: 12px;
 		line-height: 1.4;
+	}
+
+	.social-tag {
+		font-size: 11px;
+		font-weight: bold;
+		margin-right: 2px;
 	}
 
 	/* ── Version ── */

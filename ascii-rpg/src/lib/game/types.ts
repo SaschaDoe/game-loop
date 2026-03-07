@@ -56,6 +56,15 @@ export type DialogueCondition =
 	| { type: 'hasStories'; value: number }
 	| { type: 'minCharLevel'; value: number };
 
+export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
+
+export interface SocialCheck {
+	skill: SocialSkill;
+	difficulty: number; // 1-20, checked against roll + bonuses
+	successNode: string;
+	failNode: string;
+}
+
 export interface DialogueOption {
 	text: string;
 	nextNode: string;
@@ -63,6 +72,7 @@ export interface DialogueOption {
 	onSelect?: DialogueEffect;
 	once?: boolean;
 	showIf?: DialogueCondition;
+	socialCheck?: SocialCheck;
 }
 
 export interface DialogueNode {
@@ -197,6 +207,20 @@ export interface GameMap {
 	secretWalls: Set<string>;
 }
 
+export interface GameStats {
+	enemiesKilled: number;
+	bossesKilled: number;
+	secretsFound: number;
+	trapsDisarmed: number;
+	chestsOpened: number;
+	levelsCleared: number;
+	npcsSpokenTo: number;
+	landmarksExamined: number;
+	damageDealt: number;
+	damageTaken: number;
+	maxDungeonLevel: number;
+}
+
 export interface GameState {
 	player: Entity;
 	enemies: Entity[];
@@ -224,4 +248,6 @@ export interface GameState {
 	knownLanguages: string[];
 	landmarks: Landmark[];
 	heardStories: string[];
+	stats: GameStats;
+	unlockedAchievements: string[];
 }

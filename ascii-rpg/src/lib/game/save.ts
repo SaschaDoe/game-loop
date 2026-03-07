@@ -1,6 +1,7 @@
-import type { GameState, Tile } from './types';
+import type { GameState, Tile, GameStats } from './types';
+import { createDefaultStats } from './achievements';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -39,6 +40,8 @@ interface SerializedState {
 	knownLanguages: string[];
 	landmarks: GameState['landmarks'];
 	heardStories: string[];
+	stats: GameStats;
+	unlockedAchievements: string[];
 }
 
 export function serializeState(state: GameState): string {
@@ -74,7 +77,9 @@ export function serializeState(state: GameState): string {
 			rumors: state.rumors,
 			knownLanguages: state.knownLanguages,
 			landmarks: state.landmarks,
-			heardStories: state.heardStories
+			heardStories: state.heardStories,
+			stats: state.stats,
+			unlockedAchievements: state.unlockedAchievements
 		}
 	};
 	return JSON.stringify(data);
@@ -117,6 +122,8 @@ export function deserializeState(json: string): GameState {
 		knownLanguages: s.knownLanguages ?? [],
 		landmarks: s.landmarks ?? [],
 		heardStories: s.heardStories ?? [],
+		stats: s.stats ?? createDefaultStats(),
+		unlockedAchievements: s.unlockedAchievements ?? [],
 		activeDialogue: null
 	};
 }

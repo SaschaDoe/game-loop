@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
@@ -15,6 +15,7 @@ import { rollLootDrop, getLootAt, pickupLoot, lootChar, lootColor } from './loot
 import { getSkillBonuses } from './skills';
 import { placeLandmarks, getLandmarkAt, getLandmarkDef, getAdjacentLandmarks, examineLandmark, landmarkChar, landmarkColor } from './landmarks';
 import { shortRest, longRest } from './rest';
+import { checkAchievements, getAchievement, createDefaultStats } from './achievements';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -44,6 +45,38 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'hasRumors': return ctx.rumorCount >= cond.value;
 		case 'hasStories': return ctx.storyCount >= cond.value;
 		case 'minCharLevel': return ctx.characterLevel >= cond.value;
+	}
+}
+
+const SOCIAL_CLASS_BONUS: Record<CharacterClass, Record<SocialSkill, number>> = {
+	warrior: { persuade: 0, intimidate: 4, deceive: -1 },
+	mage:    { persuade: 4, intimidate: -1, deceive: 1 },
+	rogue:   { persuade: 1, intimidate: 0, deceive: 4 },
+};
+
+export function rollSocialCheck(check: SocialCheck, state: GameState): { success: boolean; roll: number; bonus: number; total: number } {
+	const roll = 1 + Math.floor(Math.random() * 20);
+	const classBonus = SOCIAL_CLASS_BONUS[state.characterConfig.characterClass][check.skill];
+	const levelBonus = Math.floor(state.characterLevel / 3);
+	const bonus = classBonus + levelBonus;
+	const total = roll + bonus;
+	return { success: total >= check.difficulty, roll, bonus, total };
+}
+
+export const SOCIAL_SKILL_DISPLAY: Record<SocialSkill, { label: string; color: string }> = {
+	persuade: { label: 'Persuasion', color: '#4cf' },
+	intimidate: { label: 'Intimidation', color: '#f84' },
+	deceive: { label: 'Deception', color: '#c4f' },
+};
+
+function processAchievements(state: GameState): void {
+	const newly = checkAchievements(state.stats, state.unlockedAchievements);
+	for (const id of newly) {
+		state.unlockedAchievements.push(id);
+		const def = getAchievement(id);
+		if (def) {
+			addMessage(state, `Achievement unlocked: ${def.name}!`, 'discovery');
+		}
 	}
 }
 
@@ -159,7 +192,9 @@ export function createGame(config?: CharacterConfig): GameState {
 		rumors: [],
 		knownLanguages: [],
 		landmarks: [],
-		heardStories: []
+		heardStories: [],
+		stats: createDefaultStats(),
+		unlockedAchievements: []
 	};
 
 	// Apply class bonuses
@@ -300,7 +335,9 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		rumors: [],
 		knownLanguages: [],
 		landmarks,
-		heardStories: []
+		heardStories: [],
+		stats: createDefaultStats(),
+		unlockedAchievements: []
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -344,6 +381,7 @@ function detectAdjacentSecrets(state: GameState): void {
 		const key = `${nx},${ny}`;
 		if (state.map.secretWalls.has(key) && !state.detectedSecrets.has(key)) {
 			state.detectedSecrets.add(key);
+			state.stats.secretsFound++;
 			addMessage(state, 'You notice a hidden passage in the wall!', 'discovery');
 		}
 	}
@@ -513,6 +551,7 @@ function moveEnemies(state: GameState, defending = false) {
 				addMessage(state, `You block ${rawDmg - dmg} damage from ${enemy.name}!`, 'info');
 			}
 			state.player.hp -= dmg;
+			state.stats.damageTaken += dmg;
 			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`, 'damage_taken');
 			const onHit = getMonsterOnHitEffect(enemy);
 			if (onHit) {
@@ -654,10 +693,15 @@ export function handleInput(state: GameState, key: string): GameState {
 				const baseReward = xpReward(enemy, state.level);
 				const reward = applyXpMultiplier(bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward, state);
 				state.xp += reward;
+				state.stats.enemiesKilled++;
+				if (bossKill) state.stats.bossesKilled++;
 				addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
 			}
 			state.enemies = state.enemies.filter((e) => e.hp > 0);
-			if (killed.length > 0) checkLevelUp(state);
+			if (killed.length > 0) {
+				checkLevelUp(state);
+				processAchievements(state);
+			}
 			if (result.teleportPos) {
 				state.player.pos = result.teleportPos;
 				updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
@@ -856,6 +900,7 @@ export function handleInput(state: GameState, key: string): GameState {
 	if (chest) {
 		const isRogue = state.characterConfig.characterClass === 'rogue';
 		const result = openChest(chest, state.level, isRogue);
+		state.stats.chestsOpened++;
 		for (const msg of result.messages) {
 			addMessage(state, msg.text, msg.type);
 		}
@@ -896,6 +941,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		const baseDmg = Math.max(1, (state.player.attack - curseReduction) + Math.floor(Math.random() * 3));
 		const dmg = isSneakAttack ? baseDmg * 2 : baseDmg;
 		target.hp -= dmg;
+		state.stats.damageDealt += dmg;
 		if (isSneakAttack) {
 			addMessage(state, `Sneak attack! You hit ${target.name} for ${dmg}!`, 'player_attack');
 		} else {
@@ -918,6 +964,8 @@ export function handleInput(state: GameState, key: string): GameState {
 			const multiplier = envKill ? ENVIRONMENTAL_KILL_BONUS : 1;
 			const reward = applyXpMultiplier(Math.floor((bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward) * multiplier), state);
 			state.xp += reward;
+			state.stats.enemiesKilled++;
+			if (bossKill) state.stats.bossesKilled++;
 			state.enemies = state.enemies.filter((e) => e !== target);
 			if (envKill) {
 				addMessage(state, `${target.name} perished in the environment! +${reward} XP (Creativity bonus!)`, 'level_up');
@@ -929,6 +977,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				addMessage(state, `${target.name} defeated! +${reward} XP`, 'player_attack');
 			}
 			checkLevelUp(state);
+			processAchievements(state);
 		}
 		moveEnemies(state);
 		return { ...state };
@@ -957,6 +1006,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		if (state.detectedTraps.has(trapKey)) {
 			// Detected trap: attempt disarm
 			const disarmResult = disarmTrap(state, trap, state.characterConfig.characterClass);
+			if (disarmResult.success) state.stats.trapsDisarmed++;
 			for (const msg of disarmResult.messages) {
 				addMessage(state, msg, disarmResult.success ? 'discovery' : 'trap');
 			}
@@ -1036,6 +1086,11 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.rumors = [...state.rumors];
 		next.knownLanguages = [...state.knownLanguages];
 		next.heardStories = [...state.heardStories];
+		next.stats = { ...state.stats };
+		next.stats.levelsCleared++;
+		next.stats.maxDungeonLevel = Math.max(next.stats.maxDungeonLevel, next.level);
+		next.unlockedAchievements = [...state.unlockedAchievements];
+		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
 	}
@@ -1101,6 +1156,23 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			addMessage(state, `Story collected: "${option.onSelect.story.title}" (+5 XP)`, 'discovery');
 			state.xp += 5;
 		}
+	}
+
+	// Social skill check — overrides normal navigation
+	if (option.socialCheck) {
+		const result = rollSocialCheck(option.socialCheck, state);
+		const display = SOCIAL_SKILL_DISPLAY[option.socialCheck.skill];
+		const bonusStr = result.bonus >= 0 ? `+${result.bonus}` : `${result.bonus}`;
+		if (result.success) {
+			addMessage(state, `[${display.label} Check: ${result.roll}${bonusStr}=${result.total} vs ${option.socialCheck.difficulty}] Success!`, 'discovery');
+		} else {
+			addMessage(state, `[${display.label} Check: ${result.roll}${bonusStr}=${result.total} vs ${option.socialCheck.difficulty}] Failed!`, 'damage_taken');
+		}
+		const targetNode = result.success ? option.socialCheck.successNode : option.socialCheck.failNode;
+		if (tree.nodes[targetNode]) {
+			state.activeDialogue = { ...state.activeDialogue, currentNodeId: targetNode };
+		}
+		return { ...state };
 	}
 
 	// Exit dialogue
