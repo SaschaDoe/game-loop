@@ -278,6 +278,7 @@ export interface GameState {
 	hunger: number;
 	thirst: number;
 	survivalEnabled: boolean;
+	turnCount: number;
 }
 
 export interface BestiaryEntry {

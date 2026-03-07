@@ -71,6 +71,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		hunger: MAX_SURVIVAL,
 		thirst: MAX_SURVIVAL,
 		survivalEnabled: true,
+		turnCount: 0,
 		...overrides
 	};
 }

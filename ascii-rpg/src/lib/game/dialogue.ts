@@ -1057,6 +1057,8 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('Know any useful secrets?', 'stranger_rumors', '#ff4'),
 				opt('Share a tale with me.', 'stranger_stories', '#c8f'),
 				opt('[Deepscript] I can read the old writing now.', 'deepscript_talk', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
+				opt('[Elvish] The old words come to me now.', 'elvish_talk', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Elvish' } }),
+				opt('Can you teach me Elvish?', 'stranger_teach_elvish', '#ff4'),
 				opt('I\'ve collected many secrets now...', 'many_secrets', '#ff4', { showIf: { type: 'hasRumors', value: 5 } }),
 				opt('Any new insights?', 'insights', '#8cf'),
 				opt('I\'ve cleared many levels now.', 'stranger_veteran', '#ff4', { showIf: { type: 'minLevelsCleared', value: 5 } }),
@@ -1495,6 +1497,42 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 			[
 				opt('A three-hundred-year-old review of a mediocre empress. This is why I drink here.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
+		),
+		stranger_teach_elvish: node('stranger_teach_elvish',
+			'*They regard you for a long moment.* Elvish. You wish to learn the language of intent. *They set down their untouched ale.* Elvish is not like other languages. It does not describe the world — it describes what the world SHOULD be. Every sentence is a wish. Every verb is a prayer. The Architects used it as the emotional layer of their constructions. Deepscript is the skeleton. Orcish is the heartbeat. Elvish is the dream. *They close their eyes.* I will teach you. But understand: once you speak Elvish, you will hear the dungeon differently. The walls will sound... sad.',
+			[
+				opt('[Study Elvish with the Stranger]', 'stranger_elvish_learned', '#4f4', { onSelect: { learnLanguage: 'Elvish', message: 'The Hooded Stranger teaches you Elvish! The world sounds different now — more fragile, more beautiful.' } }),
+				opt('I\'m not sure I want sad walls.', 'return', '#0ff'),
+			]
+		),
+		stranger_elvish_learned: node('stranger_elvish_learned',
+			'*The lesson takes the form of silence. The Stranger speaks no words — instead, they hum. A melody so old it predates music. And somehow, through the humming, you understand. Elvish pours into your mind like light through stained glass. Colors you never knew existed. Emotions that have no Common equivalent. The word for "sunset" is the same as the word for "goodbye." The word for "hello" is the same as "I am afraid this will end."* There. You speak Elvish now. Use it carefully. Every Elvish sentence changes the speaker as much as the listener.',
+			[
+				opt('That was the strangest language lesson of my life.', 'return', '#4f4', { onSelect: { mood: 'amused', message: '"All the best lessons are."' } }),
+			]
+		),
+		elvish_talk: node('elvish_talk',
+			'*Their posture changes entirely. The cryptic mystic act falls away, and for the first time you see something raw, something vulnerable.* You speak the tongue of intent. Then hear my intent: I am tired. Three centuries of waiting in taverns, watching adventurers descend and not return. I chose to stay above because I was afraid. Not of the dungeon — of the answer at the bottom. What if the Architects were WRONG? What if consciousness shouldn\'t persist? What if the Eye\'s dream is the correct one? *Their voice breaks.* I taught you Elvish because I cannot go down there myself. You must carry the words I cannot speak.',
+			[
+				opt('What words?', 'elvish_words', '#ff4'),
+				opt('You\'ve been carrying this for three hundred years?', 'elvish_burden', '#8cf'),
+			],
+			'Elvish'
+		),
+		elvish_words: node('elvish_words',
+			'*They speak in Elvish so pure it makes the air crystallize.* The Verse of Intention. The third component of the Severance. Deepscript tells the dungeon WHAT to do. Orcish tells it HOW to feel. Elvish tells it WHY. Without the why, the Severance is just destruction. WITH it... it is mercy. A gentle closing of an argument that has gone on too long. *They press a hand to your forehead. Something warm flows through you.* There. The Verse is yours now. Speak it at the bottom, when the time comes. And tell the Eye... tell it that three hundred years was long enough. For all of us.',
+			[
+				opt('I\'ll carry your words. [Rumor learned]', 'return', '#4f4', { onSelect: { mood: 'friendly', rumor: { id: 'stranger_severance', text: 'The Severance requires three Verses: Deepscript for structure, Orcish for soul, Elvish for intent. The Stranger carries the Elvish Verse of Intention.', source: 'The Hooded Stranger', accuracy: 'true' }, message: 'The Stranger entrusts you with the Elvish Verse of Intention. Their eyes shine with something that might be hope.' } }),
+			],
+			'Elvish'
+		),
+		elvish_burden: node('elvish_burden',
+			'*They laugh — the first genuine laugh you\'ve heard from them. It sounds like a church bell that hasn\'t been rung in centuries.* Three hundred years of ordering ale I cannot drink. Three hundred years of cryptic warnings that nobody heeds. Three hundred years of watching Garvus lose arm-wrestling matches to furniture. *They wipe their eyes.* I was the strongest of our expedition. I went deeper than anyone. And I came back because I was a coward. The others went further. They became part of the dungeon. I became part of a tavern. I am not sure which fate is worse.',
+			[
+				opt('Choosing to live isn\'t cowardice.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: '*A long pause.* "Perhaps. Perhaps not. But thank you for saying it."' } }),
+				opt('Three hundred years of Garvus. That IS worse.', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"The furniture arm-wrestling alone should qualify as cosmic suffering."' } }),
+			],
+			'Elvish'
 		),
 		return_afraid: node('return_afraid',
 			'*The stranger is pressed against the wall, their composure cracked.* Something stirred below. I felt it through the stone. The Eye shifted. When the Eye shifts, the dungeon reshuffles. Corridors become dead ends. Safe rooms become trap rooms. Everything you knew about the layout... forget it.',
@@ -3616,8 +3654,70 @@ export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
 				opt('Tell me a story, Grikkle.', 'grikkle_stories', '#c8f'),
 				opt('Tell me about yourself, Grikkle.', 'grikkle_backstory', '#c8f'),
 				opt('I could just... take your stuff.', 'grikkle_threaten', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 6, successNode: 'grikkle_intimidated', failNode: 'grikkle_unimpressed' } }),
+				opt('[Orcish] Grikkle, I speak your tongue.', 'grikkle_orcish_return', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Orcish' } }),
+				opt('Can you teach me Orcish?', 'grikkle_teach_orcish', '#ff4'),
 				opt('Goodbye, Grikkle.', 'farewell', '#0ff'),
 			]
+		),
+		grikkle_teach_orcish: node('grikkle_teach_orcish',
+			'*He blinks.* You want Grikkle to teach Orcish? TEACH? Like... SCHOOL? *He puffs up with pride.* Grikkle is PROFESSOR now! Professor Grikkle! Grikkle always knew was destined for academia! Okay! Lesson one: "WAAAGH" means hello, goodbye, I love you, I am going to eat you, and also "where is bathroom." Context is VERY important! Lesson two: *He clears his throat and makes a sound like a garbage disposal eating a trumpet.*',
+			[
+				opt('[Study the basics of Orcish with Grikkle]', 'grikkle_orcish_learned', '#4f4', { onSelect: { learnLanguage: 'Orcish', message: 'Grikkle teaches you Orcish! Your pronunciation is terrible but functional!' } }),
+				opt('On second thought, I\'m good.', 'return', '#0ff'),
+			]
+		),
+		grikkle_orcish_learned: node('grikkle_orcish_learned',
+			'*After twenty minutes of throat-shredding guttural sounds, Grikkle declares you "acceptable."* There! You speak Orcish now! Well, you speak Orcish like baby goblin with head cold, but is GOOD ENOUGH! Now you can read goblin signs in dungeon! And talk to Grikkle in mother tongue! Which Grikkle actually prefers because Common gives Grikkle a headache! Too many... SYLLABLES!',
+			[
+				opt('Thank you, Professor Grikkle.', 'return', '#4f4', { onSelect: { mood: 'amused', message: '"PROFESSOR! Yes! Grikkle is adding that to business card!"' } }),
+			]
+		),
+		grikkle_orcish_return: node('grikkle_orcish_return',
+			'*His eyes go wide.* You... you speak the Old Tongue? *His entire demeanor shifts. The salesman act drops. For a moment, he looks ancient and weary.* Nobody speaks Orcish up here anymore. Not since the Sundering, when the great goblin clans were scattered. *He removes his top hat.* If you speak the tongue... then I can tell you true things. Not the sales pitch. The REAL things.',
+			[
+				opt('What real things, Grikkle?', 'grikkle_truth', '#ff4'),
+				opt('Tell me about the Sundering.', 'grikkle_sundering', '#8cf'),
+				opt('Go back to the sales pitch. I liked it better.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			],
+			'Orcish'
+		),
+		grikkle_truth: node('grikkle_truth',
+			'*He speaks quietly, in perfect Orcish, without a single stammer.* I am not a merchant. I am a Keeper — the last of the Goblin Lorekeepers. My clan, the Deeprock Grikkari, were chroniclers. We recorded everything the dungeon did. Every shift, every growth, every nightmare. The top hat? A Keeper\'s crown, worn by every Chronicler since the First Descent. The monocle is a genuine reading lens, enchanted to see Deepscript inscriptions invisible to the naked eye. *He puts the hat back on.* But nobody buys history. So I sell rocks. And I wait. For someone who speaks the tongue.',
+			[
+				opt('You\'ve been waiting for someone like me?', 'grikkle_waiting', '#ff4'),
+				opt('The Deeprock Grikkari... a goblin lorekeeper clan?', 'grikkle_clan', '#8cf'),
+			],
+			'Orcish'
+		),
+		grikkle_waiting: node('grikkle_waiting',
+			'*He nods solemnly.* The dungeon is accelerating. New levels appear faster. The Eye dreams more frequently. Something is coming to a head — an argument three millennia old is reaching its conclusion. The Architects designed a failsafe. A Severance. But the key to activating it is written in THREE languages: Deepscript for the structure, Orcish for the soul, and Elvish for the intent. You need all three. I can give you the Orcish component. *He pulls a tiny scroll from inside his hat.* The Goblin Verse of Unbinding. Memorize it. You will need it at the bottom.',
+			[
+				opt('Take the scroll. [Rumor learned]', 'return', '#4f4', { onSelect: { mood: 'friendly', rumor: { id: 'grikkle_severance', text: 'The Severance requires three languages: Deepscript for structure, Orcish for soul, and Elvish for intent. Grikkle carries the Goblin Verse of Unbinding.', source: 'Grikkle (as Keeper)', accuracy: 'true' }, message: 'Grikkle entrusts you with ancient goblin lore.' } }),
+			],
+			'Orcish'
+		),
+		grikkle_clan: node('grikkle_clan',
+			'*His voice carries the weight of centuries.* The Deeprock Grikkari predate the dungeon itself. When the Architects began their construction — their argument — my ancestors were already here, living in the caves above. We watched them build. We learned their language. We documented everything, because that is what Keepers DO. When the dungeon swallowed our caves, we adapted. We became part of it. Some of my kin became monsters — lost to the dungeon\'s influence. Others became merchants, hiding in plain sight. And I... I became the last one who remembers why we started writing things down in the first place.',
+			[
+				opt('Why DID you start writing things down?', 'grikkle_why_write', '#ff4'),
+				opt('Thank you for trusting me with this.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			],
+			'Orcish'
+		),
+		grikkle_why_write: node('grikkle_why_write',
+			'*He smiles — not the manic merchant grin, but something genuine and sad.* Because the Architects argued about whether consciousness should persist. Whether memory matters. My ancestors believed the answer was YES. So they proved it. They remembered. They wrote. They persisted. Every page a Keeper writes is a vote for permanence in a universe that keeps trying to forget. *He puts the top hat back on, adjusts the monocle, and suddenly he\'s Grikkle the Merchant again.* ANYWAY! You want buy rock? Very sharp! Premium quality!',
+			[
+				opt('The greatest lorekeeper in the dungeon sells rocks. Perfect.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			],
+			'Orcish'
+		),
+		grikkle_sundering: node('grikkle_sundering',
+			'*His ears droop.* Two hundred years ago, the Eye blinked. Not a normal blink — a DEEP blink. The kind that reshuffles ten levels at once. The Deeprock warrens were torn apart. Clan members scattered across a dozen levels. Communication lines severed. Ink wells shattered. The Grand Library of Grikkari — three thousand years of records — fell into a crevasse that wasn\'t there a moment before. *He stares at his pebbles.* Everything Grikkle sells? Found in the rubble. Fragments of a civilization that existed between the cracks of another civilization\'s argument.',
+			[
+				opt('I\'m sorry, Grikkle.', 'return', '#4f4', { onSelect: { mood: 'sad', message: 'For once, Grikkle has nothing to sell you. Only grief.' } }),
+				opt('Can the Grand Library be recovered?', 'return', '#ff4', { onSelect: { mood: 'friendly', message: '"Maybe. If someone goes deep enough. If someone CARES enough. Grikkle has hoped for two hundred years. Grikkle can hope a little longer."' } }),
+			],
+			'Orcish'
 		),
 		grikkle_wares: lie('grikkle_wares',
 			'*He gestures grandly at his crate.* BEHOLD! Grikkle\'s Emporium of Wonders! Item one: this rock! Very sharp! Could be weapon! Item two: this OTHER rock! Less sharp but bigger! Item three: *He holds up a glowing mushroom.* Grikkle\'s Special Mushroom! Makes you feel STRONG! Or sick! Fifty-fifty! Very exciting! Like gambling but with your stomach! You want to haggle? Grikkle LOVES haggling!',

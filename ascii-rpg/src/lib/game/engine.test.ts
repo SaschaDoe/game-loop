@@ -72,6 +72,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		hunger: 100,
 		thirst: 100,
 		survivalEnabled: true,
+		turnCount: 0,
 		...overrides
 	};
 }
@@ -1621,12 +1622,12 @@ describe('skill tree integration', () => {
 	});
 
 	it('skill sight bonus increases effective sight radius', () => {
-		const state = makeTestState({ unlockedSkills: ['w_tac_1'] }); // +1 sight
+		const state = makeTestState({ unlockedSkills: ['w_tac_1'], turnCount: 15 }); // +1 sight, morning (no time penalty)
 		expect(effectiveSightRadius(state)).toBe(9); // base 8 + 1
 	});
 
 	it('skill sight bonus stacks with multiple skills', () => {
-		const state = makeTestState({ unlockedSkills: ['m_know_1', 'm_know_3'] }); // +1 + +2 sight
+		const state = makeTestState({ unlockedSkills: ['m_know_1', 'm_know_3'], turnCount: 15 }); // +1 + +2 sight, morning
 		expect(effectiveSightRadius(state)).toBe(11); // base 8 + 3
 	});
 
@@ -1932,5 +1933,38 @@ describe('survival integration', () => {
 		expect(result.hunger).toBe(60);
 		expect(result.thirst).toBe(50);
 		expect(result.survivalEnabled).toBe(true);
+	});
+});
+
+describe('day-night cycle integration', () => {
+	it('turnCount increments each turn', () => {
+		const state = makeTestState({ turnCount: 0 });
+		const result = handleInput(state, 'a');
+		expect(result.turnCount).toBe(1);
+	});
+
+	it('turnCount persists through level transition', () => {
+		const state = makeTestState({ turnCount: 42 });
+		state.map.tiles[5][6] = '>';
+		const result = handleInput(state, 'd');
+		expect(result.turnCount).toBe(42);
+	});
+
+	it('emits phase change message at transition', () => {
+		const state = makeTestState({ turnCount: 9 }); // dawn -> morning at turn 10
+		const result = handleInput(state, 'a');
+		const timeMsg = result.messages.find(m => m.text.includes('morning'));
+		expect(timeMsg).toBeDefined();
+	});
+
+	it('sight radius is reduced at night', () => {
+		const dayState = makeTestState({ turnCount: 15 }); // morning
+		const nightState = makeTestState({ turnCount: 75 }); // night
+		expect(effectiveSightRadius(nightState)).toBeLessThan(effectiveSightRadius(dayState));
+	});
+
+	it('sight radius has minimum of 2', () => {
+		const state = makeTestState({ turnCount: 95, sightRadius: 2 }); // midnight, low base
+		expect(effectiveSightRadius(state)).toBeGreaterThanOrEqual(2);
 	});
 });

@@ -18,6 +18,7 @@ import { shortRest, longRest } from './rest';
 import { checkAchievements, getAchievement, createDefaultStats } from './achievements';
 import { recordSeen, recordKill } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
+import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -116,7 +117,8 @@ function applyXpMultiplier(baseXp: number, state: GameState): number {
 
 export function effectiveSightRadius(state: GameState): number {
 	const bonuses = getSkillBonuses(state.unlockedSkills);
-	return state.sightRadius + (bonuses.sightRadius ?? 0);
+	const timeModifier = sightModifier(getTimePhase(state.turnCount));
+	return Math.max(2, state.sightRadius + (bonuses.sightRadius ?? 0) + timeModifier);
 }
 
 function checkLevelUp(state: GameState): void {
@@ -219,7 +221,8 @@ export function createGame(config?: CharacterConfig): GameState {
 		bestiary: {},
 		hunger: MAX_SURVIVAL,
 		thirst: MAX_SURVIVAL,
-		survivalEnabled: cfg.difficulty !== 'easy'
+		survivalEnabled: cfg.difficulty !== 'easy',
+		turnCount: 0
 	};
 
 	// Apply class bonuses
@@ -369,7 +372,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		bestiary: {},
 		hunger: MAX_SURVIVAL,
 		thirst: MAX_SURVIVAL,
-		survivalEnabled: difficulty !== 'easy'
+		survivalEnabled: difficulty !== 'easy',
+		turnCount: 0
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -1199,6 +1203,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.hunger = state.hunger;
 		next.thirst = state.thirst;
 		next.survivalEnabled = state.survivalEnabled;
+		next.turnCount = state.turnCount;
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
@@ -1215,6 +1220,12 @@ export function handleInput(state: GameState, key: string): GameState {
 	}
 
 	moveEnemies(state);
+
+	// Tick time (day-night cycle)
+	const timeResult = tickTime(state);
+	if (timeResult.phaseChanged && timeResult.message) {
+		addMessage(state, timeResult.message);
+	}
 
 	// Tick survival (hunger/thirst)
 	const survivalResult = tickSurvival(state);
@@ -1378,9 +1389,16 @@ export function npcMoodColor(npc: NPC): string {
 
 const DEEPSCRIPT_GLYPHS = 'ᚠᚡᚢᚣᚤᚥᚦᚧᚨᚩᚪᚫᚬᚭᚮᚯᚰᚱᚲᚳᚴᚵᚶᚷᚸᚹᚺᚻᚼᚽᚾᚿ';
 const ORCISH_GLYPHS = 'ɤʁʂʃʇʈʊʋʌʍʎʏɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿ';
+const ELVISH_GLYPHS = 'ꝏꝑꝓꝕꝗꝙꝛꝝꝟꝡꝣꝥꝧꝩꝫꝭꝯꜣꜥꜧꜩꜫꜭꜯꜱꜳꜵꜷꜹꜻꜽ';
+
+const LANGUAGE_GLYPHS: Record<string, string> = {
+	Deepscript: DEEPSCRIPT_GLYPHS,
+	Orcish: ORCISH_GLYPHS,
+	Elvish: ELVISH_GLYPHS,
+};
 
 export function garbleText(text: string, language: string): string {
-	const glyphs = language === 'Deepscript' ? DEEPSCRIPT_GLYPHS : language === 'Orcish' ? ORCISH_GLYPHS : DEEPSCRIPT_GLYPHS;
+	const glyphs = LANGUAGE_GLYPHS[language] ?? DEEPSCRIPT_GLYPHS;
 	let result = '';
 	for (const ch of text) {
 		if (ch === ' ' || ch === '\n' || ch === '.' || ch === ',' || ch === '!' || ch === '?') {

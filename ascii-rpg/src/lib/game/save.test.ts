@@ -88,6 +88,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		hunger: 100,
 		thirst: 100,
 		survivalEnabled: true,
+		turnCount: 0,
 		...overrides
 	};
 }
@@ -277,6 +278,12 @@ describe('serializeState / deserializeState round-trip', () => {
 		expect(restored.survivalEnabled).toBe(false);
 	});
 
+	it('preserves turnCount', () => {
+		const state = makeTestState({ turnCount: 150 });
+		const restored = deserializeState(serializeState(state));
+		expect(restored.turnCount).toBe(150);
+	});
+
 	it('produces valid JSON string', () => {
 		const state = makeTestState();
 		const json = serializeState(state);
@@ -379,5 +386,13 @@ describe('localStorage integration', () => {
 		expect(restored!.hunger).toBe(42);
 		expect(restored!.thirst).toBe(65);
 		expect(restored!.survivalEnabled).toBe(true);
+	});
+
+	it('preserves turnCount through save/load', () => {
+		const state = makeTestState({ turnCount: 73 });
+		saveGame(state);
+		const restored = loadGame();
+		expect(restored).not.toBeNull();
+		expect(restored!.turnCount).toBe(73);
 	});
 });
