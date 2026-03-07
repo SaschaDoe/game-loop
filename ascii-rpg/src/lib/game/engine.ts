@@ -327,6 +327,16 @@ function moveEnemies(state: GameState, defending = false) {
 		} else if (!isBlocked(state, nx, ny) && !state.enemies.some((e) => e !== enemy && e.pos.x === nx && e.pos.y === ny)) {
 			// Non-relentless enemies avoid hazard tiles
 			if (behavior !== 'relentless' && getHazardAt(state.hazards, nx, ny)) continue;
+			// Narrate visible enemy movement
+			if (state.visibility[enemy.pos.y]?.[enemy.pos.x] === Visibility.Visible) {
+				const distBefore = Math.abs(enemy.pos.x - state.player.pos.x) + Math.abs(enemy.pos.y - state.player.pos.y);
+				const distAfter = Math.abs(nx - state.player.pos.x) + Math.abs(ny - state.player.pos.y);
+				if (distAfter < distBefore) {
+					addMessage(state, `${enemy.name} moves toward you.`, 'info');
+				} else if (distAfter > distBefore && behavior === 'cowardly') {
+					addMessage(state, `${enemy.name} retreats!`, 'info');
+				}
+			}
 			enemy.pos = { x: nx, y: ny };
 		}
 	}

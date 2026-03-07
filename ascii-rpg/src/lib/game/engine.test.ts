@@ -1157,3 +1157,61 @@ describe('dodge and block', () => {
 		expect(result.messages.some((m) => m.text.includes('defensive stance'))).toBe(true);
 	});
 });
+
+describe('combat log narration', () => {
+	it('narrates visible enemy moving toward player', () => {
+		// Aggressive enemy at (7, 5), visible, player moves to stay nearby
+		const enemy = makeEnemy(7, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		// All tiles are Visible by default in makeTestState
+
+		// Player moves up — enemy should move toward and narrate
+		const result = handleInput(state, 'w');
+		const moveMsg = result.messages.find((m) => m.text.includes('moves toward you'));
+		expect(moveMsg).toBeDefined();
+		expect(moveMsg!.type).toBe('info');
+	});
+
+	it('does not narrate enemy movement outside visible area', () => {
+		const enemy = makeEnemy(7, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		// Set enemy tile to Unexplored; use 'g' (defend) which doesn't recalculate FOV
+		state.visibility[5][7] = Visibility.Unexplored;
+
+		const result = handleInput(state, 'g');
+		const moveMsg = result.messages.find((m) => m.text.includes('moves toward'));
+		expect(moveMsg).toBeUndefined();
+	});
+
+	it('narrates cowardly enemy retreating', () => {
+		// Rat is cowardly — when below 50% HP it flees
+		const enemy = makeEnemy(6, 5, { name: 'Rat', hp: 1, maxHp: 10, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = handleInput(state, 'w');
+		const retreatMsg = result.messages.find((m) => m.text.includes('retreats'));
+		// Rat at low HP with cowardly behavior should flee away
+		expect(retreatMsg).toBeDefined();
+	});
+
+	it('messages are color-coded by type', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 1, maxHp: 3, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = handleInput(state, 'd'); // attack enemy
+		// Should have player_attack message
+		const atkMsg = result.messages.find((m) => m.type === 'player_attack');
+		expect(atkMsg).toBeDefined();
+	});
+
+	it('retains up to 50 messages', () => {
+		// Place an enemy so moveEnemies generates narration (triggers addMessage which truncates)
+		const enemy = makeEnemy(7, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		// Fill with messages beyond limit
+		state.messages = Array.from({ length: 55 }, (_, i) => ({ text: `msg ${i}`, type: 'info' as const }));
+
+		const result = handleInput(state, 'w');
+		expect(result.messages.length).toBeLessThanOrEqual(50);
+	});
+});

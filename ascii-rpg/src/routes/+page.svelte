@@ -36,6 +36,8 @@
 	let state: GameState = $state(createGame());
 	let grid = $derived(renderColored(state));
 	let nameInput: HTMLInputElement;
+	let logExpanded = $state(false);
+	let messagesEl: HTMLDivElement;
 
 	function advanceIntro() {
 		if (introStep < INTRO_LINES.length - 1) {
@@ -63,6 +65,10 @@
 		if (wasAlive && state.gameOver && isPermadeath(state.characterConfig.difficulty)) {
 			deleteSave();
 		}
+		// Auto-scroll combat log to bottom
+		requestAnimationFrame(() => {
+			if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+		});
 	}
 
 	function onKeyDown(e: KeyboardEvent) {
@@ -84,6 +90,11 @@
 			}
 		} else if (phase === 'playing') {
 			const key = e.key;
+			if (key === 'l') {
+				e.preventDefault();
+				logExpanded = !logExpanded;
+				return;
+			}
 			if (['w', 'a', 's', 'd', 'q', 'r', 'f', 'g', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
 				e.preventDefault();
 				sendInput(key);
@@ -239,7 +250,13 @@
 		</div>
 		<pre class="map">{#each grid as row, y}{#each row as cell}<span style="color:{cell.color}">{cell.char}</span>{/each}{#if y < grid.length - 1}
 {/if}{/each}</pre>
-		<div class="messages">
+		<div class="combat-log-header">
+			<span class="log-title">Combat Log</span>
+			<button class="log-toggle" onclick={() => logExpanded = !logExpanded}>
+				{logExpanded ? '▼ Collapse' : '▲ Expand'} (L)
+			</button>
+		</div>
+		<div class="messages" class:log-expanded={logExpanded} bind:this={messagesEl}>
 			{#each state.messages as msg}
 				<div class="msg msg-{msg.type}">{msg.text}</div>
 			{/each}
@@ -603,10 +620,47 @@
 		background: #0a0a0a;
 	}
 
+	.combat-log-header {
+		width: 100%;
+		max-width: 600px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 4px;
+	}
+
+	.log-title {
+		font-size: 11px;
+		color: #666;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+
+	.log-toggle {
+		background: none;
+		border: 1px solid #444;
+		color: #888;
+		font-family: inherit;
+		font-size: 11px;
+		padding: 1px 8px;
+		cursor: pointer;
+	}
+
+	.log-toggle:hover {
+		color: #ccc;
+		border-color: #666;
+	}
+
 	.messages {
 		width: 100%;
 		max-width: 600px;
-		min-height: 60px;
+		max-height: 80px;
+		overflow-y: auto;
+		scroll-behavior: smooth;
+	}
+
+	.messages.log-expanded {
+		max-height: 300px;
 	}
 
 	.msg {
