@@ -1,10 +1,10 @@
-import type { DialogueTree, DialogueNode, Rumor, Story } from './types';
+import type { DialogueTree, DialogueNode, DialogueCondition, Rumor, Story } from './types';
 
 function node(id: string, npcText: string, options: DialogueNode['options'], language?: string): DialogueNode {
 	return { id, npcText, options, language };
 }
 
-function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean }): DialogueNode['options'][0] {
+function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean; showIf?: DialogueCondition }): DialogueNode['options'][0] {
 	return { text, nextNode, color, ...extras };
 }
 
@@ -483,6 +483,11 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('Heard any rumors?', 'rumors_menu', '#ff4'),
 				opt('Tell me a story.', 'stories_menu', '#c8f'),
 				opt('Tell me about the dungeon.', 'dungeon', '#ff4'),
+				opt('[Warrior] Any combat tips for a swordsman?', 'warrior_tips', '#f84', { showIf: { type: 'class', value: 'warrior' } }),
+				opt('[Mage] Know anything about magical anomalies down there?', 'mage_tips', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('[Rogue] Hear about any good loot to... liberate?', 'rogue_tips', '#4f8', { showIf: { type: 'class', value: 'rogue' } }),
+				opt('I barely made it back alive...', 'barely_alive', '#f44', { showIf: { type: 'hpBelow', value: 30 } }),
+				opt('I\'ve been deep. Really deep.', 'veteran_talk', '#ff4', { showIf: { type: 'minLevel', value: 8 } }),
 				opt('Just need a moment to rest.', 'rest', '#4f4'),
 				opt('See you later, Barkeep.', 'farewell', '#0ff'),
 			]
@@ -596,6 +601,43 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
 		),
+		warrior_tips: node('warrior_tips',
+			'*He sizes you up.* A swordsman, eh? Your father was one too, you know. Best advice I can give: narrow corridors are your best friend. Let the monsters come to you single-file. Your whirlwind attack is devastating in rooms, but don\'t blow it on one rat and then get mobbed by five goblins. Also \u2014 and this is important \u2014 blocking reduces damage significantly. Don\'t be too proud to turtle up when you\'re outnumbered. Pride gets swordsmen killed. Caution gets them another round at my bar.',
+			[
+				opt('Solid advice. I\'ll keep that in mind.', 'return', '#4f4'),
+			]
+		),
+		mage_tips: node('mage_tips',
+			'*He whistles through his teeth.* A mage? Down THERE? Brave. Or foolish. The line between the two is thinner than spider silk. The dungeon has... opinions about magic. Some floors amplify it. Others suppress it. Below level ten, the ambient magic gets weird \u2014 spells sometimes have unexpected side effects. Also, your blink ability? Lifesaver. Literally. When things go sideways \u2014 and they WILL go sideways \u2014 blink first, think second. Dead mages don\'t publish papers.',
+			[
+				opt('Blink first, think second. Got it.', 'return', '#4f4'),
+			]
+		),
+		rogue_tips: node('rogue_tips',
+			'*He leans in conspiratorially.* A rogue, hm? Good. The dungeon REWARDS the sneaky. Here\'s what the swordsmen won\'t tell you: every boss has a pattern. They telegraph their big attacks. A rogue who watches and waits can exploit the gaps between swings. Your invisibility? Perfect for repositioning. Get behind \'em. Also \u2014 you can sense traps better than anyone. That\'s not just a nice bonus, that\'s a SURVIVAL MECHANISM. The deep floors are riddled with the things.',
+			[
+				opt('Watch, wait, exploit. My specialty.', 'return', '#4f4'),
+			]
+		),
+		barely_alive: node('barely_alive',
+			'*His face falls as he sees the state of you.* Gods above. You look like you tried to wrestle a mimic. SIT. Sit down right now. *He pours something from a special bottle behind the bar \u2014 not the regular ale.* This is the emergency reserve. Made from moonpetal extract. Same stuff your mother uses in her salves. Drink it. All of it. And don\'t you DARE go back down there until you\'re feeling better.',
+			[
+				opt('Thank you, Barkeep. [Drink the emergency reserve]', 'return', '#4f4', { onSelect: { hp: 8, message: 'The Barkeep\'s emergency reserve warms you from the inside! +8 HP' } }),
+			]
+		),
+		veteran_talk: node('veteran_talk',
+			'*He stares at you with a mix of awe and concern.* Level eight? Or deeper? *He shakes his head slowly.* You\'ve gone further than most. Further than your father, further than the Silver Delvers when they were your age. You\'ve got the look now. That thousand-yard stare. Every deep delver gets it. *He refills your mug without being asked.* The dungeon is changing you, isn\'t it? You can feel it in the back of your skull. A humming. A presence. That\'s normal. Or at least, it\'s common. Whether it\'s "normal" is a philosophical question I\'m not qualified for.',
+			[
+				opt('The humming... yes. What does it mean?', 'humming', '#f44'),
+				opt('I\'m fine. Really.', 'return', '#4f4'),
+			]
+		),
+		humming: node('humming',
+			'*He drops his voice.* The Hooded Stranger says it\'s the dungeon acknowledging you. Like a nod from a predator that respects its prey. The deeper you go, the louder it gets. Garvus said at level fifteen it was deafening. Like standing inside a bell. And the Eye... *He catches himself.* You\'ll know when you feel it. Everyone does. Just... remember who you are. The dungeon has a way of making people forget. Your name, your reasons, your way back. Hold onto those.',
+			[
+				opt('I will. I promise.', 'farewell', '#4f4'),
+			]
+		),
 		farewell: node('farewell',
 			'Good luck down there. And if you find any rare ingredients, bring \'em back! I\'m always looking to improve the menu.',
 			[
@@ -691,6 +733,8 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('Tell me about the deeper levels.', 'deep_levels', '#ff4'),
 				opt('Know any useful secrets?', 'stranger_rumors', '#ff4'),
 				opt('Share a tale with me.', 'stranger_stories', '#c8f'),
+				opt('[Deepscript] I can read the old writing now.', 'deepscript_talk', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
+				opt('I\'ve collected many secrets now...', 'many_secrets', '#ff4', { showIf: { type: 'hasRumors', value: 5 } }),
 				opt('Any new insights?', 'insights', '#8cf'),
 				opt('I need to go.', 'farewell', '#0ff'),
 			]
@@ -912,6 +956,52 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('...You\'re messing with me. [Rumor learned]', 'stranger_rumors', '#ff4', { onSelect: { rumor: RUMORS.dungeon_password } }),
 			]
 		),
+		deepscript_talk: node('deepscript_talk',
+			'*The stranger goes very still. Then, slowly, they lean forward. When they speak, there is genuine surprise in their voice \u2014 perhaps for the first time in centuries.* You... can read Deepscript? *They switch languages, speaking words that make the air vibrate.* Who taught you? No mortal has been able to parse the Architects\' tongue in living memory. This changes things. This changes MANY things. The Shades will speak to you now. The walls will whisper their secrets. And the Eye... *A pause.* ...the Eye will notice.',
+			[
+				opt('The Eye will notice? Is that bad?', 'eye_notice', '#f44'),
+				opt('Thessaly taught me.', 'thessaly_taught', '#8cf'),
+				opt('What secrets do the walls hold?', 'wall_secrets', '#ff4'),
+			]
+		),
+		eye_notice: node('eye_notice',
+			'Neither good nor bad. Inevitable. The Eye watches all who enter, but those who can read Deepscript... it watches MORE closely. You are no longer merely an adventurer. You are a potential conversant. Someone who could read its messages. Understand its purpose. *They lean back.* Perhaps even answer it. Whether you should... that is a question I have spent three centuries avoiding.',
+			[
+				opt('I\'ll be careful.', 'return', '#4f4'),
+			]
+		),
+		thessaly_taught: node('thessaly_taught',
+			'*A long silence.* Thessaly. Of course. *Something shifts in their voice \u2014 something almost like warmth.* She was the last scholar who truly understood. When she walked into the Eye, she didn\'t disappear. She was... translated. Into Deepscript. She IS a message now, written across level fifteen\'s walls. If you can read Deepscript, you can read HER. Her thoughts. Her discoveries. Her final, beautiful, terrible conclusion about why the dungeon exists.',
+			[
+				opt('I\'ll find her. On level fifteen.', 'return', '#4f4'),
+				opt('What was her conclusion?', 'thessaly_conclusion', '#f44'),
+			]
+		),
+		thessaly_conclusion: node('thessaly_conclusion',
+			'*The stranger steeples their fingers.* She wrote it on the library wall, in letters three feet tall: "The dungeon does not contain the Eye. The Eye contains the dungeon. We are inside a thought. The thought is learning to think itself." *They pause.* I have spent three hundred years trying to determine if that\'s profound or merely terrifying. I have concluded it is both.',
+			[
+				opt('...I need a drink.', 'farewell', '#4f4'),
+			]
+		),
+		wall_secrets: node('wall_secrets',
+			'Everywhere. Deepscript is etched into every surface, but most of it is too faded or too small to see without looking. Maintenance logs. Error reports. *They chuckle.* The dungeon has bugs, adventurer. Literal software bugs in reality. The Shades are patches \u2014 debugging routines left behind by the Architects. The monsters are stress tests. And you... *They point at you.* ...you are user input.',
+			[
+				opt('I\'m user input. That\'s existentially horrifying.', 'return', '#4f4'),
+			]
+		),
+		many_secrets: node('many_secrets',
+			'*Their eyes flash blue beneath the hood.* You have been listening. Gathering. Piecing the puzzle together. *They lean forward with an intensity you haven\'t seen before.* Then perhaps you are ready for a truth that the rumors only hint at: the dungeon does not exist to be conquered. It exists to be UNDERSTOOD. Every monster, every trap, every secret room \u2014 it is a lesson. A curriculum. The dungeon is the world\'s oldest school, and you are very close to graduating. Whether that is a reward or a punishment depends entirely on the student.',
+			[
+				opt('What happens when you graduate?', 'graduation', '#f44'),
+				opt('I\'ll keep learning.', 'return', '#4f4'),
+			]
+		),
+		graduation: node('graduation',
+			'*The longest pause yet.* You meet the headmaster. *They rise from their seat \u2014 the first time you\'ve ever seen them move.* I should know. I graduated. Three hundred years ago. And I have been sitting in this tavern, writing the course guide, ever since. *They sit back down.* Class dismissed.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
 		stranger_stories: node('stranger_stories',
 			'*The stranger settles back, their hood casting deeper shadows.* A tale? I am old, adventurer. Very old. And I have witnessed things that would make a historian weep. Which tale do you wish to hear?',
 			[
@@ -964,6 +1054,8 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			[
 				opt('What can you tell me about the deeper levels?', 'deep_drunk', '#ff4'),
 				opt('Tell me a story, Garvus.', 'drunk_stories', '#c8f'),
+				opt('[Mage] You remind me of someone...', 'mage_thessaly', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('[Deepscript] I can read the old writing, Garvus.', 'deepscript_shock', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
 				opt('How are you holding up?', 'okay', '#4f4'),
 				opt('Any advice for me?', 'advice', '#ff4'),
 				opt('I\'ll leave you to it.', 'farewell', '#0ff'),
@@ -1211,6 +1303,44 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			'*He leans in with the intensity of someone sharing nuclear launch codes.* I have invented... a potion... that makesh you invisible to bossesh. INVISHIBLE. The recipe: three mushrooms \u2014 the purple onesh, not the green, NEVER the green \u2014 a shpider fang, and... *He drops his voice.* ...the tearsh of shomeone who genuinely believesh in you. *He sits back triumphantly.* The lasht ingredient ish the hardesht to find in a dungeon. I tried using my OWN tears but apparently "believing in yourshelf" doesh\'nt count. Also the mushrooms were poishonoush. I was in bed for a week. *He raises his mug.* But the THEORY is sound!',
 			[
 				opt('I believe in you, Garvus. [Story collected]', 'drunk_stories', '#4f4', { onSelect: { story: STORIES.drunk_recipe, mood: 'amused' } }),
+			]
+		),
+		mage_thessaly: node('mage_thessaly',
+			'*He goes very still, staring at you with sudden, terrible clarity.* ...Thesshaly? *He blinks rapidly.* No. No, you\'re not her. But you have the same... the same LOOK. The way mages look at things like they\'re reading something nobody else can see. She had that look when she walked into the Eye. *His hand shakes.* You\'re going to go looking for her, aren\'t you? All mages are the same. Curiosity that\'ll kill you. She was the smartest person I ever met and it still wasn\'t enough to save her from her own questions.',
+			[
+				opt('I\'ll be more careful than she was.', 'more_careful', '#4f4'),
+				opt('Maybe curiosity is the point.', 'curiosity_point', '#8cf'),
+			]
+		),
+		more_careful: node('more_careful',
+			'*He laughs \u2014 a raw, broken sound.* That\'sh EXACTLY what she shaid. Word for word. On the morning we entered level fifteen. "I\'ll be careful, Garvush." Then she read the wall. Then she talked to the Eye. Then she walked into it. Very carefully. With perfect, measured steps. Into oblivion. *He drains his mug.* Be careful, mage. Be careful in a different way than she was.',
+			[
+				opt('I will. I promise.', 'farewell', '#4f4'),
+			]
+		),
+		curiosity_point: node('curiosity_point',
+			'*He stares at you.* ...Yeah. Maybe it is. Maybe the whole dungeon is one big question and the Eye is the answer and people like you and Thessaly are the only ones brave enough to ask. *He sniffs.* Or shtupid enough. The line is very thin. Thesshaly was on BOTH shides of it shimultaneously. Quantum shtupidity, she called it. Even her jokes were too smart for me.',
+			[
+				opt('She sounds incredible.', 'farewell', '#4f4'),
+			]
+		),
+		deepscript_shock: node('deepscript_shock',
+			'*His mug crashes to the floor. He doesn\'t notice. His eyes are wide and he\'s gripping the table like it\'s the only real thing in the universe.* You can READ it? The... the writing on the walls? The writing that Thesshaly spent YEARS learning? *His voice drops to a horrified whisper.* Then you know. You know what the dungeon is SAYING. What it\'s been saying all along. What it said to HER before she... *He covers his face.* Did you read level fifteen? Did you read what she wrote?',
+			[
+				opt('Not yet. I haven\'t been that deep.', 'not_yet_fifteen', '#4f4'),
+				opt('What did she write?', 'she_wrote', '#f44'),
+			]
+		),
+		not_yet_fifteen: node('not_yet_fifteen',
+			'*He grabs your arm.* When you get there \u2014 IF you get there \u2014 find the library. Read the east wall. That\'s where she wrote her final entry. Her... her goodbye. To me. To all of ush. *Tears streak his face.* She shaid she was happy. She shaid she finally understood. And she shaid... *He struggles.* ...she shaid to tell Garvush to shtop drinking. *A watery laugh.* I have NOT followed that advice.',
+			[
+				opt('I\'ll find it. I\'ll read it. For both of you.', 'farewell', '#4f4'),
+			]
+		),
+		she_wrote: node('she_wrote',
+			'*He shakes his head.* I can\'t read Deepshcript. I only know what the othersh told me. Thesshaly wrote something on every wall she could reach. Equations. Diagrams. And one sentence in Common, for us. For the ones who couldn\'t read the rest. It said: "The answer is beautiful. Tell Garvus I\'m sorry about the cheese incident." *He laughs and cries at the same time.* It was a VERY funny cheese incident. She turned Korrin\'s entire ration pack into sentient gouda. It filed a complaint.',
+			[
+				opt('Sentient gouda. Classic Thessaly.', 'farewell', '#4f4'),
 			]
 		),
 	}
@@ -1647,6 +1777,8 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('Got anything for me?', 'wares', '#ff4'),
 				opt('Heard any trade gossip?', 'merchant_rumors', '#ff4'),
 				opt('Tell me a trade story.', 'morrigan_stories', '#c8f'),
+				opt('[Rogue] Got anything that fell off the back of a wagon?', 'rogue_wares', '#4f8', { showIf: { type: 'class', value: 'rogue' } }),
+				opt('You\'ve been down here a long time...', 'deep_merchant', '#ff4', { showIf: { type: 'minLevel', value: 5 } }),
 				opt('How\'s business?', 'business', '#8cf'),
 				opt('Any tips about this level?', 'tips', '#ff4'),
 				opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
@@ -1822,6 +1954,25 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('A healing lava bath. Right. [Rumor learned]', 'merchant_rumors', '#f44', { onSelect: { rumor: RUMORS.lava_potion } }),
 			]
 		),
+		rogue_wares: node('rogue_wares',
+			'*She glances left and right \u2014 unnecessarily, given you\'re in a dungeon \u2014 and produces a small pouch.* I KNEW you were the discerning type. I have a very special inventory for customers with... flexible ethics. Lock picks, smoke bombs, a "previously owned" dagger with someone else\'s name engraved on it. *She winks.* The trick to being a rogue in a dungeon? Everything is already stolen. The dungeon stole it from the surface. You\'re just redistributing assets. Very ethical, if you think about it wrong enough.',
+			[
+				opt('I like the way you think, Morrigan.', 'return', '#4f4'),
+			]
+		),
+		deep_merchant: node('deep_merchant',
+			'*She waves a hand dismissively.* "Down here a long time?" I\'ve been on THIS level for two weeks. But I\'ve been in the dungeon for... *She counts on her fingers.* ...longer than I should admit. The first rule of dungeon retail: never tell the customer how long you\'ve been lost. Bad for confidence. Bad for sales. *She lowers her voice.* Between you and me? I stopped trying to reach the surface four floors ago. The dungeon provides customers. The monsters provide protection. And the rent is free. I\'ve genuinely considered this a permanent business address. "Morrigan\'s Mobile Emporium" might need rebranding to "Morrigan\'s Immobile Emporium." Less catchy. But honest.',
+			[
+				opt('You LIVE in the dungeon?!', 'live_dungeon', '#f44'),
+				opt('That\'s oddly inspiring.', 'return', '#4f4'),
+			]
+		),
+		live_dungeon: node('live_dungeon',
+			'Where else would I go? The surface has TAXES. Regulations. Health inspections. Do you know what a health inspector would say about my inventory? *She gestures at a jar of pickled something.* Down here, nobody asks if my potions are "FDA approved." Nobody asks what FDA MEANS. It\'s paradise. Horrifying, monster-infested, perpetually dark paradise. But I\'ve learned to appreciate the ambiance. The screaming from level six adds atmosphere. Very mood-setting for the evening sale.',
+			[
+				opt('You\'re genuinely terrifying, Morrigan.', 'return', '#4f4'),
+			]
+		),
 		morrigan_stories: node('morrigan_stories',
 			'*She claps her hands.* Oh, you want to hear about my business ventures? Most people just want potions. You, my friend, want ENTERTAINMENT. I like that. What shall I tell you about?',
 			[
@@ -1866,6 +2017,8 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 				opt('The walls might actually be moving.', 'walls_move', '#f44'),
 				opt('Tell me more about yourself.', 'backstory', '#8cf'),
 				opt('Tell me about something weird you saw.', 'corwin_stories', '#c8f'),
+				opt('[Rogue] As a rogue, I notice things. Let me help you.', 'rogue_help', '#4f8', { showIf: { type: 'class', value: 'rogue' } }),
+				opt('[Warrior] I\'ll clear a path for you. Stay behind me.', 'warrior_protect', '#f84', { showIf: { type: 'class', value: 'warrior' } }),
 				opt('Any dangers I should know about?', 'dangers', '#ff4'),
 				opt('Good luck out there.', 'farewell', '#0ff'),
 			]
@@ -2099,6 +2252,37 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 			'*They give you a grateful nod.* Thanks for stopping. Most people down here either try to eat me or run away screaming. A normal conversation is... nice. If you make it to the surface, tell the Cartographers\' Guild that Corwin says their maps are all wrong. They\'ll know it\'s me. I say it every time. *A tired smile.* Good luck down there.',
 			[
 				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		rogue_help: node('rogue_help',
+			'*Their eyes widen.* A rogue? Oh thank the gods. Your kind can SENSE things. Traps, secret passages, the subtle wrongness that means a wall is about to eat you. *They grab your sleeve.* Can you feel that? That slight... vibration? I\'ve been feeling it for hours and I don\'t know if it\'s a trap or my own anxiety. It\'s VERY hard to tell the difference in a dungeon. My anxiety also vibrates.',
+			[
+				opt('That vibration is just the dungeon breathing. You\'re fine.', 'rogue_reassure', '#4f4'),
+				opt('Actually, that IS a trap. Step left. Now.', 'rogue_trap_save', '#f44'),
+			]
+		),
+		rogue_reassure: node('rogue_reassure',
+			'*They exhale.* The dungeon BREATHES? You rogues just say things like that casually? "The dungeon breathes." As if that\'s NORMAL. *They run a hand through their hair.* My academy training did not cover this. We learned about contour lines and elevation markers. Nobody mentioned that the FLOOR has LUNGS.',
+			[
+				opt('You get used to it.', 'farewell', '#4f4'),
+			]
+		),
+		rogue_trap_save: node('rogue_trap_save',
+			'*They leap sideways. A blade swings through the space they just occupied.* WHAT. WHAT WAS THAT. *They\'re pressed against the wall, hyperventilating.* How did you KNOW? I\'ve been standing there for TEN MINUTES! You just walk up and casually say "that\'s a trap" like it\'s OBVIOUS? *They stare at you with a mixture of terror and awe.* I am adding you to my will. You now inherit my useless maps.',
+			[
+				opt('Keep the maps. Stay alive.', 'farewell', '#4f4'),
+			]
+		),
+		warrior_protect: node('warrior_protect',
+			'*Their shoulders sag with relief.* A warrior. A REAL warrior. With a REAL sword. Not a cartography compass held menacingly, which has been my primary defense strategy. *They fall in behind you.* I don\'t suppose you do escort services? Not like \u2014 I mean combat escort. Bodyguard. Guard-of-the-body. Because my body is in desperate need of guarding. Multiple things on this level have expressed interest in eating it.',
+			[
+				opt('Stick close and don\'t touch anything shiny.', 'warrior_advice', '#4f4'),
+			]
+		),
+		warrior_advice: node('warrior_advice',
+			'Don\'t touch anything shiny. Right. *They put their hands in their pockets.* ...I touched something shiny earlier. It was a gold coin on the floor. It was not a gold coin. It was a TOOTH. It was a tooth belonging to something that was very interested in getting it back. I ran for six rooms. SIX. The thing pursued me for FIVE. It gave up on the sixth because it found someone else\'s tooth on the floor and got distracted. The dungeon economy is based on lost teeth. I have added this to my notes.',
+			[
+				opt('Never change, Corwin.', 'farewell', '#4f4'),
 			]
 		),
 		corwin_stories: node('corwin_stories',
