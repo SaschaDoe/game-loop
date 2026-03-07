@@ -107,6 +107,7 @@ export function deserializeState(json: string): GameState {
 		lootDrops: s.lootDrops ?? [],
 		skillPoints: s.skillPoints ?? 0,
 		unlockedSkills: s.unlockedSkills ?? [],
+		rumors: s.rumors ?? [],
 		activeDialogue: null
 	};
 }

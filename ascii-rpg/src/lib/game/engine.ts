@@ -932,6 +932,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.abilityCooldown = state.abilityCooldown;
 		next.skillPoints = state.skillPoints;
 		next.unlockedSkills = [...state.unlockedSkills];
+		next.rumors = [...state.rumors];
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
 	}
