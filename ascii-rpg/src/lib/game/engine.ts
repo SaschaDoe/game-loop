@@ -231,6 +231,7 @@ const DUNGEON_NPCS: DungeonNPCDef[] = [
 	{ char: '$', color: '#ff8', name: 'Morrigan', dialogue: ['Welcome to Morrigan\'s Mobile Emporium!', 'We go where the customers are!', 'Even monster-infested death traps!'], gives: { hp: 5 }, minLevel: 2, weight: 3 },
 	{ char: 'C', color: '#8bf', name: 'Corwin', dialogue: ['Oh thank the gods, a person!', 'I\'ve been lost for days...', 'My maps are completely useless here.'], minLevel: 3, weight: 2 },
 	{ char: 'W', color: '#a8f', name: 'Whispering Shade', dialogue: ['*An ethereal figure flickers in the shadows, murmuring in an alien tongue...*'], minLevel: 5, weight: 2 },
+	{ char: 'g', color: '#8f4', name: 'Grikkle', dialogue: ['Psst! Hey! You! Big-person! Grikkle has GOODS!', 'Best goods! Premium quality!', 'Fell off back of cart! Very legitimate!'], gives: { hp: 3 }, minLevel: 1, weight: 3 },
 ];
 
 const NPC_SPAWN_CHANCE = 0.3;

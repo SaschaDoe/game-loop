@@ -2073,6 +2073,7 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 			'*She rummages through her bags.* Hmm, let\'s see... healing salves, sharpening stones, slightly haunted compasses, one shoe — don\'t ask whose — and this lovely amulet that may or may not be cursed. *She holds up a glowing trinket.* Tell you what — take this healing salve. First customer discount. Come back alive and buy more. Dead customers are terrible for retention metrics.',
 			[
 				opt('Thanks, Morrigan. [Take healing salve]', 'gift', '#4f4', { onSelect: { hp: 5, message: 'Morrigan gives you a healing salve! (+5 HP)' } }),
+				opt('A salve? I was hoping for something... better. Can we negotiate?', 'haggle_start', '#ff4', { once: true }),
 				opt('What about the amulet?', 'amulet', '#ff4'),
 				opt('Tell me about these deeper levels.', 'deep_levels', '#8cf'),
 			]
@@ -2262,6 +2263,122 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 			'*She waves dismissively.* Minor curse. You might see colors slightly differently for an hour. Or hear a faint humming. Or develop a temporary fondness for interpretive dance. The goblin I got the recipe from said it was "mostly harmless," which in goblin translates to "only two previous customers died, and one of them was already dead." Very encouraging odds, relatively speaking. The undead customer actually LEFT a positive review. Said the cookie was "life-changing." Which, given he was a skeleton, had a very literal meaning.',
 			[
 				opt('I\'m going to pass. Firmly.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		// ─── HAGGLING SYSTEM ───
+		haggle_start: node('haggle_start',
+			'*Her eyes light up with the unholy gleam of a merchant who smells a deal.* NEGOTIATE? Oh, darling. You just said my favorite word. *She cracks her knuckles.* I should warn you: I once haggled a Fire Elemental down to room temperature. Literally. He\'s a Lukewarm Elemental now. Very sad. Very affordable. What did you have in mind?',
+			[
+				opt('I need better healing. The salve isn\'t enough.', 'haggle_healing', '#4f4'),
+				opt('I need something to hit harder. Attack boost.', 'haggle_weapon', '#ff4'),
+				opt('What\'s your BEST stuff? The hidden stock.', 'haggle_secret', '#c8f', { showIf: { type: 'npcMood', value: 'friendly' } }),
+				opt('Actually, the salve is fine.', 'wares', '#0ff'),
+			]
+		),
+		haggle_healing: node('haggle_healing',
+			'*She taps her chin.* Better healing, better healing... *She digs through her bags.* I\'ve got Morrigan\'s Premium Recovery Tonic. Heals twice what the salve does. But it\'s not free, darling. Nothing in a dungeon is free. Except death. Death has EXCELLENT pricing. Very competitive.',
+			[
+				opt('Name your price.', 'haggle_healing_price', '#ff4'),
+				opt('What if I told you I have connections to the Athenaeum?', 'haggle_healing_persuade', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 12, successNode: 'haggle_healing_good', failNode: 'haggle_healing_meh' } }),
+				opt('I could just take it. You know that, right?', 'haggle_healing_intimidate', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 14, successNode: 'haggle_healing_good', failNode: 'haggle_threat_fail' } }),
+			]
+		),
+		haggle_healing_price: node('haggle_healing_price',
+			'*She grins.* My standard rate: information. Tell me something I don\'t know about the dungeon. A secret. A rumor. Something JUICY. Knowledge is currency down here, and Morrigan trades in ALL currencies. *She leans forward.* What have you got for me?',
+			[
+				opt('The dungeon has a heartbeat. 72 beats per minute. Like a sleeping person.', 'haggle_healing_good', '#8cf', { showIf: { type: 'hasRumors', value: 3 } }),
+				opt('I\'ve spoken with a creature that calls itself an Architect.', 'haggle_healing_good', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
+				opt('I don\'t have anything worth trading.', 'haggle_healing_meh', '#888'),
+				opt('The walls sing on the deeper levels. Beautiful melodies.', 'haggle_healing_decent', '#ff4'),
+			]
+		),
+		haggle_healing_good: node('haggle_healing_good',
+			'*Her jaw drops.* That\'s... that\'s INCREDIBLE. Do you know how much that information is worth to the right buyer? The Athenaeum would pay a FORTUNE. The alchemists\' guild would start a BIDDING WAR. *She pulls out a large, ornate bottle.* Here \u2014 Morrigan\'s Premium Recovery Tonic. And a little extra for the quality of the intel. I LIKE doing business with you.',
+			[
+				opt('Take the Premium Tonic. [+10 HP]', 'haggle_complete', '#4f4', { onSelect: { hp: 10, message: 'Morrigan\'s Premium Recovery Tonic surges through you! +10 HP', mood: 'friendly' } }),
+			]
+		),
+		haggle_healing_decent: node('haggle_healing_decent',
+			'*She considers.* Singing walls... I\'ve heard that one before, but it\'s still good gossip material. Worth a mid-tier exchange. *She pulls out a respectable bottle.* Standard Premium Tonic. Fair trade for fair information. The walls singing, though \u2014 I wonder what they\'re singing ABOUT. Probably complaining about load-bearing responsibilities. Walls have a LOT of stress.',
+			[
+				opt('Take the Tonic. [+7 HP]', 'haggle_complete', '#4f4', { onSelect: { hp: 7, message: 'Morrigan\'s Premium Recovery Tonic warms your core! +7 HP' } }),
+			]
+		),
+		haggle_healing_meh: node('haggle_healing_meh',
+			'*She sighs.* Nothing to trade? No rumors, no secrets, no scandalous academic gossip? *She thinks.* Alright, alright. Since you\'re a regular customer and I\'d rather have a LIVE regular than a dead one-timer... I\'ll give you the tonic at cost. Which is still better than the salve. Consider it an investment in customer retention.',
+			[
+				opt('Take the Tonic at cost. [+6 HP]', 'haggle_complete', '#4f4', { onSelect: { hp: 6, message: 'Morrigan reluctantly hands over a basic tonic. +6 HP' } }),
+			]
+		),
+		haggle_weapon: node('haggle_weapon',
+			'*She whistles.* Attack boost? Now THERE\'S a premium request. *She opens a locked pouch.* I\'ve got Morrigan\'s Blade Oil \u2014 makes any weapon cut sharper. Also makes it smell like lemons. Side effect. Possibly a feature, depending on your feelings about citrus.',
+			[
+				opt('What do you want for it?', 'haggle_weapon_price', '#ff4'),
+				opt('My guild would pay triple if you throw in extra. Trust me.', 'haggle_weapon_deceive', '#c4f', { socialCheck: { skill: 'deceive', difficulty: 15, successNode: 'haggle_weapon_great', failNode: 'haggle_weapon_caught' } }),
+				opt('I\'ll take whatever you\'ve got.', 'haggle_weapon_basic', '#4f4'),
+			]
+		),
+		haggle_weapon_price: node('haggle_weapon_price',
+			'*She considers.* For the Blade Oil? I need a STORY. Not a rumor \u2014 a real story. Something that happened to you, or that you heard firsthand. I collect stories the way other merchants collect coins. They\'re worth more, honestly. Coins get spent. Stories get TOLD. And every time someone tells a story, Morrigan gets free advertising.',
+			[
+				opt('[Share a tale of the Silver Delvers]', 'haggle_weapon_good', '#c8f', { showIf: { type: 'hasStories', value: 2 } }),
+				opt('[Describe the Eye Below]', 'haggle_weapon_good', '#f44', { showIf: { type: 'hasStories', value: 4 } }),
+				opt('I don\'t have stories worth telling yet.', 'haggle_weapon_basic', '#888'),
+			]
+		),
+		haggle_weapon_good: node('haggle_weapon_good',
+			'*Her eyes widen as you speak. She actually stops rummaging.* ...that\'s MAGNIFICENT. The drama! The tragedy! The sentient gouda! *She wipes a tear.* THAT is a story I can sell for YEARS. Here \u2014 take the premium Blade Oil. You\'ve more than earned it. And if you get more stories, come back. I\'ll always deal for a good narrative.',
+			[
+				opt('Take the Premium Blade Oil. [+3 ATK]', 'haggle_complete', '#4f4', { onSelect: { atk: 3, message: 'Morrigan\'s Premium Blade Oil makes your weapon sing! +3 ATK', mood: 'friendly' } }),
+			]
+		),
+		haggle_weapon_basic: node('haggle_weapon_basic',
+			'*She shrugs.* No stories? That\'s fine. You\'re still new. Tell you what \u2014 take the standard Blade Oil. When you\'ve got something worth telling, come back and I\'ll upgrade you. Consider it a... narrative credit system. Buy now, story later.',
+			[
+				opt('Take the Standard Blade Oil. [+1 ATK]', 'haggle_complete', '#4f4', { onSelect: { atk: 1, message: 'Morrigan\'s Blade Oil adds a slight edge! +1 ATK' } }),
+			]
+		),
+		haggle_weapon_great: node('haggle_weapon_great',
+			'*She claps.* Oh you wonderful liar \u2014 I ALMOST believed you! Almost! But the guild line was a nice touch. You know what? I respect the hustle. Takes one to know one. Here \u2014 take the DELUXE Blade Oil. Consider it professional courtesy from one con artist to another. Normally I\'d be offended, but honestly? That was ART.',
+			[
+				opt('Take the Deluxe Blade Oil. [+4 ATK]', 'haggle_complete', '#4f4', { onSelect: { atk: 4, message: 'Morrigan\'s Deluxe Blade Oil makes your weapon deadly! +4 ATK', mood: 'amused' } }),
+			]
+		),
+		haggle_weapon_caught: node('haggle_weapon_caught',
+			'*She stares at you for three full seconds, then bursts out laughing.* "My guild would pay triple." YOUR GUILD. Darling, I have SOLD THINGS to every guild in the Grey Reaches. I know their rates. I know their handshakes. I know which guild master snores. You do NOT have guild backing. *She wags a finger.* Nice try, though. Here \u2014 take the basic oil. For audacity.',
+			[
+				opt('Take the Basic Blade Oil. [+1 ATK]', 'haggle_complete', '#4f4', { onSelect: { atk: 1, message: 'Morrigan gives you oil out of pity. +1 ATK', mood: 'amused' } }),
+			]
+		),
+		haggle_threat_fail: node('haggle_threat_fail',
+			'*She doesn\'t even blink.* Sweetie. I sell things to GOBLINS. Goblins who have AXES. And TEETH. And a COMPLETE LACK of consumer protection laws. You think a vague threat is going to rattle ME? *She pats your hand condescendingly.* Take the basic salve. And maybe work on your intimidation technique. I offer lessons. For a price. Everything is for a price.',
+			[
+				opt('Take the salve. [+5 HP]', 'haggle_complete', '#4f4', { onSelect: { hp: 5, message: 'Morrigan pats your head and hands you a basic salve. +5 HP', mood: 'amused' } }),
+			]
+		),
+		haggle_secret: node('haggle_secret',
+			'*She glances around, then pulls you closer.* The hidden stock? You\'ve EARNED the hidden stock. *She opens a pouch she\'s never opened before \u2014 it glows faintly from within.* I found these on level twelve, near the Anchor Stone chamber. They\'re... different. The dungeon MADE them. Not placed by adventurers, not dropped by monsters. Grown. Like fruit. From the walls.',
+			[
+				opt('What do they do?', 'haggle_secret_reveal', '#ff4'),
+			]
+		),
+		haggle_secret_reveal: node('haggle_secret_reveal',
+			'*She holds up a crystalline vial filled with liquid starlight.* Essence of the Deep. The dungeon\'s own blood, if you will. It heals AND strengthens. I\'ve seen it close wounds that should have been fatal and sharpen a blade to cut through stone. I have exactly ONE vial, and I\'ve been saving it for someone who deserves it. *She looks at you.* Someone who treats me like a person, not just a vending machine in a cave.',
+			[
+				opt('I\'m honored, Morrigan. [Take Essence of the Deep]', 'haggle_secret_taken', '#4f4', { onSelect: { hp: 15, atk: 3, message: 'Essence of the Deep surges through you! +15 HP, +3 ATK! The dungeon itself lent its power.' } }),
+			]
+		),
+		haggle_secret_taken: node('haggle_secret_taken',
+			'*She watches you drink it with an expression that\'s part pride, part maternal concern, part merchant calculating the missed revenue.* That was worth more gold than I\'ll earn in my lifetime. And I gave it away. FOR FREE. My mother would be having a stroke right now. *She grins.* But mum never fought in a dungeon. Some things are worth more than profit. Like... *She searches for the word.* ...friendship? Is that the one? I\'m not great with non-monetary values. But I think that\'s it.',
+			[
+				opt('That\'s the one, Morrigan.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		haggle_complete: node('haggle_complete',
+			'*She rubs her hands together.* Pleasure doing business. Morrigan\'s Mobile Emporium \u2014 where every transaction is an adventure and every adventure is tax-deductible! *She packs up her display.* Come back anytime. Alive, preferably. Repeat customers are the backbone of any sustainable business model, and dead people are TERRIBLE at repeat purchasing. Though I did once sell a ghost its own burial shroud. Nice markup on that one.',
+			[
+				opt('You\'re one of a kind, Morrigan.', 'return', '#4f4'),
+				opt('[Leave]', '__exit__', '#0ff'),
 			]
 		),
 		// ─── MOOD-SPECIFIC RETURN NODES ───
@@ -2898,6 +3015,277 @@ export const SHADE_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── DUNGEON: GOBLIN PEDDLER ───
+
+export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A small goblin sits behind an upturned crate covered in... stuff. Teeth. Rocks. Something that might once have been a sandwich. It wears a tiny top hat and a monocle made from a bottle bottom.* Psst! Hey! You! Big-person! Grikkle has GOODS. Best goods! Premium quality! Fell off back of cart! Very legitimate! No questions! You buy?',
+			[
+				opt('What are you selling?', 'grikkle_wares', '#ff4'),
+				opt('You\'re a goblin. In a dungeon. Selling things.', 'grikkle_business', '#8cf'),
+				opt('I\'m not buying anything from a goblin.', 'grikkle_offended', '#f44'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Grikkle adjusts his tiny top hat.* Big-person back! Grikkle knew you come back! Nobody can resist Grikkle\'s Premium Inventory Experience! Grikkle has NEW goods! Found them! On floor! Very recently! Not still warm! That is marketing term!',
+			[
+				opt('Show me what you\'ve got.', 'grikkle_wares', '#ff4'),
+				opt('Do you know anything useful about this level?', 'grikkle_info', '#8cf'),
+				opt('Tell me about yourself, Grikkle.', 'grikkle_backstory', '#c8f'),
+				opt('I could just... take your stuff.', 'grikkle_threaten', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 6, successNode: 'grikkle_intimidated', failNode: 'grikkle_unimpressed' } }),
+				opt('Goodbye, Grikkle.', 'farewell', '#0ff'),
+			]
+		),
+		grikkle_wares: node('grikkle_wares',
+			'*He gestures grandly at his crate.* BEHOLD! Grikkle\'s Emporium of Wonders! Item one: this rock! Very sharp! Could be weapon! Item two: this OTHER rock! Less sharp but bigger! Item three: *He holds up a glowing mushroom.* Grikkle\'s Special Mushroom! Makes you feel STRONG! Or sick! Fifty-fifty! Very exciting! Like gambling but with your stomach! You want to haggle? Grikkle LOVES haggling!',
+			[
+				opt('I\'ll try the mushroom.', 'mushroom_deal', '#4f4'),
+				opt('That\'s just a rock.', 'rock_haggle', '#ff4'),
+				opt('Let me haggle for the mushroom.', 'haggle_mushroom_start', '#ff4'),
+				opt('Do you have anything that ISN\'T a rock or fungus?', 'grikkle_premium', '#c8f'),
+			]
+		),
+		mushroom_deal: node('mushroom_deal',
+			'*He hands you the glowing mushroom with great ceremony.* Grikkle guarantees seventy percent satisfaction! Previous customer very happy! Other previous customer... less happy. But he was already being eaten by slime so maybe not mushroom\'s fault. Correlation not causation! Grikkle took statistics class! Failed! But attended! That counts!',
+			[
+				opt('Eat the mushroom. [50/50: +6 HP or +2 ATK]', 'mushroom_eaten', '#4f4', { onSelect: { hp: 4, message: 'The mushroom tastes like hope and regret! +4 HP' } }),
+			]
+		),
+		mushroom_eaten: node('mushroom_eaten',
+			'*He watches intently.* Well?? How is?? Are you strong? Are you sick? Are you BOTH? That happened once! Very confusing for the customer! He was punching walls while throwing up! Grikkle called it "the full experience." Charged extra.',
+			[
+				opt('I feel... fine, actually.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('That was disgusting, Grikkle.', 'return', '#f44', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		rock_haggle: node('rock_haggle',
+			'*He clutches the rock protectively.* "Just" a rock?! THIS is not "just" a rock! This is a PREMIUM rock! You know how many rocks are in this dungeon? MILLIONS. But THIS one Grikkle personally selected! From the FLOOR! He picked it UP! With his own HANDS! Do you know how many rocks Grikkle evaluated before choosing this one? THREE! Three whole rocks! Rigorous selection process!',
+			[
+				opt('Fine. What do you want for the rock?', 'rock_price', '#ff4'),
+				opt('Grikkle, I don\'t need a rock.', 'return', '#0ff'),
+			]
+		),
+		rock_price: node('rock_price',
+			'*He strokes the rock lovingly.* For this MASTERPIECE of geological engineering? Grikkle wants... a compliment. That\'s right! Nobody ever says nice things to Grikkle! Other goblins say "Grikkle, you smell bad." Boss Goblin says "Grikkle, stop selling rocks." But Grikkle KNOWS the rock market! One day, rocks will be CURRENCY! Grikkle is ahead of his time!',
+			[
+				opt('You\'re a visionary, Grikkle.', 'rock_sold', '#4f4', { onSelect: { mood: 'friendly', message: 'Grikkle beams with pride. The validation is free. The rock is not.' } }),
+				opt('Your rock business is doomed, Grikkle. Sorry.', 'rock_crushed', '#f44', { onSelect: { mood: 'sad' } }),
+			]
+		),
+		rock_sold: node('rock_sold',
+			'*His eyes fill with tears.* V-visionary?! NOBODY has ever called Grikkle visionary! Boss Goblin calls Grikkle "waste of cave space!" Other goblins call Grikkle "that weird one with the rocks!" *He shoves the rock into your hands.* HERE! Take! Premium rock! FOR FREE! Because you are NICE BIG-PERSON and Grikkle will REMEMBER this day! *He pulls out another rock.* Also take THIS rock! Backup rock! For emergencies!',
+			[
+				opt('Thanks, Grikkle. [+2 ATK from... sharp rocks]', 'return', '#4f4', { onSelect: { atk: 2, message: 'Grikkle\'s premium rocks are surprisingly sharp! +2 ATK' } }),
+			]
+		),
+		rock_crushed: node('rock_crushed',
+			'*His bottom lip trembles.* D-doomed? The rock business is... doomed? *He looks at his crate of rocks.* But... but Grikkle BELIEVED. Grikkle had a FIVE-YEAR PLAN. Year one: rocks. Year two: FANCY rocks. Year three: rocks with HATS. Year four: publicly traded rock company. Year five: retirement to a nice cave with a view. *He sniffs.* ...Grikkle will go back to being a regular goblin now. Regular goblins just hit things. Hitting things is boring.',
+			[
+				opt('Wait, Grikkle. I was wrong. Rocks with hats? GENIUS.', 'rock_saved', '#4f4', { onSelect: { mood: 'friendly' } }),
+				opt('I\'m sorry, Grikkle.', 'return', '#4f4'),
+			]
+		),
+		rock_saved: node('rock_saved',
+			'*He perks up instantly.* GENIUS?! Grikkle KNEW IT! *He grabs a rock and starts carving.* Grikkle is going to make the BEST rocks with hats! Tiny hats! Big hats! Hats with FEATHERS! *He\'s already fashioning a tiny paper cone hat for a pebble.* First prototype! Grikkle calls it "Señor Pebbleston." Very distinguished! Executive rock! Has corner office! *He hands you a rock with a crude hat glued on.* Here! Take! Founding investor gets first product! FOR FREE!',
+			[
+				opt('I will treasure Señor Pebbleston. [+1 ATK]', 'return', '#4f4', { onSelect: { atk: 1, message: 'Señor Pebbleston, executive rock, joins your inventory! +1 ATK' } }),
+			]
+		),
+		haggle_mushroom_start: node('haggle_mushroom_start',
+			'*His eyes light up.* HAGGLE! YES! Grikkle is BEST haggler! In Goblin School of Business, Grikkle got gold star in haggling! *He pauses.* Gold star was also a rock. With gold paint. BUT STILL! Grikkle\'s opening offer: you give Grikkle something SHINY. Anything shiny! Grikkle LOVES shiny! Deal?',
+			[
+				opt('I don\'t have anything shiny. How about information?', 'haggle_mushroom_info', '#ff4'),
+				opt('How about I just compliment your hat instead?', 'haggle_mushroom_hat', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 8, successNode: 'haggle_mushroom_hat_ok', failNode: 'haggle_mushroom_hat_fail' } }),
+				opt('How about I tell your boss where you are?', 'haggle_mushroom_threat', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 10, successNode: 'haggle_mushroom_scared', failNode: 'haggle_mushroom_brave' } }),
+			]
+		),
+		haggle_mushroom_info: node('haggle_mushroom_info',
+			'*He tilts his head.* Information? What kind? Grikkle already knows everything! Grikkle knows where rocks are! And where MORE rocks are! And... also where some rocks might be! ...Grikkle\'s knowledge is specialized. What you got?',
+			[
+				opt('There\'s a merchant named Morrigan nearby. Sells actual goods.', 'haggle_mushroom_morrigan', '#ff4'),
+				opt('The walls on the deeper levels sing. True story.', 'haggle_mushroom_sing', '#8cf'),
+			]
+		),
+		haggle_mushroom_morrigan: node('haggle_mushroom_morrigan',
+			'*He gasps.* MORRIGAN?! The big-person merchant?! She is Grikkle\'s HERO! She sold invisible armor to Grikkle\'s entire tribe! They walk around naked thinking they look AMAZING! Grikkle was only goblin who knew the armor was fake! That\'s why Grikkle became merchant! To be like Morrigan! *He hands you TWO mushrooms.* Take! For intel on legend! Grikkle will study her techniques! From safe distance! She is very scary up close!',
+			[
+				opt('Take two mushrooms. [+8 HP]', 'return', '#4f4', { onSelect: { hp: 8, message: 'Grikkle\'s mushrooms surge with energy! The second one tastes like victory! +8 HP', mood: 'friendly' } }),
+			]
+		),
+		haggle_mushroom_sing: node('haggle_mushroom_sing',
+			'*His eyes go wide.* Walls SING?! WHAT THEY SING?! Is it rock music?! *He cracks up at his own joke, slapping his knee.* HA! ROCK music! Because walls are made of ROCKS! Get it?! Grikkle made a PUN! *He wipes tears of laughter.* That is best thing anyone ever tell Grikkle! Here, take mushroom! And extra mushroom! Pun tax paid in fungus!',
+			[
+				opt('Rock music. Classic. [+6 HP]', 'return', '#4f4', { onSelect: { hp: 6, message: 'Grikkle\'s mushrooms are surprisingly effective! +6 HP', mood: 'amused' } }),
+			]
+		),
+		haggle_mushroom_hat_ok: node('haggle_mushroom_hat_ok',
+			'*His entire face goes red with pleasure.* You... you LIKE Grikkle\'s hat?! *He touches the tiny top hat reverently.* Grikkle MADE this hat! From a rat! Not a live rat! A dead rat! ...the hat part was an accident! Rat fell on Grikkle\'s head and... stayed! Now is fashion statement! *He\'s so happy he gives you everything on the crate.* TAKE! ALL! FOR NICE BIG-PERSON WHO APPRECIATES FASHION!',
+			[
+				opt('Take everything. [+5 HP, +2 ATK]', 'return', '#4f4', { onSelect: { hp: 5, atk: 2, message: 'Grikkle dumps his entire inventory on you! +5 HP, +2 ATK!', mood: 'friendly' } }),
+			]
+		),
+		haggle_mushroom_hat_fail: node('haggle_mushroom_hat_fail',
+			'*He narrows his eyes.* You say you like hat, but your EYES say you think hat is stupid. Grikkle knows! Grikkle has been lied to before! Boss Goblin said Grikkle\'s cooking was "not actively poisonous" and THAT was a lie! Three goblins hospitalized! Point is: Grikkle has trust issues! Compliment needs to be SINCERE! Try harder or bring shinies!',
+			[
+				opt('I genuinely do like it. It\'s... unique.', 'return', '#4f4'),
+				opt('Fine. One mushroom, no deal sweetener.', 'mushroom_deal', '#ff4'),
+			]
+		),
+		haggle_mushroom_scared: node('haggle_mushroom_scared',
+			'*He freezes.* B-boss Goblin?! No! Not Boss Goblin! Boss Goblin said if Grikkle caught selling rocks to big-persons AGAIN, Boss Goblin would use Grikkle AS a rock! For catapult! Grikkle does NOT want to be catapult ammunition! *He shoves everything at you.* TAKE TAKE TAKE! Free! All free! Grikkle was never here! You never saw Grikkle! Grikkle is GHOST! Very solid ghost! With merchandise!',
+			[
+				opt('Take the panicked offering. [+6 HP, +1 ATK]', 'return', '#4f4', { onSelect: { hp: 6, atk: 1, message: 'Grikkle\'s terror-fueled generosity! +6 HP, +1 ATK!', mood: 'afraid' } }),
+			]
+		),
+		haggle_mushroom_brave: node('haggle_mushroom_brave',
+			'*He puffs up his chest — all twelve inches of it.* HA! You think Grikkle scared of Boss Goblin? Grikkle ALREADY in trouble with Boss Goblin! Grikkle in trouble with Boss Goblin every day! Is basically employment status! "Grikkle, stop selling rocks!" "Grikkle, put down the fungus!" "Grikkle, that is not a hat, that is a dead rat!" *He straightens his hat.* Boss Goblin has no vision. No ENTREPRENEURIAL SPIRIT. You want mushroom? We trade fair. No threats. Grikkle has DIGNITY.',
+			[
+				opt('Fair enough. I respect the hustle.', 'mushroom_deal', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		grikkle_business: node('grikkle_business',
+			'*He adjusts his monocle proudly.* YES! Grikkle is ENTREPRENEUR! Other goblins hit things with clubs! Boring! No growth potential! Zero scalability! But SELLING things? Unlimited upside! Grikkle read book about this! Well, Grikkle looked at book. Pictures only. But pictures very inspiring! One picture had goblin with PILE OF GOLD! That is Grikkle\'s five-year plan! Step one: sell rocks. Step two: ???. Step three: pile of gold!',
+			[
+				opt('I admire the ambition.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('Step two is important, Grikkle.', 'step_two', '#ff4'),
+			]
+		),
+		step_two: node('step_two',
+			'*He blinks.* Step two IS important! That is why it says "???" — because it is MYSTERIOUS! All great business plans have mysterious step two! Grikkle asked Morrigan — the big-person merchant — about step two. She said "market differentiation and customer acquisition strategy." Grikkle does not know what that means but it sounds PROFITABLE! Grikkle\'s differentiation: ONLY goblin merchant! No competition! Monopoly! Grikkle is the Jeff Bezos of goblins! Except with more teeth and less... whatever Jeff Bezos has!',
+			[
+				opt('You might actually be onto something.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		grikkle_offended: node('grikkle_offended',
+			'*He gasps.* NOT buying from goblin?! That is SPECIESISM! Grikkle has RIGHTS! Grikkle has FEELINGS! Grikkle has... okay Grikkle also has your wallet. *He holds up a purse.* Grikkle picked your pocket while you were being prejudiced! Is educational tax! For closed-mindedness! *He grins.* Also Grikkle has very fast hands. Goblin trait. Very useful in retail AND theft! Overlapping skill sets!',
+			[
+				opt('Give that back!', 'grikkle_caught', '#f44'),
+				opt('...okay, that was impressive.', 'grikkle_respect', '#4f4'),
+			]
+		),
+		grikkle_caught: node('grikkle_caught',
+			'*He hands it back sheepishly.* Sorry. Force of habit. Old job was pickpocket. New job is merchant. Skills transfer! Just... in wrong direction sometimes. Grikkle is REFORMING! Mostly! On Tuesdays! The rest of the week is... flexible.',
+			[
+				opt('Show me your wares, you little menace.', 'grikkle_wares', '#ff4', { onSelect: { mood: 'amused' } }),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		grikkle_respect: node('grikkle_respect',
+			'*He beams.* SEE! Grikkle has TALENT! Most goblins just bash and grab! Grikkle has FINESSE! Subtle! Artisanal thievery! *He hands back the purse.* But Grikkle is merchant now! Legitimate business-goblin! Thievery is just... backup career. In case rock market crashes. Which it WON\'T. Rocks are forever. That is literally geology.',
+			[
+				opt('Show me the rocks, Grikkle.', 'grikkle_wares', '#ff4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		grikkle_backstory: node('grikkle_backstory',
+			'*He settles in, clearly thrilled someone asked.* Grikkle was born in Goblin Warren, sub-level C, alcove seven. Mother was warrior. Father was also warrior. Brother was warrior. Sister was warrior. EVERYONE warrior! Very violent family! Dinner conversation was mostly screaming and biting! But Grikkle was different. Grikkle did not want to hit things. Grikkle wanted to SELL things. First business: age four, sold mud pies to other goblin children. Made two teeth in profit! Teeth is goblin currency. Very hygenic. Not really.',
+			[
+				opt('How did you end up here?', 'grikkle_exile', '#8cf'),
+				opt('Teeth currency? Really?', 'grikkle_teeth', '#ff4'),
+			]
+		),
+		grikkle_exile: node('grikkle_exile',
+			'*He sighs.* Boss Goblin said Grikkle was "embarrassment to goblin kind." Said selling things was "un-goblin." Kicked Grikkle out of warren! So Grikkle set up shop in dungeon! At first, customers were just lost adventurers. Then word spread! Now Grikkle has REGULARS! A skeleton comes every Tuesday for polish. A slime bought eight hats. And there was one very confused rat who Grikkle is PRETTY sure was trying to buy cheese but might have just been lost. Grikkle charged it anyway.',
+			[
+				opt('A skeleton buys polish from you?', 'grikkle_skeleton', '#ff4'),
+				opt('You charged a lost rat?', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		grikkle_skeleton: node('grikkle_skeleton',
+			'*He nods enthusiastically.* Mr. Bones! Best customer! Very reliable! Never haggles! Doesn\'t talk much! PERFECT customer! Grikkle sells him bone polish every Tuesday! Mr. Bones pays in teeth! Which is ironic because Mr. Bones IS mostly teeth! But Grikkle does not ask questions! Good merchants don\'t! Unless question is "want to buy more?"',
+			[
+				opt('I need to meet Mr. Bones.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		grikkle_teeth: node('grikkle_teeth',
+			'*He pulls out a small bag that rattles.* Goblin economy runs on teeth! Very logical! Always in supply! Every goblin born with full set! Then they fall out! Then new ones grow! Renewable resource! Way better than gold! Gold just sits there! Teeth have UTILITY! Can be used as currency AND as weapons! Try biting someone with a gold coin! Not effective! Grikkle tried!',
+			[
+				opt('The economics check out, honestly.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		grikkle_info: node('grikkle_info',
+			'*He looks around conspiratorially.* Grikkle knows THINGS. Grikkle sees things. Small goblin, big eyes. Nobody notices Grikkle! Is like being invisible! But with better inventory! This level has secret room in east wall \u2014 Grikkle heard walls talking about it. Also, big-monsters mostly sleep in the northwest. And there is trap near the stairs \u2014 Grikkle saw other goblin step on it. Other goblin is now ceiling decoration. Very tragic. Also very funny. Grikkle feels conflicted.',
+			[
+				opt('Walls talking? You heard the walls talk?', 'grikkle_walls', '#8cf'),
+				opt('Thanks for the tips, Grikkle.', 'return', '#4f4', { onSelect: { rumor: RUMORS.secret_walls, message: 'Grikkle reveals secret room locations!' } }),
+			]
+		),
+		grikkle_walls: node('grikkle_walls',
+			'*He nods solemnly.* Grikkle hears them. Late at night. When dungeon is quiet. Walls whisper. They say things like "containment integrity at eighty-seven percent" and "alert: organic entity detected in sector four" and sometimes just "hmmmmmm" for a VERY long time. Grikkle thinks walls are computers. Or ghosts. Or ghost computers. Grikkle\'s theory: entire dungeon is one big thinking machine and we are all bugs in the code! *He taps his nose.* Also literal bugs sometimes. Dungeon has centipedes. HUGE ones.',
+			[
+				opt('That\'s... actually a sophisticated theory, Grikkle.', 'return', '#4f4', { onSelect: { mood: 'friendly', rumor: RUMORS.singing_walls, message: 'Grikkle\'s theory about the dungeon as a thinking machine makes disturbing sense.' } }),
+			]
+		),
+		grikkle_premium: node('grikkle_premium',
+			'*He glances around, then lifts a corner of his crate.* Under here. Grikkle\'s PREMIUM stock. Not rocks! Not fungus! Real items! Found in deep places where other goblins too scared to go! Grikkle goes because Grikkle has two things other goblins don\'t: courage! And a complete inability to sense danger! Same thing, really! *He reveals a surprisingly well-maintained potion.* Dungeon-brewed healing tonic. Real stuff. Want?',
+			[
+				opt('Now we\'re talking. What do you want for it?', 'grikkle_premium_price', '#ff4'),
+				opt('Where did you really get this?', 'grikkle_premium_source', '#8cf'),
+			]
+		),
+		grikkle_premium_price: node('grikkle_premium_price',
+			'*He thinks VERY hard. Steam might be coming from his ears.* For premium tonic... Grikkle wants a TRADE SECRET. You know other merchants? The big-person ones? Tell Grikkle their tricks! How they sell things that are NOT rocks! Grikkle needs to expand inventory! Diversify! That is business word Grikkle learned from broken book he found!',
+			[
+				opt('Morrigan says: "marketing is everything." Sell the story, not the product.', 'grikkle_wisdom', '#ff4', { showIf: { type: 'hasStories', value: 1 } }),
+				opt('I don\'t know any merchant secrets.', 'grikkle_pity_deal', '#888'),
+				opt('The secret is confidence. ACT like your rocks are worth gold.', 'grikkle_wisdom', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 10, successNode: 'grikkle_wisdom', failNode: 'grikkle_pity_deal' } }),
+			]
+		),
+		grikkle_wisdom: node('grikkle_wisdom',
+			'*His eyes go WIDE.* Marketing! STORY! CONFIDENCE! *He scribbles on a stone tablet with a piece of charcoal.* This changes EVERYTHING! Grikkle is not selling rocks! Grikkle is selling EXPERIENCES! Premium Hand-Selected Geological Artifacts! Artisanal Cave Minerals! *He\'s vibrating with excitement.* HERE! Take tonic! Take TWO tonics! You just gave Grikkle MBA! In one sentence! Big-person business school is VERY efficient!',
+			[
+				opt('Take the tonics. [+10 HP]', 'return', '#4f4', { onSelect: { hp: 10, message: 'Grikkle\'s premium dungeon-brewed tonics are surprisingly potent! +10 HP', mood: 'friendly' } }),
+			]
+		),
+		grikkle_pity_deal: node('grikkle_pity_deal',
+			'*He deflates slightly.* No secrets? Okay. Is fine. Grikkle will figure out step two eventually. In meantime, take tonic anyway. Grikkle needs REVIEWS more than payment! Tell other big-persons about Grikkle! Word of mouth! Viral marketing! Grikkle also has actual virus but that is different thing!',
+			[
+				opt('Take the tonic. [+5 HP]', 'return', '#4f4', { onSelect: { hp: 5, message: 'Grikkle\'s tonic works! Probably don\'t think about the "virus" comment. +5 HP' } }),
+			]
+		),
+		grikkle_premium_source: node('grikkle_premium_source',
+			'*He lowers his voice.* Grikkle goes to deep places. Level five. Level six. Places where air is thick and walls glow. There are pools \u2014 dark pools that shimmer like oil \u2014 and things GROW near them. Mushrooms. Crystals. And sometimes... potions. Already bottled. Already labeled. Like dungeon is making them ON PURPOSE. *He shudders.* Grikkle does not think about WHY dungeon makes potions. Thinking about WHY dungeon does things makes Grikkle\'s head hurt. Grikkle just takes and sells. Is simpler.',
+			[
+				opt('The dungeon manufactures its own items?', 'grikkle_dungeon_factory', '#f44'),
+				opt('Smart not to think too hard about it.', 'grikkle_premium_price', '#ff4'),
+			]
+		),
+		grikkle_dungeon_factory: node('grikkle_dungeon_factory',
+			'*He nods, clearly unnerved.* Makes potions. Makes traps. Makes MONSTERS. Everything in dungeon is... GROWN. Like garden. Very scary garden with death flowers and murder soil. Grikkle once saw a corridor grow a NEW ROOM overnight. Just... pushed the walls apart and there was room. Empty. Clean. Waiting. Like house making spare bedroom for guest that hasn\'t arrived yet. *He pulls his hat down tighter.* Grikkle does not want to be the guest. Grikkle is just the caterer.',
+			[
+				opt('A spare bedroom for an expected guest... [Rumor learned]', 'return', '#f44', { onSelect: { rumor: RUMORS.potions_matter, message: 'Grikkle reveals that the dungeon grows new rooms as if expecting visitors.' } }),
+			]
+		),
+		grikkle_intimidated: node('grikkle_intimidated',
+			'*He leaps behind his crate.* OKAY OKAY! Take things! All things! Grikkle\'s things are YOUR things now! Hostile takeover! Very legal! Grikkle knows about hostile takeovers from broken business book! *He pushes the crate toward you.* Just please do not step on Grikkle! Previous customer stepped on Grikkle! Was very flat for a week! Goblin skeleton is surprisingly flexible but the experience was NOT enjoyable!',
+			[
+				opt('Take Grikkle\'s inventory. [+4 HP, +1 ATK]', 'return', '#4f4', { onSelect: { hp: 4, atk: 1, message: 'You help yourself to Grikkle\'s "inventory." +4 HP, +1 ATK', mood: 'afraid' } }),
+			]
+		),
+		grikkle_unimpressed: node('grikkle_unimpressed',
+			'*He crosses his tiny arms.* Pfft. You think THAT is scary? Grikkle lives in dungeon! With MONSTERS! Grikkle\'s NEIGHBORS are a pack of giant rats and a skeleton who plays trumpet at 3 AM! You are not scary! You are just BIG! Lots of things are big! Mountains! Dragons! Boss Goblin\'s ego! None of them scare Grikkle! Well, dragons do. But that is REASONABLE fear! Very sensible! Not embarrassing!',
+			[
+				opt('Fair point. Let\'s just trade normally.', 'grikkle_wares', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		grikkle_threaten: node('grikkle_threaten',
+			'*Used as social check routing node.*',
+			[
+				opt('[This node should not display]', 'return', '#888'),
+			]
+		),
+		farewell: node('farewell',
+			'*He waves enthusiastically with both hands.* BYE BYE! Come back soon! Tell friends! Tell ENEMIES! Grikkle does not discriminate! All customers welcome! Even the ones who tried to eat Grikkle! Especially them! Repeat customers are VERY important! Even cannibalistic ones!',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -2908,4 +3296,5 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Morrigan': MERCHANT_DIALOGUE,
 	'Corwin': LOST_ADVENTURER_DIALOGUE,
 	'Whispering Shade': SHADE_DIALOGUE,
+	'Grikkle': GOBLIN_PEDDLER_DIALOGUE,
 };
