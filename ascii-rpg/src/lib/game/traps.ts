@@ -1,4 +1,4 @@
-import type { GameState, Trap, TrapType, Position, GameMap } from './types';
+import type { GameState, Trap, TrapType, Position, GameMap, CharacterClass } from './types';
 import { applyEffect } from './status-effects';
 
 interface TrapDef {
@@ -136,4 +136,58 @@ export function triggerTrap(state: GameState, trap: Trap): TriggerResult {
 	}
 
 	return { messages };
+}
+
+export const DISARM_CHANCE: Record<CharacterClass, number> = {
+	rogue: 0.80,
+	warrior: 0.50,
+	mage: 0.40
+};
+
+export interface DisarmResult {
+	success: boolean;
+	messages: string[];
+	triggerResult?: TriggerResult;
+}
+
+export function disarmTrap(state: GameState, trap: Trap, characterClass: CharacterClass): DisarmResult {
+	const chance = DISARM_CHANCE[characterClass];
+	const name = trapName(trap.type);
+
+	if (Math.random() < chance) {
+		trap.triggered = true;
+		return {
+			success: true,
+			messages: [`You carefully disarm the ${name}.`]
+		};
+	}
+
+	const triggerResult = triggerTrap(state, trap);
+	return {
+		success: false,
+		messages: [`You fail to disarm the ${name}!`, ...triggerResult.messages],
+		triggerResult
+	};
+}
+
+const SEARCH_RADIUS = 2;
+
+export function searchForTraps(state: GameState): string[] {
+	const messages: string[] = [];
+	const { x, y } = state.player.pos;
+	for (let dy = -SEARCH_RADIUS; dy <= SEARCH_RADIUS; dy++) {
+		for (let dx = -SEARCH_RADIUS; dx <= SEARCH_RADIUS; dx++) {
+			if (dx === 0 && dy === 0) continue;
+			const nx = x + dx;
+			const ny = y + dy;
+			const key = `${nx},${ny}`;
+			if (state.detectedTraps.has(key)) continue;
+			const trap = getTrapAt(state, nx, ny);
+			if (trap) {
+				state.detectedTraps.add(key);
+				messages.push(`You discover a ${trapName(trap.type)} nearby!`);
+			}
+		}
+	}
+	return messages;
 }

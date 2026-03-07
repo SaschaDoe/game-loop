@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pickTrapType, trapName, createTrap, placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
+import { pickTrapType, trapName, createTrap, placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps, DISARM_CHANCE } from './traps';
 import type { GameState, Trap } from './types';
 import { Visibility } from './types';
 
@@ -217,5 +217,135 @@ describe('triggerTrap', () => {
 		const dmg5 = 20 - state5.player.hp;
 
 		expect(dmg5).toBeGreaterThan(dmg1);
+	});
+});
+
+describe('DISARM_CHANCE', () => {
+	it('rogue has highest disarm chance', () => {
+		expect(DISARM_CHANCE.rogue).toBeGreaterThan(DISARM_CHANCE.warrior);
+		expect(DISARM_CHANCE.rogue).toBeGreaterThan(DISARM_CHANCE.mage);
+	});
+
+	it('all classes have a chance between 0 and 1', () => {
+		for (const cls of ['rogue', 'warrior', 'mage'] as const) {
+			expect(DISARM_CHANCE[cls]).toBeGreaterThan(0);
+			expect(DISARM_CHANCE[cls]).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe('disarmTrap', () => {
+	it('successful disarm marks trap as triggered and returns success', () => {
+		const trap = createTrap({ x: 5, y: 5 }, 'spike');
+		const state = makeTestState({ traps: [trap] });
+		const orig = Math.random;
+		Math.random = () => 0.01; // Always succeed
+		try {
+			const result = disarmTrap(state, trap, 'warrior');
+			expect(result.success).toBe(true);
+			expect(trap.triggered).toBe(true);
+			expect(result.messages[0]).toContain('disarm');
+			expect(state.player.hp).toBe(20); // No damage taken
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('failed disarm triggers the trap', () => {
+		const trap = createTrap({ x: 5, y: 5 }, 'spike');
+		const state = makeTestState({ traps: [trap], level: 1 });
+		const orig = Math.random;
+		Math.random = () => 0.99; // Always fail
+		try {
+			const result = disarmTrap(state, trap, 'rogue');
+			expect(result.success).toBe(false);
+			expect(trap.triggered).toBe(true);
+			expect(state.player.hp).toBeLessThan(20);
+			expect(result.messages.some((m) => m.includes('fail'))).toBe(true);
+			expect(result.triggerResult).toBeDefined();
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('rogue succeeds more often than mage', () => {
+		let rogueSuccesses = 0;
+		let mageSuccesses = 0;
+		for (let i = 0; i < 200; i++) {
+			const trap1 = createTrap({ x: 5, y: 5 }, 'spike');
+			const state1 = makeTestState({ traps: [trap1] });
+			if (disarmTrap(state1, trap1, 'rogue').success) rogueSuccesses++;
+
+			const trap2 = createTrap({ x: 5, y: 5 }, 'spike');
+			const state2 = makeTestState({ traps: [trap2] });
+			if (disarmTrap(state2, trap2, 'mage').success) mageSuccesses++;
+		}
+		expect(rogueSuccesses).toBeGreaterThan(mageSuccesses);
+	});
+
+	it('failed teleport disarm returns teleportPos', () => {
+		const trap = createTrap({ x: 5, y: 5 }, 'teleport');
+		const state = makeTestState({ traps: [trap] });
+		const orig = Math.random;
+		let callCount = 0;
+		Math.random = () => {
+			callCount++;
+			if (callCount === 1) return 0.99; // Fail disarm
+			return 0.1; // For teleport random position
+		};
+		try {
+			const result = disarmTrap(state, trap, 'warrior');
+			expect(result.success).toBe(false);
+			expect(result.triggerResult?.teleportPos).toBeDefined();
+		} finally {
+			Math.random = orig;
+		}
+	});
+});
+
+describe('searchForTraps', () => {
+	it('detects traps within radius 2', () => {
+		const trap = createTrap({ x: 7, y: 5 }, 'spike'); // 2 tiles away
+		const state = makeTestState({ traps: [trap] });
+		const messages = searchForTraps(state);
+		expect(state.detectedTraps.has('7,5')).toBe(true);
+		expect(messages.length).toBe(1);
+		expect(messages[0]).toContain('Spike Trap');
+	});
+
+	it('does not detect traps beyond radius 2', () => {
+		const trap = createTrap({ x: 8, y: 5 }, 'spike'); // 3 tiles away
+		const state = makeTestState({ traps: [trap] });
+		const messages = searchForTraps(state);
+		expect(state.detectedTraps.has('8,5')).toBe(false);
+		expect(messages).toHaveLength(0);
+	});
+
+	it('detects multiple traps at once', () => {
+		const trap1 = createTrap({ x: 6, y: 5 }, 'spike');
+		const trap2 = createTrap({ x: 4, y: 5 }, 'alarm');
+		const state = makeTestState({ traps: [trap1, trap2] });
+		const messages = searchForTraps(state);
+		expect(messages).toHaveLength(2);
+		expect(state.detectedTraps.has('6,5')).toBe(true);
+		expect(state.detectedTraps.has('4,5')).toBe(true);
+	});
+
+	it('skips already detected traps', () => {
+		const trap = createTrap({ x: 6, y: 5 }, 'spike');
+		const state = makeTestState({ traps: [trap] });
+		state.detectedTraps.add('6,5');
+		const messages = searchForTraps(state);
+		expect(messages).toHaveLength(0);
+	});
+
+	it('wider than passive detection', () => {
+		// Trap at distance 2 — passive detect (radius 1) misses, search (radius 2) finds
+		const trap = createTrap({ x: 7, y: 5 }, 'spike');
+		const state = makeTestState({ traps: [trap] });
+		const passiveMessages = detectAdjacentTraps(state);
+		expect(passiveMessages).toHaveLength(0);
+		const searchMessages = searchForTraps(state);
+		expect(searchMessages).toHaveLength(1);
 	});
 });

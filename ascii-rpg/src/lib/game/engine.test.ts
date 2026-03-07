@@ -380,13 +380,20 @@ describe('Traps integration', () => {
 		expect(result.messages.some((m) => m.text.includes('Spike Trap'))).toBe(true);
 	});
 
-	it('detected trap is not triggered when walking onto it', () => {
+	it('detected trap attempts disarm instead of triggering blindly', () => {
 		const state = makeTestState();
 		state.traps = [{ pos: { x: 6, y: 5 }, type: 'spike', triggered: false }];
 		state.detectedTraps.add('6,5');
-		const result = handleInput(state, 'd');
-		expect(result.traps[0].triggered).toBe(false);
-		expect(result.player.hp).toBe(20);
+		const orig = Math.random;
+		Math.random = () => 0.01; // Succeed disarm
+		try {
+			const result = handleInput(state, 'd');
+			expect(result.traps[0].triggered).toBe(true); // Disarmed (marked triggered)
+			expect(result.player.hp).toBe(20); // No damage
+			expect(result.messages.some((m) => m.text.includes('disarm'))).toBe(true);
+		} finally {
+			Math.random = orig;
+		}
 	});
 
 	it('trap can kill the player', () => {
@@ -1213,5 +1220,82 @@ describe('combat log narration', () => {
 
 		const result = handleInput(state, 'w');
 		expect(result.messages.length).toBeLessThanOrEqual(50);
+	});
+});
+
+describe('search action (e key)', () => {
+	it('detects traps within radius 2', () => {
+		const trap: Trap = { pos: { x: 7, y: 5 }, type: 'spike', triggered: false };
+		const state = makeTestState({ traps: [trap] });
+		const result = handleInput(state, 'e');
+		expect(result.detectedTraps.has('7,5')).toBe(true);
+		expect(result.messages.some((m) => m.text.includes('Spike Trap'))).toBe(true);
+	});
+
+	it('reports nothing found when no traps nearby', () => {
+		const state = makeTestState();
+		const result = handleInput(state, 'e');
+		expect(result.messages.some((m) => m.text.includes('find nothing'))).toBe(true);
+	});
+
+	it('does not work while stunned', () => {
+		const trap: Trap = { pos: { x: 6, y: 5 }, type: 'spike', triggered: false };
+		const state = makeTestState({ traps: [trap] });
+		applyEffect(state.player, 'stun', 2, 0);
+		const result = handleInput(state, 'e');
+		expect(result.detectedTraps.has('6,5')).toBe(false);
+		expect(result.messages.some((m) => m.text.includes('stunned'))).toBe(true);
+	});
+
+	it('costs a turn (enemies move)', () => {
+		const enemy = makeEnemy(7, 5, { name: 'TestEnemy', hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+		const origPos = { ...enemy.pos };
+		handleInput(state, 'e');
+		// Enemy should have moved (aggressive behavior moves toward player)
+		expect(enemy.pos.x !== origPos.x || enemy.pos.y !== origPos.y).toBe(true);
+	});
+});
+
+describe('disarm on walking onto detected trap', () => {
+	it('successful disarm prevents damage', () => {
+		const trap: Trap = { pos: { x: 6, y: 5 }, type: 'spike', triggered: false };
+		const state = makeTestState({ traps: [trap], level: 1 });
+		state.detectedTraps.add('6,5');
+		const orig = Math.random;
+		Math.random = () => 0.01; // Succeed
+		try {
+			const result = handleInput(state, 'd'); // Move right onto trap
+			expect(result.player.hp).toBe(20);
+			expect(trap.triggered).toBe(true);
+			expect(result.messages.some((m) => m.text.includes('disarm'))).toBe(true);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('failed disarm triggers the trap and deals damage', () => {
+		const trap: Trap = { pos: { x: 6, y: 5 }, type: 'spike', triggered: false };
+		const state = makeTestState({ traps: [trap], level: 1 });
+		state.detectedTraps.add('6,5');
+		const orig = Math.random;
+		Math.random = () => 0.99; // Fail
+		try {
+			const result = handleInput(state, 'd'); // Move right onto trap
+			expect(result.player.hp).toBeLessThan(20);
+			expect(trap.triggered).toBe(true);
+			expect(result.messages.some((m) => m.text.includes('fail'))).toBe(true);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('undetected trap still triggers normally', () => {
+		const trap: Trap = { pos: { x: 6, y: 5 }, type: 'spike', triggered: false };
+		const state = makeTestState({ traps: [trap], level: 1 });
+		// NOT adding to detectedTraps
+		const result = handleInput(state, 'd');
+		expect(result.player.hp).toBeLessThan(20);
+		expect(trap.triggered).toBe(true);
 	});
 });

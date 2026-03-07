@@ -4,7 +4,7 @@ import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
 import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
-import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
+import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, hazardChar, hazardColor } from './hazards';
 import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './difficulty';
@@ -498,6 +498,25 @@ export function handleInput(state: GameState, key: string): GameState {
 		return { ...state };
 	}
 
+	// Search key
+	if (key === 'e') {
+		if (hasEffect(state.player, 'stun')) {
+			addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
+		const found = searchForTraps(state);
+		if (found.length > 0) {
+			for (const msg of found) {
+				addMessage(state, msg, 'discovery');
+			}
+		} else {
+			addMessage(state, 'You search the area but find nothing.', 'info');
+		}
+		moveEnemies(state);
+		return { ...state };
+	}
+
 	let dx = 0;
 	let dy = 0;
 	if (key === 'w' || key === 'ArrowUp') dy = -1;
@@ -618,17 +637,35 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	// Check for trap at new position
 	const trap = getTrapAt(state, nx, ny);
-	if (trap && !state.detectedTraps.has(`${nx},${ny}`)) {
-		const result = triggerTrap(state, trap);
-		for (const msg of result.messages) {
-			addMessage(state, msg, 'trap');
-		}
-		if (result.teleportPos) {
-			state.player.pos = result.teleportPos;
-			updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
-			detectAdjacentSecrets(state);
-			for (const msg2 of detectAdjacentTraps(state)) {
-				addMessage(state, msg2, 'discovery');
+	if (trap) {
+		const trapKey = `${nx},${ny}`;
+		if (state.detectedTraps.has(trapKey)) {
+			// Detected trap: attempt disarm
+			const disarmResult = disarmTrap(state, trap, state.characterConfig.characterClass);
+			for (const msg of disarmResult.messages) {
+				addMessage(state, msg, disarmResult.success ? 'discovery' : 'trap');
+			}
+			if (!disarmResult.success && disarmResult.triggerResult?.teleportPos) {
+				state.player.pos = disarmResult.triggerResult.teleportPos;
+				updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+				detectAdjacentSecrets(state);
+				for (const msg2 of detectAdjacentTraps(state)) {
+					addMessage(state, msg2, 'discovery');
+				}
+			}
+		} else {
+			// Undetected trap: trigger normally
+			const result = triggerTrap(state, trap);
+			for (const msg of result.messages) {
+				addMessage(state, msg, 'trap');
+			}
+			if (result.teleportPos) {
+				state.player.pos = result.teleportPos;
+				updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+				detectAdjacentSecrets(state);
+				for (const msg2 of detectAdjacentTraps(state)) {
+					addMessage(state, msg2, 'discovery');
+				}
 			}
 		}
 		if (state.player.hp <= 0) {
