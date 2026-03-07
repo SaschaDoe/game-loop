@@ -762,6 +762,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			const def = getLandmarkDef(lm.type);
 			const text = examineLandmark(lm);
 			lm.examined = true;
+			state.stats.landmarksExamined++;
 			addMessage(state, `[${def?.name ?? 'Landmark'}] ${text}`, 'discovery');
 		}
 
@@ -873,10 +874,14 @@ export function handleInput(state: GameState, key: string): GameState {
 				mood: npc.mood,
 				context: buildDialogueContext(state),
 			};
-			if (npc.dialogueIndex === 0) npc.dialogueIndex = 1;
+			if (npc.dialogueIndex === 0) {
+				npc.dialogueIndex = 1;
+				state.stats.npcsSpokenTo++;
+			}
 			return { ...state };
 		}
 		// Fallback for NPCs without dialogue trees
+		if (npc.dialogueIndex === 0) state.stats.npcsSpokenTo++;
 		const lineIdx = Math.min(npc.dialogueIndex, npc.dialogue.length - 1);
 		addMessage(state, `${npc.name}: "${npc.dialogue[lineIdx]}"`, 'npc');
 		if (npc.dialogueIndex < npc.dialogue.length - 1) npc.dialogueIndex++;

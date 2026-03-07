@@ -252,6 +252,18 @@ describe('serializeState / deserializeState round-trip', () => {
 		expect(restored.unlockedSkills).toEqual(['w_arms_1', 'w_def_1']);
 	});
 
+	it('preserves stats and unlockedAchievements', () => {
+		const state = makeTestState({
+			stats: { enemiesKilled: 42, bossesKilled: 3, secretsFound: 7, trapsDisarmed: 5, chestsOpened: 10, levelsCleared: 4, npcsSpokenTo: 8, landmarksExamined: 12, damageDealt: 350, damageTaken: 200, maxDungeonLevel: 5 },
+			unlockedAchievements: ['first_blood', 'boss_hunter']
+		});
+		const restored = deserializeState(serializeState(state));
+		expect(restored.stats.enemiesKilled).toBe(42);
+		expect(restored.stats.bossesKilled).toBe(3);
+		expect(restored.stats.maxDungeonLevel).toBe(5);
+		expect(restored.unlockedAchievements).toEqual(['first_blood', 'boss_hunter']);
+	});
+
 	it('produces valid JSON string', () => {
 		const state = makeTestState();
 		const json = serializeState(state);
