@@ -55,7 +55,8 @@ export type DialogueCondition =
 	| { type: 'hasRumors'; value: number }
 	| { type: 'hasStories'; value: number }
 	| { type: 'minCharLevel'; value: number }
-	| { type: 'npcMood'; value: NPCMood };
+	| { type: 'npcMood'; value: NPCMood }
+	| { type: 'knownLiar'; value: number };
 
 export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
 
@@ -81,6 +82,7 @@ export interface DialogueNode {
 	npcText: string;
 	options: DialogueOption[];
 	language?: string;
+	suspicious?: boolean;
 }
 
 export interface DialogueTree {
@@ -100,6 +102,7 @@ export interface DialogueContext {
 	knownLanguages: string[];
 	playerName: string;
 	npcMood: NPCMood;
+	lieCount: number;
 }
 
 export interface ActiveDialogue {
@@ -251,6 +254,15 @@ export interface GameState {
 	knownLanguages: string[];
 	landmarks: Landmark[];
 	heardStories: string[];
+	lieCount: number;
 	stats: GameStats;
 	unlockedAchievements: string[];
+	bestiary: Record<string, BestiaryEntry>;
+}
+
+export interface BestiaryEntry {
+	timesSeen: number;
+	timesKilled: number;
+	rareEncountered: boolean;
+	rareKilled: boolean;
 }

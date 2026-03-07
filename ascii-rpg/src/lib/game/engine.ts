@@ -16,6 +16,7 @@ import { getSkillBonuses } from './skills';
 import { placeLandmarks, getLandmarkAt, getLandmarkDef, getAdjacentLandmarks, examineLandmark, landmarkChar, landmarkColor } from './landmarks';
 import { shortRest, longRest } from './rest';
 import { checkAchievements, getAchievement, createDefaultStats } from './achievements';
+import { recordSeen, recordKill } from './bestiary';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -32,6 +33,7 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		knownLanguages: state.knownLanguages,
 		playerName: state.player.name,
 		npcMood,
+		lieCount: state.lieCount,
 	};
 }
 
@@ -47,6 +49,7 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'hasStories': return ctx.storyCount >= cond.value;
 		case 'minCharLevel': return ctx.characterLevel >= cond.value;
 		case 'npcMood': return ctx.npcMood === cond.value;
+		case 'knownLiar': return ctx.lieCount >= cond.value;
 	}
 }
 
@@ -195,8 +198,10 @@ export function createGame(config?: CharacterConfig): GameState {
 		knownLanguages: [],
 		landmarks: [],
 		heardStories: [],
+		lieCount: 0,
 		stats: createDefaultStats(),
-		unlockedAchievements: []
+		unlockedAchievements: [],
+		bestiary: {}
 	};
 
 	// Apply class bonuses
@@ -340,9 +345,14 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		knownLanguages: [],
 		landmarks,
 		heardStories: [],
+		lieCount: 0,
 		stats: createDefaultStats(),
-		unlockedAchievements: []
+		unlockedAchievements: [],
+		bestiary: {}
 	};
+	for (const enemy of state.enemies) {
+		recordSeen(state.bestiary, enemy);
+	}
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
 		addMessage(state, msg);
@@ -715,6 +725,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				state.xp += reward;
 				state.stats.enemiesKilled++;
 				if (bossKill) state.stats.bossesKilled++;
+				recordKill(state.bestiary, enemy);
 				addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
 			}
 			state.enemies = state.enemies.filter((e) => e.hp > 0);
@@ -1004,6 +1015,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			state.xp += reward;
 			state.stats.enemiesKilled++;
 			if (bossKill) state.stats.bossesKilled++;
+			recordKill(state.bestiary, target);
 			state.enemies = state.enemies.filter((e) => e !== target);
 			if (envKill) {
 				addMessage(state, `${target.name} perished in the environment! +${reward} XP (Creativity bonus!)`, 'level_up');
@@ -1124,10 +1136,12 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.rumors = [...state.rumors];
 		next.knownLanguages = [...state.knownLanguages];
 		next.heardStories = [...state.heardStories];
+		next.lieCount = state.lieCount;
 		next.stats = { ...state.stats };
 		next.stats.levelsCleared++;
 		next.stats.maxDungeonLevel = Math.max(next.stats.maxDungeonLevel, next.level);
 		next.unlockedAchievements = [...state.unlockedAchievements];
+		next.bestiary = { ...state.bestiary };
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
@@ -1209,6 +1223,13 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			addMessage(state, `[${display.label} Check: ${result.roll}${bonusStr}=${result.total} vs ${option.socialCheck.difficulty}] Success!`, 'discovery');
 		} else {
 			addMessage(state, `[${display.label} Check: ${result.roll}${bonusStr}=${result.total} vs ${option.socialCheck.difficulty}] Failed!`, 'damage_taken');
+			// Track failed deception attempts for liar reputation
+			if (option.socialCheck.skill === 'deceive') {
+				state.lieCount++;
+				if (state.lieCount >= 3) {
+					addMessage(state, 'Your reputation as a liar is spreading...', 'trap');
+				}
+			}
 		}
 		const targetNode = result.success ? option.socialCheck.successNode : option.socialCheck.failNode;
 		if (tree.nodes[targetNode]) {
@@ -1228,6 +1249,13 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 		state.activeDialogue = { ...state.activeDialogue, currentNodeId: option.nextNode };
 	}
 	return { ...state };
+}
+
+export function canDetectLies(state: GameState): boolean {
+	if (state.characterConfig.characterClass === 'rogue') return true;
+	if (state.knownLanguages.includes('Deepscript')) return true;
+	if (state.characterLevel >= 8) return true;
+	return false;
 }
 
 export const MOOD_DISPLAY: Record<string, { label: string; color: string; icon: string }> = {

@@ -4,6 +4,10 @@ function node(id: string, npcText: string, options: DialogueNode['options'], lan
 	return { id, npcText, options, language };
 }
 
+function lie(id: string, npcText: string, options: DialogueNode['options']): DialogueNode {
+	return { id, npcText, options, suspicious: true };
+}
+
 function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean; showIf?: DialogueCondition; socialCheck?: SocialCheck }): DialogueNode['options'][0] {
 	return { text, nextNode, color, ...extras };
 }
@@ -491,7 +495,42 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('I barely made it back alive...', 'barely_alive', '#f44', { showIf: { type: 'hpBelow', value: 30 } }),
 				opt('I\'ve been deep. Really deep.', 'veteran_talk', '#ff4', { showIf: { type: 'minLevel', value: 8 } }),
 				opt('Just need a moment to rest.', 'rest', '#4f4'),
+				opt('Look, about all the lies...', 'liar_confession', '#fa4', { showIf: { type: 'knownLiar', value: 3 } }),
 				opt('See you later, Barkeep.', 'farewell', '#0ff'),
+			]
+		),
+		liar_confession: node('liar_confession',
+			'*He stops polishing and gives you a long, hard look.* Oh. So you\'ve heard. *He sets down the glass.* Word travels fast in a tavern, friend. The Hooded Stranger mentioned you have a "flexible relationship with the truth." Morrigan called you \u2014 and I quote \u2014 "a delightful little liar, almost as good as me but without the profit margin." Even Grikkle knows, and he believes ROCKS are currency. When a goblin who trades in PEBBLES questions your honesty, you\'ve hit rock bottom. Pun intended.',
+			[
+				opt('I had my reasons.', 'liar_reasons', '#ff4'),
+				opt('Is it really that bad?', 'liar_reputation', '#8cf'),
+				opt('I\'m trying to be better.', 'liar_redemption', '#4f4'),
+			]
+		),
+		liar_reasons: node('liar_reasons',
+			'*He leans on the counter.* Everybody has reasons. The guy who told me his tab was "on the house" had reasons. The woman who claimed she was "the Duchess of Somewhere" to get the VIP table had reasons. You know what they all have in common? They still owed me money. Reasons don\'t fill the honesty jar, friend. *He taps a literal jar on the counter labeled "HONESTY JAR \u2014 deposit truth here."* I put that up after the third adventurer tried to pay with counterfeit courage.',
+			[
+				opt('Fair point. Can I make it up to you?', 'liar_redemption', '#4f4'),
+				opt('That jar is ridiculous.', 'return', '#0ff'),
+			]
+		),
+		liar_reputation: lie('liar_reputation',
+			'*He counts on his fingers.* Let me see. You lied to Morrigan \u2014 she\'s actually impressed, which is terrifying. You tried to deceive the Hooded Stranger \u2014 NOBODY fools them, they\'re literally part of the dungeon. I heard a Mimic refuse to disguise itself as a chest near you because, and I quote, "that one lies more than I do and I\'m LITERALLY a living deception." You\'ve out-lied a professional liar. That\'s almost an achievement.',
+			[
+				opt('...A Mimic said that about me?', 'liar_mimic', '#f44'),
+				opt('I should probably stop lying.', 'liar_redemption', '#4f4'),
+			]
+		),
+		liar_mimic: node('liar_mimic',
+			'*He nods solemnly.* It was very articulate for a chest. It had feelings, apparently. You\'ve given a Mimic an existential crisis. It\'s now questioning whether it\'s REALLY a chest pretending to be a monster, or a monster pretending to be a chest pretending to be honest. Last I heard it was seeking therapy from a Gelatinous Cube. *He shakes his head.* The Cube is not a licensed therapist but it IS a good listener. Mostly because it dissolves anyone who interrupts.',
+			[
+				opt('That\'s the best worst thing I\'ve ever heard.', 'liar_redemption', '#4f4'),
+			]
+		),
+		liar_redemption: node('liar_redemption',
+			'*He pours you a drink \u2014 a small one.* Look, everyone deserves a second chance. Even serial liars. Even the Mimic. *He slides the glass over.* Tell you what. From now on, try being straight with people. Not because lying is wrong \u2014 it clearly works, you\'re still alive \u2014 but because down here, trust is the only currency that actually holds its value. Gold corrodes. Potions expire. But if people trust you, they\'ll watch your back when the shadows come. And the shadows ALWAYS come.',
+			[
+				opt('Thanks, Barkeep. I\'ll try. [+3 HP]', 'return', '#4f4', { onSelect: { hp: 3, message: 'The Barkeep\'s forgiveness warms your spirit. +3 HP', mood: 'friendly' } }),
 			]
 		),
 		drink: node('drink',
@@ -828,6 +867,7 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('[Deepscript] I can read the old writing now.', 'deepscript_talk', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
 				opt('I\'ve collected many secrets now...', 'many_secrets', '#ff4', { showIf: { type: 'hasRumors', value: 5 } }),
 				opt('Any new insights?', 'insights', '#8cf'),
+				opt('I hear you\'re not quite what you seem...', 'stranger_liar', '#f44', { showIf: { type: 'minCharLevel', value: 5 } }),
 				opt('I need to go.', 'farewell', '#0ff'),
 			]
 		),
@@ -1119,6 +1159,69 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 			'*The temperature drops perceptibly.* Once every three hundred years, the dungeon aligns with something beyond this world. The walls thin. The floors become translucent. For one night, you can see THROUGH the stone to the spaces between realities \u2014 vast, dark oceans of nothing, with things moving in them. Things with too many angles. Things that notice you noticing them. *They grip the table.* The last Convergence was two hundred and ninety-nine years ago. The next one is... *They look at you meaningfully.* ...soon. Very soon. Be deep in the dungeon when it happens, and you may see things that cannot be unseen. Be at the surface, and you\'ll merely feel a wrongness in the air. Like the world hiccuping.',
 			[
 				opt('The next one is SOON?! [Story collected]', 'stranger_stories', '#4f4', { onSelect: { story: STORIES.stranger_convergence } }),
+			]
+		),
+		// ─── NPC LIES & DECEPTION DETECTION ───
+		stranger_liar: node('stranger_liar',
+			'*They go very still.* Not what I seem? *A sound that might be a laugh or might be a death rattle.* Nobody in this tavern is what they seem. The Barkeep pretends he\'s not terrified. Garvus pretends alcohol helps. I pretend... well. We all have our roles.',
+			[
+				opt('You\'re not just an observer. You\'re part of the dungeon.', 'stranger_truth', '#f44'),
+				opt('What are you pretending to be?', 'stranger_pretend', '#8cf'),
+			]
+		),
+		stranger_pretend: lie('stranger_pretend',
+			'*A pause.* I pretend to be... a traveler. Someone who passed through and stayed for the drinks. *They gesture vaguely at their untouched ale.* Nothing more. Nothing less. Just a stranger in a tavern, with stories to tell and warnings to give. That is all.',
+			[
+				opt('[Rogue] That\'s a lie. You\'ve never touched that drink.', 'stranger_caught', '#f44', { showIf: { type: 'class', value: 'rogue' } }),
+				opt('[Deepscript] Your words taste like Deepscript. You\'re not mortal.', 'stranger_caught', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
+				opt('Fair enough.', 'return', '#0ff'),
+			]
+		),
+		stranger_truth: node('stranger_truth',
+			'*The shadows around them seem to deepen.* Part of it? No. But... connected. The dungeon and I share a... wavelength. I hear its thoughts. I feel when new levels grow. When the Eye blinks, I blink with it. *Their voice drops.* I did not choose this. I went too deep. I came back. But not all of me returned to THIS side. Part of me is still down there, merged with the stone. And part of the dungeon... is up here. Sitting in a tavern. Drinking ale it cannot taste. Waiting.',
+			[
+				opt('Waiting for what?', 'stranger_waiting', '#f44'),
+				opt('That\'s... I\'m sorry.', 'return', '#4f4'),
+			]
+		),
+		stranger_caught: node('stranger_caught',
+			'*For the first time, the Stranger looks... surprised. Then something like respect crosses their hidden features.* You are perceptive. More perceptive than most who sit where you sit. *They lean forward.* You are right. I am not a traveler. I have not traveled in... a very long time. I am an anchor. Left here by the Architects \u2014 or by the dungeon itself, I am no longer certain which \u2014 to watch. To remember. To ensure that someone, somewhere, knows what lies below. Even if they think I am merely a strange patron with good stories.',
+			[
+				opt('An anchor. Like the Anchor Stones.', 'stranger_anchor', '#f44'),
+				opt('You\'re a safety mechanism. A living warning.', 'stranger_warning_reveal', '#8cf'),
+			]
+		),
+		stranger_anchor: node('stranger_anchor',
+			'*They nod slowly.* Similar. The Anchor Stones pin the containment in place physically. I pin it in place... informationally. Stories. Warnings. Rumors. Every adventurer I speak to leaves with a little more caution, a little more awareness. That caution saves lives. Those saved lives mean fewer people reaching the Eye. And the fewer who reach the Eye, the longer the containment holds. *A long sigh.* I am a story that tells stories to prevent the final story from being told.',
+			[
+				opt('A story that tells stories. That\'s beautiful and terrifying.', 'return', '#4f4', { onSelect: { mood: 'friendly', rumor: RUMORS.potions_matter, message: 'The Stranger reveals their true nature as a living containment mechanism.' } }),
+			]
+		),
+		stranger_warning_reveal: node('stranger_warning_reveal',
+			'*Something like warmth enters their voice.* Yes. A warning system with a personality and opinions about ale quality. Not the most elegant solution. The Architects preferred crystalline matrices and dimensional locks. But I am more... personable. People listen to a person in a tavern. They do not listen to a glowing rock in a cave. *They tilt their head.* I have been doing this for three centuries. I am quite good at it by now. The trick is knowing which truths to share and which to... season.',
+			[
+				opt('"Season?" You admit you lie to people?', 'stranger_lies_admitted', '#ff4'),
+				opt('Three centuries of warnings. Thank you.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		stranger_lies_admitted: lie('stranger_lies_admitted',
+			'*They spread their hands.* I curate. There is a difference. A lie says "the dungeon is safe." I never say that. A curated truth says "the dungeon is dangerous but here is how to survive the first five levels." Both are incomplete. One kills. One saves. *They lean back.* You want full honesty? The full truth about the dungeon would drive you mad. It drove Garvus to drink. It drove Thessaly to stay. It drove a thousand others to fates I will not describe over ale. So yes. I "season" my truths. Like a chef seasons a meal. Too much salt kills. Too little is bland. I aim for... educational.',
+			[
+				opt('What would the unseasoned truth look like?', 'stranger_full_truth', '#f44'),
+				opt('I understand. Some truths need preparation.', 'return', '#4f4'),
+			]
+		),
+		stranger_full_truth: node('stranger_full_truth',
+			'*They lean in very close. Their breath smells like stone.* The dungeon is alive. It is not a metaphor. It breathes. It thinks. It wants. And what it wants is YOU. Not to kill you \u2014 to KNOW you. To absorb your experiences, your memories, your fear, your hope. It feeds on stories. Every adventurer who enters becomes a chapter. The dungeon READS you as you explore it. And when it has read enough of you... it writes you INTO itself. Thessaly is not trapped below. She IS below. She is page four hundred and seventy-three. *They pull back.* Is that honest enough?',
+			[
+				opt('...I wish you\'d kept seasoning that one.', 'return', '#4f4', { onSelect: { mood: 'afraid' } }),
+			]
+		),
+		stranger_waiting: node('stranger_waiting',
+			'*They look down at their untouched ale.* For the right one. The one who goes deep enough to learn the truth, but wise enough to come back and SHARE it. Garvus went deep but broke. Thessaly went deep but stayed. The others... didn\'t return at all. *They look up at you.* I wait for someone who can carry the weight of what lies below and still walk in sunlight. The dungeon\'s jailer, you might say. Or its biographer. The job is open. The benefits are terrible.',
+			[
+				opt('What happens if nobody takes the job?', 'return', '#f44'),
+				opt('I might be that person.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
 			]
 		),
 	}
@@ -2014,7 +2117,27 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('You\'ve been down here a long time...', 'deep_merchant', '#ff4', { showIf: { type: 'minLevel', value: 5 } }),
 				opt('How\'s business?', 'business', '#8cf'),
 				opt('Any tips about this level?', 'tips', '#ff4'),
-				opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
+				opt('I hear I have a... reputation.', 'morrigan_liar', '#fa4', { showIf: { type: 'knownLiar', value: 3 } }),
+			opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
+			]
+		),
+		morrigan_liar: node('morrigan_liar',
+			'*Her eyes light up like she\'s found a kindred spirit.* A REPUTATION? Oh, darling, you don\'t have a reputation. You have a PORTFOLIO. I\'ve been tracking your lies like an art collector. The one where you tried to bluff the Stranger? Magnificent. Doomed, obviously \u2014 lying to a three-century-old dungeon anchor is like trying to sell water to a fish \u2014 but the AUDACITY! *She claps her hands.* I haven\'t seen deception this ambitious since I sold a Skeleton its own femur back. Told him it was a "premium replacement bone." He couldn\'t tell the difference. To be fair, he didn\'t have a brain.',
+			[
+				opt('You\'re... impressed?', 'morrigan_liar_impressed', '#ff4'),
+				opt('I\'m not proud of it.', 'morrigan_liar_shame', '#4f4'),
+			]
+		),
+		morrigan_liar_impressed: lie('morrigan_liar_impressed',
+			'*She leans in conspiratorially.* Impressed? I\'m INSPIRED. Most adventurers are boringly honest. "Help me, I\'m dying." "Please, I need healing." "Stop selling counterfeit potions." SO tedious. But you? You understand that truth is just one option on a very long menu. *She winks.* Between you and me, half my "rare artifacts" are just regular items with fancy names. My "Cloak of Ethereal Shadows" is a curtain. My "Blade of a Thousand Cuts" has a paper cut on the handle. Marketing, darling. It\'s ALL marketing.',
+			[
+				opt('We\'re both terrible people. [+2 ATK]', 'return', '#4f4', { onSelect: { atk: 2, message: 'Morrigan shares her secrets of the trade. +2 ATK', mood: 'amused' } }),
+			]
+		),
+		morrigan_liar_shame: node('morrigan_liar_shame',
+			'*She tilts her head.* Not proud? Oh, honey. Pride is for people who haven\'t learned that shame is just pride with worse marketing. *She pats your hand.* But if you\'re genuinely trying to reform, I respect that too. Honesty is the most expensive luxury in a dungeon. Nobody can afford it. That\'s why I sell the affordable alternative. *She gestures at her wares.* Plausible deniability, darling. In potion form.',
+			[
+				opt('Thanks, Morrigan. I think.', 'return', '#4f4'),
 			]
 		),
 		alive: node('alive',
@@ -3040,7 +3163,7 @@ export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
 				opt('Goodbye, Grikkle.', 'farewell', '#0ff'),
 			]
 		),
-		grikkle_wares: node('grikkle_wares',
+		grikkle_wares: lie('grikkle_wares',
 			'*He gestures grandly at his crate.* BEHOLD! Grikkle\'s Emporium of Wonders! Item one: this rock! Very sharp! Could be weapon! Item two: this OTHER rock! Less sharp but bigger! Item three: *He holds up a glowing mushroom.* Grikkle\'s Special Mushroom! Makes you feel STRONG! Or sick! Fifty-fifty! Very exciting! Like gambling but with your stomach! You want to haggle? Grikkle LOVES haggling!',
 			[
 				opt('I\'ll try the mushroom.', 'mushroom_deal', '#4f4'),

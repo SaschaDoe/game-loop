@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
@@ -406,7 +406,8 @@
 		{@const node = dlg.tree.nodes[dlg.currentNodeId]}
 		{@const isGarbled = !!(node?.language && !state.knownLanguages.includes(node.language))}
 		{@const displayText = isGarbled ? garbleText(node?.npcText ?? '', node?.language ?? '') : (node?.npcText ?? '')}
-		{@const filteredOpts = (node?.options ?? []).map((opt, origIdx) => ({ opt, origIdx })).filter(({ opt }) => !opt.showIf || checkCondition(opt.showIf, dlg.context))}
+		{@const isSuspicious = !!(node?.suspicious && canDetectLies(state))}
+	{@const filteredOpts = (node?.options ?? []).map((opt, origIdx) => ({ opt, origIdx })).filter(({ opt }) => !opt.showIf || checkCondition(opt.showIf, dlg.context))}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="dialogue-overlay" onclick={(e) => {
@@ -429,6 +430,7 @@
 				{#if node}
 					<div class="dialogue-text" class:garbled={isGarbled}>{typewriterText}{#if !typewriterDone}<span class="typewriter-cursor">|</span>{/if}</div>
 					{#if isGarbled}<div class="garbled-hint">You do not understand this language. Perhaps someone could teach you {node.language}...</div>{/if}
+					{#if isSuspicious && typewriterDone}<div class="suspicious-hint">[Seems suspicious...]</div>{/if}
 					{#if typewriterDone}
 					<div class="dialogue-options">
 						{#each filteredOpts as { opt: option, origIdx }, i}
@@ -1032,6 +1034,13 @@
 		font-size: 11px;
 		font-style: italic;
 		margin-top: 4px;
+	}
+	.suspicious-hint {
+		color: #fa4;
+		font-size: 11px;
+		font-style: italic;
+		margin-top: 4px;
+		animation: blink 2s ease-in-out infinite;
 	}
 	@keyframes blink {
 		50% { opacity: 0; }

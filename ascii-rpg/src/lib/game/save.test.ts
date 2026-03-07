@@ -83,6 +83,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		heardStories: [],
 		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0 },
 		unlockedAchievements: [],
+		lieCount: 0,
+		bestiary: {},
 		...overrides
 	};
 }
