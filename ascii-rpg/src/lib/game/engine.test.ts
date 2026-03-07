@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, handleInput, xpForLevel, xpReward } from './engine';
+import { BOSS_DEFS, createMonster, isBoss } from './monsters';
 import type { GameState, Entity, Trap } from './types';
 import { Visibility } from './types';
 
@@ -471,5 +472,41 @@ describe('Combat log messages', () => {
 		const result = handleInput(state, 'd');
 		expect(result.messages.length).toBeLessThanOrEqual(50);
 		expect(result.messages.length).toBeGreaterThan(0);
+	});
+});
+
+describe('Boss encounters integration', () => {
+	it('boss defeat gives 3x XP', () => {
+		const bossDef = BOSS_DEFS[0];
+		const boss = createMonster({ x: 6, y: 5 }, 5, bossDef);
+		boss.hp = 1; // one hit to kill
+		// Set characterLevel to 50 to prevent level-ups from consuming XP
+		const state = makeTestState({ enemies: [boss], level: 5, characterLevel: 50 });
+		const expectedReward = xpReward(boss, 5) * 3;
+
+		const result = handleInput(state, 'd');
+		expect(result.enemies).toHaveLength(0);
+		expect(result.xp).toBe(expectedReward);
+	});
+
+	it('boss defeat shows vanquished message', () => {
+		const bossDef = BOSS_DEFS[0];
+		const boss = createMonster({ x: 6, y: 5 }, 5, bossDef);
+		boss.hp = 1;
+		const state = makeTestState({ enemies: [boss], level: 5 });
+
+		const result = handleInput(state, 'd');
+		const msg = result.messages.find((m) => m.text.includes('vanquished'));
+		expect(msg).toBeDefined();
+		expect(msg!.type).toBe('level_up');
+	});
+
+	it('regular enemy defeat does not get 3x XP', () => {
+		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: 3 });
+		const state = makeTestState({ enemies: [enemy], level: 1 });
+		const expectedReward = xpReward(enemy, 1);
+
+		const result = handleInput(state, 'd');
+		expect(result.xp).toBe(expectedReward);
 	});
 });

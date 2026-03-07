@@ -3,7 +3,7 @@ import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
-import { createMonster, pickMonsterDef, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
+import { createMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
 
 const MAP_W = 50;
@@ -37,6 +37,16 @@ function createEnemy(pos: Position, level: number): Entity {
 	return createMonster(pos, level, def);
 }
 
+function spawnEnemies(positions: Position[], level: number): Entity[] {
+	const enemies = positions.map((p) => createEnemy(p, level));
+	if (isBossLevel(level) && positions.length > 0) {
+		const bossDef = pickBossDef(level);
+		// Replace the last enemy with the boss
+		enemies[enemies.length - 1] = createMonster(positions[positions.length - 1], level, bossDef);
+	}
+	return enemies;
+}
+
 export function createGame(): GameState {
 	return newLevel(1);
 }
@@ -67,7 +77,7 @@ function newLevel(level: number): GameState {
 			attack: 2 + level,
 			statusEffects: []
 		},
-		enemies: enemyPositions.map((p) => createEnemy(p, level)),
+		enemies: spawnEnemies(enemyPositions, level),
 		map,
 		messages: [{ text: `Welcome to dungeon level ${level}. Use WASD or arrow keys to move.`, type: 'info' as const }],
 		level,
@@ -83,6 +93,10 @@ function newLevel(level: number): GameState {
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
 		addMessage(state, msg);
+	}
+	if (isBossLevel(level)) {
+		const bossDef = pickBossDef(level);
+		addMessage(state, `A powerful presence lurks here... ${bossDef.name} awaits!`, 'death');
 	}
 	return state;
 }
@@ -205,10 +219,15 @@ export function handleInput(state: GameState, key: string): GameState {
 		target.hp -= dmg;
 		addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
 		if (target.hp <= 0) {
-			const reward = xpReward(target, state.level);
+			const bossKill = isBoss(target);
+			const reward = bossKill ? xpReward(target, state.level) * 3 : xpReward(target, state.level);
 			state.xp += reward;
 			state.enemies = state.enemies.filter((e) => e !== target);
-			addMessage(state, `${target.name} defeated! +${reward} XP`, 'player_attack');
+			if (bossKill) {
+				addMessage(state, `${target.name} has been vanquished! +${reward} XP`, 'level_up');
+			} else {
+				addMessage(state, `${target.name} defeated! +${reward} XP`, 'player_attack');
+			}
 			checkLevelUp(state);
 		}
 		moveEnemies(state);
