@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
@@ -6,10 +6,11 @@ import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effec
 import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
-import { placeHazards, applyHazards, getHazardAt, hazardChar, hazardColor } from './hazards';
+import { placeHazards, applyHazards, getHazardAt, applyHazardToEntity, hazardChar, hazardColor } from './hazards';
 import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './difficulty';
 import { placeChests, getChestAt, openChest, chestChar, chestColor } from './chests';
 import { generateStartingLocation } from './locations';
+import { NPC_DIALOGUE_TREES } from './dialogue';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -106,7 +107,8 @@ export function createGame(config?: CharacterConfig): GameState {
 		characterConfig: cfg,
 		abilityCooldown: 0,
 		hazards: [],
-		chests: []
+		chests: [],
+		activeDialogue: null
 	};
 
 	// Apply class bonuses
@@ -176,7 +178,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		abilityCooldown: 0,
 		hazards: filteredHazards,
 		npcs: [],
-		chests: filteredChests
+		chests: filteredChests,
+		activeDialogue: null
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -247,6 +250,61 @@ export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
 	mage: 0,
 	rogue: 1
 };
+
+export const PUSH_CHANCE: Record<CharacterClass, number> = {
+	warrior: 1.0,
+	rogue: 0.40,
+	mage: 0.30
+};
+
+const ENVIRONMENTAL_KILL_BONUS = 1.5;
+
+export interface PushResult {
+	pushed: boolean;
+	messages: { text: string; type: MessageType }[];
+	environmentalKill: boolean;
+}
+
+export function attemptPush(
+	state: GameState,
+	target: Entity,
+	dx: number,
+	dy: number
+): PushResult {
+	const messages: { text: string; type: MessageType }[] = [];
+	const pushX = target.pos.x + dx;
+	const pushY = target.pos.y + dy;
+
+	// Can't push if destination is blocked or occupied
+	if (isBlocked(state, pushX, pushY)) return { pushed: false, messages, environmentalKill: false };
+	if (state.enemies.some((e) => e !== target && e.pos.x === pushX && e.pos.y === pushY)) {
+		return { pushed: false, messages, environmentalKill: false };
+	}
+	if (pushX === state.player.pos.x && pushY === state.player.pos.y) {
+		return { pushed: false, messages, environmentalKill: false };
+	}
+
+	const chance = PUSH_CHANCE[state.characterConfig.characterClass];
+	if (Math.random() >= chance) return { pushed: false, messages, environmentalKill: false };
+
+	// Push succeeds
+	target.pos = { x: pushX, y: pushY };
+	messages.push({ text: `You push ${target.name} back!`, type: 'player_attack' });
+
+	let environmentalKill = false;
+
+	// Check hazard at new position
+	const hazard = getHazardAt(state.hazards, pushX, pushY);
+	if (hazard) {
+		const effect = applyHazardToEntity(hazard, target, state.level);
+		if (effect) {
+			messages.push({ text: effect.text, type: 'player_attack' });
+		}
+		if (target.hp <= 0) environmentalKill = true;
+	}
+
+	return { pushed: true, messages, environmentalKill };
+}
 
 function moveEnemies(state: GameState, defending = false) {
 	tickAbilityCooldown(state);
@@ -550,6 +608,22 @@ export function handleInput(state: GameState, key: string): GameState {
 	// Talk to NPC?
 	const npc = state.npcs.find((n) => n.pos.x === nx && n.pos.y === ny);
 	if (npc) {
+		const tree = npc.dialogueTree ?? NPC_DIALOGUE_TREES[npc.name];
+		if (tree) {
+			const startId = (npc.dialogueIndex > 0 && tree.returnNode) ? tree.returnNode : tree.startNode;
+			state.activeDialogue = {
+				npcName: npc.name,
+				npcChar: npc.char,
+				npcColor: npc.color,
+				currentNodeId: startId,
+				tree,
+				visitedNodes: new Set<string>(),
+				givenItems: npc.given,
+			};
+			if (npc.dialogueIndex === 0) npc.dialogueIndex = 1;
+			return { ...state };
+		}
+		// Fallback for NPCs without dialogue trees
 		const lineIdx = Math.min(npc.dialogueIndex, npc.dialogue.length - 1);
 		addMessage(state, `${npc.name}: "${npc.dialogue[lineIdx]}"`, 'npc');
 		if (npc.dialogueIndex < npc.dialogue.length - 1) npc.dialogueIndex++;
@@ -618,14 +692,26 @@ export function handleInput(state: GameState, key: string): GameState {
 		} else {
 			addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
 		}
+		let envKill = false;
+		if (target.hp > 0) {
+			// Attempt push on surviving enemy
+			const pushResult = attemptPush(state, target, dx, dy);
+			for (const msg of pushResult.messages) {
+				addMessage(state, msg.text, msg.type);
+			}
+			envKill = pushResult.environmentalKill;
+		}
 		if (target.hp <= 0) {
 			const bossKill = isBoss(target);
 			const rareKill = isRare(target);
 			const baseReward = xpReward(target, state.level);
-			const reward = bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward;
+			const multiplier = envKill ? ENVIRONMENTAL_KILL_BONUS : 1;
+			const reward = Math.floor((bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward) * multiplier);
 			state.xp += reward;
 			state.enemies = state.enemies.filter((e) => e !== target);
-			if (bossKill) {
+			if (envKill) {
+				addMessage(state, `${target.name} perished in the environment! +${reward} XP (Creativity bonus!)`, 'level_up');
+			} else if (bossKill) {
 				addMessage(state, `${target.name} has been vanquished! +${reward} XP`, 'level_up');
 			} else if (rareKill) {
 				addMessage(state, `${target.name} slain! +${reward} XP`, 'level_up');
@@ -730,6 +816,49 @@ export function handleInput(state: GameState, key: string): GameState {
 	}
 
 	moveEnemies(state);
+	return { ...state };
+}
+
+export function handleDialogueChoice(state: GameState, optionIndex: number): GameState {
+	if (!state.activeDialogue) return state;
+	const { tree, currentNodeId, visitedNodes } = state.activeDialogue;
+	const currentNode = tree.nodes[currentNodeId];
+	if (!currentNode || optionIndex < 0 || optionIndex >= currentNode.options.length) return state;
+
+	const option = currentNode.options[optionIndex];
+	visitedNodes.add(currentNodeId);
+
+	// Apply dialogue effects
+	if (option.onSelect && !state.activeDialogue.givenItems) {
+		if (option.onSelect.hp) {
+			state.player.hp = Math.min(state.player.maxHp, state.player.hp + option.onSelect.hp);
+			addMessage(state, option.onSelect.message ?? `Healed ${option.onSelect.hp} HP!`, 'healing');
+		}
+		if (option.onSelect.atk) {
+			state.player.attack += option.onSelect.atk;
+			addMessage(state, option.onSelect.message ?? `+${option.onSelect.atk} ATK!`, 'level_up');
+		}
+		state.activeDialogue.givenItems = true;
+		// Mark the NPC as having given items
+		const npc = state.npcs.find((n) => n.name === state.activeDialogue!.npcName);
+		if (npc) npc.given = true;
+	}
+
+	// Exit dialogue
+	if (option.nextNode === '__exit__') {
+		state.activeDialogue = null;
+		return { ...state };
+	}
+
+	// Navigate to next node
+	if (tree.nodes[option.nextNode]) {
+		state.activeDialogue = { ...state.activeDialogue, currentNodeId: option.nextNode };
+	}
+	return { ...state };
+}
+
+export function closeDialogue(state: GameState): GameState {
+	state.activeDialogue = null;
 	return { ...state };
 }
 

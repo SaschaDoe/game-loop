@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, DODGE_CHANCE, BLOCK_REDUCTION } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -1391,5 +1391,152 @@ describe('extended status effects in combat', () => {
 		// Defend to trigger moveEnemies which ticks effects
 		handleInput(state, 'g');
 		expect(enemy.hp).toBe(16); // 20 - 4 burn damage
+	});
+});
+
+describe('attemptPush', () => {
+	it('warrior always pushes (100% chance)', () => {
+		expect(PUSH_CHANCE.warrior).toBe(1.0);
+	});
+
+	it('rogue and mage have lower push chance', () => {
+		expect(PUSH_CHANCE.rogue).toBeLessThan(PUSH_CHANCE.warrior);
+		expect(PUSH_CHANCE.mage).toBeLessThan(PUSH_CHANCE.rogue);
+	});
+
+	it('pushes enemy to the target tile', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50 });
+		const state = makeTestState({ enemies: [enemy] });
+		const orig = Math.random;
+		Math.random = () => 0.01; // Succeed push
+		try {
+			const result = attemptPush(state, enemy, 1, 0); // Push right
+			expect(result.pushed).toBe(true);
+			expect(enemy.pos).toEqual({ x: 7, y: 5 });
+			expect(result.messages.some((m) => m.text.includes('push'))).toBe(true);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('fails when destination is a wall', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50 });
+		const state = makeTestState({ enemies: [enemy] });
+		state.map.tiles[5][7] = '#'; // Wall at push destination
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const result = attemptPush(state, enemy, 1, 0);
+			expect(result.pushed).toBe(false);
+			expect(enemy.pos).toEqual({ x: 6, y: 5 }); // Unchanged
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('fails when destination is occupied by another enemy', () => {
+		const enemy1 = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50 });
+		const enemy2 = makeEnemy(7, 5, { name: 'Blocker', hp: 50, maxHp: 50 });
+		const state = makeTestState({ enemies: [enemy1, enemy2] });
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const result = attemptPush(state, enemy1, 1, 0);
+			expect(result.pushed).toBe(false);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('pushing into hazard applies hazard damage', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 10, maxHp: 10 });
+		const hazard: Hazard = { pos: { x: 7, y: 5 }, type: 'lava' };
+		const state = makeTestState({ enemies: [enemy], hazards: [hazard], level: 3 });
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const result = attemptPush(state, enemy, 1, 0);
+			expect(result.pushed).toBe(true);
+			expect(enemy.pos).toEqual({ x: 7, y: 5 });
+			expect(enemy.hp).toBeLessThan(10); // Took lava damage
+			expect(result.messages.some((m) => m.text.includes('lava'))).toBe(true);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('environmental kill flagged when enemy dies from hazard push', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 1, maxHp: 10 });
+		const hazard: Hazard = { pos: { x: 7, y: 5 }, type: 'lava' };
+		const state = makeTestState({ enemies: [enemy], hazards: [hazard], level: 3 });
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const result = attemptPush(state, enemy, 1, 0);
+			expect(result.pushed).toBe(true);
+			expect(result.environmentalKill).toBe(true);
+			expect(enemy.hp).toBeLessThanOrEqual(0);
+		} finally {
+			Math.random = orig;
+		}
+	});
+});
+
+describe('push integration in combat', () => {
+	it('attack + push produces push message', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 100, maxHp: 100, attack: 1 });
+		applyEffect(enemy, 'freeze', 5, 0); // Freeze so enemy can't move back after push
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' }
+		});
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const result = handleInput(state, 'd'); // Attack right
+			// Enemy pushed from (6,5) to (7,5), frozen so stays there
+			expect(enemy.pos.x).toBe(7);
+			expect(result.messages.some((m) => m.text.includes('push'))).toBe(true);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('environmental kill grants bonus XP with Creativity message', () => {
+		// Enemy has enough HP to survive the attack hit, but dies from lava push
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 15, maxHp: 15, attack: 1 });
+		const hazard: Hazard = { pos: { x: 7, y: 5 }, type: 'lava' };
+		const state = makeTestState({
+			enemies: [enemy],
+			hazards: [hazard],
+			level: 5, // lava does 2+5=7 damage
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' }
+		});
+		state.player.attack = 3; // Low attack: 3+0=3 damage, leaving enemy at 12HP, then lava does 7 → 5HP (survives)
+		// Actually we need enemy to die from lava. Let's set HP so attack + lava kills.
+		// attack=3, dmg=max(1,3+0)=3, enemy at 15-3=12, lava=7, 12-7=5. Still alive.
+		// Set hp=9: 9-3=6, lava=7, 6-7=-1. Dead from lava!
+		enemy.hp = 9;
+		enemy.maxHp = 9;
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const startXp = state.xp;
+			const result = handleInput(state, 'd');
+			expect(result.messages.some((m) => m.text.includes('Creativity bonus'))).toBe(true);
+			expect(result.xp).toBeGreaterThan(startXp);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('no push attempted when enemy dies from the attack itself', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 1, maxHp: 1, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		state.player.attack = 50;
+		const result = handleInput(state, 'd');
+		// Enemy died from attack, no push message
+		expect(result.messages.some((m) => m.text.includes('push'))).toBe(false);
+		expect(result.messages.some((m) => m.text.includes('defeated'))).toBe(true);
 	});
 });
