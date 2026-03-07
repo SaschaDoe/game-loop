@@ -249,3 +249,7 @@ export function getMonsterOnHitEffect(enemy: Entity): MonsterDef['onHitEffect'] 
 export function isBoss(enemy: Entity): boolean {
 	return getMonsterDef(enemy)?.boss === true;
 }
+
+export function getMonsterTier(enemy: Entity): number {
+	return getMonsterDef(enemy)?.tier ?? 1;
+}

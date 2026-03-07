@@ -108,6 +108,14 @@ export interface Chest {
 	mimic: boolean;
 }
 
+export type LootType = 'healing' | 'xp_bonus' | 'atk_bonus';
+
+export interface LootDrop {
+	pos: Position;
+	type: LootType;
+	value: number;
+}
+
 export type Tile = '#' | '.' | '>' | '*';
 
 export enum Visibility {
@@ -149,5 +157,6 @@ export interface GameState {
 	hazards: Hazard[];
 	npcs: NPC[];
 	chests: Chest[];
+	lootDrops: LootDrop[];
 	activeDialogue: ActiveDialogue | null;
 }

@@ -3,7 +3,7 @@ import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
-import type { GameState, Entity, Trap, Hazard, Chest } from './types';
+import type { GameState, Entity, Trap, Hazard, Chest, LootDrop } from './types';
 import { Visibility } from './types';
 
 function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
@@ -57,6 +57,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		hazards: [],
 		npcs: [],
 		chests: [],
+		lootDrops: [],
 		activeDialogue: null,
 		...overrides
 	};
@@ -1538,5 +1539,58 @@ describe('push integration in combat', () => {
 		// Enemy died from attack, no push message
 		expect(result.messages.some((m) => m.text.includes('push'))).toBe(false);
 		expect(result.messages.some((m) => m.text.includes('defeated'))).toBe(true);
+	});
+});
+
+describe('loot drops', () => {
+	it('killing an enemy can drop loot', () => {
+		const enemy = makeEnemy(6, 5, { name: 'Goblin', hp: 1, maxHp: 1, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		state.player.attack = 50;
+		const orig = Math.random;
+		Math.random = () => 0.01; // Succeed drop + pick first loot entry
+		try {
+			const result = handleInput(state, 'd');
+			expect(result.lootDrops.length).toBe(1);
+			expect(result.lootDrops[0].pos).toEqual({ x: 6, y: 5 });
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('picking up healing loot restores HP', () => {
+		const drop: LootDrop = { pos: { x: 6, y: 5 }, type: 'healing', value: 5 };
+		const state = makeTestState({ lootDrops: [drop] });
+		state.player.hp = 10;
+		const result = handleInput(state, 'd'); // Move right onto loot
+		expect(result.player.hp).toBe(15);
+		expect(result.lootDrops).toHaveLength(0);
+		expect(result.messages.some((m) => m.text.includes('Health Potion'))).toBe(true);
+	});
+
+	it('picking up xp_bonus loot adds XP', () => {
+		const drop: LootDrop = { pos: { x: 6, y: 5 }, type: 'xp_bonus', value: 20 };
+		const state = makeTestState({ lootDrops: [drop] });
+		const startXp = state.xp;
+		const result = handleInput(state, 'd');
+		expect(result.xp).toBe(startXp + 20);
+		expect(result.lootDrops).toHaveLength(0);
+	});
+
+	it('picking up atk_bonus loot adds ATK', () => {
+		const drop: LootDrop = { pos: { x: 6, y: 5 }, type: 'atk_bonus', value: 1 };
+		const state = makeTestState({ lootDrops: [drop] });
+		const startAtk = state.player.attack;
+		const result = handleInput(state, 'd');
+		expect(result.player.attack).toBe(startAtk + 1);
+		expect(result.lootDrops).toHaveLength(0);
+	});
+
+	it('healing loot does not exceed maxHp', () => {
+		const drop: LootDrop = { pos: { x: 6, y: 5 }, type: 'healing', value: 50 };
+		const state = makeTestState({ lootDrops: [drop] });
+		state.player.hp = 19;
+		const result = handleInput(state, 'd');
+		expect(result.player.hp).toBe(20); // maxHp is 20
 	});
 });

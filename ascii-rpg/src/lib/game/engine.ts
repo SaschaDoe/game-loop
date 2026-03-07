@@ -1,9 +1,9 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
-import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
+import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, getMonsterTier, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, applyHazardToEntity, hazardChar, hazardColor } from './hazards';
@@ -11,6 +11,7 @@ import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './di
 import { placeChests, getChestAt, openChest, chestChar, chestColor } from './chests';
 import { generateStartingLocation } from './locations';
 import { NPC_DIALOGUE_TREES } from './dialogue';
+import { rollLootDrop, getLootAt, pickupLoot, lootChar, lootColor } from './loot';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -108,6 +109,7 @@ export function createGame(config?: CharacterConfig): GameState {
 		abilityCooldown: 0,
 		hazards: [],
 		chests: [],
+		lootDrops: [],
 		activeDialogue: null
 	};
 
@@ -128,6 +130,57 @@ export function createGame(config?: CharacterConfig): GameState {
 }
 
 const DEFAULT_SIGHT_RADIUS = 8;
+
+interface DungeonNPCDef {
+	char: string;
+	color: string;
+	name: string;
+	dialogue: string[];
+	gives?: { hp?: number; atk?: number };
+	minLevel: number;
+	weight: number;
+}
+
+const DUNGEON_NPCS: DungeonNPCDef[] = [
+	{ char: '$', color: '#ff8', name: 'Morrigan', dialogue: ['Welcome to Morrigan\'s Mobile Emporium!', 'We go where the customers are!', 'Even monster-infested death traps!'], gives: { hp: 5 }, minLevel: 2, weight: 3 },
+	{ char: 'C', color: '#8bf', name: 'Corwin', dialogue: ['Oh thank the gods, a person!', 'I\'ve been lost for days...', 'My maps are completely useless here.'], minLevel: 3, weight: 2 },
+];
+
+const NPC_SPAWN_CHANCE = 0.3;
+
+function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][] }, level: number, occupied: Set<string>): NPC[] {
+	if (Math.random() > NPC_SPAWN_CHANCE) return [];
+	const eligible = DUNGEON_NPCS.filter(d => level >= d.minLevel);
+	if (eligible.length === 0) return [];
+	const totalWeight = eligible.reduce((s, d) => s + d.weight, 0);
+	let roll = Math.random() * totalWeight;
+	let pick = eligible[0];
+	for (const def of eligible) {
+		roll -= def.weight;
+		if (roll <= 0) { pick = def; break; }
+	}
+	// Find a floor tile not occupied
+	const floors: Position[] = [];
+	for (let y = 1; y < map.height - 1; y++) {
+		for (let x = 1; x < map.width - 1; x++) {
+			if (map.tiles[y][x] === '.' && !occupied.has(`${x},${y}`)) {
+				floors.push({ x, y });
+			}
+		}
+	}
+	if (floors.length === 0) return [];
+	const pos = floors[Math.floor(Math.random() * floors.length)];
+	return [{
+		pos,
+		char: pick.char,
+		color: pick.color,
+		name: pick.name,
+		dialogue: pick.dialogue,
+		dialogueIndex: 0,
+		gives: pick.gives,
+		given: false,
+	}];
+}
 
 function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 	const baseEnemyCount = 3 + level;
@@ -179,6 +232,7 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		hazards: filteredHazards,
 		npcs: [],
 		chests: filteredChests,
+		lootDrops: [],
 		activeDialogue: null
 	};
 	detectAdjacentSecrets(state);
@@ -225,6 +279,15 @@ function detectAdjacentSecrets(state: GameState): void {
 			state.detectedSecrets.add(key);
 			addMessage(state, 'You notice a hidden passage in the wall!', 'discovery');
 		}
+	}
+}
+
+function tryDropLoot(state: GameState, enemy: Entity): void {
+	const tier = getMonsterTier(enemy);
+	const boss = isBoss(enemy);
+	const drop = rollLootDrop(enemy.pos, state.level, tier, boss);
+	if (drop) {
+		state.lootDrops.push(drop);
 	}
 }
 
@@ -321,6 +384,7 @@ function moveEnemies(state: GameState, defending = false) {
 	// Remove enemies killed by hazards and award XP
 	state.enemies = state.enemies.filter((e) => {
 		if (e.hp <= 0) {
+			tryDropLoot(state, e);
 			const reward = xpReward(e, state.level);
 			state.xp += reward;
 			addMessage(state, `${e.name} perished in a hazard! +${reward} XP`, 'player_attack');
@@ -336,6 +400,7 @@ function moveEnemies(state: GameState, defending = false) {
 	}
 	state.enemies = state.enemies.filter((e) => {
 		if (e.hp <= 0) {
+			tryDropLoot(state, e);
 			const reward = xpReward(e, state.level);
 			state.xp += reward;
 			addMessage(state, `${e.name} died from status effects! +${reward} XP`, 'player_attack');
@@ -515,6 +580,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			// Handle kills from warrior whirlwind
 			const killed = state.enemies.filter((e) => e.hp <= 0);
 			for (const enemy of killed) {
+				tryDropLoot(state, enemy);
 				const bossKill = isBoss(enemy);
 				const rareKill = isRare(enemy);
 				const baseReward = xpReward(enemy, state.level);
@@ -705,6 +771,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			envKill = pushResult.environmentalKill;
 		}
 		if (target.hp <= 0) {
+			tryDropLoot(state, target);
 			const bossKill = isBoss(target);
 			const rareKill = isRare(target);
 			const baseReward = xpReward(target, state.level);
@@ -788,6 +855,26 @@ export function handleInput(state: GameState, key: string): GameState {
 		state.player.hp = Math.min(state.player.maxHp, state.player.hp + heal);
 		state.map.tiles[ny][nx] = '.';
 		addMessage(state, `Picked up a potion! Healed ${heal} HP.`, 'healing');
+	}
+
+	// pick up loot drop
+	const loot = getLootAt(state.lootDrops, nx, ny);
+	if (loot) {
+		const result = pickupLoot(loot);
+		addMessage(state, result.message.text, result.message.type);
+		switch (loot.type) {
+			case 'healing':
+				state.player.hp = Math.min(state.player.maxHp, state.player.hp + loot.value);
+				break;
+			case 'xp_bonus':
+				state.xp += loot.value;
+				checkLevelUp(state);
+				break;
+			case 'atk_bonus':
+				state.player.attack += loot.value;
+				break;
+		}
+		state.lootDrops = state.lootDrops.filter((d) => d !== loot);
 	}
 
 	// stairs
@@ -935,6 +1022,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 				} else if (getChestAt(state.chests, x, y)) {
 					const ch = getChestAt(state.chests, x, y)!;
 					row.push({ char: chestChar(ch.type), color: chestColor(ch.type) });
+				} else if (getLootAt(state.lootDrops, x, y)) {
+					const ld = getLootAt(state.lootDrops, x, y)!;
+					row.push({ char: lootChar(ld.type), color: lootColor(ld.type) });
 				} else {
 					const key = `${x},${y}`;
 					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
@@ -953,18 +1043,23 @@ export function renderColored(state: GameState): { char: string; color: string }
 				}
 			} else {
 				// Explored but not currently visible: show terrain dimmed, no entities
-				const key = `${x},${y}`;
-				const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
-				if (detectedTrap) {
-					row.push({ char: '^', color: dimColor(tileColor('^')) });
+				const lootDrop = getLootAt(state.lootDrops, x, y);
+				if (lootDrop) {
+					row.push({ char: lootChar(lootDrop.type), color: dimColor(lootColor(lootDrop.type)) });
 				} else {
-					const hazard = getHazardAt(state.hazards, x, y);
-					if (hazard) {
-						row.push({ char: hazardChar(hazard.type), color: dimColor(hazardColor(hazard.type)) });
+					const key = `${x},${y}`;
+					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
+					if (detectedTrap) {
+						row.push({ char: '^', color: dimColor(tileColor('^')) });
 					} else {
-						const tile = state.map.tiles[y][x];
-						const isSecret = state.detectedSecrets.has(key);
-						row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+						const hazard = getHazardAt(state.hazards, x, y);
+						if (hazard) {
+							row.push({ char: hazardChar(hazard.type), color: dimColor(hazardColor(hazard.type)) });
+						} else {
+							const tile = state.map.tiles[y][x];
+							const isSecret = state.detectedSecrets.has(key);
+							row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+						}
 					}
 				}
 			}

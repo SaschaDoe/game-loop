@@ -73,6 +73,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		hazards: [],
 		npcs: [],
 		chests: [],
+		lootDrops: [],
+		activeDialogue: null,
 		...overrides
 	};
 }
