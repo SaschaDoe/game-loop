@@ -2233,6 +2233,27 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 			[
 				opt('I\'ll seek them out.', 'rescue', '#4f4'),
 				opt('Living footnotes. That\'s wild.', 'rescue', '#4f4'),
+				opt('What about Orcish and Elvish?', 'three_tongues', '#ff4'),
+			]
+		),
+		three_tongues: node('three_tongues',
+			'*She sits up straighter, chains clinking with excitement.* You know about the other languages? The Architects didn\'t write in Deepscript alone \u2014 they used THREE tongues! Deepscript for the logical structure, the bones. Orcish for the emotional substrate, the FEELING of each room. Why does the boss chamber feel oppressive? Because it was described in Orcish. Why do safe rooms feel comforting? Same reason. And Elvish... *She drops her voice.* Elvish is the intentionality layer. The PURPOSE. The why-it-exists. The dungeon has a reason for being, and that reason is written in Elvish. Find speakers of all three tongues, and you might actually understand what this place IS.',
+			[
+				opt('Where do I learn Orcish?', 'orcish_hint', '#ff4'),
+				opt('Where do I learn Elvish?', 'elvish_hint', '#ff4'),
+				opt('That\'s incredible. Thank you.', 'return', '#4f4'),
+			]
+		),
+		orcish_hint: node('orcish_hint',
+			'*She thinks.* The goblins. They\'re descended from the original cave-dwellers who were here before the dungeon. Their language preserved fragments of the Orcish layer. If you find a goblin willing to talk instead of bite \u2014 and that\'s a big if \u2014 they might teach you. I heard rumors of a goblin merchant in the lower levels. Wears a tiny hat. Sounds absurd, but the dungeon is absurd. The hat might be a Keeper\'s crown. Might be just a hat. With goblins, it\'s hard to tell.',
+			[
+				opt('A goblin in a top hat. Got it.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		elvish_hint: node('elvish_hint',
+			'*She bites her lip.* Elvish is... harder. The Elvish speakers are mostly gone \u2014 absorbed into the dungeon or ascended beyond it. But there are beings who remember. Ancient ones. The kind who sit in taverns and pretend to drink ale while radiating three centuries of accumulated melancholy. *She gives you a pointed look.* I\'m being specific for a reason. If someone in a hood is being cryptic at you, they probably speak Elvish. Ask them. Politely. They\'ve earned the right to be mysterious.',
+			[
+				opt('Mysterious hooded ale-pretenders. Very specific.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 		programming: node('programming',
