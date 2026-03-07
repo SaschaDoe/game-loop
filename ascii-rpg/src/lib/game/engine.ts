@@ -1,5 +1,7 @@
 import type { GameState, Entity, Position } from './types';
+import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
+import { createVisibilityGrid, updateVisibility } from './fov';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -46,11 +48,16 @@ export function createGame(): GameState {
 	return newLevel(1);
 }
 
+const DEFAULT_SIGHT_RADIUS = 8;
+
 function newLevel(level: number): GameState {
 	const map = generateMap(MAP_W, MAP_H, level);
 	const spawns = getSpawnPositions(map, 1 + 3 + level);
 	const playerPos = spawns[0];
 	const enemyPositions = spawns.slice(1);
+	const sightRadius = DEFAULT_SIGHT_RADIUS;
+	const visibility = createVisibilityGrid(map.width, map.height);
+	updateVisibility(visibility, map, playerPos, sightRadius);
 
 	return {
 		player: {
@@ -68,7 +75,9 @@ function newLevel(level: number): GameState {
 		level,
 		gameOver: false,
 		xp: 0,
-		characterLevel: 1
+		characterLevel: 1,
+		visibility,
+		sightRadius
 	};
 }
 
@@ -143,6 +152,7 @@ export function handleInput(state: GameState, key: string): GameState {
 	if (isBlocked(state, nx, ny)) return state;
 
 	state.player.pos = { x: nx, y: ny };
+	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
 
 	// pick up item
 	if (state.map.tiles[ny][nx] === '*') {
@@ -160,6 +170,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.player.attack = Math.max(state.player.attack, next.player.attack);
 		next.xp = state.xp;
 		next.characterLevel = state.characterLevel;
+		next.sightRadius = state.sightRadius;
 		addMessage(next, `Descended to level ${next.level}.`);
 		return next;
 	}
@@ -189,25 +200,53 @@ export function render(state: GameState): string[] {
 	return lines;
 }
 
+function dimColor(hex: string): string {
+	// Expand 3-char hex to 6-char: #abc → #aabbcc
+	if (hex.length === 4) {
+		hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+	}
+	const r = parseInt(hex.slice(1, 3), 16);
+	const g = parseInt(hex.slice(3, 5), 16);
+	const b = parseInt(hex.slice(5, 7), 16);
+	const dim = (v: number) => Math.floor(v * 0.35).toString(16).padStart(2, '0');
+	return `#${dim(r)}${dim(g)}${dim(b)}`;
+}
+
+function tileColor(tile: string): string {
+	if (tile === '#') return '#444444';
+	if (tile === '.') return '#666666';
+	if (tile === '>') return '#ffff00';
+	if (tile === '*') return '#ff00ff';
+	return '#444444';
+}
+
 export function renderColored(state: GameState): { char: string; color: string }[][] {
 	const grid: { char: string; color: string }[][] = [];
 	for (let y = 0; y < state.map.height; y++) {
 		const row: { char: string; color: string }[] = [];
 		for (let x = 0; x < state.map.width; x++) {
+			const vis = state.visibility[y][x];
+
+			if (vis === Visibility.Unexplored) {
+				row.push({ char: ' ', color: '#000' });
+				continue;
+			}
+
+			const isVisible = vis === Visibility.Visible;
+
 			if (state.player.pos.x === x && state.player.pos.y === y) {
 				row.push({ char: '@', color: state.player.color });
-			} else {
+			} else if (isVisible) {
 				const enemy = state.enemies.find((e) => e.pos.x === x && e.pos.y === y);
 				if (enemy) {
 					row.push({ char: enemy.char, color: enemy.color });
 				} else {
-					const tile = state.map.tiles[y][x];
-					let color = '#444';
-					if (tile === '.') color = '#666';
-					else if (tile === '>') color = '#ff0';
-					else if (tile === '*') color = '#f0f';
-					row.push({ char: tile, color });
+					row.push({ char: state.map.tiles[y][x], color: tileColor(state.map.tiles[y][x]) });
 				}
+			} else {
+				// Explored but not currently visible: show terrain dimmed, no entities
+				const tile = state.map.tiles[y][x];
+				row.push({ char: tile, color: dimColor(tileColor(tile)) });
 			}
 		}
 		grid.push(row);

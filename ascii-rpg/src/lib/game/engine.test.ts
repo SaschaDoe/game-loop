@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, handleInput, xpForLevel, xpReward } from './engine';
 import type { GameState, Entity } from './types';
+import { Visibility } from './types';
 
 function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
 	return {
@@ -21,6 +22,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 	const tiles = Array.from({ length: height }, () =>
 		Array.from({ length: width }, () => '.' as const)
 	);
+	const visibility = Array.from({ length: height }, () =>
+		Array.from({ length: width }, () => Visibility.Visible)
+	);
 	return {
 		player: {
 			pos: { x: 5, y: 5 },
@@ -38,6 +42,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		gameOver: false,
 		xp: 0,
 		characterLevel: 1,
+		visibility,
+		sightRadius: 8,
 		...overrides
 	};
 }
@@ -88,6 +94,30 @@ describe('createGame', () => {
 		const state = createGame();
 		expect(state.xp).toBe(0);
 		expect(state.characterLevel).toBe(1);
+	});
+
+	it('initializes visibility grid with FOV computed', () => {
+		const state = createGame();
+		expect(state.visibility).toBeDefined();
+		expect(state.visibility.length).toBe(state.map.height);
+		expect(state.visibility[0].length).toBe(state.map.width);
+		// Player's tile should be visible
+		const { x, y } = state.player.pos;
+		expect(state.visibility[y][x]).toBe(Visibility.Visible);
+	});
+
+	it('has some unexplored tiles on the map', () => {
+		const state = createGame();
+		let hasUnexplored = false;
+		for (const row of state.visibility) {
+			for (const cell of row) {
+				if (cell === Visibility.Unexplored) {
+					hasUnexplored = true;
+					break;
+				}
+			}
+		}
+		expect(hasUnexplored).toBe(true);
 	});
 });
 

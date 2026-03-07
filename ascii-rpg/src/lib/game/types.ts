@@ -15,6 +15,12 @@ export interface Entity {
 
 export type Tile = '#' | '.' | '>' | '*';
 
+export enum Visibility {
+	Unexplored = 0,
+	Explored = 1,
+	Visible = 2
+}
+
 export interface GameMap {
 	width: number;
 	height: number;
@@ -30,4 +36,6 @@ export interface GameState {
 	gameOver: boolean;
 	xp: number;
 	characterLevel: number;
+	visibility: Visibility[][];
+	sightRadius: number;
 }
