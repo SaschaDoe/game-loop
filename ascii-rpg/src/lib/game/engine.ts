@@ -204,6 +204,14 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 	const chests = placeChests(map, level);
 	const filteredChests = chests.filter((c) => !(c.pos.x === playerPos.x && c.pos.y === playerPos.y));
 
+	// Build occupied positions set for NPC spawning
+	const occupiedPositions = new Set<string>();
+	occupiedPositions.add(`${playerPos.x},${playerPos.y}`);
+	for (const ep of enemyPositions) occupiedPositions.add(`${ep.x},${ep.y}`);
+	for (const t of filteredTraps) occupiedPositions.add(`${t.pos.x},${t.pos.y}`);
+	for (const c of filteredChests) occupiedPositions.add(`${c.pos.x},${c.pos.y}`);
+	const npcs = spawnDungeonNPCs(map, level, occupiedPositions);
+
 	const state: GameState = {
 		player: {
 			pos: playerPos,
@@ -230,7 +238,7 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		characterConfig: DEFAULT_CONFIG,
 		abilityCooldown: 0,
 		hazards: filteredHazards,
-		npcs: [],
+		npcs,
 		chests: filteredChests,
 		lootDrops: [],
 		activeDialogue: null

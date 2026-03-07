@@ -39,6 +39,44 @@
 	let logExpanded = $state(false);
 	let messagesEl: HTMLDivElement;
 	let dialogueSelection = $state(0);
+	let typewriterText = $state('');
+	let typewriterDone = $state(false);
+	let typewriterNodeId = $state('');
+	let typewriterRaf = 0;
+	let typewriterIdx = 0;
+
+	function startTypewriter(text: string, nodeId: string) {
+		if (typewriterNodeId === nodeId) return;
+		cancelAnimationFrame(typewriterRaf);
+		typewriterNodeId = nodeId;
+		typewriterText = '';
+		typewriterDone = false;
+		typewriterIdx = 0;
+		const chars = [...text];
+		let lastTime = 0;
+		const msPerChar = 25;
+		function tick(time: number) {
+			if (!lastTime) lastTime = time;
+			const elapsed = time - lastTime;
+			const charsToShow = Math.floor(elapsed / msPerChar);
+			if (charsToShow > typewriterIdx) {
+				typewriterIdx = Math.min(charsToShow, chars.length);
+				typewriterText = chars.slice(0, typewriterIdx).join('');
+			}
+			if (typewriterIdx >= chars.length) {
+				typewriterDone = true;
+				return;
+			}
+			typewriterRaf = requestAnimationFrame(tick);
+		}
+		typewriterRaf = requestAnimationFrame(tick);
+	}
+
+	function skipTypewriter(fullText: string) {
+		cancelAnimationFrame(typewriterRaf);
+		typewriterText = fullText;
+		typewriterDone = true;
+	}
 
 	function advanceIntro() {
 		if (introStep < INTRO_LINES.length - 1) {
@@ -96,6 +134,11 @@
 				const key = e.key;
 				const node = state.activeDialogue.tree.nodes[state.activeDialogue.currentNodeId];
 				if (!node) return;
+				// Skip typewriter on SPACE or tap
+				if (!typewriterDone && (key === ' ' || key === 'Enter')) {
+					skipTypewriter(node.npcText);
+					return;
+				}
 				if (key === 'w' || key === 'ArrowUp') {
 					dialogueSelection = Math.max(0, dialogueSelection - 1);
 				} else if (key === 's' || key === 'ArrowDown') {
@@ -106,6 +149,7 @@
 				} else if (key === 'Escape') {
 					state = closeDialogue(state);
 					dialogueSelection = 0;
+					typewriterNodeId = '';
 				} else if (key >= '1' && key <= '9') {
 					const idx = parseInt(key) - 1;
 					if (idx < node.options.length) {
@@ -329,17 +373,22 @@
 	{#if state.activeDialogue}
 		{@const dlg = state.activeDialogue}
 		{@const node = dlg.tree.nodes[dlg.currentNodeId]}
+		{void startTypewriter(node?.npcText ?? '', dlg.currentNodeId)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="dialogue-overlay" onclick={(e) => e.stopPropagation()}>
+		<div class="dialogue-overlay" onclick={(e) => {
+			e.stopPropagation();
+			if (!typewriterDone && node) skipTypewriter(node.npcText);
+		}}>
 			<div class="dialogue-box">
 				<div class="dialogue-header">
 					<span class="dialogue-portrait" style="color:{dlg.npcColor}">{dlg.npcChar}</span>
 					<span class="dialogue-name" style="color:{dlg.npcColor}">{dlg.npcName}</span>
-					<button class="dialogue-close" onclick={() => { state = closeDialogue(state); dialogueSelection = 0; }}>ESC</button>
+					<button class="dialogue-close" onclick={() => { state = closeDialogue(state); dialogueSelection = 0; typewriterNodeId = ''; }}>ESC</button>
 				</div>
 				{#if node}
-					<div class="dialogue-text">{node.npcText}</div>
+					<div class="dialogue-text">{typewriterText}{#if !typewriterDone}<span class="typewriter-cursor">|</span>{/if}</div>
+					{#if typewriterDone}
 					<div class="dialogue-options">
 						{#each node.options as option, i}
 							{@const isGiftOption = option.onSelect && dlg.givenItems}
@@ -366,7 +415,12 @@
 						{/each}
 					</div>
 				{/if}
-				<div class="dialogue-hint">W/S to navigate &middot; ENTER to select &middot; 1-{node?.options.length ?? 0} quick select &middot; ESC to leave</div>
+				{/if}
+				{#if !typewriterDone}
+					<div class="dialogue-hint">SPACE or click to skip</div>
+				{:else}
+					<div class="dialogue-hint">W/S to navigate &middot; ENTER to select &middot; 1-{node?.options.length ?? 0} quick select &middot; ESC to leave</div>
+				{/if}
 			</div>
 		</div>
 	{/if}
@@ -858,6 +912,14 @@
 		color: #ddd;
 		white-space: pre-line;
 		padding: 8px 0;
+		min-height: 3em;
+	}
+	.typewriter-cursor {
+		animation: blink 0.6s step-end infinite;
+		color: #fff;
+	}
+	@keyframes blink {
+		50% { opacity: 0; }
 	}
 
 	.dialogue-options {

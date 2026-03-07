@@ -1327,6 +1327,434 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── DUNGEON: WANDERING MERCHANT ───
+
+export const MERCHANT_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A hunched figure sits cross-legged on the floor, surrounded by a ludicrous number of pouches, satchels, and bags.* Welcome, welcome! Morrigan\'s Mobile Emporium, at your service! "We go where the customers are — even if that\'s a monster-infested death trap!"',
+			[
+				opt('How are you alive down here?', 'alive', '#ff4'),
+				opt('Do you have anything useful?', 'wares', '#ff4'),
+				opt('This seems like a terrible business model.', 'business', '#8cf'),
+				opt('Goodbye.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*She beams at you.* My favorite customer! Well, my only living customer. The distinction matters less than you\'d think.',
+			[
+				opt('Got anything for me?', 'wares', '#ff4'),
+				opt('How\'s business?', 'business', '#8cf'),
+				opt('Any tips about this level?', 'tips', '#ff4'),
+				opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
+			]
+		),
+		alive: node('alive',
+			'Trade secret! *She taps her nose.* Actually, it\'s simple: the monsters don\'t eat me because I sell them things too. That Goblin Jailer upstairs? Loyal customer. Bought his cooking pot from me. "Big Beautiful," he calls it. I suggested the name. Marketing is everything, even in a dungeon.',
+			[
+				opt('You sold the goblins a cooking pot?!', 'pot', '#f44'),
+				opt('You trade with monsters?', 'monster_trade', '#ff4'),
+				opt('What do you have for sale?', 'wares', '#ff4'),
+			]
+		),
+		pot: node('pot',
+			'A merchant doesn\'t judge her customers, dear. She judges their coin purses. Besides, Big Beautiful was just a regular cauldron before I upsold it with a "premium polish package." Three extra gold for me to spit on it and rub it with my sleeve. He was delighted. *She sighs contentedly.* Pure profit.',
+			[
+				opt('You\'re a terrible person.', 'terrible', '#f44'),
+				opt('I respect the hustle.', 'hustle', '#4f4'),
+				opt('What else do you sell?', 'wares', '#ff4'),
+			]
+		),
+		terrible: node('terrible',
+			'Terrible? I\'m an entrepreneur! I found an underserved market — dungeon denizens with disposable income and no competing retailers within a three-level radius. That\'s not terrible, that\'s visionary. Harvard would give me a case study. If Harvard existed. Does it? Geography was never my strong suit.',
+			[
+				opt('Do you have anything for ME?', 'wares', '#ff4'),
+				opt('Tell me about the deeper levels.', 'deep_levels', '#8cf'),
+			]
+		),
+		hustle: node('hustle',
+			'*She grins wide enough to show a gold tooth.* I like you. Most adventurers just try to rob me. The last one swung his sword at my head. Missed, obviously — I ducked. He hit the wall, stunned himself, and I sold him a "premium concussion remedy" before he came to. Water. It was water. He seemed better though.',
+			[
+				opt('Show me your wares.', 'wares', '#ff4'),
+				opt('Any advice for surviving down here?', 'tips', '#ff4'),
+			]
+		),
+		monster_trade: node('monster_trade',
+			'Oh yes. Slimes love accessories — they absorb them and feel fancy. Skeletons buy joint lubricant. The Shadow Stalkers... well, they mostly just stare at my merchandise until I get uncomfortable and give them a discount. But the BEST customers are Mimics. They buy disguise kits. Little hats, fake locks, wood stain. Very image-conscious, Mimics.',
+			[
+				opt('Mimics buy disguise kits from you.', 'mimics', '#f44'),
+				opt('This is the strangest economy I\'ve ever heard of.', 'economy', '#8cf'),
+				opt('Show me what you\'ve got.', 'wares', '#ff4'),
+			]
+		),
+		mimics: node('mimics',
+			'How else do you think they look so convincing? Natural talent? Please. Those hinges don\'t oil themselves. I run a whole Mimic cosmetics line: "ChestBest — Because You\'re Worth Eating." Sales are through the roof. Well, through the floor. We\'re underground. Through the wall? Point is: business is good.',
+			[
+				opt('I will never trust a chest again.', 'tips', '#ff4'),
+				opt('Show me your wares.', 'wares', '#ff4'),
+			]
+		),
+		economy: node('economy',
+			'Strange? This is the PUREST form of capitalism! No regulations, no taxes, no returns policy. Customer ate the product? Not my problem. Customer was eaten BY the product? Also not my problem. It\'s beautiful. Adam Smith would weep with joy. Or terror. Possibly both.',
+			[
+				opt('I need supplies, not economics.', 'wares', '#ff4'),
+				opt('Tell me about the deeper levels.', 'deep_levels', '#8cf'),
+			]
+		),
+		wares: node('wares',
+			'*She rummages through her bags.* Hmm, let\'s see... healing salves, sharpening stones, slightly haunted compasses, one shoe — don\'t ask whose — and this lovely amulet that may or may not be cursed. *She holds up a glowing trinket.* Tell you what — take this healing salve. First customer discount. Come back alive and buy more. Dead customers are terrible for retention metrics.',
+			[
+				opt('Thanks, Morrigan. [Take healing salve]', 'gift', '#4f4', { onSelect: { hp: 5, message: 'Morrigan gives you a healing salve! (+5 HP)' } }),
+				opt('What about the amulet?', 'amulet', '#ff4'),
+				opt('Tell me about these deeper levels.', 'deep_levels', '#8cf'),
+			]
+		),
+		gift: node('gift',
+			'*She nods approvingly.* Good. Use it wisely. Or don\'t. I\'m a merchant, not a life coach. Now, if you happen to find any monster teeth, shed scales, or the occasional intact eyeball on your travels, bring them back. I can always use fresh inventory. "Ethically sourced dungeon components." That\'s my new slogan. Still workshopping it.',
+			[
+				opt('I\'ll keep an eye out. Pun intended.', 'farewell', '#4f4'),
+				opt('Tell me about the deeper levels.', 'deep_levels', '#8cf'),
+			]
+		),
+		amulet: node('amulet',
+			'*She holds up a small stone pendant that pulses with a faint blue light.* Found it on level twelve. Previous owner didn\'t need it anymore, on account of being dead. It hums when danger is near. Also hums when you\'re trying to sleep, when it\'s bored, and occasionally it screams at 3 AM for no reason. Might be haunted. Might just need new batteries. I honestly don\'t know.',
+			[
+				opt('I\'ll pass on the screaming amulet.', 'tips', '#ff4'),
+				opt('Is it... looking at me?', 'amulet_eye', '#f44'),
+			]
+		),
+		amulet_eye: node('amulet_eye',
+			'*She glances at the amulet, which does seem to have developed a faint iris-like pattern.* Oh, it does that. Started about level ten. I think the dungeon is... seeping into it. Some items down here absorb the ambient weirdness. The deeper you go, the weirder things get. Compasses point toward things you don\'t want to find. Weapons develop opinions. Armor gets clingy. Literally.',
+			[
+				opt('The dungeon changes objects?', 'deep_levels', '#8cf'),
+				opt('Good to know. I should go.', 'farewell', '#0ff'),
+			]
+		),
+		deep_levels: node('deep_levels',
+			'*She lowers her voice.* I\'ve been as deep as level fifteen. That\'s my hard limit. Below that, things start to... notice you. Not the monsters — they notice you everywhere. I mean the dungeon itself. The walls shift. The air tastes like static. And my merchandise started rearranging itself when I wasn\'t looking. A healing potion ended up inside a locked chest that I KNOW was empty. The dungeon is playing shopkeeper. Badly.',
+			[
+				opt('The dungeon... reorganizes your stock?', 'dungeon_shops', '#8cf'),
+				opt('What else have you seen down there?', 'deep_horrors', '#f44'),
+				opt('I should keep moving. Thanks.', 'farewell', '#0ff'),
+			]
+		),
+		dungeon_shops: node('dungeon_shops',
+			'Reorganizes, reprices, occasionally reviews. I found one of my potions with a tiny label that said "3/5 stars — adequate viscosity, poor aftertaste." WHO wrote that?! I\'m the only literate thing on this level! Unless... *She stares at the walls.* Unless the dungeon has opinions about my pricing. That\'s the most terrifying thought I\'ve ever had. Competition from the building.',
+			[
+				opt('The dungeon has Yelp reviews for potions.', 'farewell', '#4f4'),
+				opt('Morrigan, you are delightful.', 'farewell', '#4f4'),
+			]
+		),
+		deep_horrors: node('deep_horrors',
+			'On level thirteen, I saw a door that wasn\'t there five seconds ago. Behind it was a room full of treasure — gold, gems, weapons, the works. Beautiful. Perfect. Too perfect. I threw a shoe in. The room ate it. The whole room was a Mimic. A ROOM-SIZED Mimic. That was the day I established my depth limit. Also the day I lost my left shoe. Hence the single shoe for sale.',
+			[
+				opt('A room-sized Mimic. Of course.', 'farewell', '#ff4'),
+				opt('How do you keep coming back?', 'secret', '#8cf'),
+			]
+		),
+		secret: node('secret',
+			'*She winks.* I know the service tunnels. Every building has them, even eldritch dungeon-prisons. Back corridors, maintenance passages, the occasional ventilation shaft that may or may not be a sleeping worm. Trade routes, dear. A merchant never reveals her supply chain. Suffice to say I can get in and out faster than any adventurer. No offense.',
+			[
+				opt('None taken. Stay safe, Morrigan.', 'farewell', '#4f4'),
+			]
+		),
+		business: node('business',
+			'*She pulls out a tiny ledger and squints at it.* Let\'s see... this quarter: seven adventurer sales, four monster sales, one sale to something I couldn\'t identify but it paid in teeth. Teeth! As currency! I had to accept — you can\'t discriminate in an open market. Margins are thin but overhead is low. The rent is free because my landlord is an ancient horror that doesn\'t understand property law.',
+			[
+				opt('Your landlord is... the dungeon?', 'deep_levels', '#8cf'),
+				opt('You\'re insane and I love it.', 'hustle', '#4f4'),
+				opt('I should go.', 'farewell', '#0ff'),
+			]
+		),
+		tips: node('tips',
+			'*She counts on her fingers.* One: if a chest looks too good to be true, it will eat you. I should know — I sell them their disguises. Two: potions are worth more than gold down here. Three: the dungeon changes layout between visits, but the RULES stay the same — it always puts the exit in an accessible room. Four: if you hear singing and you didn\'t bring a bard, run.',
+			[
+				opt('Singing?', 'singing', '#f44'),
+				opt('Good advice. Thank you.', 'farewell', '#4f4'),
+			]
+		),
+		singing: node('singing',
+			'*She shivers theatrically.* Something deep, deep down sings. Not words — more like... the sound an ocean would make if it could carry a tune. My monster customers don\'t hear it. Or they pretend not to. But every adventurer I\'ve spoken to mentions it eventually. It gets louder the deeper you go. By level fifteen, I could feel it in my teeth. That\'s when I packed up and headed upward. A merchant knows when the market is hostile.',
+			[
+				opt('That must be the Eye.', 'the_eye_merchant', '#f44'),
+				opt('Thanks for the warning.', 'farewell', '#4f4'),
+			]
+		),
+		the_eye_merchant: node('the_eye_merchant',
+			'*Her face goes serious — genuinely serious, for the first time.* Don\'t use that name lightly. I\'ve had customers — big, scary, well-armed customers — flinch at that word. Whatever it is, it\'s the reason the dungeon exists and the reason it keeps... producing. New monsters, new traps, new treasure. Like a factory that runs on nightmares. *She forces a grin.* But nightmares need merchants too! That\'s my niche!',
+			[
+				opt('You\'re braver than you let on, Morrigan.', 'farewell', '#4f4'),
+			]
+		),
+		farewell: node('farewell',
+			'*She waves cheerfully.* Happy dungeoning! Remember: if it looks like a chest, poke it first! If it looks like a wall, it might be a door! And if it looks like a merchant, it\'s probably me! Unless it\'s a Mimic. In which case — sorry, I sold it the disguise kit. Professional ethics prevent me from warning you further! Toodles!',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── DUNGEON: LOST ADVENTURER ───
+
+export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A battered figure leans against the wall, breathing heavily. Their armor is dented and stained with... various substances.* Oh thank the gods. A person. A real, living person. I\'ve been lost on this level for what feels like days. Please tell me you know the way out.',
+			[
+				opt('The stairs are usually in the largest room.', 'directions', '#4f4'),
+				opt('How did you get lost?', 'lost_story', '#ff4'),
+				opt('You look rough. Are you okay?', 'condition', '#4f4'),
+				opt('Sorry, can\'t help. Good luck.', 'farewell_cold', '#f44'),
+			]
+		),
+		return: node('return',
+			'*They look up hopefully.* Oh, it\'s you again. I\'m still lost. I tried going north. Found a wall. Tried going south. Found a different wall. I\'m starting to think the walls are following me.',
+			[
+				opt('The walls might actually be moving.', 'walls_move', '#f44'),
+				opt('Tell me more about yourself.', 'backstory', '#8cf'),
+				opt('Any dangers I should know about?', 'dangers', '#ff4'),
+				opt('Good luck out there.', 'farewell', '#0ff'),
+			]
+		),
+		directions: node('directions',
+			'*Their face lights up.* The largest room! Of course! I\'ve been checking the smallest rooms because I figured the exit would be hidden. That\'s... that\'s backwards logic, isn\'t it? *They rub their temples.* The dungeon does something to your brain after a while. Makes you think in circles. Literally — I walked in a circle for three hours yesterday. Same circle. Counted.',
+			[
+				opt('The dungeon messes with your head?', 'dungeon_mind', '#f44'),
+				opt('Who are you, anyway?', 'backstory', '#8cf'),
+				opt('Be careful out there.', 'farewell', '#0ff'),
+			]
+		),
+		lost_story: node('lost_story',
+			'My party and I came down three levels ago. Five of us. Tank, healer, two DPS, and me — the cartographer. My ONE job was to map the dungeon. You know what\'s hard to map? A DUNGEON THAT REARRANGES ITSELF. My maps became fiction within minutes. Beautiful fiction, mind you. Very detailed. Completely useless.',
+			[
+				opt('What happened to your party?', 'party', '#ff4'),
+				opt('The dungeon rearranges?', 'dungeon_mind', '#f44'),
+				opt('A cartographer in a shifting dungeon. Rough.', 'rough', '#4f4'),
+			]
+		),
+		party: node('party',
+			'We got separated on this level. Something — I don\'t know what — caused a cave-in that sealed off the corridor between us. I could hear them on the other side, then... nothing. Either they found a way out, or... *They trail off.* I choose to believe they\'re fine. Talia, our healer, is smart. She\'d get them out. She has to have gotten them out.',
+			[
+				opt('I\'m sure they\'re fine.', 'hope', '#4f4'),
+				opt('Tell me about Talia.', 'talia', '#8cf'),
+				opt('I\'ll look for them if I can.', 'search_party', '#4f4'),
+			]
+		),
+		hope: node('hope',
+			'*They nod, not entirely convinced.* Yeah. Yeah, they\'re fine. Talia once healed a man who\'d been stepped on by a mountain troll. If she can fix that, she can navigate a little dungeon. *A shaky laugh.* A little dungeon that eats people. Totally fine. Everything\'s fine.',
+			[
+				opt('What can you tell me about this level?', 'dangers', '#ff4'),
+				opt('Take this — you need it more than me. [Give advice]', 'advice_gift', '#4f4'),
+			]
+		),
+		talia: node('talia',
+			'*Their eyes soften.* Talia Windmere. Best combat medic in the Grey Reaches. She could set a broken bone during a boss fight without missing a heal. We went through the academy together. She always said I\'d get us lost one day. *A pained smile.* Guess she was right. If you see her — brown hair, green cloak, absurdly competent aura — tell her I\'m sorry about the maps.',
+			[
+				opt('I\'ll keep an eye out for her.', 'search_party', '#4f4'),
+				opt('She sounds special.', 'special', '#8cf'),
+			]
+		),
+		special: node('special',
+			'*They look away quickly.* She\'s my best friend. Has been since we were apprentices. She used to patch me up after every training accident — and there were MANY training accidents. I once fell into a pit trap during a lecture on pit traps. The instructor was not amused. Talia laughed so hard she had to sit down. Then she healed my broken arm. Then she laughed again.',
+			[
+				opt('I hope you find each other.', 'farewell', '#4f4'),
+				opt('Any warnings about what\'s ahead?', 'dangers', '#ff4'),
+			]
+		),
+		search_party: node('search_party',
+			'*Their eyes widen.* You\'d... you\'d really look? That\'s... *They swallow hard.* Thank you. If you find any of them — Talia the healer, Kael the tank, Jinx and Bree on damage — tell them I\'m alive. Tell them the cartographer finally admits the maps were useless. That\'ll make Kael laugh. He always said I was drawing pretty pictures.',
+			[
+				opt('I will. Stay alive until then.', 'farewell', '#4f4'),
+				opt('Any tips for this level before I go?', 'dangers', '#ff4'),
+			]
+		),
+		backstory: node('backstory',
+			'Name\'s Corwin. Guild cartographer, third class. Which means I get third-class assignments. "Map the unmappable dungeon," they said. "Great opportunity for advancement," they said. You know what\'s a great opportunity? NOT being lost in a dungeon that actively resists being understood. I should have been a baker. Bread doesn\'t rearrange itself.',
+			[
+				opt('The Guild sent you here?', 'guild', '#ff4'),
+				opt('What have you mapped so far?', 'maps', '#8cf'),
+				opt('How long have you been down here?', 'time_lost', '#ff4'),
+			]
+		),
+		guild: node('guild',
+			'The Cartographers\' Guild of the Grey Reaches. Motto: "We Chart The Unknown." Unofficial motto: "We Lose Members Regularly." There\'s a hall of portraits back at headquarters — every cartographer who never returned. It\'s the biggest room in the building. Bigger than the trophy room. SIGNIFICANTLY bigger. I asked about that once. They said it was "motivational."',
+			[
+				opt('That\'s the opposite of motivational.', 'dark_guild', '#f44'),
+				opt('Have other cartographers mapped this dungeon?', 'maps', '#8cf'),
+			]
+		),
+		dark_guild: node('dark_guild',
+			'Right?! But try telling that to Guild Master Aldric. *Corwin pauses.* Wait, Aldric runs the Athenaeum too... or was that a different Aldric? There are too many Aldrics in this world. The point is: the people who send you into dungeons never go INTO dungeons. Funny how that works. Very funny. I\'m laughing. On the inside. Where the despair lives.',
+			[
+				opt('Aldric of the Athenaeum?', 'aldric', '#8cf'),
+				opt('Let\'s focus on survival.', 'dangers', '#ff4'),
+			]
+		),
+		aldric: node('aldric',
+			'You know him? Scholar Aldric, big ego, covets window offices? Yeah, he funds a lot of the expeditions down here. Officially for "scholarly research." Unofficially... I think he\'s looking for something specific. The teams he sponsors always get instructions to retrieve certain artifacts. Thessaly — one of his rivals — was investigating the same thing before she disappeared. Strange coincidence, that.',
+			[
+				opt('I met Thessaly. She\'s alive.', 'thessaly_alive', '#4f4'),
+				opt('What artifacts is Aldric after?', 'artifacts', '#ff4'),
+				opt('Interesting. I should move on.', 'farewell', '#0ff'),
+			]
+		),
+		thessaly_alive: node('thessaly_alive',
+			'*Corwin\'s eyes go wide.* Thessaly\'s ALIVE?! She — everyone thought she — *They laugh with genuine relief.* That stubborn, brilliant woman. Of course she\'s alive. The goblins probably couldn\'t shut her up about resonance patterns long enough to eat her. *Quietly.* That\'s actually wonderful news. First good thing I\'ve heard in weeks.',
+			[
+				opt('She\'s in the goblin caves above. Chained up.', 'thessaly_detail', '#ff4'),
+				opt('What about these artifacts?', 'artifacts', '#ff4'),
+			]
+		),
+		thessaly_detail: node('thessaly_detail',
+			'Chained?! We have to — well, YOU have to. I\'m useless in a fight. I once swung a sword and hit myself. True story. But Thessaly is important. Her research on the Resonance — the thing the dungeon does to sound and stone — it might be the key to understanding this whole place. Aldric knows that. That\'s probably why he took her office window. Petty academic revenge disguised as administrative efficiency.',
+			[
+				opt('I\'ll help her. What about the artifacts?', 'artifacts', '#ff4'),
+				opt('Time for me to go. Stay safe.', 'farewell', '#4f4'),
+			]
+		),
+		artifacts: node('artifacts',
+			'*Corwin lowers their voice.* Anchor Stones. Small, black, impossibly heavy for their size. They\'re embedded in the walls of certain dungeon levels — always in hidden rooms, always guarded by the toughest monsters on the floor. Thessaly\'s theory was that they\'re containment devices — part of whatever keeps the dungeon... contained. Aldric wants them removed. I\'m not sure that\'s wise.',
+			[
+				opt('Removing containment devices sounds bad.', 'bad_idea', '#f44'),
+				opt('Why would Aldric want them?', 'aldric_motive', '#8cf'),
+			]
+		),
+		bad_idea: node('bad_idea',
+			'EXTREMELY bad. But Aldric is... persuasive. He told my Guild that the Anchor Stones are "merely geological curiosities." He told the Council of the Grey Reaches that they\'re "potential energy sources." He told Thessaly they were "irrelevant to her research." Three different lies to three different audiences. That\'s not incompetence. That\'s strategy.',
+			[
+				opt('I\'ll be careful with what I find.', 'farewell', '#4f4'),
+				opt('Sounds like a conspiracy.', 'conspiracy', '#f44'),
+			]
+		),
+		aldric_motive: node('aldric_motive',
+			'Power? Knowledge? Academic glory? All three? I\'m a cartographer, not a mind reader. But I\'ve seen his private notes — accidentally, while lost in his office, which happens more often than you\'d think — and he\'s obsessed with something called the "Severance." Same word Thessaly uses. He thinks the Anchor Stones are the key to achieving it. Whatever "it" is.',
+			[
+				opt('The Severance... Thessaly mentioned that.', 'severance', '#f44'),
+				opt('I should go. Thank you, Corwin.', 'farewell', '#4f4'),
+			]
+		),
+		severance: node('severance',
+			'*Corwin shudders.* I don\'t like that word. It sounds like surgery. Or termination. Or both. Thessaly thinks it means cutting the connection between the Eye and the surface. Aldric thinks it means... something else. Something about control. *They meet your eyes.* Be careful who you trust down here. The dungeon isn\'t the only thing with an agenda.',
+			[
+				opt('I\'ll remember that. Good luck, Corwin.', 'farewell', '#4f4'),
+			]
+		),
+		conspiracy: node('conspiracy',
+			'It IS a conspiracy! But nobody listens to the cartographer! "Corwin, you\'re paranoid." "Corwin, you see patterns that aren\'t there." "Corwin, that\'s a wall, not a secret door." Okay, that last one was legitimate. But the Aldric thing — I\'m RIGHT about that. Something is wrong and nobody with authority wants to admit it because the dungeon funding is too lucrative.',
+			[
+				opt('Follow the money. Classic.', 'farewell', '#ff4'),
+				opt('I believe you, Corwin.', 'believed', '#4f4'),
+			]
+		),
+		believed: node('believed',
+			'*They stare at you.* You... do? Nobody ever — *They blink rapidly.* That\'s — thank you. That means more than you know. I\'ve been screaming into the void about this for months and the void just kept echoing back bureaucratic memos. *They straighten up.* Find the truth down there. For me, for Thessaly, for everyone who deserves to know what\'s really going on.',
+			[
+				opt('I will. Stay alive, Corwin.', 'farewell', '#4f4'),
+			]
+		),
+		maps: node('maps',
+			'*They pull out a crumpled parchment covered in scrawled lines, crossed-out passages, and tiny notes.* This. This is my masterwork. Three levels of the dungeon, painstakingly mapped over two weeks. It\'s completely wrong now — the dungeon shifted twice since I drew it — but it\'s ARTISTICALLY correct. The proportions are beautiful. The shading is exquisite. As a map, it\'s fiction. As art, it\'s a triumph.',
+			[
+				opt('Can I see it?', 'see_map', '#ff4'),
+				opt('A beautiful, useless map. Poetic.', 'poetic', '#4f4'),
+			]
+		),
+		see_map: node('see_map',
+			'*They hand it over proudly.* Note the cross-hatching on the walls — that represents stone density. The dotted lines are suspected secret passages. The skull symbols are where I almost died. There are... a lot of skull symbols. *They point to a cluster.* That\'s where I fell into the same pit three times. In one day. The dungeon remembered I was clumsy and kept putting the pit in my path.',
+			[
+				opt('The dungeon targeted you specifically?', 'dungeon_mind', '#f44'),
+				opt('This is impressive work, actually.', 'farewell', '#4f4'),
+			]
+		),
+		poetic: node('poetic',
+			'*They beam.* That\'s the nicest thing anyone\'s said about my work! Talia just calls them "elaborate doodles." Kael uses them as napkins. NAPKINS! Do you know how long I spent on the topographical contour lines?! Three hours! Per contour! He wiped soup off his chin with three hours of my life! *Deep breath.* I\'m fine. I\'m fine. This is fine.',
+			[
+				opt('You should keep moving. The stairs are northeast.', 'farewell', '#4f4'),
+				opt('Any warnings about what\'s ahead?', 'dangers', '#ff4'),
+			]
+		),
+		time_lost: node('time_lost',
+			'*They check a tally scratched into the wall.* Eleven meals. But meals don\'t mean days because sometimes I eat twice when I\'m scared and sometimes I forget to eat entirely because something is trying to eat ME. So... between three and eleven days? Let\'s say a week. A long, lonely, terrifying week filled with wrong turns and questionable survival decisions.',
+			[
+				opt('What kind of questionable decisions?', 'bad_decisions', '#ff4'),
+				opt('I can point you toward the exit.', 'directions', '#4f4'),
+			]
+		),
+		bad_decisions: node('bad_decisions',
+			'Where do I start? I tried befriending a Slime. It dissolved my backup map. I attempted to negotiate with a skeleton. It threw a bone at me — its OWN bone. I ate a glowing mushroom because I thought it might be magical food. It was not. I hallucinated that the walls were singing for six hours. Actually, the walls might have actually been singing. This dungeon makes it hard to tell.',
+			[
+				opt('The singing... everyone mentions the singing.', 'singing', '#f44'),
+				opt('You need to get out of here.', 'farewell', '#4f4'),
+			]
+		),
+		singing: node('singing',
+			'*Their humor drains away.* You hear it too? The low, constant hum beneath everything? I thought it was tinnitus at first. Or stress. But it\'s always there, just below the edge of hearing. And it gets LOUDER in certain rooms. Rooms with those strange black stones in the walls. The Anchor Stones. It\'s like... the stones are vibrating in response to something below. Something that never stops.',
+			[
+				opt('The Anchor Stones. Thessaly studies those.', 'artifacts', '#8cf'),
+				opt('I\'ll be careful. Good luck, Corwin.', 'farewell', '#4f4'),
+			]
+		),
+		dungeon_mind: node('dungeon_mind',
+			'I\'m convinced it learns. Not like a monster learns — not instinct, not pattern matching. Real learning. It watched me for two days, figured out my navigation habits, and then subtly rotated the entire floor layout by fifteen degrees. I didn\'t notice for hours because everything LOOKED right but was slightly wrong. Like a dream where your house has one extra door. The dungeon gaslights people. That\'s its hobby.',
+			[
+				opt('A gaslighting dungeon. Wonderful.', 'dangers', '#ff4'),
+				opt('I need to keep moving. Stay safe.', 'farewell', '#0ff'),
+			]
+		),
+		walls_move: node('walls_move',
+			'*They stare at you.* Don\'t. Don\'t tell me that. I\'ve been telling myself the walls DON\'T move and that\'s the only thing keeping me sane. *They glance at the nearest wall.* Although... that crack WAS on the left side yesterday. I think. Maybe. *Long pause.* Great. Now I\'m going to be watching the walls. This is fine. Everything is fine. The walls are fine.',
+			[
+				opt('Want some survival tips?', 'dangers', '#ff4'),
+				opt('You need to get to the stairs. Fast.', 'farewell', '#ff4'),
+			]
+		),
+		rough: node('rough',
+			'Rough is an understatement. "Catastrophic" is closer. "Existential nightmare" is accurate. I went to school for seven years to learn precision cartography and the dungeon treats my skills like a personal insult. Every time I finish a map, it rearranges. Like it\'s TAUNTING me. "Oh, nice map you\'ve got there. Would be a shame if someone... shifted everything three meters east."',
+			[
+				opt('That does sound personal.', 'dungeon_mind', '#8cf'),
+				opt('Who are you, anyway?', 'backstory', '#ff4'),
+			]
+		),
+		condition: node('condition',
+			'*They gesture at themselves.* Armor dented from a skeleton ambush. Left boot dissolved by a slime — I\'m wearing a sack tied with rope. Seven bruises, two scrapes, and something that might be a curse but might also be a rash. The dungeon\'s humidity is murder on sensitive skin. I had a skincare routine before this expedition. Now I have... survival.',
+			[
+				opt('How did you end up here?', 'lost_story', '#ff4'),
+				opt('Take care of yourself.', 'farewell', '#4f4'),
+			]
+		),
+		dangers: node('dangers',
+			'*They think hard.* This level? Watch for the trap clusters — the dungeon likes to put spike traps near treasure as a "tax." The monsters here coordinate more than the upper levels — I swear I saw goblins using hand signals. Oh, and check EVERY chest before opening it. I lost my last healing potion to a Mimic that I could have sworn was a real chest. It even had a convincing padlock.',
+			[
+				opt('Thanks for the tips.', 'farewell', '#4f4'),
+				opt('Mimics with padlocks. Noted.', 'farewell', '#4f4'),
+			]
+		),
+		advice_gift: node('advice_gift',
+			'*They nod gratefully.* I appreciate it. More than you know. It\'s been... lonely. The darkness down here isn\'t just physical. It gets in your head. Makes you doubt yourself, your choices, whether the walls are actually there or just suggestions. *They straighten their dented armor.* But talking to you helps. Reminds me that the surface exists. That there\'s something worth climbing back to.',
+			[
+				opt('You\'ll make it back. I believe in you.', 'farewell', '#4f4'),
+			]
+		),
+		farewell_cold: node('farewell_cold',
+			'*Their face falls.* Right. Yeah. No, that\'s... that\'s fair. Everyone for themselves down here. I get it. *They force a smile.* I\'ll figure it out. I always do. Eventually. After several wrong turns and at least one near-death experience. It\'s my process. Very inefficient. But consistent.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		farewell: node('farewell',
+			'*They give you a grateful nod.* Thanks for stopping. Most people down here either try to eat me or run away screaming. A normal conversation is... nice. If you make it to the surface, tell the Cartographers\' Guild that Corwin says their maps are all wrong. They\'ll know it\'s me. I say it every time. *A tired smile.* Good luck down there.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -1334,4 +1762,6 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Hooded Stranger': STRANGER_DIALOGUE,
 	'Drunk Patron': DRUNK_DIALOGUE,
 	'Thessaly': PRISONER_DIALOGUE,
+	'Morrigan': MERCHANT_DIALOGUE,
+	'Corwin': LOST_ADVENTURER_DIALOGUE,
 };
