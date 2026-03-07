@@ -61,4 +61,20 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 47-religion-and-deities | Deity worship, divine intervention, holy/unholy ground |
 | 48-summoning-and-conjuration | Summon creatures, conjured objects, planar binding |
 | 49-magitech-and-artificer | Mechanical companions, gadgets, enchantment engineering |
-| 50-weather-and-elemental-mastery | Weather manipulation, elemental attunement |
+| 50-weather-and-elemental-mastery | Weather manipulation, elemental attunement, natural disasters |
+| 51-underwater-civilization | Sunken cities, merfolk faction, deep-sea exploration |
+| 52-psychic-powers | Telekinesis, telepathy, psychic combat, psi points |
+| 53-bounty-and-wanted-system | Bounty boards, wanted levels, bounty hunter NPCs |
+| 54-prison-and-escape | Prison gameplay, escape routes, inmate factions |
+| 55-ancient-technology | Precursor ruins, ancient weapons, AI companion |
+| 56-martial-arts | Unarmed combat, chi system, training montages, fighting styles |
+| 57-gambling-and-card-games | Collectible card game, dice games, pit fighting bets |
+| 58-spirits-and-ancestors | Ancestor communion, spirit world, totem crafting |
+| 59-cartography-and-mapping | Map drawing, uncharted territories, exploration |
+| 60-political-system | Kingdom management, diplomacy, treaties, governance |
+| 61-library-and-scholarship | Ancient tomes, research system, scribe profession |
+| 62-tattoos-and-body-modification | Magical tattoos, scarification, prosthetics |
+| 63-merchant-caravans | Caravan management, trade routes, caravan combat |
+| 64-time-travel | Temporal paradoxes, time periods, chronomancy spells |
+| 65-sports-and-athletics | Foot races, wrestling, archery competitions |
+| 66-vampirism-gameplay | Vampire powers, vampire society, vampire hunting |

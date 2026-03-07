@@ -16,6 +16,12 @@ As a player, I want a New Game+ mode after completing the main story, so that I 
   - NPCs have different dialogue acknowledging the player's power ("You seem... different")
 - NG++ and beyond: each successive cycle adds another 25% difficulty, stacking
 - Leaderboard: track how many NG+ cycles completed with character stats
+- **Selective Carry-Over**: player chooses which 1 legendary item to keep; rest are re-hidden in new locations
+- **NG+ Exclusive Dungeon**: a hidden megadungeon only accessible in NG+ containing the true final boss
+- **NPC Deja Vu**: LLM dialogue hints that NPCs feel a strange familiarity ("Have we met before?")
+- **Alternate Companion Recruitment**: some companions have different recruitment conditions in NG+ (former enemies become allies, former allies are suspicious)
+- **Diminishing Gold**: only 10% of gold carries over (spent on "the journey between worlds")
+- **Caps at NG+5**: enemy scaling maxes out; NG+5 completion grants the "Eternal Champion" title and a unique cosmetic
 
 ## Acceptance Criteria
 
