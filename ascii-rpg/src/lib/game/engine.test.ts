@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -848,5 +848,137 @@ describe('hazard avoidance', () => {
 		// Skeleton is relentless so it moves toward player through the lava
 		expect(e.pos.x).toBe(6);
 		expect(e.pos.y).toBe(5);
+	});
+});
+
+describe('flee from combat', () => {
+	it('cannot flee when no enemies are adjacent', () => {
+		const enemy = makeEnemy(8, 8, { hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = attemptFlee(state);
+		expect(result.moved).toBeNull();
+		expect(result.messages[0].text).toContain('nothing to flee from');
+	});
+
+	it('bosses block fleeing', () => {
+		const boss = makeEnemy(6, 5, { name: 'The Hollow King', char: 'K', hp: 30, maxHp: 30 });
+		const state = makeTestState({ enemies: [boss] });
+
+		const result = attemptFlee(state);
+		expect(result.moved).toBeNull();
+		expect(result.messages[0].text).toContain('boss blocks');
+	});
+
+	it('successful flee moves player away from enemy', () => {
+		// Force success by mocking Math.random
+		const origRandom = Math.random;
+		Math.random = () => 0.0; // Always below flee chance
+
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = attemptFlee(state);
+		expect(result.moved).not.toBeNull();
+		expect(result.messages.some((m) => m.text.includes('flee from combat'))).toBe(true);
+
+		// Player should be further from enemy than original position
+		const origDist = Math.abs(5 - 6) + Math.abs(5 - 5); // 1
+		const newDist = Math.abs(result.moved!.x - 6) + Math.abs(result.moved!.y - 5);
+		expect(newDist).toBeGreaterThan(origDist);
+
+		Math.random = origRandom;
+	});
+
+	it('failed flee returns no movement', () => {
+		const origRandom = Math.random;
+		Math.random = () => 0.99; // Always above flee chance
+
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = attemptFlee(state);
+		expect(result.moved).toBeNull();
+		expect(result.messages.some((m) => m.text.includes('failed to flee'))).toBe(true);
+
+		Math.random = origRandom;
+	});
+
+	it('f key triggers flee and enemies still act', () => {
+		const origRandom = Math.random;
+		Math.random = () => 0.99; // Force flee failure
+
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10, name: 'Goblin', attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		const initialPlayerHp = state.player.hp;
+
+		const result = handleInput(state, 'f');
+		// Player should not have moved (flee failed)
+		expect(result.player.pos.x).toBe(5);
+		expect(result.player.pos.y).toBe(5);
+		// Enemies should have acted (moveEnemies was called)
+		// Either enemy moved or attacked — player hp may have changed
+		const failMsg = result.messages.find((m) => m.text.includes('failed to flee'));
+		expect(failMsg).toBeDefined();
+
+		Math.random = origRandom;
+	});
+
+	it('rogue has higher flee chance than warrior', () => {
+		// Test with deterministic random at 0.55 — rogue succeeds (0.75), warrior fails (0.50)
+		const origRandom = Math.random;
+
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10 });
+
+		Math.random = () => 0.55;
+		const rogueState = makeTestState({
+			enemies: [{ ...enemy }],
+			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+		});
+		const rogueResult = attemptFlee(rogueState);
+
+		Math.random = () => 0.55;
+		const warriorState = makeTestState({
+			enemies: [{ ...enemy }],
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+		});
+		const warriorResult = attemptFlee(warriorState);
+
+		expect(rogueResult.moved).not.toBeNull(); // rogue succeeds at 0.55 < 0.75
+		expect(warriorResult.moved).toBeNull(); // warrior fails at 0.55 >= 0.50
+
+		Math.random = origRandom;
+	});
+
+	it('stunned player cannot flee', () => {
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+		applyEffect(state.player, 'stun', 2, 0);
+
+		const result = handleInput(state, 'f');
+		const stunMsg = result.messages.find((m) => m.text.includes('stunned'));
+		expect(stunMsg).toBeDefined();
+	});
+
+	it('flee fails when surrounded by walls', () => {
+		const origRandom = Math.random;
+		Math.random = () => 0.0; // Force success
+
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+		// Surround player with walls on all escape routes
+		for (let y = 3; y <= 7; y++) {
+			for (let x = 2; x <= 5; x++) {
+				if (!(x === 5 && y === 5)) { // Don't wall player's tile
+					state.map.tiles[y][x] = '#';
+				}
+			}
+		}
+
+		const result = attemptFlee(state);
+		expect(result.moved).toBeNull();
+		expect(result.messages.some((m) => m.text.includes('nowhere to go'))).toBe(true);
+
+		Math.random = origRandom;
 	});
 });

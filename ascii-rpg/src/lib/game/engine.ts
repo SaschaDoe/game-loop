@@ -302,6 +302,82 @@ function moveEnemies(state: GameState) {
 	}
 }
 
+const FLEE_CHANCE: Record<CharacterClass, number> = {
+	rogue: 0.75,
+	mage: 0.60,
+	warrior: 0.50
+};
+
+interface FleeResult {
+	moved: Position | null;
+	messages: { text: string; type: MessageType }[];
+}
+
+export function attemptFlee(state: GameState): FleeResult {
+	const messages: { text: string; type: MessageType }[] = [];
+	const { player, enemies } = state;
+
+	// Must be adjacent to at least one enemy
+	const adjacent = enemies.filter(
+		(e) => Math.abs(e.pos.x - player.pos.x) <= 1 && Math.abs(e.pos.y - player.pos.y) <= 1
+	);
+	if (adjacent.length === 0) {
+		messages.push({ text: 'There is nothing to flee from.', type: 'info' });
+		return { moved: null, messages };
+	}
+
+	// Bosses block fleeing
+	if (adjacent.some((e) => isBoss(e))) {
+		messages.push({ text: 'The boss blocks your escape!', type: 'damage_taken' });
+		return { moved: null, messages };
+	}
+
+	const chance = FLEE_CHANCE[state.characterConfig.characterClass];
+	if (Math.random() >= chance) {
+		messages.push({ text: 'You failed to flee!', type: 'damage_taken' });
+		return { moved: null, messages };
+	}
+
+	// Find the nearest enemy and move 2 tiles away from it
+	const nearest = adjacent.reduce((a, b) => {
+		const da = Math.abs(a.pos.x - player.pos.x) + Math.abs(a.pos.y - player.pos.y);
+		const db = Math.abs(b.pos.x - player.pos.x) + Math.abs(b.pos.y - player.pos.y);
+		return da <= db ? a : b;
+	});
+
+	const awayX = Math.sign(player.pos.x - nearest.pos.x);
+	const awayY = Math.sign(player.pos.y - nearest.pos.y);
+
+	// Try 2 tiles away, then 1 tile, in away direction and perpendicular directions
+	const candidates: Position[] = [];
+	if (awayX !== 0 || awayY !== 0) {
+		candidates.push({ x: player.pos.x + awayX * 2, y: player.pos.y + awayY * 2 });
+		candidates.push({ x: player.pos.x + awayX, y: player.pos.y + awayY });
+	}
+	// Perpendicular options
+	const perps = awayX !== 0 && awayY !== 0
+		? [{ x: awayX, y: 0 }, { x: 0, y: awayY }]
+		: awayX !== 0
+			? [{ x: 0, y: 1 }, { x: 0, y: -1 }]
+			: [{ x: 1, y: 0 }, { x: -1, y: 0 }];
+	for (const p of perps) {
+		candidates.push({ x: player.pos.x + p.x * 2, y: player.pos.y + p.y * 2 });
+		candidates.push({ x: player.pos.x + p.x, y: player.pos.y + p.y });
+	}
+
+	const dest = candidates.find(
+		(c) => !isBlocked(state, c.x, c.y) && !enemies.some((e) => e.pos.x === c.x && e.pos.y === c.y)
+	);
+
+	if (!dest) {
+		messages.push({ text: 'You try to flee but there is nowhere to go!', type: 'damage_taken' });
+		return { moved: null, messages };
+	}
+
+	messages.push({ text: 'You flee from combat!', type: 'info' });
+	return { moved: dest, messages };
+}
+
 export function handleInput(state: GameState, key: string): GameState {
 	if (state.gameOver) {
 		if (key === 'r') {
@@ -347,6 +423,26 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 			moveEnemies(state);
 		}
+		return { ...state };
+	}
+
+	// Flee key
+	if (key === 'f') {
+		if (hasEffect(state.player, 'stun')) {
+			addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
+		const fleeResult = attemptFlee(state);
+		for (const msg of fleeResult.messages) {
+			addMessage(state, msg.text, msg.type);
+		}
+		if (fleeResult.moved) {
+			state.player.pos = fleeResult.moved;
+			updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+			detectAdjacentSecrets(state);
+		}
+		moveEnemies(state);
 		return { ...state };
 	}
 

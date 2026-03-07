@@ -84,7 +84,7 @@
 			}
 		} else if (phase === 'playing') {
 			const key = e.key;
-			if (['w', 'a', 's', 'd', 'q', 'r', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+			if (['w', 'a', 's', 'd', 'q', 'r', 'f', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
 				e.preventDefault();
 				sendInput(key);
 			}
@@ -272,6 +272,7 @@
 					{ABILITY_DEFS[state.characterConfig.characterClass].name}
 					{#if state.abilityCooldown > 0}({state.abilityCooldown}){/if}
 				</button>
+				<button class="dpad-btn dpad-flee" ontouchstart={dpadTouch('f')} onclick={dpadClick('f')}>Flee</button>
 			</div>
 			{#if state.gameOver}
 				<div class="dpad-row">
@@ -715,6 +716,19 @@
 	.dpad-ability:active {
 		background: #321;
 		border-color: #fa6;
+	}
+
+	.dpad-flee {
+		width: auto;
+		padding: 0 16px;
+		font-size: 12px;
+		color: #8ac;
+		border-color: #8ac;
+	}
+
+	.dpad-flee:active {
+		background: #123;
+		border-color: #adf;
 	}
 
 	.dpad-restart {
