@@ -85,6 +85,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		unlockedAchievements: [],
 		lieCount: 0,
 		bestiary: {},
+		hunger: 100,
+		thirst: 100,
+		survivalEnabled: true,
 		...overrides
 	};
 }
@@ -266,6 +269,14 @@ describe('serializeState / deserializeState round-trip', () => {
 		expect(restored.unlockedAchievements).toEqual(['first_blood', 'boss_hunter']);
 	});
 
+	it('preserves hunger, thirst, and survivalEnabled', () => {
+		const state = makeTestState({ hunger: 35, thirst: 78, survivalEnabled: false });
+		const restored = deserializeState(serializeState(state));
+		expect(restored.hunger).toBe(35);
+		expect(restored.thirst).toBe(78);
+		expect(restored.survivalEnabled).toBe(false);
+	});
+
 	it('produces valid JSON string', () => {
 		const state = makeTestState();
 		const json = serializeState(state);
@@ -358,5 +369,15 @@ describe('localStorage integration', () => {
 		expect(restored!.bestiary['Goblin'].timesKilled).toBe(3);
 		expect(restored!.bestiary['Goblin'].rareEncountered).toBe(true);
 		expect(restored!.bestiary['Rat'].timesKilled).toBe(2);
+	});
+
+	it('preserves survival state through save/load', () => {
+		const state = makeTestState({ hunger: 42, thirst: 65, survivalEnabled: true });
+		saveGame(state);
+		const restored = loadGame();
+		expect(restored).not.toBeNull();
+		expect(restored!.hunger).toBe(42);
+		expect(restored!.thirst).toBe(65);
+		expect(restored!.survivalEnabled).toBe(true);
 	});
 });

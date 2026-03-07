@@ -52,6 +52,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		unlockedAchievements: [],
 		lieCount: 0,
 		bestiary: {},
+		hunger: 100,
+		thirst: 100,
+		survivalEnabled: true,
 		...overrides
 	};
 }
