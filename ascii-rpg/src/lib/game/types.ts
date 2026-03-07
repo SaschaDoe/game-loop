@@ -35,6 +35,8 @@ export interface Story {
 	type: 'legend' | 'tall_tale' | 'cautionary' | 'personal' | 'lore';
 }
 
+export type NPCAction = 'attack' | 'flee' | 'break_down' | 'storm_off';
+
 export interface DialogueEffect {
 	hp?: number;
 	atk?: number;
@@ -43,6 +45,7 @@ export interface DialogueEffect {
 	rumor?: Rumor;
 	learnLanguage?: string;
 	story?: Story;
+	npcAction?: NPCAction;
 }
 
 export type DialogueCondition =

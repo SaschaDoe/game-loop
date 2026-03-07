@@ -511,10 +511,34 @@ export function attemptPush(
 
 const MOOD_RECOVERY_TURNS = 20;
 
+function relocateNpc(state: GameState, npc: NPC) {
+	const floors: Position[] = [];
+	for (let y = 1; y < state.map.height - 1; y++) {
+		for (let x = 1; x < state.map.width - 1; x++) {
+			if (state.map.tiles[y][x] !== '.') continue;
+			if (x === state.player.pos.x && y === state.player.pos.y) continue;
+			if (state.enemies.some(e => e.pos.x === x && e.pos.y === y)) continue;
+			if (state.npcs.some(n => n !== npc && n.pos.x === x && n.pos.y === y)) continue;
+			const dist = Math.abs(x - state.player.pos.x) + Math.abs(y - state.player.pos.y);
+			if (dist >= 6) floors.push({ x, y });
+		}
+	}
+	if (floors.length > 0) {
+		npc.pos = floors[Math.floor(Math.random() * floors.length)];
+	}
+}
+
 function tickNpcMoods(state: GameState) {
 	for (const npc of state.npcs) {
 		if (npc.mood !== 'neutral' && npc.mood !== 'friendly') {
 			npc.moodTurns++;
+			// Afraid NPCs try to flee from the player every 5 turns
+			if (npc.mood === 'afraid' && npc.moodTurns % 5 === 0) {
+				const dist = Math.abs(npc.pos.x - state.player.pos.x) + Math.abs(npc.pos.y - state.player.pos.y);
+				if (dist <= 4) {
+					relocateNpc(state, npc);
+				}
+			}
 			if (npc.moodTurns >= MOOD_RECOVERY_TURNS) {
 				npc.mood = 'neutral';
 				npc.moodTurns = 0;
@@ -1251,6 +1275,46 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			state.heardStories = [...state.heardStories, option.onSelect.story.id];
 			addMessage(state, `Story collected: "${option.onSelect.story.title}" (+5 XP)`, 'discovery');
 			state.xp += 5;
+		}
+		// NPC extreme emotional actions
+		if (option.onSelect.npcAction) {
+			const npcName = state.activeDialogue!.npcName;
+			const npc = state.npcs.find((n) => n.name === npcName);
+			state.activeDialogue = null;
+			if (npc) {
+				switch (option.onSelect.npcAction) {
+					case 'attack': {
+						const dmg = Math.max(1, Math.floor(state.player.attack * 0.3));
+						state.player.hp -= dmg;
+						addMessage(state, `${npcName} attacks you in a fury! You take ${dmg} damage!`, 'damage_taken');
+						npc.mood = 'hostile';
+						npc.moodTurns = 0;
+						if (state.player.hp <= 0) handlePlayerDeath(state);
+						break;
+					}
+					case 'flee': {
+						addMessage(state, `${npcName} backs away in terror and flees!`, 'npc');
+						npc.mood = 'afraid';
+						npc.moodTurns = 0;
+						relocateNpc(state, npc);
+						break;
+					}
+					case 'break_down': {
+						addMessage(state, `${npcName} breaks down sobbing uncontrollably...`, 'npc');
+						npc.mood = 'sad';
+						npc.moodTurns = 0;
+						break;
+					}
+					case 'storm_off': {
+						addMessage(state, `${npcName} storms off in disgust!`, 'npc');
+						npc.mood = 'hostile';
+						npc.moodTurns = 0;
+						relocateNpc(state, npc);
+						break;
+					}
+				}
+			}
+			return { ...state };
 		}
 	}
 

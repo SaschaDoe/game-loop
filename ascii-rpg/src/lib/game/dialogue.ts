@@ -257,6 +257,44 @@ export const MOTHER_DIALOGUE: DialogueTree = {
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
 		),
+		return_sad: node('return_sad',
+			'*Her eyes are red. She\'s been crying.* I keep thinking about what happens if you don\'t come back. Your father tells me to stop worrying. But a mother\'s worry is infinite. It has no off switch. I tried. The switch broke.',
+			[
+				opt('I\'ll always come back, Mother.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Your mother brightens.' } }),
+				opt('I need you to believe in me.', 'return', '#ff4', { onSelect: { mood: 'neutral' } }),
+				opt('[Hug her silently]', 'mother_hug', '#4f4', { onSelect: { mood: 'friendly', hp: 2, message: 'Your mother\'s embrace heals more than potions. +2 HP' } }),
+			]
+		),
+		mother_hug: node('mother_hug',
+			'*She holds you for a long time. When she lets go, she\'s smiling through tears.* There. That\'s better. Now go be brave. And eat something. You look thin.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		return_afraid: node('return_afraid',
+			'*She flinches when she sees your wounds.* Oh no. Oh no, no, no. I KNEW this would happen. I told your father \u2014 I said "they\'re going to come back looking like a chewed boot" \u2014 and look at you!',
+			[
+				opt('It looks worse than it feels.', 'return', '#4f4', { onSelect: { mood: 'neutral' } }),
+				opt('I\'m fine. Really.', 'return', '#4f4', { onSelect: { mood: 'sad', message: 'She doesn\'t believe you. Not even a little.' } }),
+				opt('Can you patch me up?', 'return', '#ff4', { onSelect: { mood: 'friendly', hp: 3, message: 'Mother fusses over your wounds with practiced hands. +3 HP' } }),
+			]
+		),
+		return_hostile: node('return_hostile',
+			'*She crosses her arms. Her foot is tapping. The foot-tapping is never good.* You said something that hurt me last time. I don\'t care if you\'re a dungeon hero \u2014 you don\'t speak to your mother like that.',
+			[
+				opt('I\'m sorry, Mother. I didn\'t mean it.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'She softens, but only a little.' } }),
+				opt('You\'re right. I was wrong.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'She nods firmly. Apology accepted. Motherhood is a dictatorship with mercy.' } }),
+				opt('I stand by what I said.', '__exit__', '#f44', { onSelect: { mood: 'hostile', npcAction: 'break_down', message: 'She turns away. You hear quiet sobbing.' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*She\'s actually laughing when you approach.* I was just telling Mrs. Greystone about your adventures. She doesn\'t believe the part about the goblin merchant. I told her "the goblin has a TOP HAT." She fainted.',
+			[
+				opt('The top hat is very real.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('Wait \u2014 you\'re telling people about this?', 'return', '#ff4', { onSelect: { mood: 'amused', message: 'She is absolutely telling everyone. The whole village knows about the top hat.' } }),
+				opt('Mrs. Greystone faints at everything.', 'return', '#4f4', { onSelect: { mood: 'neutral' } }),
+			]
+		),
 	}
 };
 
@@ -506,6 +544,38 @@ export const FATHER_DIALOGUE: DialogueTree = {
 			'Give \'em hell, kid. And come back in one piece. Preferably with all your fingers.',
 			[
 				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		return_sad: node('return_sad',
+			'*He\'s sitting in the dark, holding an old adventurer\'s medallion.* I used to be fast, you know. Fastest blade in the Silver Delvers. Now I can barely open a jar. Time takes everything. Even the things you thought were permanent.',
+			[
+				opt('You\'re still the toughest person I know.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'He clears his throat gruffly. Definitely not emotional.' } }),
+				opt('Tell me about the Silver Delvers.', 'his_past', '#8cf', { onSelect: { mood: 'neutral' } }),
+				opt('Want to arm-wrestle? Might cheer you up.', 'return', '#ff4', { onSelect: { mood: 'amused', message: 'He almost smiles. "You couldn\'t beat me with both hands and a head start."' } }),
+			]
+		),
+		return_afraid: node('return_afraid',
+			'*His hands are shaking. He\'s holding his old sword, eyes scanning the door.* The dungeon surges are getting worse. I can feel it in the ground. Same tremor as twenty years ago, right before level ten collapsed and took half the Delvers with it.',
+			[
+				opt('What happened on level ten?', 'his_past', '#ff4', { onSelect: { mood: 'sad' } }),
+				opt('I\'ll handle whatever comes. That\'s my job now.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'He nods slowly. "Yeah. Yeah, I suppose it is."' } }),
+				opt('You don\'t have to be afraid anymore, Dad.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		return_hostile: node('return_hostile',
+			'*He\'s pacing. His jaw is set in that way that means someone is about to get a lecture.* What you did down there was RECKLESS. You think I survived twenty years of dungeoneering by charging in like a drunken goat? There are RULES. There are STRATEGIES. There is a REASON old adventurers exist!',
+			[
+				opt('I\'m sorry, Father. I\'ll be more careful.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'The jaw unclenches. Slightly.' } }),
+				opt('Maybe YOUR strategy was being slow and cautious. Mine is different.', '__exit__', '#f44', { onSelect: { npcAction: 'storm_off', message: 'He throws his hands up and walks away. The door slams.' } }),
+				opt('Teach me, then. Show me the right way.', 'combat_tips', '#ff4', { onSelect: { mood: 'friendly', message: 'He stops pacing. Teaching is what he was built for.' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*He\'s chuckling to himself when you arrive.* Your mother just told me about the goblin with the top hat. She did an impression. The impression was... *he wipes his eyes* ...it was VERY accurate. She even did the voice. The tiny little goblin sales pitch voice.',
+			[
+				opt('Mother does impressions?', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('The goblin\'s name is Grikkle. Show some respect.', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"Grikkle. Even the NAME is funny."' } }),
+				opt('I need to hear this impression.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 	}
@@ -1426,6 +1496,45 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('A three-hundred-year-old review of a mediocre empress. This is why I drink here.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
+		return_afraid: node('return_afraid',
+			'*The stranger is pressed against the wall, their composure cracked.* Something stirred below. I felt it through the stone. The Eye shifted. When the Eye shifts, the dungeon reshuffles. Corridors become dead ends. Safe rooms become trap rooms. Everything you knew about the layout... forget it.',
+			[
+				opt('Can you sense the Eye from here?', 'eye_sense', '#f44', { onSelect: { mood: 'afraid' } }),
+				opt('Sounds like you need a drink.', 'return', '#4f4', { onSelect: { mood: 'amused', message: 'They actually laugh. "Perhaps I do."' } }),
+				opt('What does the reshuffling mean for me?', 'return', '#ff4', { onSelect: { mood: 'neutral', message: '"It means trust your instincts, not your map."' } }),
+			]
+		),
+		eye_sense: node('eye_sense',
+			'*Their voice drops to a whisper.* I don\'t sense it. I HEAR it. A low hum beneath every other sound. Most people filter it out — their brains refuse to acknowledge it. But once you learn to listen... *they trail off* ...you can never stop. It\'s under the tavern music. Under the wind. Under your own heartbeat. It has always been there. And it is getting louder.',
+			[
+				opt('I wish you hadn\'t told me that.', 'return', '#4f4', { onSelect: { mood: 'neutral' } }),
+				opt('How do I make it stop?', 'return', '#f44', { onSelect: { mood: 'sad', message: '"You don\'t."' } }),
+			]
+		),
+		return_hostile: node('return_hostile',
+			'*Their eyes burn from the shadows. The usual cryptic patience is gone.* You speak of things you do not understand. You prod at ancient wounds with the curiosity of a child poking a sleeping dragon. I have watched civilizations rise and crumble, and you dare to question MY knowledge?',
+			[
+				opt('I meant no disrespect.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '*They exhale slowly.* "...I know. Forgive my sharpness. Eternity makes one... brittle."' } }),
+				opt('Knowledge without sharing is just hoarding.', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"Hoarding. Like a dragon." *A thin smile.* "Perhaps you have a point."' } }),
+				opt('Someone\'s cranky. Should I come back in a century?', '__exit__', '#f44', { onSelect: { npcAction: 'storm_off', message: 'The stranger dissolves into shadow. Their chair is empty. The shadows seem deeper now.' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*They sit motionless. The shadows around them seem heavier, as if gravity itself is mourning.* I remember what the world looked like before the dungeon. Green fields where the entrance now gapes. Children playing where monsters spawn. Three hundred years is a long time to remember a world that no longer exists.',
+			[
+				opt('What was it like?', 'return', '#8cf', { onSelect: { mood: 'sad', message: '"Beautiful. And temporary. As all beautiful things are."' } }),
+				opt('The world still has green fields. Just... elsewhere.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '"Elsewhere. Yes. I should visit elsewhere sometime."' } }),
+				opt('You carry a heavy burden.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: '"Thank you for noticing. Most people just see the mysterious hood and assume I\'m being dramatic."' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*Is the stranger... smiling? It\'s hard to tell under the hood, but there\'s a definite upturn.* Your Garvus just attempted to arm-wrestle a table leg. He lost. The table leg won by submission. The Barkeep is keeping score. Garvus is currently zero for seven against furniture.',
+			[
+				opt('Classic Garvus.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('I need to see these arm-wrestling records.', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"The Barkeep carves them into the bar. There is an entire section dedicated to Garvus vs. inanimate objects."' } }),
+				opt('Does anything actually amuse a three-hundred-year-old being?', 'return', '#8cf', { onSelect: { mood: 'friendly', message: '"Drunken mortals fighting furniture. Consistently. For centuries."' } }),
+			]
+		),
 	}
 };
 
@@ -2287,6 +2396,38 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 				opt('What is the Severance?', 'below', '#f44'),
 				opt('How do I survive the deeper levels?', 'escape', '#ff4'),
 				opt('Thank you for understanding.', 'return', '#4f4', { onSelect: { mood: 'neutral' } }),
+			]
+		),
+		return_afraid: node('return_afraid',
+			'*She\'s huddled in the corner, scratching equations into the stone with her fingernail.* The rats are organizing. I\'ve been tracking their patrol patterns. They have SHIFTS. They have a HIERARCHY. The big one with the scar \u2014 I call him Regional Manager \u2014 he reports to something deeper. Something that understands logistics.',
+			[
+				opt('Thessaly, those are just rats.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '"JUST rats? That\'s what the last assistant said. Before the rats promoted her to food."' } }),
+				opt('What does the Regional Manager want?', 'return', '#ff4', { onSelect: { mood: 'afraid', message: '"Performance reviews. For everyone. Including us."' } }),
+				opt('I\'ll protect you from the rat hierarchy.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'She relaxes slightly. "You\'d fight a middle manager? You\'re braver than I thought."' } }),
+			]
+		),
+		return_hostile: node('return_hostile',
+			'*She doesn\'t look up from her notes.* I have seventeen equations to solve before the dungeon reshuffles. Each one represents a possible escape route. You just interrupted equation fourteen. Equation fourteen was CRITICAL. It involved a variable I have been chasing for THREE WEEKS. That variable is now GONE. I hope you\'re happy.',
+			[
+				opt('I\'m sorry about the variable.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '"It was a beautiful variable. Complex. Irrational. Like me."' } }),
+				opt('Can I help with the equations?', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"Can you solve a non-Euclidean quadratic in Deepscript notation?" *She sees your face.* "I\'ll take that as no."' } }),
+				opt('Math can\'t be that important.', '__exit__', '#f44', { onSelect: { npcAction: 'break_down', message: 'Thessaly stares at you with the hollow eyes of someone whose life\'s work was just dismissed.' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*She\'s staring at the chains on the wall.* I had a laboratory once. Real equipment. Proper beakers. A grant from the University of Applied Nonsense. Now I have a cave, some rats, and a fingernail I\'ve been using as a stylus. My academic career peaked at "prisoner who does math."',
+			[
+				opt('You\'ll get back to your lab.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '"The lab was condemned after the gouda incident. But the sentiment is appreciated."' } }),
+				opt('Tell me about your research. The real stuff.', 'research', '#8cf', { onSelect: { mood: 'friendly' } }),
+				opt('At least the rats appreciate your math.', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"Regional Manager does seem impressed by my graphs. He chewed the least important one."' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*She\'s actually giggling, which is unsettling from a prisoner in chains.* I just realized something. The dungeon\'s trap placement follows a Fibonacci spiral. The ENTIRE dungeon is one enormous mathematical joke. Someone with a cosmic sense of humor built the world\'s deadliest punchline. I am trapped inside a JOKE. This is the funniest thing that has ever happened to me. Also the worst.',
+			[
+				opt('Is the punchline on level twenty?', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+				opt('You\'re handling captivity remarkably well.', 'return', '#4f4', { onSelect: { mood: 'amused', message: '"It\'s the equations. They keep me sane. Mostly. The giggling is new."' } }),
+				opt('A Fibonacci trap spiral. Of course.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 	}
@@ -3413,6 +3554,42 @@ export const SHADE_DIALOGUE: DialogueTree = {
 			],
 			'Deepscript'
 		),
+		return_afraid: node('return_afraid',
+			'*The Shade is flickering rapidly, its form unstable.* Something below has awakened. The argument... the great debate... a new voice has entered it. A voice that speaks in silence and screams in architecture. The walls are DISAGREEING with each other. Can you not feel it? The floor is uncertain. The ceiling is anxious.',
+			[
+				opt('[Try to calm the Shade]', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'The Shade stabilizes, but barely.' } }),
+				opt('[Ask what awakened]', 'return', '#f44', { onSelect: { mood: 'afraid', message: '"Something that was sleeping in the argument\'s margin notes. Something annotated."' } }),
+				opt('[Back away slowly]', '__exit__', '#0ff', { onSelect: { npcAction: 'flee', message: 'The Shade dissolves into the walls, leaving only a faint chill.' } }),
+			],
+			'Deepscript'
+		),
+		return_hostile: node('return_hostile',
+			'*The Shade\'s form solidifies into something sharp and angular. Its voice resonates with cold fury.* You desecrate what you do not understand. The Architects spoke in MEANING and you trample through their sentences like a drunk through a library. Every step you take corrupts a thousand years of careful argument.',
+			[
+				opt('[Apologize in Deepscript]', 'return', '#4f4', { showIf: { type: 'knowsLanguage', value: 'Deepscript' }, onSelect: { mood: 'neutral', message: 'The Shade pauses, surprised. "You speak... imperfectly. But you speak. This is... unexpected."' } }),
+				opt('[Stand your ground]', 'return', '#f44', { onSelect: { mood: 'hostile', message: 'The temperature drops several degrees. The Shade\'s eyes burn brighter.' } }),
+				opt('[Offer respect]', 'return', '#4f4', { onSelect: { mood: 'sad', message: 'The anger drains from the Shade like water through stone. What remains is just... old grief.' } }),
+			],
+			'Deepscript'
+		),
+		return_sad: node('return_sad',
+			'*The Shade hangs in the air like a tear that refused to fall.* I remember when these halls were new. When the mortar was still wet and the Architects walked among us, debating the proper angle of every corner. They cared about EVERY angle. Forty-seven degrees was a scandal. Ninety degrees was revolutionary. And now... the corridors crumble. The arguments fade. I am the last one who remembers what they were fighting about. And I am forgetting.',
+			[
+				opt('[Listen in silence]', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'Sometimes the greatest comfort is simply being heard.' } }),
+				opt('What were they fighting about?', 'return', '#8cf', { onSelect: { mood: 'sad', message: '"Whether existence should be permanent or temporary. They never reached consensus. The dungeon is their indecision made manifest."' } }),
+				opt('You\'re not forgotten. I\'m here.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'The Shade glows slightly brighter. "You are... kind. For a warm-blooded thing."' } }),
+			],
+			'Deepscript'
+		),
+		return_amused: node('return_amused',
+			'*The Shade is doing something impossible: it appears to be chuckling. The sound is like wind through a pipe organ.* I have just observed a goblin attempt to sell a health potion to a skeleton. The skeleton has no stomach. The goblin insisted this was "not a dealbreaker." The negotiation lasted forty-five minutes. The skeleton bought two.',
+			[
+				opt('Grikkle strikes again.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('Do ancient ethereal beings normally people-watch?', 'return', '#8cf', { onSelect: { mood: 'amused', message: '"After three millennia, entertainment options narrow significantly."' } }),
+				opt('The skeleton economy is fascinating.', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+			],
+			'Deepscript'
+		),
 	}
 };
 
@@ -3703,6 +3880,38 @@ export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
 			'*He waves enthusiastically with both hands.* BYE BYE! Come back soon! Tell friends! Tell ENEMIES! Grikkle does not discriminate! All customers welcome! Even the ones who tried to eat Grikkle! Especially them! Repeat customers are VERY important! Even cannibalistic ones!',
 			[
 				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		return_afraid: node('return_afraid',
+			'*Grikkle is hiding behind his crate. Only his tiny top hat is visible.* BIG-PERSON! You are BACK! Is scary things gone? Grikkle heard NOISES! Very bad noises! Like bones crunching but BIGGER! And then... silence! SILENCE IS WORSE! When dungeon is quiet, dungeon is PLANNING! Grikkle knows this! Grikkle survived FOURTEEN attempted hostile takeovers! Physical ones! Not corporate ones!',
+			[
+				opt('The coast is clear, Grikkle.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '*Grikkle peeks out.* "You SURE? Last time someone said coast is clear, coast was very NOT clear. Coast was full of spiders."' } }),
+				opt('BOO!', '__exit__', '#f44', { onSelect: { npcAction: 'flee', message: 'Grikkle screams, grabs his crate, and vanishes into a crack in the wall you didn\'t know existed.' } }),
+				opt('Want me to stand guard?', 'return', '#4f4', { onSelect: { mood: 'friendly', message: '"FREE bodyguard?! Grikkle accepts! This is best deal Grikkle has made all week! And Grikkle makes LOTS of deals!"' } }),
+			]
+		),
+		return_hostile: node('return_hostile',
+			'*Grikkle stands on his crate to look you in the eye. He fails by approximately three feet, but the ENERGY is there.* You! BAD customer! Grikkle knows what you did! You told OTHER customers about Grikkle\'s "flexible sourcing policies!" This is SLANDER! Grikkle\'s sourcing is not flexible! It is CREATIVE! Very different! Flexible implies dishonesty! Creative implies GENIUS!',
+			[
+				opt('Grikkle, I\'m sorry.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: '"Hmph. Grikkle accepts apology. But you are on PROBATION. Customer probation. Very serious."' } }),
+				opt('I\'ll buy something to make up for it.', 'grikkle_wares', '#ff4', { onSelect: { mood: 'amused', message: '"Now THAT is the language Grikkle understands! Money speaks louder than slander!"' } }),
+				opt('Your sourcing IS dishonest, Grikkle.', '__exit__', '#f44', { onSelect: { npcAction: 'storm_off', message: 'Grikkle pulls his tiny top hat over his eyes, picks up his crate, and waddles away with maximum indignation.' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*Grikkle is sitting on his crate, staring at a small pebble.* Grikkle misses Se\u00f1or Pebbleston. *He sniffles.* Best business partner. Never complained. Never asked for raise. Never got sick. Was rock. Perfect employee. And Grikkle SOLD him. For three teeth and a button. Grikkle is BAD friend. BAD business partner. Grikkle should close shop. Go live in cave. Smaller cave. Sadder cave.',
+			[
+				opt('Señor Pebbleston would want you to keep selling, Grikkle.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: '*Grikkle wipes his eyes.* "You... you think so? Se\u00f1or Pebbleston believed in Grikkle Brand? Even from beyond?"' } }),
+				opt('I\'ll help you find Señor Pebbleston.', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"REALLY?! You would search entire dungeon for one rock?! *His eyes light up.* That is either very kind or very stupid! Either way, Grikkle APPROVES!"' } }),
+				opt('There are other rocks, Grikkle.', 'return', '#f44', { onSelect: { mood: 'hostile', message: '"OTHER rocks?! OTHER ROCKS?! There are no OTHER Se\u00f1or Pebblestons! Every rock is UNIQUE! You are CANCELLED, big-person!"' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*Grikkle is practically vibrating with glee.* BIG-PERSON! Guess what?! Grikkle just sold a MIRROR to a Mimic! A MIRROR! Mimic looked at self for FIRST TIME! Had existential crisis! Mimic now questioning if it is a chest pretending to be a monster or a monster pretending to be a chest! Grikkle charged EXTRA for the therapy session afterwards! Philosophy is PREMIUM SERVICE!',
+			[
+				opt('You gave a Mimic an identity crisis.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+				opt('How much did you charge for the therapy?', 'return', '#ff4', { onSelect: { mood: 'amused', message: '"Four teeth! Which is actually what Mimic was ALREADY holding! So Mimic technically paid with its OWN teeth! Capitalism is BEAUTIFUL!"' } }),
+				opt('You are the most dangerous thing in this dungeon, Grikkle.', 'return', '#4f4', { onSelect: { mood: 'amused', message: '"Thank you! Grikkle puts that on business card! \'More dangerous than monsters! Better prices too!\'"' } }),
 			]
 		),
 	}
