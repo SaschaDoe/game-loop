@@ -34,6 +34,14 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		playerName: state.player.name,
 		npcMood,
 		lieCount: state.lieCount,
+		enemiesKilled: state.stats.enemiesKilled,
+		bossesKilled: state.stats.bossesKilled,
+		secretsFound: state.stats.secretsFound,
+		trapsDisarmed: state.stats.trapsDisarmed,
+		chestsOpened: state.stats.chestsOpened,
+		levelsCleared: state.stats.levelsCleared,
+		maxDungeonLevel: state.stats.maxDungeonLevel,
+		startingLocation: state.characterConfig.startingLocation,
 	};
 }
 
@@ -50,6 +58,12 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'minCharLevel': return ctx.characterLevel >= cond.value;
 		case 'npcMood': return ctx.npcMood === cond.value;
 		case 'knownLiar': return ctx.lieCount >= cond.value;
+		case 'minEnemiesKilled': return ctx.enemiesKilled >= cond.value;
+		case 'hasBossKills': return ctx.bossesKilled >= cond.value;
+		case 'minSecretsFound': return ctx.secretsFound >= cond.value;
+		case 'minChestsOpened': return ctx.chestsOpened >= cond.value;
+		case 'startingLocation': return ctx.startingLocation === cond.value;
+		case 'minLevelsCleared': return ctx.levelsCleared >= cond.value;
 	}
 }
 

@@ -56,7 +56,13 @@ export type DialogueCondition =
 	| { type: 'hasStories'; value: number }
 	| { type: 'minCharLevel'; value: number }
 	| { type: 'npcMood'; value: NPCMood }
-	| { type: 'knownLiar'; value: number };
+	| { type: 'knownLiar'; value: number }
+	| { type: 'minEnemiesKilled'; value: number }
+	| { type: 'hasBossKills'; value: number }
+	| { type: 'minSecretsFound'; value: number }
+	| { type: 'minChestsOpened'; value: number }
+	| { type: 'startingLocation'; value: StartingLocation }
+	| { type: 'minLevelsCleared'; value: number };
 
 export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
 
@@ -103,6 +109,14 @@ export interface DialogueContext {
 	playerName: string;
 	npcMood: NPCMood;
 	lieCount: number;
+	enemiesKilled: number;
+	bossesKilled: number;
+	secretsFound: number;
+	trapsDisarmed: number;
+	chestsOpened: number;
+	levelsCleared: number;
+	maxDungeonLevel: number;
+	startingLocation: StartingLocation;
 }
 
 export interface ActiveDialogue {

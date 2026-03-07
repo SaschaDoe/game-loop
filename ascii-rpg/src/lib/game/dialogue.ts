@@ -494,9 +494,82 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('[Rogue] Hear about any good loot to... liberate?', 'rogue_tips', '#4f8', { showIf: { type: 'class', value: 'rogue' } }),
 				opt('I barely made it back alive...', 'barely_alive', '#f44', { showIf: { type: 'hpBelow', value: 30 } }),
 				opt('I\'ve been deep. Really deep.', 'veteran_talk', '#ff4', { showIf: { type: 'minLevel', value: 8 } }),
+				opt('I\'ve killed a LOT of things down there.', 'barkeep_slayer', '#f84', { showIf: { type: 'minEnemiesKilled', value: 50 } }),
+				opt('I found some hidden rooms...', 'barkeep_secrets', '#c8f', { showIf: { type: 'minSecretsFound', value: 3 } }),
+				opt('I beat a boss!', 'barkeep_boss_kill', '#ff4', { showIf: { type: 'hasBossKills', value: 1 } }),
+				opt('[Cave Escapee] Remember when I escaped those goblins?', 'barkeep_cave_origin', '#8f4', { showIf: { type: 'startingLocation', value: 'cave' } }),
 				opt('Just need a moment to rest.', 'rest', '#4f4'),
 				opt('Look, about all the lies...', 'liar_confession', '#fa4', { showIf: { type: 'knownLiar', value: 3 } }),
 				opt('See you later, Barkeep.', 'farewell', '#0ff'),
+			]
+		),
+		barkeep_slayer: node('barkeep_slayer',
+			'*He whistles low.* Fifty kills? FIFTY? *He pulls out a tattered ledger from beneath the counter.* I keep a running tally of every adventurer who comes through here. Kill counts, survival rates, average drinks consumed before heading back in. You know what the average adventurer kills before they die? Seven. SEVEN. And most of those are rats. You\'re practically a natural disaster at this point. *He flips to a page.* Let me update your entry... "prolific," I\'ll write. No \u2014 "EXTREMELY prolific." The monsters down there must have a WANTED poster of you by now.',
+			[
+				opt('Do monsters actually have wanted posters?', 'barkeep_wanted', '#ff4'),
+				opt('What\'s the record?', 'barkeep_record', '#8cf'),
+			]
+		),
+		barkeep_wanted: node('barkeep_wanted',
+			'*He leans in conspiratorially.* Morrigan told me she saw one. Tacked to a wall on level four. Hand-drawn, very unflattering portrait. Listed your crimes as "excessive violence," "potion theft," and "being mean to Slimes." There was a reward: two dead rats and a rusty sword. *He pauses.* The Slimes pooled their resources. I don\'t want to know how Slimes pool resources. It\'s probably dissolving.',
+			[
+				opt('I\'m honored and disgusted.', 'return', '#4f4'),
+			]
+		),
+		barkeep_record: node('barkeep_record',
+			'*He flips to the front of the ledger.* The all-time record belongs to Korrin the Vast \u2014 one of the Silver Delvers. Two hundred and forty-three confirmed kills. Also held the record for "most food consumed in a single sitting," "loudest burp recorded in Willowmere," and "most bones broken in one\'s own body during a fight." He was not a subtle man. He once killed a Mimic by sitting on it. Didn\'t even know it was there. Just wanted a chair.',
+			[
+				opt('That\'s... inspirational?', 'return', '#4f4', { onSelect: { message: 'You feel inspired by Korrin\'s legacy of indiscriminate violence.' } }),
+			]
+		),
+		barkeep_secrets: node('barkeep_secrets',
+			'*His eyes light up.* SECRET rooms?! *He grabs a quill and paper.* Tell me EVERYTHING. I\'ve been compiling a map of every secret passage and hidden chamber reported by adventurers for TWENTY YEARS. It\'s my masterwork. My magnum opus. *He unfurls a massive scroll covered in contradictory scribbles.* As you can see, it is... a work in progress. Half the passages overlap, three of the rooms apparently exist inside each other, and this entire section \u2014 *he points to a corner* \u2014 was drawn by Garvus while drunk, so it\'s just a picture of a horse.',
+			[
+				opt('That is the worst map I\'ve ever seen.', 'barkeep_bad_map', '#f44'),
+				opt('I can help you fill it in.', 'barkeep_help_map', '#4f4'),
+			]
+		),
+		barkeep_bad_map: node('barkeep_bad_map',
+			'*He clutches the scroll to his chest, offended.* It\'s IMPRESSIONISTIC. You wouldn\'t understand. Corwin \u2014 the cartographer \u2014 took one look at it and wept. I ASSUMED those were tears of appreciation. He later clarified they were tears of professional anguish. But the SPIRIT of the map is accurate. Probably. The horse is definitely wrong, I\'ll grant you that. Unless there IS a horse on level seven. Nobody has disproven it.',
+			[
+				opt('Nobody can disprove a dungeon horse. Fair point.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		barkeep_help_map: node('barkeep_help_map',
+			'*His face lights up like a lantern.* Would you? REALLY? Oh, this is wonderful! *He hands you a charcoal stick.* Just mark the locations as best you can. And please \u2014 no horses. Unless you actually SEE a horse. *He leans in.* In which case, DEFINITELY draw the horse. I need to settle a bet with Garvus. [+5 HP from sheer gratitude]',
+			[
+				opt('You got it, Barkeep.', 'return', '#4f4', { onSelect: { hp: 5, message: 'The Barkeep\'s gratitude is palpable! +5 HP', mood: 'friendly' } }),
+			]
+		),
+		barkeep_boss_kill: node('barkeep_boss_kill',
+			'*He SLAMS his hand on the counter.* A BOSS?! You killed a BOSS?! *He starts rummaging behind the bar.* This calls for the good stuff! Not the "good" stuff I serve tourists \u2014 the ACTUAL good stuff! *He produces a bottle that seems to glow faintly.* Last time someone killed a boss, the Silver Delvers threw a party that lasted three days. Garvus arm-wrestled a table and LOST. The table was not enchanted. He was just that drunk. *He pours.* To you, boss-slayer!',
+			[
+				opt('Cheers! What can you tell me about bosses? [+6 HP]', 'barkeep_boss_lore', '#4f4', { onSelect: { hp: 6, message: 'Premium celebratory drinks! +6 HP' } }),
+			]
+		),
+		barkeep_boss_lore: node('barkeep_boss_lore',
+			'The bosses are the dungeon\'s immune system. Every five levels, there\'s a guardian \u2014 something the dungeon grew specifically to stop invaders. They\'re not just strong, they\'re PURPOSE-built. Each one learns from the adventurers who failed before you. That Shadow you fought? It studied the fighting styles of everyone it killed. You didn\'t just beat a monster \u2014 you beat the combined experience of every adventurer who DIDN\'T beat it. *He refills your glass.* That\'s why it matters. That\'s why I keep the ledger. Every victory down there is standing on a pile of defeats.',
+			[
+				opt('That\'s... heavy.', 'return', '#4f4', { onSelect: { rumor: rumor('boss_immune_system', 'Dungeon bosses are living immune systems that learn from previous adventurers\' failures.', 'Barkeep', 'true') } }),
+			]
+		),
+		barkeep_cave_origin: node('barkeep_cave_origin',
+			'*He chuckles.* Remember? Friend, EVERYONE remembers. You showed up at my door looking like something a goblin chewed on and spat out \u2014 because that is LITERALLY what happened. Thessaly dragged you in, you collapsed on my best table, and you bled on three menus. Do you know how hard it is to get adventurer blood out of parchment? Very. I had to rewrite the daily specials. *He shakes his head fondly.* And now look at you. From goblin prisoner to dungeon veteran. The character arc is impressive.',
+			[
+				opt('I still have nightmares about that cell.', 'barkeep_cave_nightmares', '#f44'),
+				opt('Thessaly saved my life that day.', 'barkeep_cave_thessaly', '#8cf'),
+			]
+		),
+		barkeep_cave_nightmares: node('barkeep_cave_nightmares',
+			'Nightmares are just the dungeon\'s way of sending thank-you cards. "Dear adventurer, thank you for visiting. We hope you enjoyed the imprisonment, starvation, and psychological trauma. Please rate your experience: one skull for \'would not recommend\' to five skulls for \'actively soul-destroying.\'" *He pats your hand.* It gets easier. Or you get used to it. One of those two. I can never remember which.',
+			[
+				opt('Your bedside manner needs work.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		barkeep_cave_thessaly: node('barkeep_cave_thessaly',
+			'*His expression softens.* Aye, she did. She had that way about her \u2014 couldn\'t pass someone in trouble without helping. It\'s why she went back into the dungeon, you know. She heard there were MORE prisoners deeper down. Went to help them. *He goes quiet.* That was six months ago. Nobody knows exactly what happened. The deeper levels... they change people. Or they TAKE people. With Thessaly, I honestly don\'t know which would be worse. She\'s the strongest person I ever met. If she couldn\'t make it back...',
+			[
+				opt('I\'ll find out what happened to her. I promise.', 'return', '#4f4', { onSelect: { mood: 'friendly', rumor: rumor('thessaly_deep', 'Thessaly went deeper into the dungeon to rescue other prisoners six months ago and never returned.', 'Barkeep', 'true'), message: 'The Barkeep looks at you with desperate hope.' } }),
 			]
 		),
 		liar_confession: node('liar_confession',
@@ -867,6 +940,10 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('[Deepscript] I can read the old writing now.', 'deepscript_talk', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Deepscript' } }),
 				opt('I\'ve collected many secrets now...', 'many_secrets', '#ff4', { showIf: { type: 'hasRumors', value: 5 } }),
 				opt('Any new insights?', 'insights', '#8cf'),
+				opt('I\'ve cleared many levels now.', 'stranger_veteran', '#ff4', { showIf: { type: 'minLevelsCleared', value: 5 } }),
+				opt('The traps down there... I\'ve learned to disarm them.', 'stranger_traps_context', '#fa4', { showIf: { type: 'minSecretsFound', value: 2 } }),
+				opt('[Village] I grew up in Willowmere, you know.', 'stranger_village_origin', '#8f4', { showIf: { type: 'startingLocation', value: 'village' } }),
+				opt('[Tavern Regular] I\'ve been drinking here longer than you.', 'stranger_tavern_origin', '#fa8', { showIf: { type: 'startingLocation', value: 'tavern' } }),
 				opt('I hear you\'re not quite what you seem...', 'stranger_liar', '#f44', { showIf: { type: 'minCharLevel', value: 5 } }),
 				opt('I need to go.', 'farewell', '#0ff'),
 			]
@@ -1222,6 +1299,82 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 			[
 				opt('What happens if nobody takes the job?', 'return', '#f44'),
 				opt('I might be that person.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		stranger_veteran: node('stranger_veteran',
+			'*They lean forward, and for the first time you see something resembling genuine interest.* Five floors. Five containment layers breached, re-sealed behind you by the dungeon\'s own architecture. You know what most adventurers see when they descend? Darkness. Monsters. Treasure. Simple things. But by the fifth floor, the dungeon starts to notice you. Not as prey. As a READER. Someone turning its pages. *Their voice drops.* It\'s been a long time since someone read that far. The last chapter was Thessaly. The one before that was me.',
+			[
+				opt('What happens when you read far enough?', 'stranger_reader_deep', '#f44'),
+				opt('The dungeon notices me. I\'ve felt it.', 'stranger_felt_it', '#8cf'),
+			]
+		),
+		stranger_reader_deep: node('stranger_reader_deep',
+			'*They steeple their fingers.* The dungeon begins to write BACK. You\'ll notice it first in the corridors \u2014 they start resembling places from your memories. A room that looks like your childhood home. A corridor that smells like your mother\'s cooking. It\'s not malice. It\'s... communication. The dungeon is trying to learn your language. Not Common or Deepscript. YOUR language. The language of your fears and hopes and memories. *A pause.* When it becomes fluent, things get... interesting.',
+			[
+				opt('Interesting how?', 'return', '#f44', { onSelect: { rumor: rumor('dungeon_reads_back', 'After the fifth floor, the dungeon begins to shape itself around your memories. It\'s learning your language.', 'Hooded Stranger', 'true'), message: 'The Stranger reveals the dungeon\'s true nature as a reader.' } }),
+			]
+		),
+		stranger_felt_it: node('stranger_felt_it',
+			'*They nod slowly.* Yes. That prickling on the back of your neck when a room is too quiet. The feeling that the walls are breathing. The certainty that the treasure in that chest was placed there specifically FOR you. *They lean closer.* Because it WAS. The dungeon is not random. Below the fifth floor, nothing is random. Every enemy placed to test you. Every potion placed to sustain you. Every trap placed to teach you. It\'s a curriculum. You are being educated. The question is: for what?',
+			[
+				opt('Educated for what?', 'return', '#f44', { onSelect: { rumor: rumor('dungeon_curriculum', 'Below floor five, the dungeon tailors every encounter specifically for each adventurer. Nothing is random.', 'Hooded Stranger', 'true') } }),
+			]
+		),
+		stranger_traps_context: node('stranger_traps_context',
+			'*They go very still.* You disarm traps. *It is not a question.* You see the mechanisms. The pressure plates. The wire. The intent. *They lean forward intently.* Do you know what a trap IS, in the context of the dungeon? It is a sentence. A statement of purpose. "This corridor is important enough to protect." Every trap you disarm, you are reading the dungeon\'s priorities. Its anxieties. The places it guards most fiercely are the places closest to its heart. *A long pause.* Or whatever passes for a heart in a living labyrinth.',
+			[
+				opt('So the traps are a map to what the dungeon values most.', 'stranger_trap_map', '#ff4'),
+				opt('That\'s a very poetic way to describe spike pits.', 'stranger_trap_poetry', '#4f4'),
+			]
+		),
+		stranger_trap_map: node('stranger_trap_map',
+			'*Something like excitement enters their voice \u2014 an emotion you didn\'t think they were capable of.* YES. Precisely. Thessaly understood this. She mapped the trap density per corridor and discovered a pattern: the most heavily trapped paths all converge on a single point. Level fifteen. Room forty-seven. We called it the Convergence. Every trap in the dungeon is a finger pointing at that room. *They lean back.* Nobody who has entered Room Forty-Seven has described what they found. Because nobody who has entered Room Forty-Seven has come back.',
+			[
+				opt('Room Forty-Seven. I\'ll remember that.', 'return', '#f44', { onSelect: { rumor: rumor('room_47', 'All trap-heavy corridors converge on Room 47 on level 15. Nobody who entered has returned.', 'Hooded Stranger', 'exaggerated'), message: 'The Stranger shares the location of the Convergence.' } }),
+			]
+		),
+		stranger_trap_poetry: node('stranger_trap_poetry',
+			'*Something that might be a laugh escapes them.* Spike pits are haiku. Poison darts are limericks. The really elaborate ones \u2014 the multi-stage traps with pressure plates and swinging blades and fire and THEN the pit opens \u2014 those are epic poetry. Sonnets of suffering. The dungeon fancies itself an artist. *They gesture at their untouched ale.* Between you and me, its metaphors are heavy-handed. A spike pit that says "do not enter" is not subtle. But the dungeon has never been accused of subtlety. Volume, yes. Subtlety, no.',
+			[
+				opt('I\'ll never look at a spike pit the same way again.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		stranger_village_origin: node('stranger_village_origin',
+			'*They tilt their head, studying you.* Willowmere. I remember when it was founded. Aldric Willowmere and his twelve wagons, none of which survived the journey. *You realize they said "I remember" about something two hundred years ago.* Your village sits on an intersection of ley lines \u2014 did you know that? Three lines of concentrated magical energy converging on a muddy field where a confused merchant decided to build a house. The dungeon grew here because of those ley lines. And Willowmere grew here because of the dungeon. You are not from a village near a dungeon. You are from a village that the dungeon GREW.',
+			[
+				opt('The dungeon grew Willowmere?!', 'stranger_village_grown', '#f44'),
+				opt('My parents never mentioned ley lines.', 'stranger_village_parents', '#8cf'),
+			]
+		),
+		stranger_village_grown: node('stranger_village_grown',
+			'Not intentionally. The dungeon needs... an ecosystem. Adventurers to feed it stories. Merchants to supply adventurers. Farmers to supply merchants. Before Aldric, the dungeon attracted wanderers, hermits, the occasional cursed knight. But they were inconsistent. Unreliable. The dungeon needed a RENEWABLE source. So it nudged the ley lines. Made the area feel... welcoming. Safe. Like a good place to build. *They spread their hands.* Your mother\'s cooking? Your father\'s stories? The feeling of home you carry from Willowmere? All real. All genuine. And all part of a system designed to produce people brave enough to walk into the dark.',
+			[
+				opt('That is deeply unsettling and I wish you hadn\'t told me.', 'return', '#4f4', { onSelect: { rumor: rumor('willowmere_grown', 'Willowmere was not founded by choice. The dungeon manipulated ley lines to create a settlement that would produce adventurers.', 'Hooded Stranger', 'exaggerated') } }),
+			]
+		),
+		stranger_village_parents: node('stranger_village_parents',
+			'*A hint of warmth in their voice.* They wouldn\'t. The ley lines are invisible to most. Your parents gave you what mattered \u2014 kindness, courage, a reason to come back alive. The dungeon may have arranged the GEOGRAPHY of Willowmere, but it cannot arrange love. That part is real. Entirely, stubbornly, inconveniently real. *A pause.* It confuses the dungeon, I think. Love. It cannot read it. It cannot replicate it. Every time you think of home and fight harder because of it, the dungeon encounters something it cannot catalogue. You are, in a small way, illegible to it. And that is your greatest weapon.',
+			[
+				opt('Love as a weapon against a sentient dungeon. I\'ll take it.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'The Stranger\'s words fill you with warmth and determination.' } }),
+			]
+		),
+		stranger_tavern_origin: node('stranger_tavern_origin',
+			'*A dry sound that might be amusement.* Longer than me? I have been sitting in this chair for three hundred years. My ale has been untouched since the reign of Empress Valthira the Adequate. *They gesture at the fossilized ring stain on their table.* This stain is a historical artifact. Archaeologists would weep. *They tilt their head at you.* But you have been here since the beginning. YOUR beginning. This tavern is where your story started. Not in a home. Not in a prison. In a place between stories, surrounded by other people\'s tales. Do you know what that makes you?',
+			[
+				opt('What does that make me?', 'stranger_tavern_between', '#8cf'),
+				opt('Empress Valthira the Adequate?', 'stranger_valthira', '#ff4'),
+			]
+		),
+		stranger_tavern_between: node('stranger_tavern_between',
+			'A collector. You began in a tavern \u2014 a place where stories gather. The Barkeep told you his stories. Garvus told you his. I told you mine. You absorbed them all before you ever set foot in the dungeon. Most adventurers enter the dungeon as blank pages. You entered already written upon. *They lean forward.* The dungeon reads everyone who enters. But you... you entered carrying the stories of others. The dungeon didn\'t just read YOU. It read everyone whose tale you carry. You smuggled an entire library into a labyrinth. *Almost admiringly.* Clever.',
+			[
+				opt('I\'m basically a walking bookshelf. Got it.', 'return', '#4f4', { onSelect: { mood: 'amused', rumor: rumor('story_smuggler', 'Adventurers who carry others\' stories confuse the dungeon. It tries to read one person and finds many.', 'Hooded Stranger', 'true') } }),
+			]
+		),
+		stranger_valthira: node('stranger_valthira',
+			'*They actually pause, as if recalling.* Empress Valthira the Adequate. Ruled for forty-three years. Her reign was described as "fine." Her economic policies were "acceptable." Her military campaigns were "present." She was neither loved nor hated. She was... adequate. History remembers the great and the terrible. Valthira is remembered for being aggressively mediocre. She once gave a speech so perfectly average that three scribes fell asleep simultaneously. *A beat.* I attended that speech. I also fell asleep. It was remarkable in its unremarkability.',
+			[
+				opt('A three-hundred-year-old review of a mediocre empress. This is why I drink here.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 	}
@@ -2117,6 +2270,8 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('You\'ve been down here a long time...', 'deep_merchant', '#ff4', { showIf: { type: 'minLevel', value: 5 } }),
 				opt('How\'s business?', 'business', '#8cf'),
 				opt('Any tips about this level?', 'tips', '#ff4'),
+				opt('I\'ve opened a lot of chests down here.', 'morrigan_chests', '#ff4', { showIf: { type: 'minChestsOpened', value: 10 } }),
+				opt('I\'ve cleared a lot of levels.', 'morrigan_veteran', '#f84', { showIf: { type: 'minLevelsCleared', value: 5 } }),
 				opt('I hear I have a... reputation.', 'morrigan_liar', '#fa4', { showIf: { type: 'knownLiar', value: 3 } }),
 			opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
 			]
@@ -2146,6 +2301,38 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('You sold the goblins a cooking pot?!', 'pot', '#f44'),
 				opt('You trade with monsters?', 'monster_trade', '#ff4'),
 				opt('What do you have for sale?', 'wares', '#ff4'),
+			]
+		),
+		morrigan_chests: node('morrigan_chests',
+			'*She leans forward, practically vibrating.* Ten chests? You\'ve opened TEN CHESTS? Do you have ANY idea what that means from a supply chain perspective? *She pulls out an abacus.* Each chest represents approximately three to five items that I could have sold you at a MUCH higher markup! You\'re cutting out the middlewoman! *She gasps.* Wait. Do you take requests? Because if you could stop opening the ones with health potions and leave those for me to "discover" and resell, we could have a VERY profitable arrangement. I\'d give you a ten percent finder\'s fee. *She pauses.* Five percent. Three. Final offer.',
+			[
+				opt('You want me to stop looting chests so YOU can sell me the contents?', 'morrigan_chests_scheme', '#f44'),
+				opt('That is the most Morrigan thing I\'ve ever heard.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		morrigan_chests_scheme: node('morrigan_chests_scheme',
+			'*She throws up her hands.* When you say it OUT LOUD it sounds unreasonable! But that\'s because you\'re thinking like a consumer. Think like a BUSINESSWOMAN. Those chests are free inventory! Placed by the dungeon at no cost to anyone! And you\'re just TAKING it? For FREE? That\'s not adventuring, that\'s SHOPLIFTING! *She catches herself.* From a living labyrinth. Which doesn\'t technically own the items. And has no legal standing. *A long pause.* My argument has some structural weaknesses, I admit.',
+			[
+				opt('Several, yes.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		morrigan_veteran: node('morrigan_veteran',
+			'*She sizes you up with newfound respect.* Five levels cleared. FIVE. Do you know how many adventurers clear five levels? About one in twenty. The rest become... inventory. *She gestures around.* Half the bones on these floors used to be customers. I mourn them. Briefly. Then I sell their dropped equipment. The circle of commerce. *She becomes serious.* But YOU. You keep coming back. You\'re what we in the trade call a "recurring revenue stream." That\'s the highest compliment a merchant can give. Higher than "friend." Higher than "valued customer." You are RELIABLE INCOME.',
+			[
+				opt('I\'ve never been so flattered and insulted simultaneously.', 'morrigan_vet_flattered', '#ff4'),
+				opt('Do you have better stock for experienced adventurers?', 'morrigan_vet_stock', '#4f4'),
+			]
+		),
+		morrigan_vet_flattered: node('morrigan_vet_flattered',
+			'*She winks.* That\'s my specialty. I once made a Lich feel simultaneously honored and offended by calling his phylactery "vintage." He didn\'t know whether to thank me or curse me. He did both. I sold him a "premium curse removal kit" for the curse he JUST cast on me. Double sale! TRIPLE if you count the emotional damage. *She beams.* Anyway, since you\'re clearly going to survive long enough to be a repeat customer \u2014 here. Something from my personal reserve.',
+			[
+				opt('From your personal reserve? [+3 ATK]', 'return', '#4f4', { onSelect: { atk: 3, message: 'Morrigan shares something from her secret stock! +3 ATK', mood: 'friendly' } }),
+			]
+		),
+		morrigan_vet_stock: node('morrigan_vet_stock',
+			'*She rummages through her infinite pouches.* Better stock for better customers! I have a tiered loyalty program. Bronze tier: you get to browse. Silver tier: I stop lying about the prices. Gold tier: I tell you which items are ACTUALLY magical and which are just shiny. Platinum tier: I reveal my real prices. *She lowers her voice.* Nobody has ever reached Platinum tier. The Gold tier customers all died. The Silver tier customers all left. You are \u2014 I think \u2014 the first Bronze customer to come back FIVE TIMES. Which means you get... *drumroll* ...a small discount. Very small.',
+			[
+				opt('How small?', 'return', '#ff4', { onSelect: { hp: 4, message: 'Morrigan grudgingly applies a tiny discount. +4 HP in premium potions!' } }),
 			]
 		),
 		pot: node('pot',
@@ -2603,7 +2790,41 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 				opt('[Rogue] As a rogue, I notice things. Let me help you.', 'rogue_help', '#4f8', { showIf: { type: 'class', value: 'rogue' } }),
 				opt('[Warrior] I\'ll clear a path for you. Stay behind me.', 'warrior_protect', '#f84', { showIf: { type: 'class', value: 'warrior' } }),
 				opt('Any dangers I should know about?', 'dangers', '#ff4'),
+				opt('I\'ve killed dozens of monsters. You\'re safe with me.', 'corwin_bodycount', '#f84', { showIf: { type: 'minEnemiesKilled', value: 25 } }),
+				opt('I\'ve found secret passages in these walls.', 'corwin_secrets', '#c8f', { showIf: { type: 'minSecretsFound', value: 2 } }),
 				opt('Good luck out there.', 'farewell', '#0ff'),
+			]
+		),
+		corwin_bodycount: node('corwin_bodycount',
+			'*Their eyes go wide.* Dozens? DOZENS?! I\'ve killed exactly ONE monster since I got here. A rat. And I\'m not entirely sure I killed it \u2014 it might have died of pity. My sword got stuck in a wall on the first swing, I tripped over my own shield on the second, and the rat just... sat there. Watching. Judging. Eventually it sighed and fell over. I\'m choosing to count it. *They gesture at a single tally mark scratched into their breastplate.* My kill count. Singular. You\'re basically a god of war standing next to a man who was defeated by gravity and a disinterested rodent.',
+			[
+				opt('The rat SIGHED at you?', 'corwin_rat', '#ff4'),
+				opt('Everyone starts somewhere.', 'return', '#4f4', { onSelect: { mood: 'friendly' } }),
+			]
+		),
+		corwin_rat: node('corwin_rat',
+			'It SIGHED. Audibly. With its little rat lungs. It looked at my sword stuck in the wall, it looked at me lying on the ground, it looked at my shield spinning in a circle like a very sad top, and it let out this tiny... *He makes a small exasperated sound.* ...hhhhhh. And then it just keeled over. I think it died of EMBARRASSMENT. On my behalf. *He looks at the floor.* Sometimes I hear it in my dreams. That little sigh. The universe\'s smallest expression of disappointment. I have been roasted by a rat.',
+			[
+				opt('That is the saddest combat story I\'ve ever heard. [+2 HP]', 'return', '#4f4', { onSelect: { hp: 2, mood: 'amused', message: 'Corwin\'s terrible rat story somehow makes you feel better about your own fights. +2 HP' } }),
+			]
+		),
+		corwin_secrets: node('corwin_secrets',
+			'*They pull out a crumpled, coffee-stained journal.* SECRET passages?! This changes EVERYTHING! I\'ve been mapping the visible dungeon for weeks and the math NEVER worked! Corridors that should connect but don\'t! Rooms that are bigger on the inside! A hallway that\'s eleven feet long going north but only nine feet long going south! *They\'re scribbling furiously.* It\'s the secret passages! They\'re the hidden variables in my equations! The dungeon isn\'t nonsensical \u2014 it has a HIDDEN GEOMETRY!',
+			[
+				opt('You sound way too excited about secret doors.', 'corwin_geometry', '#ff4'),
+				opt('Can I see your map?', 'corwin_map', '#8cf'),
+			]
+		),
+		corwin_geometry: node('corwin_geometry',
+			'*They wave the journal, ink splattering everywhere.* You don\'t UNDERSTAND! I\'ve been trying to map this dungeon as a three-dimensional structure and it DOESN\'T WORK! It\'s like trying to draw a tesseract on a napkin! But if there are hidden connections \u2014 if the dungeon is a higher-dimensional space folded into three dimensions \u2014 then the secret passages aren\'t just shortcuts, they\'re DIMENSIONAL SEAMS! Places where the folded space peeks through! *They stop, eyes wide.* This means the dungeon is a four-dimensional object. We\'re walking on the surface of a hypercube. Navigating a three-dimensional shadow of a four-dimensional structure. *Long pause.* No wonder I\'m lost. Nobody taught me four-dimensional cartography. It wasn\'t in the curriculum.',
+			[
+				opt('I understood about 10% of that but it sounded important.', 'return', '#4f4', { onSelect: { rumor: rumor('hypercube_dungeon', 'The dungeon may be a 4D structure folded into 3D space. Secret passages are dimensional seams where the fold shows.', 'Corwin', 'exaggerated'), mood: 'friendly', message: 'Corwin\'s cartographic breakthrough changes how you see the dungeon.' } }),
+			]
+		),
+		corwin_map: node('corwin_map',
+			'*They hold up a map that looks like it was drawn during an earthquake by someone who was also in an earthquake inside a DIFFERENT earthquake.* It\'s a work in progress. The solid lines are confirmed corridors. The dotted lines are probable corridors. The wavy lines are "I THINK this was a corridor but it might have been a fever dream." The skull symbols mark places where I almost died. As you can see, there are... a lot of skull symbols. This entire section is just skulls. I call it the "Neighborhood of Constant Peril." *He turns the map.* Actually, I might be holding it upside down. Hard to tell.',
+			[
+				opt('This makes the Barkeep\'s map look professional.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 		directions: node('directions',
