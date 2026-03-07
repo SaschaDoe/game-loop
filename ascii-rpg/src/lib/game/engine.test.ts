@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, handleInput, xpForLevel, xpReward } from './engine';
-import type { GameState, Entity } from './types';
+import type { GameState, Entity, Trap } from './types';
 import { Visibility } from './types';
 
 function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
@@ -47,6 +47,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		visibility,
 		sightRadius: 8,
 		detectedSecrets: new Set<string>(),
+		traps: [],
+		detectedTraps: new Set<string>(),
 		...overrides
 	};
 }
@@ -346,5 +348,52 @@ describe('Secret rooms', () => {
 		const state = createGame();
 		expect(state.detectedSecrets).toBeDefined();
 		expect(state.detectedSecrets instanceof Set).toBe(true);
+	});
+});
+
+describe('Traps integration', () => {
+	it('createGame includes traps array', () => {
+		const state = createGame();
+		expect(Array.isArray(state.traps)).toBe(true);
+	});
+
+	it('createGame includes detectedTraps set', () => {
+		const state = createGame();
+		expect(state.detectedTraps).toBeDefined();
+		expect(state.detectedTraps instanceof Set).toBe(true);
+	});
+
+	it('stepping on hidden trap triggers it', () => {
+		const state = makeTestState();
+		state.traps = [{ pos: { x: 6, y: 5 }, type: 'spike', triggered: false }];
+		const result = handleInput(state, 'd');
+		expect(result.traps[0].triggered).toBe(true);
+		expect(result.player.hp).toBeLessThan(20);
+		expect(result.messages.some((m) => m.includes('Spike Trap'))).toBe(true);
+	});
+
+	it('detected trap is not triggered when walking onto it', () => {
+		const state = makeTestState();
+		state.traps = [{ pos: { x: 6, y: 5 }, type: 'spike', triggered: false }];
+		state.detectedTraps.add('6,5');
+		const result = handleInput(state, 'd');
+		expect(result.traps[0].triggered).toBe(false);
+		expect(result.player.hp).toBe(20);
+	});
+
+	it('trap can kill the player', () => {
+		const state = makeTestState();
+		state.player.hp = 1;
+		state.traps = [{ pos: { x: 6, y: 5 }, type: 'spike', triggered: false }];
+		const result = handleInput(state, 'd');
+		expect(result.gameOver).toBe(true);
+	});
+
+	it('detects traps when moving adjacent', () => {
+		const state = makeTestState();
+		state.traps = [{ pos: { x: 7, y: 5 }, type: 'spike', triggered: false }];
+		// Move right to (6,5) — adjacent to trap at (7,5)
+		const result = handleInput(state, 'd');
+		expect(result.detectedTraps.has('7,5')).toBe(true);
 	});
 });

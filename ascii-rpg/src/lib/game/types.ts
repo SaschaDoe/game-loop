@@ -22,6 +22,14 @@ export interface Entity {
 	statusEffects: StatusEffect[];
 }
 
+export type TrapType = 'spike' | 'poison_dart' | 'alarm' | 'teleport';
+
+export interface Trap {
+	pos: Position;
+	type: TrapType;
+	triggered: boolean;
+}
+
 export type Tile = '#' | '.' | '>' | '*';
 
 export enum Visibility {
@@ -49,4 +57,6 @@ export interface GameState {
 	visibility: Visibility[][];
 	sightRadius: number;
 	detectedSecrets: Set<string>;
+	traps: Trap[];
+	detectedTraps: Set<string>;
 }

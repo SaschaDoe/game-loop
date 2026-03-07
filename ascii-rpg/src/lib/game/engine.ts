@@ -4,6 +4,7 @@ import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
 import { createMonster, pickMonsterDef, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
+import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -51,6 +52,10 @@ function newLevel(level: number): GameState {
 	const visibility = createVisibilityGrid(map.width, map.height);
 	updateVisibility(visibility, map, playerPos, sightRadius);
 
+	const traps = placeTraps(map, level);
+	// Don't place traps on player spawn
+	const filteredTraps = traps.filter((t) => !(t.pos.x === playerPos.x && t.pos.y === playerPos.y));
+
 	const state: GameState = {
 		player: {
 			pos: playerPos,
@@ -71,9 +76,14 @@ function newLevel(level: number): GameState {
 		characterLevel: 1,
 		visibility,
 		sightRadius,
-		detectedSecrets: new Set<string>()
+		detectedSecrets: new Set<string>(),
+		traps: filteredTraps,
+		detectedTraps: new Set<string>()
 	};
 	detectAdjacentSecrets(state);
+	for (const msg of detectAdjacentTraps(state)) {
+		addMessage(state, msg);
+	}
 	return state;
 }
 
@@ -216,6 +226,31 @@ export function handleInput(state: GameState, key: string): GameState {
 	state.player.pos = { x: nx, y: ny };
 	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
 	detectAdjacentSecrets(state);
+	for (const msg of detectAdjacentTraps(state)) {
+		addMessage(state, msg);
+	}
+
+	// Check for trap at new position
+	const trap = getTrapAt(state, nx, ny);
+	if (trap && !state.detectedTraps.has(`${nx},${ny}`)) {
+		const result = triggerTrap(state, trap);
+		for (const msg of result.messages) {
+			addMessage(state, msg);
+		}
+		if (result.teleportPos) {
+			state.player.pos = result.teleportPos;
+			updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+			detectAdjacentSecrets(state);
+			for (const msg2 of detectAdjacentTraps(state)) {
+				addMessage(state, msg2);
+			}
+		}
+		if (state.player.hp <= 0) {
+			state.gameOver = true;
+			addMessage(state, 'You have been slain! Press R to restart.');
+			return { ...state };
+		}
+	}
 
 	// pick up item
 	if (state.map.tiles[ny][nx] === '*') {
@@ -281,6 +316,7 @@ function tileColor(tile: string, isDetectedSecret: boolean = false): string {
 	if (tile === '.') return '#666666';
 	if (tile === '>') return '#ffff00';
 	if (tile === '*') return '#ff00ff';
+	if (tile === '^') return '#ff4444';
 	return '#444444';
 }
 
@@ -307,15 +343,27 @@ export function renderColored(state: GameState): { char: string; color: string }
 					const enemyColor = effectColor(enemy) ?? enemy.color;
 					row.push({ char: enemy.char, color: enemyColor });
 				} else {
-					const tile = state.map.tiles[y][x];
-					const isSecret = state.detectedSecrets.has(`${x},${y}`);
-					row.push({ char: tile, color: tileColor(tile, isSecret) });
+					const key = `${x},${y}`;
+					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
+					if (detectedTrap) {
+						row.push({ char: '^', color: tileColor('^') });
+					} else {
+						const tile = state.map.tiles[y][x];
+						const isSecret = state.detectedSecrets.has(key);
+						row.push({ char: tile, color: tileColor(tile, isSecret) });
+					}
 				}
 			} else {
 				// Explored but not currently visible: show terrain dimmed, no entities
-				const tile = state.map.tiles[y][x];
-				const isSecret = state.detectedSecrets.has(`${x},${y}`);
-				row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+				const key = `${x},${y}`;
+				const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
+				if (detectedTrap) {
+					row.push({ char: '^', color: dimColor(tileColor('^')) });
+				} else {
+					const tile = state.map.tiles[y][x];
+					const isSecret = state.detectedSecrets.has(key);
+					row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+				}
 			}
 		}
 		grid.push(row);
