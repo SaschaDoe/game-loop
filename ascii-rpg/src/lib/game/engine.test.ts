@@ -1706,3 +1706,86 @@ describe('environmental storytelling (landmarks)', () => {
 		expect(result.landmarks[0].examined).toBe(true);
 	});
 });
+
+describe('rest and camping', () => {
+	it('short rest restores HP when no enemies nearby', () => {
+		const state = makeTestState();
+		state.player.hp = 10;
+		state.player.maxHp = 20;
+		const result = handleInput(state, 'r');
+		expect(result.player.hp).toBe(15); // 10 + floor(20*0.25)
+		const healMsg = result.messages.find(m => m.type === 'healing');
+		expect(healMsg).toBeDefined();
+	});
+
+	it('short rest blocked when enemies are nearby', () => {
+		const state = makeTestState({
+			enemies: [{ pos: { x: 6, y: 5 }, char: 'G', color: '#0f0', name: 'Goblin', hp: 5, maxHp: 5, attack: 2, statusEffects: [] }]
+		});
+		state.player.hp = 10;
+		const result = handleInput(state, 'r');
+		expect(result.player.hp).toBe(10); // no healing
+		const warnMsg = result.messages.find(m => m.text.includes("can't rest"));
+		expect(warnMsg).toBeDefined();
+	});
+
+	it('short rest does nothing at full HP', () => {
+		const state = makeTestState();
+		const result = handleInput(state, 'r');
+		const infoMsg = result.messages.find(m => m.text.includes('full health'));
+		expect(infoMsg).toBeDefined();
+	});
+
+	it('long rest restores full HP', () => {
+		const state = makeTestState();
+		state.player.hp = 5;
+		state.player.maxHp = 20;
+		const orig = Math.random;
+		Math.random = () => 0.9; // no ambush
+		try {
+			const result = handleInput(state, 'R');
+			expect(result.player.hp).toBe(20);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('long rest ambush spawns enemies', () => {
+		const state = makeTestState();
+		state.player.hp = 10;
+		state.player.maxHp = 20;
+		state.level = 1;
+		// Make all floor tiles around player
+		for (let y = 0; y < 10; y++)
+			for (let x = 0; x < 10; x++)
+				state.map.tiles[y][x] = '.';
+		const orig = Math.random;
+		let callCount = 0;
+		Math.random = () => {
+			callCount++;
+			if (callCount === 1) return 0.1; // ambush triggers (< 0.3)
+			return 0.4; // used for spawn positioning
+		};
+		try {
+			const result = handleInput(state, 'R');
+			// HP was restored to 20 but ambush enemies may have attacked
+			expect(result.player.hp).toBeGreaterThan(10); // healed from 10
+			const ambushMsg = result.messages.find(m => m.text.includes('ambushed'));
+			expect(ambushMsg).toBeDefined();
+			// Should have spawned at least 1 enemy
+			expect(result.enemies.length).toBeGreaterThan(0);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('stunned player cannot rest', () => {
+		const state = makeTestState();
+		state.player.hp = 10;
+		state.player.statusEffects = [{ type: 'stun', duration: 1, potency: 0 }];
+		const result = handleInput(state, 'r');
+		expect(result.player.hp).toBe(10);
+		const stunMsg = result.messages.find(m => m.text.includes('stunned'));
+		expect(stunMsg).toBeDefined();
+	});
+});

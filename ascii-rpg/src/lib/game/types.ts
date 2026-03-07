@@ -45,12 +45,24 @@ export interface DialogueEffect {
 	story?: Story;
 }
 
+export type DialogueCondition =
+	| { type: 'minLevel'; value: number }
+	| { type: 'maxLevel'; value: number }
+	| { type: 'class'; value: CharacterClass }
+	| { type: 'notClass'; value: CharacterClass }
+	| { type: 'hpBelow'; value: number }
+	| { type: 'knowsLanguage'; value: string }
+	| { type: 'hasRumors'; value: number }
+	| { type: 'hasStories'; value: number }
+	| { type: 'minCharLevel'; value: number };
+
 export interface DialogueOption {
 	text: string;
 	nextNode: string;
 	color?: string;
 	onSelect?: DialogueEffect;
 	once?: boolean;
+	showIf?: DialogueCondition;
 }
 
 export interface DialogueNode {
@@ -66,6 +78,18 @@ export interface DialogueTree {
 	nodes: Record<string, DialogueNode>;
 }
 
+export interface DialogueContext {
+	dungeonLevel: number;
+	characterLevel: number;
+	characterClass: CharacterClass;
+	hpPercent: number;
+	enemyCount: number;
+	rumorCount: number;
+	storyCount: number;
+	knownLanguages: string[];
+	playerName: string;
+}
+
 export interface ActiveDialogue {
 	npcName: string;
 	npcChar: string;
@@ -75,6 +99,7 @@ export interface ActiveDialogue {
 	visitedNodes: Set<string>;
 	givenItems: boolean;
 	mood: NPCMood;
+	context: DialogueContext;
 }
 
 export interface NPC {

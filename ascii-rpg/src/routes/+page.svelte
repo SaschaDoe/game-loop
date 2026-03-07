@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
@@ -141,21 +141,26 @@
 					skipTypewriter(node.npcText);
 					return;
 				}
+				// Build filtered option list (same as render)
+				const ctx = state.activeDialogue.context;
+				const filtered = node.options.map((opt, origIdx) => ({ opt, origIdx })).filter(({ opt }) => !opt.showIf || checkCondition(opt.showIf, ctx));
 				if (key === 'w' || key === 'ArrowUp') {
 					dialogueSelection = Math.max(0, dialogueSelection - 1);
 				} else if (key === 's' || key === 'ArrowDown') {
-					dialogueSelection = Math.min(node.options.length - 1, dialogueSelection + 1);
+					dialogueSelection = Math.min(filtered.length - 1, dialogueSelection + 1);
 				} else if (key === 'Enter' || key === ' ') {
-					state = handleDialogueChoice(state, dialogueSelection);
-					dialogueSelection = 0;
+					if (filtered[dialogueSelection]) {
+						state = handleDialogueChoice(state, filtered[dialogueSelection].origIdx);
+						dialogueSelection = 0;
+					}
 				} else if (key === 'Escape') {
 					state = closeDialogue(state);
 					dialogueSelection = 0;
 					typewriterNodeId = '';
 				} else if (key >= '1' && key <= '9') {
 					const idx = parseInt(key) - 1;
-					if (idx < node.options.length) {
-						state = handleDialogueChoice(state, idx);
+					if (idx < filtered.length) {
+						state = handleDialogueChoice(state, filtered[idx].origIdx);
 						dialogueSelection = 0;
 					}
 				}
@@ -389,6 +394,7 @@
 		{@const node = dlg.tree.nodes[dlg.currentNodeId]}
 		{@const isGarbled = !!(node?.language && !state.knownLanguages.includes(node.language))}
 		{@const displayText = isGarbled ? garbleText(node?.npcText ?? '', node?.language ?? '') : (node?.npcText ?? '')}
+		{@const filteredOpts = (node?.options ?? []).map((opt, origIdx) => ({ opt, origIdx })).filter(({ opt }) => !opt.showIf || checkCondition(opt.showIf, dlg.context))}
 		{void startTypewriter(displayText, dlg.currentNodeId)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -414,7 +420,7 @@
 					{#if isGarbled}<div class="garbled-hint">You do not understand this language. Perhaps someone could teach you {node.language}...</div>{/if}
 					{#if typewriterDone}
 					<div class="dialogue-options">
-						{#each node.options as option, i}
+						{#each filteredOpts as { opt: option, origIdx }, i}
 							{@const isGiftOption = option.onSelect && dlg.givenItems}
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -426,7 +432,7 @@
 								style="color:{isGiftOption ? '#555' : (option.color ?? '#ccc')}"
 								onclick={() => {
 									if (!isGiftOption) {
-										state = handleDialogueChoice(state, i);
+										state = handleDialogueChoice(state, origIdx);
 										dialogueSelection = 0;
 									}
 								}}
@@ -443,7 +449,7 @@
 				{#if !typewriterDone}
 					<div class="dialogue-hint">SPACE or click to skip</div>
 				{:else}
-					<div class="dialogue-hint">W/S to navigate &middot; ENTER to select &middot; 1-{node?.options.length ?? 0} quick select &middot; ESC to leave</div>
+					<div class="dialogue-hint">W/S to navigate &middot; ENTER to select &middot; 1-{filteredOpts.length} quick select &middot; ESC to leave</div>
 				{/if}
 			</div>
 		</div>

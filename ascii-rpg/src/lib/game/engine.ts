@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
@@ -14,9 +14,38 @@ import { NPC_DIALOGUE_TREES } from './dialogue';
 import { rollLootDrop, getLootAt, pickupLoot, lootChar, lootColor } from './loot';
 import { getSkillBonuses } from './skills';
 import { placeLandmarks, getLandmarkAt, getLandmarkDef, getAdjacentLandmarks, examineLandmark, landmarkChar, landmarkColor } from './landmarks';
+import { shortRest, longRest } from './rest';
 
 const MAP_W = 50;
 const MAP_H = 24;
+
+export function buildDialogueContext(state: GameState): DialogueContext {
+	return {
+		dungeonLevel: state.level,
+		characterLevel: state.characterLevel,
+		characterClass: state.characterConfig.characterClass,
+		hpPercent: Math.round((state.player.hp / state.player.maxHp) * 100),
+		enemyCount: state.enemies.length,
+		rumorCount: state.rumors.length,
+		storyCount: state.heardStories.length,
+		knownLanguages: state.knownLanguages,
+		playerName: state.player.name,
+	};
+}
+
+export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): boolean {
+	switch (cond.type) {
+		case 'minLevel': return ctx.dungeonLevel >= cond.value;
+		case 'maxLevel': return ctx.dungeonLevel <= cond.value;
+		case 'class': return ctx.characterClass === cond.value;
+		case 'notClass': return ctx.characterClass !== cond.value;
+		case 'hpBelow': return ctx.hpPercent < cond.value;
+		case 'knowsLanguage': return ctx.knownLanguages.includes(cond.value);
+		case 'hasRumors': return ctx.rumorCount >= cond.value;
+		case 'hasStories': return ctx.storyCount >= cond.value;
+		case 'minCharLevel': return ctx.characterLevel >= cond.value;
+	}
+}
 
 export function xpForLevel(level: number): number {
 	return Math.floor(50 * Math.pow(1.4, level - 1));
@@ -699,6 +728,58 @@ export function handleInput(state: GameState, key: string): GameState {
 		return { ...state };
 	}
 
+	// Short rest key
+	if (key === 'r') {
+		if (hasEffect(state.player, 'stun')) {
+			addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
+		const result = shortRest(state);
+		for (const msg of result.messages) {
+			addMessage(state, msg.text, msg.type);
+		}
+		if (result.rested) {
+			state.player.hp += result.hpRestored;
+			moveEnemies(state);
+		}
+		return { ...state };
+	}
+
+	// Long rest key
+	if (key === 'R') {
+		if (hasEffect(state.player, 'stun')) {
+			addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
+		const result = longRest(state);
+		for (const msg of result.messages) {
+			addMessage(state, msg.text, msg.type);
+		}
+		if (result.rested) {
+			state.player.hp += result.hpRestored;
+			if (result.ambush) {
+				// Spawn ambush enemies near player
+				const ambushCount = 1 + Math.floor(Math.random() * 2);
+				for (let i = 0; i < ambushCount; i++) {
+					const ox = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 2));
+					const oy = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 2));
+					const ex = state.player.pos.x + ox;
+					const ey = state.player.pos.y + oy;
+					if (ex >= 0 && ex < state.map.width && ey >= 0 && ey < state.map.height && state.map.tiles[ey][ex] === '.') {
+						const def = pickMonsterDef(state.level);
+						const enemy = createMonster({ x: ex, y: ey }, state.level, def);
+						applyDifficultyToEnemy(enemy, state.characterConfig.difficulty);
+						state.enemies.push(enemy);
+					}
+				}
+			}
+			moveEnemies(state);
+		}
+		return { ...state };
+	}
+
 	let dx = 0;
 	let dy = 0;
 	if (key === 'w' || key === 'ArrowUp') dy = -1;
@@ -746,6 +827,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				visitedNodes: new Set<string>(),
 				givenItems: npc.given,
 				mood: npc.mood,
+				context: buildDialogueContext(state),
 			};
 			if (npc.dialogueIndex === 0) npc.dialogueIndex = 1;
 			return { ...state };
@@ -952,6 +1034,8 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.skillPoints = state.skillPoints;
 		next.unlockedSkills = [...state.unlockedSkills];
 		next.rumors = [...state.rumors];
+		next.knownLanguages = [...state.knownLanguages];
+		next.heardStories = [...state.heardStories];
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
 	}
