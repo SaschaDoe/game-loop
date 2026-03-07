@@ -53,6 +53,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedTraps: new Set<string>(),
 		characterConfig: { name: 'Hero', characterClass: 'warrior' as const },
 		abilityCooldown: 0,
+		hazards: [],
 		...overrides
 	};
 }
@@ -615,5 +616,67 @@ describe('Special abilities integration', () => {
 
 		const result = handleInput(state, 'd');
 		expect(result.abilityCooldown).toBe(5);
+	});
+});
+
+describe('Environmental hazards integration', () => {
+	it('createGame initializes hazards array', () => {
+		const state = createGame();
+		expect(Array.isArray(state.hazards)).toBe(true);
+	});
+
+	it('player takes lava damage when standing on it after move', () => {
+		// Place lava at destination tile
+		const state = makeTestState({
+			hazards: [{ pos: { x: 6, y: 5 }, type: 'lava' }],
+			level: 1
+		});
+		// Move right onto lava tile — hazards apply during moveEnemies
+		const result = handleInput(state, 'd');
+		expect(result.player.hp).toBeLessThan(20);
+		expect(result.messages.some((m) => m.text.includes('lava'))).toBe(true);
+	});
+
+	it('enemy takes lava damage each turn', () => {
+		const enemy = makeEnemy(3, 3, { hp: 50, maxHp: 50 });
+		const state = makeTestState({
+			enemies: [enemy],
+			hazards: [{ pos: { x: 3, y: 3 }, type: 'lava' }],
+			level: 1
+		});
+		handleInput(state, 'd');
+		expect(enemy.hp).toBeLessThan(50);
+	});
+
+	it('lava can kill the player', () => {
+		const state = makeTestState({
+			hazards: [{ pos: { x: 6, y: 5 }, type: 'lava' }],
+			level: 10
+		});
+		state.player.hp = 1;
+		const result = handleInput(state, 'd');
+		expect(result.gameOver).toBe(true);
+	});
+
+	it('poison gas applies poison status to player', () => {
+		const state = makeTestState({
+			hazards: [{ pos: { x: 6, y: 5 }, type: 'poison_gas' }]
+		});
+		const result = handleInput(state, 'd');
+		expect(result.player.statusEffects.some((e) => e.type === 'poison')).toBe(true);
+	});
+
+	it('enemy killed by hazard awards XP', () => {
+		const enemy = makeEnemy(3, 3, { hp: 1, maxHp: 3 });
+		const state = makeTestState({
+			enemies: [enemy],
+			hazards: [{ pos: { x: 3, y: 3 }, type: 'lava' }],
+			level: 1,
+			characterLevel: 50
+		});
+		const result = handleInput(state, 'd');
+		expect(result.enemies).toHaveLength(0);
+		expect(result.xp).toBeGreaterThan(0);
+		expect(result.messages.some((m) => m.text.includes('hazard'))).toBe(true);
 	});
 });

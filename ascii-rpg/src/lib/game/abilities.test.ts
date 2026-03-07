@@ -51,6 +51,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedTraps: new Set<string>(),
 		characterConfig: { name: 'Hero', characterClass: 'warrior' as const },
 		abilityCooldown: 0,
+		hazards: [],
 		...overrides
 	};
 }

@@ -37,6 +37,13 @@ export interface Trap {
 	triggered: boolean;
 }
 
+export type HazardType = 'lava' | 'poison_gas';
+
+export interface Hazard {
+	pos: Position;
+	type: HazardType;
+}
+
 export type Tile = '#' | '.' | '>' | '*';
 
 export enum Visibility {
@@ -75,4 +82,5 @@ export interface GameState {
 	detectedTraps: Set<string>;
 	characterConfig: CharacterConfig;
 	abilityCooldown: number;
+	hazards: Hazard[];
 }

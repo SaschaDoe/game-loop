@@ -6,6 +6,7 @@ import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effec
 import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
+import { placeHazards, applyHazards, getHazardAt, hazardChar, hazardColor } from './hazards';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -90,6 +91,10 @@ function newLevel(level: number): GameState {
 	// Don't place traps on player spawn
 	const filteredTraps = traps.filter((t) => !(t.pos.x === playerPos.x && t.pos.y === playerPos.y));
 
+	const hazards = placeHazards(map, level);
+	// Don't place hazards on player spawn
+	const filteredHazards = hazards.filter((h) => !(h.pos.x === playerPos.x && h.pos.y === playerPos.y));
+
 	const state: GameState = {
 		player: {
 			pos: playerPos,
@@ -114,7 +119,8 @@ function newLevel(level: number): GameState {
 		traps: filteredTraps,
 		detectedTraps: new Set<string>(),
 		characterConfig: DEFAULT_CONFIG,
-		abilityCooldown: 0
+		abilityCooldown: 0,
+		hazards: filteredHazards
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -168,6 +174,29 @@ function tickEntityEffects(state: GameState, entity: Entity): void {
 
 function moveEnemies(state: GameState) {
 	tickAbilityCooldown(state);
+
+	// Apply hazard effects to all entities
+	const hazardEffects = applyHazards(state);
+	for (const effect of hazardEffects) {
+		addMessage(state, effect.text, effect.type);
+	}
+	if (state.player.hp <= 0) {
+		state.gameOver = true;
+		addMessage(state, 'You have been slain! Press R to restart.', 'death');
+	}
+
+	// Remove enemies killed by hazards and award XP
+	state.enemies = state.enemies.filter((e) => {
+		if (e.hp <= 0) {
+			const reward = xpReward(e, state.level);
+			state.xp += reward;
+			addMessage(state, `${e.name} perished in a hazard! +${reward} XP`, 'player_attack');
+			return false;
+		}
+		return true;
+	});
+	if (hazardEffects.length > 0) checkLevelUp(state);
+
 	// Tick enemy status effects and remove dead enemies
 	for (const enemy of state.enemies) {
 		tickEntityEffects(state, enemy);
@@ -438,9 +467,14 @@ export function renderColored(state: GameState): { char: string; color: string }
 					if (detectedTrap) {
 						row.push({ char: '^', color: tileColor('^') });
 					} else {
-						const tile = state.map.tiles[y][x];
-						const isSecret = state.detectedSecrets.has(key);
-						row.push({ char: tile, color: tileColor(tile, isSecret) });
+						const hazard = getHazardAt(state.hazards, x, y);
+						if (hazard) {
+							row.push({ char: hazardChar(hazard.type), color: hazardColor(hazard.type) });
+						} else {
+							const tile = state.map.tiles[y][x];
+							const isSecret = state.detectedSecrets.has(key);
+							row.push({ char: tile, color: tileColor(tile, isSecret) });
+						}
 					}
 				}
 			} else {
@@ -450,9 +484,14 @@ export function renderColored(state: GameState): { char: string; color: string }
 				if (detectedTrap) {
 					row.push({ char: '^', color: dimColor(tileColor('^')) });
 				} else {
-					const tile = state.map.tiles[y][x];
-					const isSecret = state.detectedSecrets.has(key);
-					row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+					const hazard = getHazardAt(state.hazards, x, y);
+					if (hazard) {
+						row.push({ char: hazardChar(hazard.type), color: dimColor(hazardColor(hazard.type)) });
+					} else {
+						const tile = state.map.tiles[y][x];
+						const isSecret = state.detectedSecrets.has(key);
+						row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+					}
 				}
 			}
 		}
