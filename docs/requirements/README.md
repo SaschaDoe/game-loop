@@ -84,3 +84,6 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 70-companion-system | Companion personalities, combat AI, backstories |
 | 71-minigames | Lockpicking, fishing, smithing minigames |
 | 72-necromancy-gameplay | Undead army, soul harvesting, death domain spells |
+| 73-enchanting-system | Enchantment table, runic inscription, cursed enchantments |
+| 74-wilderness-survival | Shelter building, foraging, weather hazards |
+| 75-class-system | Warrior, mage, rogue class definitions |
