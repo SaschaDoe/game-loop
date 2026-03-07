@@ -78,3 +78,6 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 64-time-travel | Temporal paradoxes, time periods, chronomancy spells |
 | 65-sports-and-athletics | Foot races, wrestling, archery competitions |
 | 66-vampirism-gameplay | Vampire powers, vampire society, vampire hunting |
+| 67-theater-and-performance | Stage plays, disguise acting, street performance |
+| 68-plague-and-epidemic | Disease mechanics, plague doctor, quarantine zones |
+| 69-lycanthropy-gameplay | Werewolf transformation, beast forms, silver economy |
