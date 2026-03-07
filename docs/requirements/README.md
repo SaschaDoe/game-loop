@@ -87,3 +87,5 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 73-enchanting-system | Enchantment table, runic inscription, cursed enchantments |
 | 74-wilderness-survival | Shelter building, foraging, weather hazards |
 | 75-class-system | Warrior, mage, rogue class definitions |
+| 76-dragon-gameplay | Dragon encounters, dragon riding, dragonborn heritage |
+| 77-roguelike-elements | Procedural events, permutation modifiers, daily challenges |
