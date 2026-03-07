@@ -732,6 +732,71 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('Founded by accident. Classic. [Story collected]', 'stories_menu', '#4f4', { onSelect: { story: STORIES.barkeep_founders } }),
 			]
 		),
+		// ─── MOOD-SPECIFIC RETURN NODES ───
+		return_hostile: node('return_hostile',
+			'*He looks up with a cold expression.* Oh. It\'s YOU. *He pointedly polishes a glass and does not offer you a drink.* I remember what you said last time. I don\'t forget. This bar has a long memory and an even longer grudge. You want to talk? Start with an apology.',
+			[
+				opt('I\'m sorry about before. I was out of line.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'The Barkeep\'s expression softens slightly.' } }),
+				opt('Fine. I don\'t need your drinks anyway.', 'hostile_standoff', '#f44'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		hostile_standoff: node('hostile_standoff',
+			'*He sets down the glass with a deliberate clink.* Correct. You don\'t. Because I\'m not serving you. I\'ve refused service to DEMONS \u2014 actual fire-breathing, soul-consuming demons \u2014 for lesser offenses. One of them cried. CRIED. Demon tears, in case you\'re wondering, are acidic. Burned a hole in my counter. Still a more pleasant interaction than this one.',
+			[
+				opt('Okay, maybe I WAS a bit rude...', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'The Barkeep unclenches slightly.' } }),
+				opt('[Leave quietly]', '__exit__', '#0ff'),
+			]
+		),
+		return_afraid: node('return_afraid',
+			'*He flinches when he sees you, then tries to hide it by wiping the counter very aggressively.* Oh! You\'re back! Great! Wonderful! I was just... cleaning. Vigorously. Not nervously at all. *His voice drops to a whisper.* Listen, I\'ve been thinking about what you said, and I pulled out some old stock from the back. Things I normally don\'t share. Want to see?',
+			[
+				opt('Show me what you\'ve got.', 'afraid_special', '#4f4'),
+				opt('Relax, I\'m not going to hurt you.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'The Barkeep exhales with visible relief.' } }),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		afraid_special: node('afraid_special',
+			'*He reaches under the counter and produces a dusty bottle with no label.* This is from the Deepceller Reserve. Aged in barrels carved from dungeon heartwood \u2014 trees that grew in the caverns where no light reaches. It tastes like starlight and regret. I\'ve been saving it for a special occasion, but frankly I\'m too terrified of you to charge full price. Half off. Please take it.',
+			[
+				opt('Take the Deepceller Reserve. [+8 HP]', 'return', '#4f4', { onSelect: { hp: 8, message: 'The Deepceller Reserve fills you with warmth and faint cosmic nostalgia! +8 HP', mood: 'neutral' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*He breaks into a grin the moment he sees you.* HA! There\'s my favorite customer! *He\'s already pouring.* You know, I\'ve been telling the other patrons about you. Garvus nearly fell off his stool laughing. The Hooded Stranger didn\'t react, but I think I saw one corner of the hood twitch. That\'s basically a standing ovation from them.',
+			[
+				opt('What can you tell me today?', 'return', '#ff4'),
+				opt('I aim to entertain.', 'amused_bonus', '#4f4'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		amused_bonus: node('amused_bonus',
+			'*He slides you a drink with a wink.* On the house. For comedic services rendered. You know, most adventurers come in here all brooding and dramatic. "The darkness calls." "I seek vengeance." "My family was murdered by wolves." YOU walk in and make me laugh. That\'s worth more than gold in this profession. Trust me \u2014 I\'ve seen what brooding does to tip averages.',
+			[
+				opt('Cheers! [+4 HP]', 'return', '#4f4', { onSelect: { hp: 4, message: 'A complimentary drink from the amused Barkeep! +4 HP' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*He\'s staring into an empty glass when you approach. He looks up with tired eyes.* Ah. You again. *He forces a smile that doesn\'t quite reach.* Sorry. Just... thinking about the old days. Before the dungeon got worse. Before Garvus stopped being Garvus. Before Thessaly disappeared. This tavern used to be full of laughter. Now it\'s full of last drinks before last journeys.',
+			[
+				opt('Are you alright?', 'sad_comfort', '#4f4'),
+				opt('Tell me about the old days.', 'sad_memories', '#8cf'),
+				opt('[Give him space]', '__exit__', '#0ff'),
+			]
+		),
+		sad_comfort: node('sad_comfort',
+			'*He takes a deep breath.* I\'m fine. I\'m always fine. That\'s what bartenders do \u2014 we\'re fine so everyone else can fall apart. *He straightens up.* But thanks for asking. Most people don\'t. They just order drinks and dump their problems on me. Nobody ever asks if the barkeep has problems of his own. *A genuine, if small, smile.* You\'re alright, you know that?',
+			[
+				opt('You\'re alright too, Barkeep.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'The Barkeep seems genuinely touched.' } }),
+			]
+		),
+		sad_memories: node('sad_memories',
+			'*His eyes go distant.* Twenty years ago this place was packed every night. The Silver Delvers used to hold court at the big table \u2014 five of them, laughing, arm-wrestling, arguing about whose turn it was to buy rounds. Thessaly would be scribbling in her journal. Garvus would be challenging people to duels he always won. Korrin would be eating everything in sight. *He chuckles sadly.* Then they went to level fifteen. And when they came back... they weren\'t the same people anymore. Nobody who goes that deep ever is.',
+			[
+				opt('People still come here. You still matter.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'The Barkeep\'s eyes brighten.' } }),
+				opt('What happened to them?', 'drunk_past', '#8cf'),
+			]
+		),
 	}
 };
 
@@ -1403,6 +1468,61 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			'*He grins enormously.* YESH. It took four hoursh and I dislocated my shoulder, but I WON. The Minotaur bought me a drink after. Very shportshmanlike, Minotaursh. Better manner\'sh than mosht humans. It\'sh now my shingle greatesht achievement, shurpassing even the time I convinced a Dragon Turtle that I was a health inspector and it needed to vacate the premises for "code violations." Guild card, very official-looking. Thesshaly forged it.',
 			[
 				opt('Thessaly forged a health inspector card for you?', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		// ─── MOOD-SPECIFIC RETURN NODES ───
+		return_afraid: node('return_afraid',
+			'*He sees you and nearly knocks over his mug.* OH NO. You\'re back. *He shields his ale protectively.* Lishten, I told you everything I know lasht time! The Eye, the Anchor Shtonesh, all of it! I\'m an empty vessel of information! A shqueezed shponge! There\'s nothing left to intimidate out of me except maybe my childhood fear of geese and I\'m NOT dishecussing that!',
+			[
+				opt('Relax, Garvus. I just came to chat.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'Garvus slowly unclenches.' } }),
+				opt('...you\'re afraid of geese?', 'geese', '#ff4'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		geese: node('geese',
+			'*He shudders violently.* YESH. Have you SHEEN those thingsh? Dead eyes. Murder waddle. They hish like they know your darkesht shecretsh. I fought a cathedral-shized eyeball and lived. I faced a Minotaur in arm-to-arm combat. But a gooshe? A GOOSHE? *He takes a long drink.* Thesshaly had a pet gooshe at the Athenaeum. Named it Professor Honkington. It bit EVERYONE. Tenured, she shaid. Can\'t fire a tenured gooshe. Akademia ish broken.',
+			[
+				opt('Professor Honkington. Of course.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*He\'s not drinking. His mug sits untouched. He stares at his hands.* I was thinking about Thesshaly. About level fifteen. About the moment she walked toward the Eye and I did nothing. I jusht... shtood there. Garvush the Bold. More like Garvush the Froze-In-Terror-While-His-Besht-Friend-Walked-Into-Oblivion.',
+			[
+				opt('You couldn\'t have stopped her, Garvus.', 'sad_guilt', '#4f4'),
+				opt('She made her choice. You survived.', 'sad_survivor', '#ff4'),
+				opt('[Sit with him in silence]', 'sad_silence', '#8cf'),
+			]
+		),
+		sad_guilt: node('sad_guilt',
+			'*His voice cracks.* Maybe. Maybe not. But I should have TRIED. That\'sh what Bold meansh. It meansh trying even when it\'sh shtupid. And I didn\'t. I ran. We ALL ran. And she walked. Calmly. Like she\'d been waiting her whole life for that moment. *He picks up his mug.* ...she probably had been. Thesshaly always knew more than she let on. Even the gooshe reshpected her.',
+			[
+				opt('She\'d want you to live, Garvus. Not just survive.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'Something shifts in Garvus\'s eyes. Not hope. But something adjacent.' } }),
+			]
+		),
+		sad_survivor: node('sad_survivor',
+			'*He looks at his mug like it holds answers.* Shurvived. Yeah. That\'sh one word for it. Another word ish "ran." Another ish "abandoned." The thesaurush of cowardice ish very exshtensive. I should know \u2014 I\'ve read it. Alphabetized it. Cross-referenced it with my therapy journal. My therapisht quit, by the way. Shaid I was "too complex a cashe." A THERAPISHT. Quitting. On ME.',
+			[
+				opt('That just means you\'re too interesting for regular therapy.', 'return', '#4f4', { onSelect: { mood: 'amused', message: 'Garvus almost smiles.' } }),
+			]
+		),
+		sad_silence: node('sad_silence',
+			'*You sit next to him. Neither of you says anything. After a long time, he takes a shaky breath.* ...thanksh. *He picks up his mug, takes a sip, and sets it down.* Mosht people try to fix me. Talk me out of drinking. Tell me to "move on." You just... shat here. *He almost smiles.* That\'sh worth more than all the advice in the world. Thesshaly ushed to do that. Just... be there. No judgement. No fixhing.',
+			[
+				opt('[Nod]', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Garvus looks at you with genuine warmth for the first time.' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*He waves enthusiastically, ale sloshing.* THERE\'sh my favorite person! You know what? You\'re alright. You make old Garvush LAUGH. Do you know how hard that ish? The lasht person to make me laugh was Thesshaly, and she had a PHD in humor. Literally. The Athenaeum has a humor department. Shkeptical, I know, but their theshish defenesh are HILARIOUS.',
+			[
+				opt('Tell me about the humor department.', 'humor_dept', '#ff4'),
+				opt('Got any new stories for me?', 'drunk_stories', '#c8f'),
+				opt('What else can you tell me?', 'return', '#ff4'),
+			]
+		),
+		humor_dept: node('humor_dept',
+			'*He leans in conspiratorially.* The Department of Applied Humor at the Athenaeum. Three scholarsh. Their entire researchh program was: "Why ish thingsh funny?" They shpent six yearsh on it. Their final paper was titled "A Comprehenshive Theory of Comedy, With Footnotes." It was eight hundred pagesh long. The footnotes were funnier than the main text. The main text was NOT funny. They failed to explain comedy while being accidentally hilarious. The irony won them an award. From the Department of Irony. Which is ALSO a real department.',
+			[
+				opt('The Department of Irony. Of course.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 	}
@@ -2144,6 +2264,76 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('I\'m going to pass. Firmly.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
+		// ─── MOOD-SPECIFIC RETURN NODES ───
+		return_hostile: node('return_hostile',
+			'*She doesn\'t look up from counting coins.* Oh. The rude one. *She snaps a pouch shut.* I\'ll have you know that I have a STRICT policy regarding aggressive customers. It\'s called the "Morrigan Surcharge." Everything you want to buy? Triple price. The healing salve? Triple. The advice? Triple. The TIME OF DAY? Also triple. Would you like to apologize, or would you like to see the quadruple tier? Because I HAVE a quadruple tier.',
+			[
+				opt('I apologize, Morrigan. I was wrong.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'Morrigan graciously accepts your apology. Prices return to normal.' } }),
+				opt('...quadruple?', 'quadruple_price', '#f44'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		quadruple_price: node('quadruple_price',
+			'*She pulls out a tiny chalkboard from somewhere.* Quadruple: for customers who question the surcharge system. There\'s also a quintuple tier for customers who question the quadruple tier. And a sextuple for those who question THAT. It goes up to duodecuple. I had a Minotaur once who argued all the way to duodecuple. He ended up owing me his entire life savings, his cave, and naming rights to his firstborn. Minotaur Junior Morrigan. Lovely child. Has my business sense.',
+			[
+				opt('I think I\'ll just apologize now.', 'return', '#4f4', { onSelect: { mood: 'amused', message: 'Morrigan appreciates that you know when to stop.' } }),
+			]
+		),
+		return_afraid: node('return_afraid',
+			'*She\'s already backing away, hands raised.* YOU! The scary one! Listen, I\'ve reorganized my entire inventory since last time! Everything is CLEARLY LABELED! Nothing cursed! Probably! And I\'ve prepared a COMPLIMENTARY welcome package because I value our business relationship and also because you terrify me on a molecular level!',
+			[
+				opt('What\'s in the welcome package?', 'afraid_package', '#4f4'),
+				opt('Morrigan, relax. I\'m not going to hurt you.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'Morrigan\'s hands stop shaking. Mostly.' } }),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		afraid_package: node('afraid_package',
+			'*She nervously produces a small bundle.* The Morrigan\'s "Please Don\'t Hurt Me" Starter Pack! One healing potion \u2014 genuine, not expired, I CHECKED. One lucky charm \u2014 may or may not work, but the placebo effect is scientifically valid! And one coupon for a future purchase \u2014 ten percent off, non-transferable, expires never because I want you to keep coming back ALIVE and HAPPY and NOT ANGRY AT ME.',
+			[
+				opt('Take the starter pack. [+5 HP]', 'return', '#4f4', { onSelect: { hp: 5, message: 'Morrigan\'s terrified generosity heals you! +5 HP', mood: 'neutral' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*She claps her hands together with delight.* My FAVORITE customer! Come, come! I\'ve got new stock AND new jokes! Did you hear the one about the Skeleton who walked into a bar? He ordered a beer and a mop! *She cackles.* I\'ve been saving that one. The last person I told it to was a skeleton. He did NOT appreciate the humor. Very thin-skinned. Well. No-skinned. You know what I mean.',
+			[
+				opt('That\'s terrible. I love it.', 'amused_deals', '#4f4'),
+				opt('What\'s the new stock?', 'wares', '#ff4'),
+				opt('Any news?', 'return', '#ff4'),
+			]
+		),
+		amused_deals: node('amused_deals',
+			'*She beams.* A customer who appreciates bad puns! You\'re rarer than a honest Mimic! Here \u2014 since you make me laugh and laughter is the best medicine, have some ACTUAL medicine. *She hands you a small vial.* Morrigan\'s Mirth Mixture. Brewed with real joy. And some herbs. Mostly herbs. The joy is a marketing addition. But the herbs are VERY good herbs.',
+			[
+				opt('Take the Mirth Mixture. [+4 HP]', 'return', '#4f4', { onSelect: { hp: 4, message: 'Morrigan\'s Mirth Mixture tickles as it heals! +4 HP' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*She\'s sitting quietly, pouches unopened, staring at a small locket.* Oh. Hello. *She tucks the locket away quickly.* Sorry. I was just... it\'s nothing. Business is fine. Everything\'s fine. I\'m fine. *She\'s clearly not fine.* Did you want to buy something?',
+			[
+				opt('What\'s in the locket, Morrigan?', 'locket', '#8cf'),
+				opt('You don\'t seem fine.', 'not_fine', '#4f4'),
+				opt('Just browsing.', 'return', '#ff4'),
+			]
+		),
+		locket: node('locket',
+			'*She hesitates, then opens it. Inside is a tiny portrait of an older woman with the same sharp eyes.* My mother. She was a merchant too. Taught me everything. "Buy low, sell high, and never let them see you cry, Morrie." She ran a shop in the capital. Real shop. With walls and a door and everything. I was supposed to take it over. Instead I\'m here, selling health potions to monsters in a hole in the ground. *She sniffs.* She\'d be furious. Or proud. With her it was always hard to tell.',
+			[
+				opt('She\'d be proud, Morrigan. You survived where others didn\'t.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Morrigan blinks rapidly and changes the subject, but she\'s smiling.' } }),
+				opt('Why not go back to the capital?', 'why_stay', '#8cf'),
+			]
+		),
+		not_fine: node('not_fine',
+			'*She sighs.* No. I\'m not. Sometimes the dungeon gets to you, you know? The darkness. The constant danger. The fact that my best customers are literally trying to kill each other. I chose this life because I thought it would be an ADVENTURE. Turns out adventure is just regular life but colder and with more teeth.',
+			[
+				opt('You\'re braver than you think, Morrigan.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Something in Morrigan\'s expression lifts.' } }),
+			]
+		),
+		why_stay: node('why_stay',
+			'*She laughs \u2014 a small, watery sound.* Because the capital shop was boring, darling. I sold candles and soap. SOAP. For fifteen years. Do you know what it\'s like to explain the difference between lavender and chamomile soap eight times a day? At least HERE nobody asks about soap. They ask about survival. About hope in dark places. About whether this potion is expired. Much more interesting. Much more meaningful. *She clutches the locket.* Mum would understand. She always said I had too much fire in me for soap.',
+			[
+				opt('Too much fire for soap. Best description ever.', 'return', '#4f4', { onSelect: { mood: 'amused', message: 'Morrigan laughs \u2014 a real, warm laugh.' } }),
+			]
+		),
 	}
 };
 
@@ -2488,6 +2678,69 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 			[
 				opt('...Garvus told me about that, actually.', 'return', '#ff4', { onSelect: { mood: 'amused' } }),
 				opt('You caught me. I just wanted to help.', 'return', '#4f4'),
+			]
+		),
+		// ─── MOOD-SPECIFIC RETURN NODES ───
+		return_afraid: node('return_afraid',
+			'*They\'re pressed against the wall, hyperventilating.* The walls moved. THE WALLS MOVED. I was just standing here, minding my own business, being lost \u2014 as one does \u2014 and the wall behind me SHIFTED. Not collapsed. Shifted. Like it was adjusting its position. Like it was getting COMFORTABLE. Walls should NOT get comfortable. That implies they were previously UNCOMFORTABLE and had OPINIONS about it.',
+			[
+				opt('Deep breaths, Corwin. Tell me what you saw.', 'afraid_walls', '#4f4'),
+				opt('The dungeon does that sometimes. It\'s normal.', 'return', '#ff4', { onSelect: { mood: 'neutral', message: 'Corwin looks skeptical but slightly calmer.' } }),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		afraid_walls: node('afraid_walls',
+			'*They take several shaky breaths.* I was mapping. Like always. And the corridor I\'d mapped yesterday was GONE. Not collapsed \u2014 GONE. Like it was never there. But my map still showed it. My map \u2014 the one I drew with my OWN HANDS \u2014 showed a corridor that reality had disagreed with. Either my map is lying or reality is lying and I don\'t know which is worse. If reality lies, what does cartography even MEAN? *They clutch their maps.* What am I even DOING down here?',
+			[
+				opt('You\'re surviving. That\'s what matters.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'Corwin nods slowly, finding their footing.' } }),
+				opt('Maybe the dungeon IS your map. And your map IS reality.', 'philosophical_maps', '#8cf'),
+			]
+		),
+		philosophical_maps: node('philosophical_maps',
+			'*They stare at you.* That\'s... that\'s either the most profound thing anyone has ever said to me or the most terrifying. *They look at their maps.* If the map IS reality... then by drawing it, I\'m creating reality. Every line I draw becomes real. Every room I map into existence EXISTS because I mapped it. *Their eyes widen.* Oh gods. That means every wrong turn I\'ve drawn might have MADE a wrong turn. I\'VE been making the dungeon worse this entire time. I\'m the REASON I\'m lost. The cartographer who drew himself into a maze of his own making. *Long pause.* I need a drink. Is Garvus still conscious?',
+			[
+				opt('Garvus is always conscious. Barely.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		return_sad: node('return_sad',
+			'*They\'re sitting on the ground, maps spread around them.* I miss Talia. And Kael. And the others. It\'s been... how long has it been? I stopped counting days when the dungeon ate my calendar. Literally ate it. A wall opened, a stone tongue came out, and slurped up my journal. The dungeon ate my SCHEDULE. That\'s not even threatening, that\'s just RUDE.',
+			[
+				opt('Tell me about your team.', 'sad_team', '#8cf'),
+				opt('We\'ll find them, Corwin.', 'return', '#4f4', { onSelect: { mood: 'neutral', message: 'A flicker of hope crosses Corwin\'s face.' } }),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		sad_team: node('sad_team',
+			'*Their face softens.* Talia was \u2014 IS \u2014 the best healer in the Grey Reaches. She once healed a man mid-fall. He was falling off a cliff and she cast a heal so powerful it gave him the strength to grab a branch on the way down. She also packed the best trail rations. Little sandwiches with the crusts cut off. In a DUNGEON. *Sniff.* Kael was our tank. Seven feet tall. Afraid of spiders. A seven-foot wall of muscle who once screamed at a spider the size of a coin. We never let him forget it. *A wobbly smile.* I hope they\'re okay. I have to believe they\'re okay.',
+			[
+				opt('They sound wonderful. You\'ll see them again.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Corwin wipes their eyes and stands a bit straighter.' } }),
+			]
+		),
+		return_friendly: node('return_friendly',
+			'*They light up when they see you.* Hey! My favorite not-lost person! *They\'ve clearly tidied their corner of the dungeon \u2014 maps are organized, there\'s a small drawn arrow on the floor pointing toward the stairs.* I\'ve been working on something! A comprehensive guide to being lost! "Corwin\'s Compendium of Confusion: A Cartographer\'s Guide to Not Knowing Where You Are." Chapter one: "You Are Here (Probably)." I think it could really help people.',
+			[
+				opt('I\'d read that book.', 'corwin_book', '#4f4'),
+				opt('Any new discoveries?', 'return', '#ff4'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		corwin_book: node('corwin_book',
+			'*They pull out a crumpled manuscript.* Chapter two: "Don\'t Panic. This Is Not Helpful Advice But Everyone Says It So Here It Is." Chapter three: "Moss Grows On The North Side Of Trees. You Are Not Near Trees. This Information Is Useless." Chapter four: "If All Else Fails, Walk Downhill. All Dungeons Are Downhill. This Is Also Useless." *They beam.* I think the marketable quality is my honest admission that nothing I suggest will actually help. Very refreshing in the self-help industry.',
+			[
+				opt('Publish it. The world needs this.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
+			]
+		),
+		return_amused: node('return_amused',
+			'*They\'re chuckling to themselves when you arrive.* Oh! Perfect timing! I just discovered something AMAZING. *They hold up a map.* I\'ve been lost for so long that my maps have become a perfect record of everywhere the dungeon ISN\'T. By process of elimination, I now know more about this dungeon\'s layout than anyone alive! The trick is to be wrong about everything and then invert it!',
+			[
+				opt('That\'s... actually genius?', 'inverted_maps', '#ff4'),
+				opt('What else have you figured out?', 'return', '#ff4'),
+			]
+		),
+		inverted_maps: node('inverted_maps',
+			'*They nod enthusiastically.* The Corwin Inversion Method! Step one: draw a map. Step two: accept that the map is wrong. Step three: assume the OPPOSITE of everything on the map. Dead end? Probably a corridor! Safe room? DANGER! Monster den? Almost certainly a nice sitting area. I tested it once and found a secret room. The room contained another, smaller secret room. Which contained a very confused rat who had ALSO gotten lost. We bonded. I named him Cartographer Junior. He has better instincts than me.',
+			[
+				opt('You and the rat should start a guild.', 'return', '#4f4', { onSelect: { mood: 'amused' } }),
 			]
 		),
 	}

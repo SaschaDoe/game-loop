@@ -43,7 +43,7 @@ function drawBuilding(tiles: Tile[][], x: number, y: number, w: number, h: numbe
 }
 
 function makeNPC(x: number, y: number, char: string, color: string, name: string, dialogue: string[], gives?: { hp?: number; atk?: number }, mood: NPC['mood'] = 'friendly'): NPC {
-	return { pos: { x, y }, char, color, name, dialogue, dialogueIndex: 0, gives, given: false, mood };
+	return { pos: { x, y }, char, color, name, dialogue, dialogueIndex: 0, gives, given: false, mood, moodTurns: 0 };
 }
 
 function generateVillage(width: number, height: number): LocationResult {

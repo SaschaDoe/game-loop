@@ -20,7 +20,7 @@ import { checkAchievements, getAchievement, createDefaultStats } from './achieve
 const MAP_W = 50;
 const MAP_H = 24;
 
-export function buildDialogueContext(state: GameState): DialogueContext {
+export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutral'): DialogueContext {
 	return {
 		dungeonLevel: state.level,
 		characterLevel: state.characterLevel,
@@ -31,6 +31,7 @@ export function buildDialogueContext(state: GameState): DialogueContext {
 		storyCount: state.heardStories.length,
 		knownLanguages: state.knownLanguages,
 		playerName: state.player.name,
+		npcMood,
 	};
 }
 
@@ -45,6 +46,7 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'hasRumors': return ctx.rumorCount >= cond.value;
 		case 'hasStories': return ctx.storyCount >= cond.value;
 		case 'minCharLevel': return ctx.characterLevel >= cond.value;
+		case 'npcMood': return ctx.npcMood === cond.value;
 	}
 }
 
@@ -265,6 +267,7 @@ function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][
 		gives: pick.gives,
 		given: false,
 		mood: 'neutral' as const,
+		moodTurns: 0,
 	}];
 }
 
@@ -474,8 +477,24 @@ export function attemptPush(
 	return { pushed: true, messages, environmentalKill };
 }
 
+const MOOD_RECOVERY_TURNS = 20;
+
+function tickNpcMoods(state: GameState) {
+	for (const npc of state.npcs) {
+		if (npc.mood !== 'neutral' && npc.mood !== 'friendly') {
+			npc.moodTurns++;
+			if (npc.moodTurns >= MOOD_RECOVERY_TURNS) {
+				npc.mood = 'neutral';
+				npc.moodTurns = 0;
+				addMessage(state, `${npc.name} seems to have calmed down.`, 'npc');
+			}
+		}
+	}
+}
+
 function moveEnemies(state: GameState, defending = false) {
 	tickAbilityCooldown(state);
+	tickNpcMoods(state);
 
 	// Apply hazard effects to all entities
 	const hazardEffects = applyHazards(state);
@@ -862,7 +881,20 @@ export function handleInput(state: GameState, key: string): GameState {
 		}
 		const tree = npc.dialogueTree ?? NPC_DIALOGUE_TREES[npc.name];
 		if (tree) {
-			const startId = (npc.dialogueIndex > 0 && tree.returnNode) ? tree.returnNode : tree.startNode;
+			let startId = (npc.dialogueIndex > 0 && tree.returnNode) ? tree.returnNode : tree.startNode;
+			// Mood-specific return nodes: if NPC has been spoken to and has a mood-specific return node, use it
+			if (npc.dialogueIndex > 0 && npc.mood !== 'neutral') {
+				const moodReturnId = `return_${npc.mood}`;
+				if (tree.nodes[moodReturnId]) {
+					startId = moodReturnId;
+				}
+			}
+			// Hostile NPCs may refuse dialogue entirely
+			if (npc.mood === 'hostile' && npc.dialogueIndex > 0 && !tree.nodes[`return_hostile`]) {
+				addMessage(state, `${npc.name} glares at you and refuses to speak.`, 'npc');
+				moveEnemies(state);
+				return { ...state };
+			}
 			state.activeDialogue = {
 				npcName: npc.name,
 				npcChar: npc.char,
@@ -872,7 +904,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				visitedNodes: new Set<string>(),
 				givenItems: npc.given,
 				mood: npc.mood,
-				context: buildDialogueContext(state),
+				context: buildDialogueContext(state, npc.mood),
 			};
 			if (npc.dialogueIndex === 0) {
 				npc.dialogueIndex = 1;
@@ -1142,8 +1174,12 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 		// Mood changes always apply
 		if (option.onSelect.mood) {
 			state.activeDialogue.mood = option.onSelect.mood;
+			state.activeDialogue.context = { ...state.activeDialogue.context, npcMood: option.onSelect.mood };
 			const npc = state.npcs.find((n) => n.name === state.activeDialogue!.npcName);
-			if (npc) npc.mood = option.onSelect.mood;
+			if (npc) {
+				npc.mood = option.onSelect.mood;
+				npc.moodTurns = 0;
+			}
 		}
 		// Learn rumors
 		if (option.onSelect.rumor && !state.rumors.some(r => r.id === option.onSelect!.rumor!.id)) {
@@ -1193,14 +1229,19 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 	return { ...state };
 }
 
-export const MOOD_DISPLAY: Record<string, { label: string; color: string }> = {
-	friendly: { label: 'Friendly', color: '#4f4' },
-	neutral: { label: 'Neutral', color: '#888' },
-	hostile: { label: 'Hostile', color: '#f44' },
-	afraid: { label: 'Afraid', color: '#f8f' },
-	amused: { label: 'Amused', color: '#ff4' },
-	sad: { label: 'Sad', color: '#48f' },
+export const MOOD_DISPLAY: Record<string, { label: string; color: string; icon: string }> = {
+	friendly: { label: 'Friendly', color: '#4f4', icon: '\u2665' },
+	neutral: { label: 'Neutral', color: '#888', icon: '' },
+	hostile: { label: 'Hostile', color: '#f44', icon: '!' },
+	afraid: { label: 'Afraid', color: '#f8f', icon: '~' },
+	amused: { label: 'Amused', color: '#ff4', icon: '*' },
+	sad: { label: 'Sad', color: '#48f', icon: ',' },
 };
+
+export function npcMoodColor(npc: NPC): string {
+	if (npc.mood === 'neutral') return npc.color;
+	return MOOD_DISPLAY[npc.mood]?.color ?? npc.color;
+}
 
 const DEEPSCRIPT_GLYPHS = 'ᚠᚡᚢᚣᚤᚥᚦᚧᚨᚩᚪᚫᚬᚭᚮᚯᚰᚱᚲᚳᚴᚵᚶᚷᚸᚹᚺᚻᚼᚽᚾᚿ';
 const ORCISH_GLYPHS = 'ɤʁʂʃʇʈʊʋʌʍʎʏɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿ';
@@ -1292,7 +1333,7 @@ export function renderColored(state: GameState): { char: string; color: string }
 					const enemyColor = effectColor(enemy) ?? enemy.color;
 					row.push({ char: enemy.char, color: enemyColor });
 				} else if (npc) {
-					row.push({ char: npc.char, color: npc.color });
+					row.push({ char: npc.char, color: npcMoodColor(npc) });
 				} else if (getChestAt(state.chests, x, y)) {
 					const ch = getChestAt(state.chests, x, y)!;
 					row.push({ char: chestChar(ch.type), color: chestColor(ch.type) });

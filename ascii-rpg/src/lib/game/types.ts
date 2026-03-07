@@ -54,7 +54,8 @@ export type DialogueCondition =
 	| { type: 'knowsLanguage'; value: string }
 	| { type: 'hasRumors'; value: number }
 	| { type: 'hasStories'; value: number }
-	| { type: 'minCharLevel'; value: number };
+	| { type: 'minCharLevel'; value: number }
+	| { type: 'npcMood'; value: NPCMood };
 
 export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
 
@@ -98,6 +99,7 @@ export interface DialogueContext {
 	storyCount: number;
 	knownLanguages: string[];
 	playerName: string;
+	npcMood: NPCMood;
 }
 
 export interface ActiveDialogue {
@@ -123,6 +125,7 @@ export interface NPC {
 	given: boolean;
 	dialogueTree?: DialogueTree;
 	mood: NPCMood;
+	moodTurns: number;
 }
 
 export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse';

@@ -113,7 +113,7 @@ export function deserializeState(json: string): GameState {
 		characterConfig: s.characterConfig,
 		abilityCooldown: s.abilityCooldown,
 		hazards: s.hazards,
-		npcs: s.npcs ?? [],
+		npcs: (s.npcs ?? []).map((n: any) => ({ ...n, moodTurns: n.moodTurns ?? 0 })),
 		chests: s.chests ?? [],
 		lootDrops: s.lootDrops ?? [],
 		skillPoints: s.skillPoints ?? 0,
