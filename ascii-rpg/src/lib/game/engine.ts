@@ -179,6 +179,7 @@ function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][
 		dialogueIndex: 0,
 		gives: pick.gives,
 		given: false,
+		mood: 'neutral' as const,
 	}];
 }
 
@@ -685,6 +686,15 @@ export function handleInput(state: GameState, key: string): GameState {
 	// Talk to NPC?
 	const npc = state.npcs.find((n) => n.pos.x === nx && n.pos.y === ny);
 	if (npc) {
+		// Block dialogue when enemies are adjacent to the player
+		const adjacentEnemy = state.enemies.some(
+			(e) => Math.abs(e.pos.x - state.player.pos.x) <= 1 && Math.abs(e.pos.y - state.player.pos.y) <= 1
+		);
+		if (adjacentEnemy) {
+			addMessage(state, 'You can\'t talk while enemies are nearby!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
 		const tree = npc.dialogueTree ?? NPC_DIALOGUE_TREES[npc.name];
 		if (tree) {
 			const startId = (npc.dialogueIndex > 0 && tree.returnNode) ? tree.returnNode : tree.startNode;
@@ -696,6 +706,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				tree,
 				visitedNodes: new Set<string>(),
 				givenItems: npc.given,
+				mood: npc.mood,
 			};
 			if (npc.dialogueIndex === 0) npc.dialogueIndex = 1;
 			return { ...state };
@@ -927,19 +938,27 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 	visitedNodes.add(currentNodeId);
 
 	// Apply dialogue effects
-	if (option.onSelect && !state.activeDialogue.givenItems) {
-		if (option.onSelect.hp) {
-			state.player.hp = Math.min(state.player.maxHp, state.player.hp + option.onSelect.hp);
-			addMessage(state, option.onSelect.message ?? `Healed ${option.onSelect.hp} HP!`, 'healing');
+	if (option.onSelect) {
+		// Item gifts only once
+		if (!state.activeDialogue.givenItems && (option.onSelect.hp || option.onSelect.atk)) {
+			if (option.onSelect.hp) {
+				state.player.hp = Math.min(state.player.maxHp, state.player.hp + option.onSelect.hp);
+				addMessage(state, option.onSelect.message ?? `Healed ${option.onSelect.hp} HP!`, 'healing');
+			}
+			if (option.onSelect.atk) {
+				state.player.attack += option.onSelect.atk;
+				addMessage(state, option.onSelect.message ?? `+${option.onSelect.atk} ATK!`, 'level_up');
+			}
+			state.activeDialogue.givenItems = true;
+			const npc = state.npcs.find((n) => n.name === state.activeDialogue!.npcName);
+			if (npc) npc.given = true;
 		}
-		if (option.onSelect.atk) {
-			state.player.attack += option.onSelect.atk;
-			addMessage(state, option.onSelect.message ?? `+${option.onSelect.atk} ATK!`, 'level_up');
+		// Mood changes always apply
+		if (option.onSelect.mood) {
+			state.activeDialogue.mood = option.onSelect.mood;
+			const npc = state.npcs.find((n) => n.name === state.activeDialogue!.npcName);
+			if (npc) npc.mood = option.onSelect.mood;
 		}
-		state.activeDialogue.givenItems = true;
-		// Mark the NPC as having given items
-		const npc = state.npcs.find((n) => n.name === state.activeDialogue!.npcName);
-		if (npc) npc.given = true;
 	}
 
 	// Exit dialogue
@@ -954,6 +973,15 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 	}
 	return { ...state };
 }
+
+export const MOOD_DISPLAY: Record<string, { label: string; color: string }> = {
+	friendly: { label: 'Friendly', color: '#4f4' },
+	neutral: { label: 'Neutral', color: '#888' },
+	hostile: { label: 'Hostile', color: '#f44' },
+	afraid: { label: 'Afraid', color: '#f8f' },
+	amused: { label: 'Amused', color: '#ff4' },
+	sad: { label: 'Sad', color: '#48f' },
+};
 
 export function closeDialogue(state: GameState): GameState {
 	state.activeDialogue = null;

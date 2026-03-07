@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY } from '$lib/game/engine';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
@@ -383,7 +383,10 @@
 			<div class="dialogue-box">
 				<div class="dialogue-header">
 					<span class="dialogue-portrait" style="color:{dlg.npcColor}">{dlg.npcChar}</span>
-					<span class="dialogue-name" style="color:{dlg.npcColor}">{dlg.npcName}</span>
+					<div class="dialogue-name-row">
+						<span class="dialogue-name" style="color:{dlg.npcColor}">{dlg.npcName}</span>
+						<span class="dialogue-mood" style="color:{MOOD_DISPLAY[dlg.mood]?.color ?? '#888'}">[{MOOD_DISPLAY[dlg.mood]?.label ?? dlg.mood}]</span>
+					</div>
 					<button class="dialogue-close" onclick={() => { state = closeDialogue(state); dialogueSelection = 0; typewriterNodeId = ''; }}>ESC</button>
 				</div>
 				{#if node}
@@ -883,11 +886,21 @@
 		border-radius: 4px;
 	}
 
+	.dialogue-name-row {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		flex: 1;
+	}
 	.dialogue-name {
 		font-size: 18px;
 		font-weight: bold;
 		letter-spacing: 2px;
-		flex: 1;
+	}
+	.dialogue-mood {
+		font-size: 12px;
+		font-style: italic;
+		opacity: 0.8;
 	}
 
 	.dialogue-close {

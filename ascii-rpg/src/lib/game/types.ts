@@ -16,10 +16,13 @@ export interface CharacterConfig {
 	startingLocation: StartingLocation;
 }
 
+export type NPCMood = 'friendly' | 'neutral' | 'hostile' | 'afraid' | 'amused' | 'sad';
+
 export interface DialogueEffect {
 	hp?: number;
 	atk?: number;
 	message?: string;
+	mood?: NPCMood;
 }
 
 export interface DialogueOption {
@@ -50,6 +53,7 @@ export interface ActiveDialogue {
 	tree: DialogueTree;
 	visitedNodes: Set<string>;
 	givenItems: boolean;
+	mood: NPCMood;
 }
 
 export interface NPC {
@@ -62,6 +66,7 @@ export interface NPC {
 	gives?: { hp?: number; atk?: number };
 	given: boolean;
 	dialogueTree?: DialogueTree;
+	mood: NPCMood;
 }
 
 export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse';

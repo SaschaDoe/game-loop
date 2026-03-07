@@ -18,7 +18,7 @@ export const MOTHER_DIALOGUE: DialogueTree = {
 			'Oh, my dear child. You look so determined today. I always knew this day would come... the day you\'d leave Willowmere.',
 			[
 				opt('What can you tell me about the dungeon?', 'dungeon_info', '#ff4'),
-				opt('I\'ll be fine, Mother. Don\'t worry.', 'reassure', '#4f4'),
+				opt('I\'ll be fine, Mother. Don\'t worry.', 'reassure', '#4f4', { onSelect: { mood: 'sad' } }),
 				opt('Do you have anything that might help me?', 'give_item', '#ff4'),
 				opt('Tell me about Willowmere.', 'village_lore', '#8cf'),
 				opt('Goodbye, Mother.', 'farewell', '#0ff'),
@@ -29,7 +29,7 @@ export const MOTHER_DIALOGUE: DialogueTree = {
 			[
 				opt('What can you tell me about the dungeon?', 'dungeon_info', '#ff4'),
 				opt('Tell me about Willowmere.', 'village_lore', '#8cf'),
-				opt('Just checking in.', 'checkin', '#4f4'),
+				opt('Just checking in.', 'checkin', '#4f4', { onSelect: { mood: 'friendly' } }),
 				opt('Goodbye, Mother.', 'farewell', '#0ff'),
 			]
 		),
@@ -223,7 +223,7 @@ export const FATHER_DIALOGUE: DialogueTree = {
 		traps_info: node('traps_info',
 			'Spike traps, poison darts, alarm bells that summon every creature on the floor, and teleportation plates that drop you into the middle of a monster convention. I lost my favorite hat to a teleport trap. Ended up on a different level entirely. Never found the hat. Still bitter about it.',
 			[
-				opt('Sorry about your hat.', 'hat', '#4f4'),
+				opt('Sorry about your hat.', 'hat', '#4f4', { onSelect: { mood: 'amused' } }),
 				opt('How do I spot them?', 'spot_traps', '#ff4'),
 			]
 		),
@@ -791,7 +791,7 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 		level_fifteen: node('level_fifteen',
 			'*His eyes go wide and he grips his mug so hard his knuckles turn white.* The... the library. Wallsh covered in writing. Every adventurer\'sh shtory. I found MY name. Read my own future. It said... *He trails off.* It shaid I\'d shpend the resht of my life in a tavern, trying to forget what I shaw next.',
 			[
-				opt('What did you see next?', 'the_eye_drunk', '#f44'),
+				opt('What did you see next?', 'the_eye_drunk', '#f44', { onSelect: { mood: 'afraid' } }),
 				opt('Maybe you should stop drinking.', 'stop_drinking', '#4f4'),
 			]
 		),
@@ -799,7 +799,7 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			'*He leans in, suddenly terrifyingly sober.* The Eye. Below the library. Below everything. An eye the size of a cathedral, embedded in the living rock. It wasn\'t looking at nothing. It was looking at ME. And it SMILED. Eyes don\'t smile. They CAN\'T smile. But this one did. And then it blinked, and Thessaly walked toward it like she was meeting an old friend, and we ran. We RAN.',
 			[
 				opt('Thessaly... the mage who stayed behind?', 'thessaly_drunk', '#f44'),
-				opt('That\'s enough. I\'m sorry I asked.', 'sorry', '#4f4'),
+				opt('That\'s enough. I\'m sorry I asked.', 'sorry', '#4f4', { onSelect: { mood: 'sad' } }),
 			]
 		),
 		thessaly_drunk: node('thessaly_drunk',
@@ -1027,7 +1027,7 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 		cooking: node('cooking',
 			'Don\'t look so horrified. They haven\'t eaten me yet because the Jailer thinks I\'m "too stringy." His exact words. He keeps poking my arms and muttering about fattening me up. I\'ve been quietly losing weight on principle. *She pauses.* That\'s a joke. The food is just terrible.',
 			[
-				opt('That\'s darkly funny.', 'dark_humor', '#4f4'),
+				opt('That\'s darkly funny.', 'dark_humor', '#4f4', { onSelect: { mood: 'amused' } }),
 				opt('I\'ll deal with the Jailer.', 'jailer_info', '#f44'),
 				opt('How do I get us out?', 'escape', '#ff4'),
 			]
@@ -1059,7 +1059,7 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 			'*She shrugs.* I was delirious at the time. Probably. But the Athenaeum has records of similar phenomena \u2014 adventurers who claimed they could sense "something watching" that wasn\'t a monster. Something... outside the world entirely. The senior scholars dismiss it as dungeon psychosis. I\'m not so sure. *She lowers her voice.* Do you ever feel like your choices are being made for you?',
 			[
 				opt('...Let\'s change the subject.', 'escape', '#ff4'),
-				opt('You\'re scaring me, Thessaly.', 'scare', '#f44'),
+				opt('You\'re scaring me, Thessaly.', 'scare', '#f44', { onSelect: { mood: 'afraid' } }),
 			]
 		),
 		scare: node('scare',
@@ -1248,7 +1248,7 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 		rescue: node('rescue',
 			'*Her expression softens.* You mean that, don\'t you? Most adventurers would\'ve left by now. "Every prisoner for themselves" and all that. *She straightens.* The Jailer has the key. Kill him, bring the key, and I can free myself. I\'ll make for the surface. If you survive the dungeon... look for me at the Athenaeum. I owe you a very large drink and a lecture on dimensional membrane theory.',
 			[
-				opt('It\'s a date.', 'date', '#4f4'),
+				opt('It\'s a date.', 'date', '#4f4', { onSelect: { mood: 'amused' } }),
 				opt('Stay alive, Thessaly.', 'farewell', '#4f4'),
 				opt('Any last tips before I go?', 'last_tips', '#ff4'),
 			]
@@ -1362,8 +1362,8 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 		pot: node('pot',
 			'A merchant doesn\'t judge her customers, dear. She judges their coin purses. Besides, Big Beautiful was just a regular cauldron before I upsold it with a "premium polish package." Three extra gold for me to spit on it and rub it with my sleeve. He was delighted. *She sighs contentedly.* Pure profit.',
 			[
-				opt('You\'re a terrible person.', 'terrible', '#f44'),
-				opt('I respect the hustle.', 'hustle', '#4f4'),
+				opt('You\'re a terrible person.', 'terrible', '#f44', { onSelect: { mood: 'hostile' } }),
+				opt('I respect the hustle.', 'hustle', '#4f4', { onSelect: { mood: 'amused' } }),
 				opt('What else do you sell?', 'wares', '#ff4'),
 			]
 		),
@@ -1478,7 +1478,7 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 		singing: node('singing',
 			'*She shivers theatrically.* Something deep, deep down sings. Not words — more like... the sound an ocean would make if it could carry a tune. My monster customers don\'t hear it. Or they pretend not to. But every adventurer I\'ve spoken to mentions it eventually. It gets louder the deeper you go. By level fifteen, I could feel it in my teeth. That\'s when I packed up and headed upward. A merchant knows when the market is hostile.',
 			[
-				opt('That must be the Eye.', 'the_eye_merchant', '#f44'),
+				opt('That must be the Eye.', 'the_eye_merchant', '#f44', { onSelect: { mood: 'afraid' } }),
 				opt('Thanks for the warning.', 'farewell', '#4f4'),
 			]
 		),
@@ -1509,7 +1509,7 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 				opt('The stairs are usually in the largest room.', 'directions', '#4f4'),
 				opt('How did you get lost?', 'lost_story', '#ff4'),
 				opt('You look rough. Are you okay?', 'condition', '#4f4'),
-				opt('Sorry, can\'t help. Good luck.', 'farewell_cold', '#f44'),
+				opt('Sorry, can\'t help. Good luck.', 'farewell_cold', '#f44', { onSelect: { mood: 'sad' } }),
 			]
 		),
 		return: node('return',
@@ -1648,7 +1648,7 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 			'It IS a conspiracy! But nobody listens to the cartographer! "Corwin, you\'re paranoid." "Corwin, you see patterns that aren\'t there." "Corwin, that\'s a wall, not a secret door." Okay, that last one was legitimate. But the Aldric thing — I\'m RIGHT about that. Something is wrong and nobody with authority wants to admit it because the dungeon funding is too lucrative.',
 			[
 				opt('Follow the money. Classic.', 'farewell', '#ff4'),
-				opt('I believe you, Corwin.', 'believed', '#4f4'),
+				opt('I believe you, Corwin.', 'believed', '#4f4', { onSelect: { mood: 'friendly' } }),
 			]
 		),
 		believed: node('believed',
