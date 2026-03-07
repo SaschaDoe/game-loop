@@ -30,6 +30,9 @@
 		<span class="atk">ATK: {state.player.attack}</span>
 		<span class="level">Dungeon: {state.level}</span>
 		<span class="char-level">Lv {state.characterLevel}</span>
+		{#each state.player.statusEffects as effect}
+			<span class="status-effect status-{effect.type}">{effect.type} ({effect.duration})</span>
+		{/each}
 	</div>
 	<div class="xp-bar-container">
 		<div class="xp-bar" style="width:{state.characterLevel >= 50 ? 100 : (state.xp / xpForLevel(state.characterLevel + 1)) * 100}%"></div>
@@ -92,6 +95,27 @@
 
 	.char-level {
 		color: #af4;
+	}
+
+	.status-effect {
+		font-size: 12px;
+		padding: 1px 4px;
+		border-radius: 2px;
+	}
+
+	.status-poison {
+		color: #0f0;
+		border: 1px solid #0f0;
+	}
+
+	.status-stun {
+		color: #ff0;
+		border: 1px solid #ff0;
+	}
+
+	.status-regeneration {
+		color: #0fa;
+		border: 1px solid #0fa;
 	}
 
 	.xp-bar-container {

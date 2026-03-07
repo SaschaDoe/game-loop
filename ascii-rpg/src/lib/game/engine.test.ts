@@ -12,6 +12,7 @@ function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
 		hp: 1,
 		maxHp: 3,
 		attack: 1,
+		statusEffects: [],
 		...overrides
 	};
 }
@@ -33,7 +34,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 			name: 'Hero',
 			hp: 20,
 			maxHp: 20,
-			attack: 10
+			attack: 10,
+			statusEffects: []
 		},
 		enemies: [],
 		map: { width, height, tiles },
@@ -257,5 +259,37 @@ describe('handleInput basics', () => {
 		expect(result.gameOver).toBe(false);
 		expect(result.xp).toBe(0);
 		expect(result.characterLevel).toBe(1);
+	});
+});
+
+describe('Status effects integration', () => {
+	it('stunned player cannot move', () => {
+		const state = makeTestState();
+		state.player.statusEffects = [{ type: 'stun', duration: 2, potency: 0 }];
+		const result = handleInput(state, 'd');
+		expect(result.player.pos.x).toBe(5); // didn't move
+		expect(result.messages.some((m) => m.includes('stunned'))).toBe(true);
+	});
+
+	it('stunned player cannot attack', () => {
+		const enemy = makeEnemy(6, 5, { hp: 5, maxHp: 5 });
+		const state = makeTestState({ enemies: [enemy] });
+		state.player.statusEffects = [{ type: 'stun', duration: 2, potency: 0 }];
+		const result = handleInput(state, 'd');
+		expect(result.enemies[0].hp).toBe(5); // enemy not damaged
+	});
+
+	it('createGame initializes player with empty statusEffects', () => {
+		const state = createGame();
+		expect(state.player.statusEffects).toEqual([]);
+	});
+
+	it('preserves player statusEffects when descending stairs', () => {
+		const state = makeTestState();
+		state.player.statusEffects = [{ type: 'poison', duration: 3, potency: 2 }];
+		state.map.tiles[5][6] = '>';
+		const result = handleInput(state, 'd');
+		expect(result.player.statusEffects).toHaveLength(1);
+		expect(result.player.statusEffects[0].type).toBe('poison');
 	});
 });

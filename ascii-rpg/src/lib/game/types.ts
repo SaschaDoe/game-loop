@@ -3,6 +3,14 @@ export interface Position {
 	y: number;
 }
 
+export type StatusEffectType = 'poison' | 'stun' | 'regeneration';
+
+export interface StatusEffect {
+	type: StatusEffectType;
+	duration: number;
+	potency: number;
+}
+
 export interface Entity {
 	pos: Position;
 	char: string;
@@ -11,6 +19,7 @@ export interface Entity {
 	hp: number;
 	maxHp: number;
 	attack: number;
+	statusEffects: StatusEffect[];
 }
 
 export type Tile = '#' | '.' | '>' | '*';

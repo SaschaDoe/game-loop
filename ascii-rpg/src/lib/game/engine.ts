@@ -2,6 +2,7 @@ import type { GameState, Entity, Position } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
+import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -40,7 +41,8 @@ function createEnemy(pos: Position, level: number): Entity {
 		name,
 		hp: 2 + level,
 		maxHp: 2 + level,
-		attack: 1 + Math.floor(level / 2)
+		attack: 1 + Math.floor(level / 2),
+		statusEffects: []
 	};
 }
 
@@ -67,7 +69,8 @@ function newLevel(level: number): GameState {
 			name: 'Hero',
 			hp: 10 + level * 2,
 			maxHp: 10 + level * 2,
-			attack: 2 + level
+			attack: 2 + level,
+			statusEffects: []
 		},
 		enemies: enemyPositions.map((p) => createEnemy(p, level)),
 		map,
@@ -90,8 +93,40 @@ function isBlocked(state: GameState, x: number, y: number): boolean {
 	return state.map.tiles[y][x] === '#';
 }
 
+function tickEntityEffects(state: GameState, entity: Entity): void {
+	const result = tickEffects(entity);
+	for (const msg of result.messages) {
+		addMessage(state, msg);
+	}
+	if (entity === state.player && entity.hp <= 0) {
+		state.gameOver = true;
+		addMessage(state, 'You have been slain! Press R to restart.');
+	}
+}
+
 function moveEnemies(state: GameState) {
+	// Tick enemy status effects and remove dead enemies
 	for (const enemy of state.enemies) {
+		tickEntityEffects(state, enemy);
+	}
+	state.enemies = state.enemies.filter((e) => {
+		if (e.hp <= 0) {
+			const reward = xpReward(e, state.level);
+			state.xp += reward;
+			addMessage(state, `${e.name} died from status effects! +${reward} XP`);
+			return false;
+		}
+		return true;
+	});
+	checkLevelUp(state);
+
+	// Tick player status effects
+	tickEntityEffects(state, state.player);
+
+	for (const enemy of state.enemies) {
+		// Stunned enemies skip their turn
+		if (hasEffect(enemy, 'stun')) continue;
+
 		const dx = Math.sign(state.player.pos.x - enemy.pos.x);
 		const dy = Math.sign(state.player.pos.y - enemy.pos.y);
 
@@ -105,6 +140,11 @@ function moveEnemies(state: GameState) {
 			const dmg = Math.max(1, enemy.attack + Math.floor(Math.random() * 2));
 			state.player.hp -= dmg;
 			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`);
+			// Slimes inflict poison on hit
+			if (enemy.name === 'Slime') {
+				applyEffect(state.player, 'poison', 3, 1);
+				addMessage(state, 'You are poisoned!');
+			}
 			if (state.player.hp <= 0) {
 				state.gameOver = true;
 				addMessage(state, 'You have been slain! Press R to restart.');
@@ -128,6 +168,13 @@ export function handleInput(state: GameState, key: string): GameState {
 	else if (key === 'a' || key === 'ArrowLeft') dx = -1;
 	else if (key === 'd' || key === 'ArrowRight') dx = 1;
 	else return state;
+
+	// Stunned player loses their turn
+	if (hasEffect(state.player, 'stun')) {
+		addMessage(state, 'You are stunned and cannot act!');
+		moveEnemies(state);
+		return { ...state };
+	}
 
 	const nx = state.player.pos.x + dx;
 	const ny = state.player.pos.y + dy;
@@ -171,6 +218,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.xp = state.xp;
 		next.characterLevel = state.characterLevel;
 		next.sightRadius = state.sightRadius;
+		next.player.statusEffects = [...state.player.statusEffects];
 		addMessage(next, `Descended to level ${next.level}.`);
 		return next;
 	}
@@ -235,11 +283,13 @@ export function renderColored(state: GameState): { char: string; color: string }
 			const isVisible = vis === Visibility.Visible;
 
 			if (state.player.pos.x === x && state.player.pos.y === y) {
-				row.push({ char: '@', color: state.player.color });
+				const playerColor = effectColor(state.player) ?? state.player.color;
+				row.push({ char: '@', color: playerColor });
 			} else if (isVisible) {
 				const enemy = state.enemies.find((e) => e.pos.x === x && e.pos.y === y);
 				if (enemy) {
-					row.push({ char: enemy.char, color: enemy.color });
+					const enemyColor = effectColor(enemy) ?? enemy.color;
+					row.push({ char: enemy.char, color: enemyColor });
 				} else {
 					row.push({ char: state.map.tiles[y][x], color: tileColor(state.map.tiles[y][x]) });
 				}
