@@ -538,3 +538,82 @@ describe('Rare monster integration', () => {
 		expect(msg!.type).toBe('level_up');
 	});
 });
+
+describe('Special abilities integration', () => {
+	it('createGame initializes abilityCooldown to 0', () => {
+		const state = createGame();
+		expect(state.abilityCooldown).toBe(0);
+	});
+
+	it('pressing q uses warrior ability and sets cooldown', () => {
+		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'warrior' }
+		});
+
+		const result = handleInput(state, 'q');
+		// Cooldown is set then moveEnemies ticks it down by 1
+		expect(result.abilityCooldown).toBe(ABILITY_DEFS.warrior.cooldown - 1);
+		expect(enemy.hp).toBeLessThan(100);
+	});
+
+	it('ability on cooldown does not consume turn', () => {
+		const state = makeTestState({ abilityCooldown: 3 });
+		const result = handleInput(state, 'q');
+		// Cooldown should not change (no moveEnemies tick)
+		expect(result.abilityCooldown).toBe(3);
+	});
+
+	it('cooldown decrements each turn', () => {
+		const state = makeTestState({ abilityCooldown: 3 });
+		// Move to trigger a turn
+		const result = handleInput(state, 'd');
+		expect(result.abilityCooldown).toBe(2);
+	});
+
+	it('whirlwind kills award XP', () => {
+		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: 3 });
+		const state = makeTestState({
+			enemies: [enemy],
+			level: 1,
+			characterLevel: 50,
+			characterConfig: { name: 'Hero', characterClass: 'warrior' }
+		});
+		const expectedReward = xpReward(enemy, 1);
+
+		const result = handleInput(state, 'q');
+		expect(result.enemies).toHaveLength(0);
+		expect(result.xp).toBe(expectedReward);
+	});
+
+	it('mage teleport moves player position', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'mage' }
+		});
+		const originalPos = { ...state.player.pos };
+
+		const result = handleInput(state, 'q');
+		// Player should have moved (extremely unlikely to land on same spot)
+		expect(
+			result.player.pos.x !== originalPos.x || result.player.pos.y !== originalPos.y
+		).toBe(true);
+	});
+
+	it('stunned player cannot use ability', () => {
+		const state = makeTestState();
+		state.player.statusEffects = [{ type: 'stun', duration: 2, potency: 0 }];
+
+		const result = handleInput(state, 'q');
+		expect(result.messages.some((m) => m.text.includes('stunned'))).toBe(true);
+		expect(result.abilityCooldown).toBe(0); // not consumed
+	});
+
+	it('ability cooldown preserved when descending stairs', () => {
+		const state = makeTestState({ abilityCooldown: 5 });
+		state.map.tiles[5][6] = '>';
+
+		const result = handleInput(state, 'd');
+		expect(result.abilityCooldown).toBe(5);
+	});
+});
