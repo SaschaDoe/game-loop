@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createGame, handleInput, renderColored, xpForLevel, CLASS_BONUSES } from '$lib/game/engine';
+	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig } from '$lib/game/types';
 
 	declare const __APP_VERSION__: string;
@@ -70,7 +71,7 @@
 			}
 		} else if (phase === 'playing') {
 			const key = e.key;
-			if (['w', 'a', 's', 'd', 'r', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+			if (['w', 'a', 's', 'd', 'q', 'r', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
 				e.preventDefault();
 				sendInput(key);
 			}
@@ -212,6 +213,17 @@
 				<button class="dpad-btn" ontouchstart={dpadTouch('a')} onclick={dpadClick('a')}>&#9664;</button>
 				<button class="dpad-btn" ontouchstart={dpadTouch('s')} onclick={dpadClick('s')}>&#9660;</button>
 				<button class="dpad-btn" ontouchstart={dpadTouch('d')} onclick={dpadClick('d')}>&#9654;</button>
+			</div>
+			<div class="dpad-row">
+				<button
+					class="dpad-btn dpad-ability"
+					class:on-cooldown={state.abilityCooldown > 0}
+					ontouchstart={dpadTouch('q')}
+					onclick={dpadClick('q')}
+				>
+					{ABILITY_DEFS[state.characterConfig.characterClass].name}
+					{#if state.abilityCooldown > 0}({state.abilityCooldown}){/if}
+				</button>
 			</div>
 			{#if state.gameOver}
 				<div class="dpad-row">
@@ -602,6 +614,24 @@
 		background: #444;
 		border-color: #c84;
 		color: #c84;
+	}
+
+	.dpad-ability {
+		width: auto;
+		padding: 0 16px;
+		font-size: 12px;
+		color: #c84;
+		border-color: #c84;
+	}
+
+	.dpad-ability.on-cooldown {
+		color: #555;
+		border-color: #333;
+	}
+
+	.dpad-ability:active {
+		background: #321;
+		border-color: #fa6;
 	}
 
 	.dpad-restart {

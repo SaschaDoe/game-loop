@@ -5,6 +5,7 @@ import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
 import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
+import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -112,7 +113,8 @@ function newLevel(level: number): GameState {
 		detectedSecrets: new Set<string>(),
 		traps: filteredTraps,
 		detectedTraps: new Set<string>(),
-		characterConfig: DEFAULT_CONFIG
+		characterConfig: DEFAULT_CONFIG,
+		abilityCooldown: 0
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -165,6 +167,7 @@ function tickEntityEffects(state: GameState, entity: Entity): void {
 }
 
 function moveEnemies(state: GameState) {
+	tickAbilityCooldown(state);
 	// Tick enemy status effects and remove dead enemies
 	for (const enemy of state.enemies) {
 		tickEntityEffects(state, enemy);
@@ -216,6 +219,42 @@ export function handleInput(state: GameState, key: string): GameState {
 	if (state.gameOver) {
 		if (key === 'r') return createGame(state.characterConfig);
 		return state;
+	}
+
+	// Ability key
+	if (key === 'q') {
+		if (hasEffect(state.player, 'stun')) {
+			addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
+		const result = useAbility(state);
+		for (const msg of result.messages) {
+			addMessage(state, msg.text, msg.type);
+		}
+		if (result.used) {
+			const def = ABILITY_DEFS[state.characterConfig.characterClass];
+			state.abilityCooldown = def.cooldown;
+			// Handle kills from warrior whirlwind
+			const killed = state.enemies.filter((e) => e.hp <= 0);
+			for (const enemy of killed) {
+				const bossKill = isBoss(enemy);
+				const rareKill = isRare(enemy);
+				const baseReward = xpReward(enemy, state.level);
+				const reward = bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward;
+				state.xp += reward;
+				addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
+			}
+			state.enemies = state.enemies.filter((e) => e.hp > 0);
+			if (killed.length > 0) checkLevelUp(state);
+			if (result.teleportPos) {
+				state.player.pos = result.teleportPos;
+				updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+				detectAdjacentSecrets(state);
+			}
+			moveEnemies(state);
+		}
+		return { ...state };
 	}
 
 	let dx = 0;
@@ -320,6 +359,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.player.statusEffects = [...state.player.statusEffects];
 		next.characterConfig = state.characterConfig;
 		next.player.name = state.player.name;
+		next.abilityCooldown = state.abilityCooldown;
 		addMessage(next, `Descended to level ${next.level}.`);
 		return next;
 	}

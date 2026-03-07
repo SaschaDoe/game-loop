@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, handleInput, xpForLevel, xpReward } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
+import { ABILITY_DEFS } from './abilities';
 import type { GameState, Entity, Trap } from './types';
 import { Visibility } from './types';
 
@@ -51,6 +52,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		traps: [],
 		detectedTraps: new Set<string>(),
 		characterConfig: { name: 'Hero', characterClass: 'warrior' as const },
+		abilityCooldown: 0,
 		...overrides
 	};
 }

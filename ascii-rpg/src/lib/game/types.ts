@@ -74,4 +74,5 @@ export interface GameState {
 	traps: Trap[];
 	detectedTraps: Set<string>;
 	characterConfig: CharacterConfig;
+	abilityCooldown: number;
 }
