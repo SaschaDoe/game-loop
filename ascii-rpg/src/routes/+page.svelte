@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, renderColored } from '$lib/game/engine';
+	import { createGame, handleInput, renderColored, xpForLevel } from '$lib/game/engine';
 	import type { GameState } from '$lib/game/types';
 
 	let state: GameState = $state(createGame());
@@ -28,7 +28,12 @@
 	<div class="hud">
 		<span class="hp">HP: {state.player.hp}/{state.player.maxHp}</span>
 		<span class="atk">ATK: {state.player.attack}</span>
-		<span class="level">Level: {state.level}</span>
+		<span class="level">Dungeon: {state.level}</span>
+		<span class="char-level">Lv {state.characterLevel}</span>
+	</div>
+	<div class="xp-bar-container">
+		<div class="xp-bar" style="width:{state.characterLevel >= 50 ? 100 : (state.xp / xpForLevel(state.characterLevel + 1)) * 100}%"></div>
+		<span class="xp-text">{state.characterLevel >= 50 ? 'MAX' : `${state.xp}/${xpForLevel(state.characterLevel + 1)} XP`}</span>
 	</div>
 	<pre class="map">{#each grid as row, y}{#each row as cell}<span style="color:{cell.color}">{cell.char}</span>{/each}{#if y < grid.length - 1}
 {/if}{/each}</pre>
@@ -83,6 +88,39 @@
 
 	.level {
 		color: #4af;
+	}
+
+	.char-level {
+		color: #af4;
+	}
+
+	.xp-bar-container {
+		position: relative;
+		width: 100%;
+		max-width: 600px;
+		height: 14px;
+		background: #222;
+		border: 1px solid #444;
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	.xp-bar {
+		height: 100%;
+		background: #af4;
+		transition: width 0.3s ease;
+	}
+
+	.xp-text {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		text-align: center;
+		font-size: 10px;
+		line-height: 14px;
+		color: #fff;
+		text-shadow: 0 0 2px #000;
 	}
 
 	.map {

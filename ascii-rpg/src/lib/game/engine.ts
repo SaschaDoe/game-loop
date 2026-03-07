@@ -6,6 +6,29 @@ const MAP_H = 24;
 
 const ENEMY_NAMES = ['Goblin', 'Rat', 'Skeleton', 'Slime', 'Bat'];
 
+export function xpForLevel(level: number): number {
+	return Math.floor(50 * Math.pow(1.4, level - 1));
+}
+
+export function xpReward(enemy: Entity, dungeonLevel: number): number {
+	return 5 + dungeonLevel * 2 + enemy.maxHp;
+}
+
+function checkLevelUp(state: GameState): void {
+	let threshold = xpForLevel(state.characterLevel + 1);
+	while (state.xp >= threshold && state.characterLevel < 50) {
+		state.xp -= threshold;
+		state.characterLevel++;
+		const hpGain = 3 + state.characterLevel;
+		const atkGain = state.characterLevel % 2 === 0 ? 1 : 0;
+		state.player.maxHp += hpGain;
+		state.player.hp += hpGain;
+		state.player.attack += atkGain;
+		addMessage(state, `Level up! You are now level ${state.characterLevel}. +${hpGain} HP${atkGain ? `, +${atkGain} ATK` : ''}.`);
+		threshold = xpForLevel(state.characterLevel + 1);
+	}
+}
+
 function createEnemy(pos: Position, level: number): Entity {
 	const name = ENEMY_NAMES[Math.floor(Math.random() * ENEMY_NAMES.length)];
 	return {
@@ -43,12 +66,14 @@ function newLevel(level: number): GameState {
 		map,
 		messages: [`Welcome to dungeon level ${level}. Use WASD or arrow keys to move.`],
 		level,
-		gameOver: false
+		gameOver: false,
+		xp: 0,
+		characterLevel: 1
 	};
 }
 
 function addMessage(state: GameState, msg: string) {
-	state.messages = [...state.messages.slice(-4), msg];
+	state.messages = [...state.messages.slice(-7), msg];
 }
 
 function isBlocked(state: GameState, x: number, y: number): boolean {
@@ -105,8 +130,11 @@ export function handleInput(state: GameState, key: string): GameState {
 		target.hp -= dmg;
 		addMessage(state, `You hit ${target.name} for ${dmg}!`);
 		if (target.hp <= 0) {
+			const reward = xpReward(target, state.level);
+			state.xp += reward;
 			state.enemies = state.enemies.filter((e) => e !== target);
-			addMessage(state, `${target.name} defeated!`);
+			addMessage(state, `${target.name} defeated! +${reward} XP`);
+			checkLevelUp(state);
 		}
 		moveEnemies(state);
 		return { ...state };
@@ -130,6 +158,8 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.player.hp = state.player.hp;
 		next.player.maxHp = Math.max(state.player.maxHp, next.player.maxHp);
 		next.player.attack = Math.max(state.player.attack, next.player.attack);
+		next.xp = state.xp;
+		next.characterLevel = state.characterLevel;
 		addMessage(next, `Descended to level ${next.level}.`);
 		return next;
 	}

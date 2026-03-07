@@ -28,4 +28,6 @@ export interface GameState {
 	messages: string[];
 	level: number;
 	gameOver: boolean;
+	xp: number;
+	characterLevel: number;
 }
