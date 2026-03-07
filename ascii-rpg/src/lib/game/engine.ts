@@ -51,7 +51,7 @@ function newLevel(level: number): GameState {
 	const visibility = createVisibilityGrid(map.width, map.height);
 	updateVisibility(visibility, map, playerPos, sightRadius);
 
-	return {
+	const state: GameState = {
 		player: {
 			pos: playerPos,
 			char: '@',
@@ -70,8 +70,11 @@ function newLevel(level: number): GameState {
 		xp: 0,
 		characterLevel: 1,
 		visibility,
-		sightRadius
+		sightRadius,
+		detectedSecrets: new Set<string>()
 	};
+	detectAdjacentSecrets(state);
+	return state;
 }
 
 function addMessage(state: GameState, msg: string) {
@@ -80,7 +83,25 @@ function addMessage(state: GameState, msg: string) {
 
 function isBlocked(state: GameState, x: number, y: number): boolean {
 	if (x < 0 || y < 0 || x >= state.map.width || y >= state.map.height) return true;
-	return state.map.tiles[y][x] === '#';
+	if (state.map.tiles[y][x] !== '#') return false;
+	// Detected secret walls can be walked through
+	const key = `${x},${y}`;
+	if (state.map.secretWalls.has(key) && state.detectedSecrets.has(key)) return false;
+	return true;
+}
+
+function detectAdjacentSecrets(state: GameState): void {
+	const { x, y } = state.player.pos;
+	const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+	for (const [dx, dy] of dirs) {
+		const nx = x + dx;
+		const ny = y + dy;
+		const key = `${nx},${ny}`;
+		if (state.map.secretWalls.has(key) && !state.detectedSecrets.has(key)) {
+			state.detectedSecrets.add(key);
+			addMessage(state, 'You notice a hidden passage in the wall!');
+		}
+	}
 }
 
 function tickEntityEffects(state: GameState, entity: Entity): void {
@@ -185,8 +206,16 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	if (isBlocked(state, nx, ny)) return state;
 
+	// Walking through a detected secret wall opens it
+	const tileKey = `${nx},${ny}`;
+	if (state.map.tiles[ny][nx] === '#' && state.map.secretWalls.has(tileKey) && state.detectedSecrets.has(tileKey)) {
+		state.map.tiles[ny][nx] = '.';
+		addMessage(state, 'You push through the hidden passage!');
+	}
+
 	state.player.pos = { x: nx, y: ny };
 	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+	detectAdjacentSecrets(state);
 
 	// pick up item
 	if (state.map.tiles[ny][nx] === '*') {
@@ -247,8 +276,8 @@ function dimColor(hex: string): string {
 	return `#${dim(r)}${dim(g)}${dim(b)}`;
 }
 
-function tileColor(tile: string): string {
-	if (tile === '#') return '#444444';
+function tileColor(tile: string, isDetectedSecret: boolean = false): string {
+	if (tile === '#') return isDetectedSecret ? '#665577' : '#444444';
 	if (tile === '.') return '#666666';
 	if (tile === '>') return '#ffff00';
 	if (tile === '*') return '#ff00ff';
@@ -278,12 +307,15 @@ export function renderColored(state: GameState): { char: string; color: string }
 					const enemyColor = effectColor(enemy) ?? enemy.color;
 					row.push({ char: enemy.char, color: enemyColor });
 				} else {
-					row.push({ char: state.map.tiles[y][x], color: tileColor(state.map.tiles[y][x]) });
+					const tile = state.map.tiles[y][x];
+					const isSecret = state.detectedSecrets.has(`${x},${y}`);
+					row.push({ char: tile, color: tileColor(tile, isSecret) });
 				}
 			} else {
 				// Explored but not currently visible: show terrain dimmed, no entities
 				const tile = state.map.tiles[y][x];
-				row.push({ char: tile, color: dimColor(tileColor(tile)) });
+				const isSecret = state.detectedSecrets.has(`${x},${y}`);
+				row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
 			}
 		}
 		grid.push(row);

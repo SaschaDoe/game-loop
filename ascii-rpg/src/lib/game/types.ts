@@ -34,6 +34,7 @@ export interface GameMap {
 	width: number;
 	height: number;
 	tiles: Tile[][];
+	secretWalls: Set<string>;
 }
 
 export interface GameState {
@@ -47,4 +48,5 @@ export interface GameState {
 	characterLevel: number;
 	visibility: Visibility[][];
 	sightRadius: number;
+	detectedSecrets: Set<string>;
 }

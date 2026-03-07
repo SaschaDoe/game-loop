@@ -38,7 +38,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 			statusEffects: []
 		},
 		enemies: [],
-		map: { width, height, tiles },
+		map: { width, height, tiles, secretWalls: new Set<string>() },
 		messages: [],
 		level: 1,
 		gameOver: false,
@@ -46,6 +46,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		characterLevel: 1,
 		visibility,
 		sightRadius: 8,
+		detectedSecrets: new Set<string>(),
 		...overrides
 	};
 }
@@ -291,5 +292,59 @@ describe('Status effects integration', () => {
 		const result = handleInput(state, 'd');
 		expect(result.player.statusEffects).toHaveLength(1);
 		expect(result.player.statusEffects[0].type).toBe('poison');
+	});
+});
+
+describe('Secret rooms', () => {
+	it('detects secret wall when player moves adjacent', () => {
+		const state = makeTestState();
+		// Place a secret wall at (7, 5) — player is at (5,5), needs to move close
+		state.map.tiles[5][7] = '#';
+		state.map.secretWalls.add('7,5');
+
+		// Move right to (6,5) — now adjacent to secret wall at (7,5)
+		const result = handleInput(state, 'd');
+		expect(result.detectedSecrets.has('7,5')).toBe(true);
+		expect(result.messages.some((m) => m.includes('hidden passage'))).toBe(true);
+	});
+
+	it('cannot walk through undetected secret wall', () => {
+		const state = makeTestState();
+		state.map.tiles[5][6] = '#';
+		state.map.secretWalls.add('6,5');
+		// Player at (5,5), try to move right into undetected secret wall
+		const result = handleInput(state, 'd');
+		expect(result.player.pos.x).toBe(5); // blocked
+	});
+
+	it('can walk through detected secret wall', () => {
+		const state = makeTestState();
+		state.map.tiles[5][6] = '#';
+		state.map.secretWalls.add('6,5');
+		state.detectedSecrets.add('6,5');
+		const result = handleInput(state, 'd');
+		expect(result.player.pos.x).toBe(6); // walked through
+		expect(result.messages.some((m) => m.includes('hidden passage'))).toBe(true);
+	});
+
+	it('opening a secret wall turns it into floor', () => {
+		const state = makeTestState();
+		state.map.tiles[5][6] = '#';
+		state.map.secretWalls.add('6,5');
+		state.detectedSecrets.add('6,5');
+		const result = handleInput(state, 'd');
+		expect(result.map.tiles[5][6]).toBe('.');
+	});
+
+	it('createGame includes secretWalls in map', () => {
+		const state = createGame();
+		expect(state.map.secretWalls).toBeDefined();
+		expect(state.map.secretWalls instanceof Set).toBe(true);
+	});
+
+	it('createGame includes detectedSecrets', () => {
+		const state = createGame();
+		expect(state.detectedSecrets).toBeDefined();
+		expect(state.detectedSecrets instanceof Set).toBe(true);
 	});
 });
