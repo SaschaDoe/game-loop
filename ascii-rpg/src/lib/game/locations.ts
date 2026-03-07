@@ -167,6 +167,14 @@ function generateCave(width: number, height: number): LocationResult {
 
 	const playerPos = { x: 14, y: 19 };
 
+	const npcs: NPC[] = [
+		makeNPC(12, 19, 'T', '#c8f', 'Thessaly', [
+			'The goblins... they captured me weeks ago.',
+			'I\'m a scholar from the Athenaeum. Kill the Jailer for the key!',
+			'Be careful out there...'
+		])
+	];
+
 	const enemies: Entity[] = [
 		{ pos: { x: 15, y: 5 }, char: 'g', color: '#0f0', name: 'Goblin Guard', hp: 4, maxHp: 4, attack: 2, statusEffects: [] },
 		{ pos: { x: 22, y: 7 }, char: 'g', color: '#0f0', name: 'Goblin Guard', hp: 3, maxHp: 3, attack: 1, statusEffects: [] },
@@ -176,7 +184,7 @@ function generateCave(width: number, height: number): LocationResult {
 	return {
 		map: { width, height, tiles, secretWalls: new Set() },
 		playerPos,
-		npcs: [],
+		npcs,
 		enemies,
 		initialHpFactor: 0.6,
 		welcomeMessage: 'You awaken in a goblin prison cell. Escape through the exit to the north!'

@@ -966,10 +966,372 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── CAVE: PRISONER ───
+
+export const PRISONER_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A gaunt figure stirs in the shadows, chains rattling.* Well, well. Another guest at the goblin resort. Welcome. The accommodations are terrible and the room service will eat you.',
+			[
+				opt('Who are you?', 'who', '#ff4'),
+				opt('How do I get out of here?', 'escape', '#ff4'),
+				opt('How long have you been here?', 'how_long', '#8cf'),
+				opt('Hang tight, I\'ll get us both out.', 'rescue', '#4f4'),
+				opt('[Say nothing and leave]', '__exit__', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*She looks up.* Oh good, you\'re still alive. I was taking bets with the rats. They had three-to-one odds against you.',
+			[
+				opt('Tell me more about yourself.', 'who', '#ff4'),
+				opt('Any tips for fighting goblins?', 'goblin_tips', '#ff4'),
+				opt('What were you doing before you got captured?', 'research', '#8cf'),
+				opt('Tell me about what lies below.', 'below', '#f44'),
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		who: node('who',
+			'Thessaly. Scholar of the Athenaeum of Grey Reaches. I was researching the resonance patterns of the deep caves \u2014 the way the stone itself seems to hum on certain nights. *She rattles her chains.* The goblins were less interested in my academic credentials than in my cooking potential.',
+			[
+				opt('The Athenaeum? Tell me more.', 'athenaeum', '#8cf'),
+				opt('Cooking potential?!', 'cooking', '#f44'),
+				opt('What are resonance patterns?', 'resonance', '#8cf'),
+				opt('I\'ll get you out of here.', 'rescue', '#4f4'),
+			]
+		),
+		athenaeum: node('athenaeum',
+			'The Athenaeum of Grey Reaches \u2014 the last great library of the old world. We catalogue everything the dungeon produces: its creatures, its shifting architecture, its impossible physics. Three hundred scholars dedicated to understanding something that defies understanding. *She smiles thinly.* My colleagues think I\'m dead, incidentally. It\'s been... educational.',
+			[
+				opt('What have you learned about the dungeon?', 'dungeon_knowledge', '#ff4'),
+				opt('Three hundred scholars and none of them came to rescue you?', 'no_rescue', '#f44'),
+				opt('Let\'s focus on getting out.', 'escape', '#ff4'),
+			]
+		),
+		no_rescue: node('no_rescue',
+			'*She laughs bitterly.* Scholars don\'t rescue. Scholars write papers about the circumstances of your disappearance and then argue about the citation format for three months. My research rival, Aldric, probably already took my office. He always coveted my window. It faces west. Beautiful sunsets. *Her voice catches.* I miss sunsets.',
+			[
+				opt('I\'m sorry.', 'sorry', '#4f4'),
+				opt('What was your research about?', 'research', '#8cf'),
+				opt('Let\'s make sure you see another sunset.', 'rescue', '#4f4'),
+			]
+		),
+		sorry: node('sorry',
+			'Don\'t be sorry. Be effective. There\'s a difference between sympathy and survival, and right now I need you firmly on the survival side. *She meets your eyes.* Though I appreciate the sentiment. It\'s been a while since anyone showed concern that wasn\'t goblin-food-related.',
+			[
+				opt('How do we escape?', 'escape', '#ff4'),
+				opt('Tell me what you know about these caves.', 'dungeon_knowledge', '#ff4'),
+			]
+		),
+		cooking: node('cooking',
+			'Don\'t look so horrified. They haven\'t eaten me yet because the Jailer thinks I\'m "too stringy." His exact words. He keeps poking my arms and muttering about fattening me up. I\'ve been quietly losing weight on principle. *She pauses.* That\'s a joke. The food is just terrible.',
+			[
+				opt('That\'s darkly funny.', 'dark_humor', '#4f4'),
+				opt('I\'ll deal with the Jailer.', 'jailer_info', '#f44'),
+				opt('How do I get us out?', 'escape', '#ff4'),
+			]
+		),
+		dark_humor: node('dark_humor',
+			'When you\'ve been chained in a goblin cave for weeks, you either develop a sense of humor or you go mad. I chose humor. The rat in the corner chose madness. We don\'t talk about Gerald. *She nods toward an empty corner.* Gerald isn\'t real, by the way. That was also a joke. Probably.',
+			[
+				opt('...Is Gerald real?', 'gerald', '#f44'),
+				opt('Focus. How do we escape?', 'escape', '#ff4'),
+				opt('Tell me about the goblins.', 'goblin_tips', '#ff4'),
+			]
+		),
+		gerald: node('gerald',
+			'*She stares at the corner for a long moment.* No. No, Gerald was a rat. A real rat. He kept me company for the first few days. Brought me crumbs. Then the goblins caught him and... well. Let\'s just say the goblins have a very literal understanding of "pet." *She looks away.* I don\'t want to talk about Gerald anymore.',
+			[
+				opt('I\'m sorry about Gerald.', 'rescue', '#4f4'),
+				opt('Let\'s focus on getting out.', 'escape', '#ff4'),
+			]
+		),
+		resonance: node('resonance',
+			'The stone here vibrates at frequencies that shouldn\'t be possible for natural rock. My instruments \u2014 confiscated, of course \u2014 detected harmonics that match theoretical models of dimensional membranes. In plain language: the walls between worlds are thin here. Dangerously thin. Sometimes I hear things through the stone. Voices. Music. Once, I swear I heard someone typing on a keyboard.',
+			[
+				opt('A keyboard? That\'s... unsettling.', 'fourth_wall', '#f44'),
+				opt('Dimensional membranes? Tell me more.', 'dimensions', '#8cf'),
+				opt('Is that related to the Eye below?', 'the_eye', '#f44'),
+			]
+		),
+		fourth_wall: node('fourth_wall',
+			'*She shrugs.* I was delirious at the time. Probably. But the Athenaeum has records of similar phenomena \u2014 adventurers who claimed they could sense "something watching" that wasn\'t a monster. Something... outside the world entirely. The senior scholars dismiss it as dungeon psychosis. I\'m not so sure. *She lowers her voice.* Do you ever feel like your choices are being made for you?',
+			[
+				opt('...Let\'s change the subject.', 'escape', '#ff4'),
+				opt('You\'re scaring me, Thessaly.', 'scare', '#f44'),
+			]
+		),
+		scare: node('scare',
+			'*She smiles.* Good. A healthy amount of fear keeps you alert. An unhealthy amount keeps you alive even longer. Now \u2014 *she rattles her chains* \u2014 are you going to help me escape this philosophical nightmare, or shall we continue debating the nature of reality while goblins sharpen their forks?',
+			[
+				opt('Right. Escape plan.', 'escape', '#ff4'),
+				opt('Tell me about the Eye first.', 'the_eye', '#f44'),
+			]
+		),
+		dimensions: node('dimensions',
+			'The Athenaeum theorizes that the dungeon exists at a convergence point \u2014 where multiple planes of reality press against each other like pages in a book. Each level deeper brings you closer to the binding. And at the center of the binding... *She trails off.* My predecessors called it the Resonance. The goblins call it the Deep Song. The drunk in the tavern above \u2014 if he\'s still alive \u2014 calls it the Eye.',
+			[
+				opt('What is the Eye?', 'the_eye', '#f44'),
+				opt('How do you know about the tavern drunk?', 'know_garvus', '#ff4'),
+				opt('This is a lot to take in.', 'overwhelmed', '#4f4'),
+			]
+		),
+		know_garvus: node('know_garvus',
+			'Garvus? Everyone at the Athenaeum knows Garvus. He was one of us. One of the best, actually \u2014 his field work was unmatched. He went deeper than anyone and came back... different. Wouldn\'t publish his findings. Wouldn\'t even discuss them. Just started drinking and muttering about eyes in the dark. The Athenaeum struck his name from the rolls. Official story: "retired due to personal reasons." Unofficial story: he saw something that broke him.',
+			[
+				opt('What did he see?', 'the_eye', '#f44'),
+				opt('Will the same thing happen to me?', 'warning', '#ff4'),
+				opt('This place is more connected than I thought.', 'connections', '#8cf'),
+			]
+		),
+		connections: node('connections',
+			'Everything is connected down here. The goblins think they\'re independent, but they serve the dungeon whether they know it or not. The creatures, the traps, the treasure \u2014 it\'s all part of a system. An ecosystem. Some scholars think the dungeon is alive, that it grows and adapts. I think it\'s worse than that. I think it\'s intelligent. And I think it\'s bored.',
+			[
+				opt('A bored, intelligent dungeon. Great.', 'bored_dungeon', '#f44'),
+				opt('How does that help me survive?', 'survival_tips', '#ff4'),
+			]
+		),
+		bored_dungeon: node('bored_dungeon',
+			'Think about it \u2014 a vast, ancient intelligence with nothing to do but watch adventurers stumble through its corridors. It sets traps not because it needs to, but because it wants to see what you\'ll do. It creates treasure rooms to test your greed. Monsters to test your courage. And occasionally, it puts two prisoners in the same cell to see if they\'ll cooperate or fight over the last crumb. *She eyes you.* We\'re cooperating, right?',
+			[
+				opt('Absolutely.', 'rescue', '#4f4'),
+				opt('Depends on how many crumbs you have.', 'crumbs', '#ff4'),
+			]
+		),
+		crumbs: node('crumbs',
+			'*She actually laughs \u2014 a genuine, surprised sound.* I like you. You\'re funnier than most adventurers. The last one who came through was all "stand back, citizen!" and "I shall smite the goblins!" He lasted forty-five seconds. I counted. *She grows serious.* Don\'t be that person. Think before you fight. The goblins are stupid individually, but they coordinate better than you\'d expect.',
+			[
+				opt('Give me the tactical rundown.', 'goblin_tips', '#ff4'),
+				opt('I\'ll be careful.', 'rescue', '#4f4'),
+			]
+		),
+		the_eye: node('the_eye',
+			'*Her voice drops to barely a whisper.* They call it many things. The Resonance. The Deep Song. The Eye Below. It\'s the thing at the bottom of everything \u2014 the reason the dungeon exists. Garvus saw it and went mad. My predecessor, Scholar Venn, went looking for it and never came back. All I know is this: the deeper you go, the more it watches. And the more it watches, the more it... adjusts. The dungeon reshapes itself around you. Personally.',
+			[
+				opt('How do I fight something like that?', 'fight_eye', '#f44'),
+				opt('Can I avoid it?', 'avoid_eye', '#ff4'),
+				opt('This is too much. Let\'s just escape.', 'escape', '#0ff'),
+			]
+		),
+		fight_eye: node('fight_eye',
+			'*She stares at you.* Fight it? I don\'t know if you can fight a geological formation that dreams. But the Athenaeum\'s oldest texts mention a "Severance" \u2014 a way to cut the connection between the Eye and the surface. No one knows what that means, exactly. My research was getting close to an answer when I got... *she gestures at the chains* ...detained. If you find my notes deeper in the caves, they might help. I dropped my satchel when the goblins grabbed me.',
+			[
+				opt('I\'ll look for your notes.', 'notes_quest', '#4f4'),
+				opt('Let\'s get you free first.', 'rescue', '#4f4'),
+			]
+		),
+		avoid_eye: node('avoid_eye',
+			'Avoid the thing that is the dungeon? That\'s like a fish trying to avoid water. But you can minimize its attention. Don\'t linger on any floor. Don\'t hoard treasure \u2014 it notices greed. And never, NEVER stare into the darkness when you feel it staring back. That\'s how it gets a read on you. That\'s how it learns.',
+			[
+				opt('Practical advice. Thank you.', 'rescue', '#4f4'),
+				opt('What happens when it learns?', 'learns', '#f44'),
+			]
+		),
+		learns: node('learns',
+			'It starts generating encounters tailored to your weaknesses. Afraid of spiders? Every room will have spiders. Rely on potions? Watch them become scarce. Trust your allies? It\'ll put them in impossible situations. The dungeon doesn\'t just want to kill you. It wants to understand you first. *She shivers.* That\'s what makes it different from every other death trap in the world. It\'s curious.',
+			[
+				opt('A curious dungeon. Wonderful.', 'escape', '#ff4'),
+				opt('Thessaly, you\'re terrifying.', 'terrifying', '#4f4'),
+			]
+		),
+		terrifying: node('terrifying',
+			'I prefer "well-informed." But yes, knowledge has a cost. Ignorance is bliss; scholarship is insomnia and chains. *She rattles them for emphasis.* Now, enough philosophy. Are you going to fight your way out or stand here until the goblins come back with a larger pot?',
+			[
+				opt('Right. Escape plan.', 'escape', '#ff4'),
+				opt('They have a pot?!', 'the_pot', '#f44'),
+			]
+		),
+		the_pot: node('the_pot',
+			'Oh yes. A very large pot. The Jailer calls it "Big Beautiful." I wish I were joking. He polishes it every evening and hums what I can only describe as a goblin lullaby. It\'s haunting. And not in the atmospheric, mysterious way. In the genuinely disturbing way. *She pauses.* Kill the Jailer first. He\'s the smart one. The guards just follow orders.',
+			[
+				opt('Noted. Kill the Jailer first.', 'jailer_info', '#f44'),
+				opt('I have a plan.', 'escape', '#ff4'),
+			]
+		),
+		warning: node('warning',
+			'*She looks at you appraisingly.* Maybe. Depends on how deep you go. The upper levels are just monsters and loot \u2014 standard adventuring fare. But past level ten, the dungeon starts... noticing you. And once it notices, it doesn\'t forget. Garvus reached level twenty. He says he doesn\'t remember what happened there. His nightmares suggest otherwise.',
+			[
+				opt('I\'ll be careful.', 'rescue', '#4f4'),
+				opt('What\'s on level twenty?', 'level_twenty', '#f44'),
+			]
+		),
+		level_twenty: node('level_twenty',
+			'If I knew that, I\'d have published it and made tenure. All the records agree: something changes on the twentieth level. The architecture becomes organic. The walls pulse. The floors are warm. Garvus\'s unpublished journal \u2014 which I may have read without permission \u2014 mentions "the Heartbeat." That\'s all. Two words, underlined three times, surrounded by ink stains that might have been tears.',
+			[
+				opt('That\'s genuinely disturbing.', 'rescue', '#4f4'),
+				opt('I need to prepare. How do I survive?', 'survival_tips', '#ff4'),
+			]
+		),
+		survival_tips: node('survival_tips',
+			'Rule one: never fight what you can avoid. Rule two: potions are more valuable than gold. Rule three: if a room seems too safe, it\'s not. Rule four: the dungeon rewards the clever and punishes the greedy. And rule five \u2014 *she holds up her chained hands* \u2014 don\'t go into uncharted areas alone. Trust me on that last one.',
+			[
+				opt('Sound advice. Thank you, Thessaly.', 'rescue', '#4f4'),
+				opt('Any combat tips specifically?', 'goblin_tips', '#ff4'),
+			]
+		),
+		goblin_tips: node('goblin_tips',
+			'Goblins are cowards one-on-one but dangerous in groups. The guards are weak \u2014 two or three hits should drop them. But the Jailer is tougher and smarter. He\'ll try to corner you. Use the corridor to fight them one at a time \u2014 the narrow space negates their numbers. And watch for the Jailer\'s keys on his belt. You\'ll need them for... well, for me. Obviously.',
+			[
+				opt('I\'ll take them down. Sit tight.', 'sit_tight', '#4f4'),
+				opt('What\'s past the cave exit?', 'below', '#ff4'),
+			]
+		),
+		sit_tight: node('sit_tight',
+			'*She holds up her chains.* I wasn\'t planning on going anywhere. *A tired smile.* Be careful out there. And if you find a leather satchel with the Athenaeum seal \u2014 a silver owl on blue \u2014 that\'s my research. Guard it with your life. It may be more important than either of us.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		notes_quest: node('notes_quest',
+			'My satchel has a silver owl clasp \u2014 the Athenaeum seal. Inside are my field journals, resonance readings, and a partial translation of the Deepscript glyphs I found on level five. That translation... it mentions the Severance. If you can complete it, you might understand what the Eye truly is. And how to stop it. Or at least... how to not be consumed by it.',
+			[
+				opt('I\'ll find your notes. I promise.', 'rescue', '#4f4'),
+				opt('What\'s Deepscript?', 'deepscript', '#8cf'),
+			]
+		),
+		deepscript: node('deepscript',
+			'An ancient writing system found etched into the deepest walls of the dungeon. It predates every known civilization. Some glyphs seem to shift when you\'re not looking \u2014 yes, I know how that sounds. The partial translations we have suggest it\'s not a language of communication but of instruction. Commands. As if someone \u2014 or something \u2014 was programming the dungeon itself.',
+			[
+				opt('Programming the dungeon...', 'programming', '#f44'),
+				opt('I need to go now. I\'ll find your notes.', 'sit_tight', '#4f4'),
+			]
+		),
+		programming: node('programming',
+			'*Her eyes light up \u2014 the look of a scholar who has found someone willing to listen.* Yes! The dungeon isn\'t natural \u2014 it was BUILT. By something with intelligence far beyond ours. The Deepscript glyphs are the remnants of its source code, if you will. And the Eye... the Eye might be the developer. Still watching. Still patching. Still adding new content. *She catches herself.* Metaphorically speaking.',
+			[
+				opt('That\'s... a lot to process.', 'sit_tight', '#4f4'),
+				opt('Who built it? And why?', 'builder', '#8cf'),
+			]
+		),
+		builder: node('builder',
+			'The Athenaeum\'s oldest texts call them the Architects. We know almost nothing about them except that they weren\'t human, they weren\'t gods, and they disappeared. The dungeon was their final work \u2014 or their final mistake. Scholar Venn believed the dungeon was a prison. Not for us. For the Eye. *She lowers her voice.* And prisons only work as long as no one opens the door from the inside.',
+			[
+				opt('Am I... opening the door by going deeper?', 'door', '#f44'),
+				opt('I need to go. Stay safe, Thessaly.', 'sit_tight', '#4f4'),
+			]
+		),
+		door: node('door',
+			'*She meets your eyes with an expression that is equal parts fear and fascination.* Every adventurer who descends weakens the bindings a little. Kills the wardens \u2014 the creatures placed there to maintain the prison. Takes the treasures that were actually containment anchors. We\'re all unwitting accomplices. *She pauses.* But someone has to go down. Someone has to find the truth. Just... try to be the one who comes back up.',
+			[
+				opt('I will. I promise.', 'sit_tight', '#4f4'),
+			]
+		),
+		below: node('below',
+			'Past this cave, the true dungeon begins. The first few levels are "standard" \u2014 goblins, rats, traps, the occasional mimic chest. But don\'t let the familiarity breed contempt. Each level is generated fresh \u2014 the dungeon never repeats itself. That\'s not natural erosion. That\'s intention. Something is curating your experience down there.',
+			[
+				opt('How deep does it go?', 'how_deep', '#ff4'),
+				opt('What should I watch for?', 'survival_tips', '#ff4'),
+				opt('I should get moving.', 'sit_tight', '#0ff'),
+			]
+		),
+		how_deep: node('how_deep',
+			'The Athenaeum has confirmed expeditions to level twenty-five. Rumors speak of fifty. The Deepscript texts suggest it\'s effectively infinite \u2014 the dungeon generates new levels as needed. Like a book that writes new chapters faster than you can read. *She shudders.* Garvus told me, once, very drunk: "There is no bottom. There is only the Eye, and the Eye goes all the way down."',
+			[
+				opt('Infinite levels. Of course.', 'sit_tight', '#ff4'),
+				opt('What\'s the deepest you\'ve been?', 'deepest', '#8cf'),
+			]
+		),
+		deepest: node('deepest',
+			'Level seven. Alone, poorly equipped, and full of scholarly hubris. I found a chamber where the walls were covered in Deepscript, floor to ceiling. My instruments went haywire. The resonance readings were off every scale I had. And then... I heard singing. Something vast and patient, singing in a language that made my teeth ache. I ran. All the way back up. Wrote my paper. Got captured by goblins on the way home. *She sighs.* Not my best week.',
+			[
+				opt('I\'ll go deeper. For both of us.', 'sit_tight', '#4f4'),
+				opt('Your life sounds exhausting.', 'exhausting', '#ff4'),
+			]
+		),
+		exhausting: node('exhausting',
+			'*She actually grins.* It really is. But there\'s nothing else I\'d rather do. Well \u2014 *she rattles her chains* \u2014 I can think of ONE thing I\'d rather be doing right now. Specifically: not this. But the research? The discovery? Knowing things that no one else knows? That\'s worth every goblin, every chain, every missed sunset. *Her grin fades.* Mostly.',
+			[
+				opt('I\'ll get you back to your sunsets.', 'rescue', '#4f4'),
+			]
+		),
+		rescue: node('rescue',
+			'*Her expression softens.* You mean that, don\'t you? Most adventurers would\'ve left by now. "Every prisoner for themselves" and all that. *She straightens.* The Jailer has the key. Kill him, bring the key, and I can free myself. I\'ll make for the surface. If you survive the dungeon... look for me at the Athenaeum. I owe you a very large drink and a lecture on dimensional membrane theory.',
+			[
+				opt('It\'s a date.', 'date', '#4f4'),
+				opt('Stay alive, Thessaly.', 'farewell', '#4f4'),
+				opt('Any last tips before I go?', 'last_tips', '#ff4'),
+			]
+		),
+		date: node('date',
+			'*She actually blushes, which is impressive given how pale she is from weeks underground.* I... was speaking academically. But yes. Fine. It\'s a date. You bring the survival stories, I\'ll bring the theoretical framework for why you should have died. It\'ll be romantic. *She clears her throat.* Now go. Before I say something even more embarrassing.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		last_tips: node('last_tips',
+			'Three things. One: the dungeon tests what you value. If you value combat, it gives you harder fights. Value treasure, it gives you more mimics. Value knowledge... well, it gave me chains and goblins. Draw your own conclusions. Two: trust the patterns. The dungeon has rules, even if they\'re strange rules. Learn them. Three: *she holds your gaze* \u2014 come back alive. The dead tell no tales, and I need someone to corroborate my research.',
+			[
+				opt('I won\'t let you down.', 'farewell', '#4f4'),
+			]
+		),
+		escape: node('escape',
+			'*She gestures toward the corridor to the north.* The guards patrol the main cave above. Three of them, plus the Jailer. The corridor is narrow \u2014 use it as a chokepoint. Fight them one at a time. There\'s a potion on the floor near me \u2014 take it, you\'ll need it more. The cave exit is in the northeast corner. Beyond that... the dungeon proper begins.',
+			[
+				opt('Three guards plus the Jailer. Got it.', 'goblin_tips', '#ff4'),
+				opt('Come with me.', 'cant_come', '#4f4'),
+				opt('I\'m ready. Wish me luck.', 'farewell', '#0ff'),
+			]
+		),
+		cant_come: node('cant_come',
+			'*She holds up her chained wrists.* I appreciate the chivalry, but I\'m rather permanently attached to this wall. The Jailer has the only key. Kill him, bring the key, and then we can discuss travel arrangements. Until then, I\'ll be here. Cheering you on silently. And cataloguing the acoustic properties of goblin screams for my next paper.',
+			[
+				opt('Right. Kill the Jailer, get the key.', 'jailer_info', '#f44'),
+				opt('Stay strong, Thessaly.', 'farewell', '#4f4'),
+			]
+		),
+		jailer_info: node('jailer_info',
+			'The Jailer \u2014 the big green one with the key ring and the disturbingly affectionate relationship with his cooking pot. He\'s tougher than the guards. Smarter, too. He\'ll try to block the corridor to trap you in the cave with the guards. Don\'t let him. Draw the guards out first, then take him on one-on-one. He hits hard but he\'s slow. Patience will beat him.',
+			[
+				opt('I\'ll handle it.', 'farewell', '#4f4'),
+				opt('What about the guards?', 'goblin_tips', '#ff4'),
+			]
+		),
+		how_long: node('how_long',
+			'*She counts on her fingers, then gives up.* Weeks? A month? Time gets strange underground. The goblins don\'t keep calendars. They measure time in meals, which is unfortunate because I\'m apparently the main course for next Tuesday. Or whatever goblins call Tuesday. Probably "Feast Day" or "Big Hungry Time."',
+			[
+				opt('That\'s horrifying.', 'cooking', '#f44'),
+				opt('Who are you, anyway?', 'who', '#ff4'),
+				opt('I\'ll get you out before Tuesday.', 'rescue', '#4f4'),
+			]
+		),
+		research: node('research',
+			'I was mapping resonance patterns in the upper caves \u2014 the way sound moves through the stone here is anomalous. My theory is that the dungeon isn\'t just underground architecture. It\'s a living acoustic instrument. The creatures, the traps, the treasure \u2014 they\'re all notes in a vast composition. And something is conducting.',
+			[
+				opt('What\'s conducting?', 'the_eye', '#f44'),
+				opt('Tell me about the resonance patterns.', 'resonance', '#8cf'),
+				opt('That\'s beautiful and terrifying.', 'overwhelmed', '#4f4'),
+			]
+		),
+		overwhelmed: node('overwhelmed',
+			'*She nods sympathetically.* Knowledge is heavy. The more you learn about this place, the heavier it gets. But ignorance will get you killed faster than truth will. Take what I\'ve told you and use it. You don\'t need to understand the dungeon completely. You just need to understand it better than it understands you.',
+			[
+				opt('Wise words. Thank you.', 'rescue', '#4f4'),
+				opt('One more question...', 'below', '#ff4'),
+			]
+		),
+		dungeon_knowledge: node('dungeon_knowledge',
+			'More than is healthy, probably. The dungeon has at least three distinct zones: the Upper Halls, where goblins and basic creatures dwell. The Deep Reaches, where the monsters become... stranger. And the Abyss, which no confirmed survivor has returned from. Each zone has its own ecology, its own rules. The creatures on level one don\'t behave like the creatures on level ten. Because the dungeon is training them. Training you. Everything is a test.',
+			[
+				opt('Training for what?', 'the_eye', '#f44'),
+				opt('Give me practical tips.', 'survival_tips', '#ff4'),
+				opt('I should start moving.', 'escape', '#ff4'),
+			]
+		),
+		farewell: node('farewell',
+			'*She nods solemnly.* Go. And remember \u2014 the dungeon will try to make you forget why you entered. Hold onto your purpose. Hold onto your name. The ones who forget... they become part of it. Just another monster in the dark. *She rattles her chains one last time.* Don\'t forget me down there. I\'ll be waiting.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
 	'Barkeep': BARKEEP_DIALOGUE,
 	'Hooded Stranger': STRANGER_DIALOGUE,
 	'Drunk Patron': DRUNK_DIALOGUE,
+	'Thessaly': PRISONER_DIALOGUE,
 };
