@@ -272,6 +272,9 @@ export interface GameState {
 	stats: GameStats;
 	unlockedAchievements: string[];
 	bestiary: Record<string, BestiaryEntry>;
+	hunger: number;
+	thirst: number;
+	survivalEnabled: boolean;
 }
 
 export interface BestiaryEntry {

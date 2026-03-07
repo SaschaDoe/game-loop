@@ -17,6 +17,7 @@ import { placeLandmarks, getLandmarkAt, getLandmarkDef, getAdjacentLandmarks, ex
 import { shortRest, longRest } from './rest';
 import { checkAchievements, getAchievement, createDefaultStats } from './achievements';
 import { recordSeen, recordKill } from './bestiary';
+import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -215,7 +216,10 @@ export function createGame(config?: CharacterConfig): GameState {
 		lieCount: 0,
 		stats: createDefaultStats(),
 		unlockedAchievements: [],
-		bestiary: {}
+		bestiary: {},
+		hunger: MAX_SURVIVAL,
+		thirst: MAX_SURVIVAL,
+		survivalEnabled: cfg.difficulty !== 'easy'
 	};
 
 	// Apply class bonuses
@@ -362,7 +366,10 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		lieCount: 0,
 		stats: createDefaultStats(),
 		unlockedAchievements: [],
-		bestiary: {}
+		bestiary: {},
+		hunger: MAX_SURVIVAL,
+		thirst: MAX_SURVIVAL,
+		survivalEnabled: difficulty !== 'easy'
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -849,6 +856,11 @@ export function handleInput(state: GameState, key: string): GameState {
 		}
 		if (result.rested) {
 			state.player.hp += result.hpRestored;
+			// Long rest restores hunger and thirst
+			const foodMsg = restoreHunger(state, 30);
+			if (foodMsg.text) addMessage(state, foodMsg.text, foodMsg.type);
+			const waterMsg = restoreThirst(state, 30);
+			if (waterMsg.text) addMessage(state, waterMsg.text, waterMsg.type);
 			if (result.ambush) {
 				// Spawn ambush enemies near player
 				const ambushCount = 1 + Math.floor(Math.random() * 2);
@@ -1001,7 +1013,8 @@ export function handleInput(state: GameState, key: string): GameState {
 			target.statusEffects = target.statusEffects.filter((e) => e.type !== 'sleep');
 		}
 		const curseReduction = state.player.statusEffects.find((e) => e.type === 'curse')?.potency ?? 0;
-		const baseDmg = Math.max(1, (state.player.attack - curseReduction) + Math.floor(Math.random() * 3));
+		const dehydrationPenalty = getDehydrationPenalty(state);
+		const baseDmg = Math.max(1, (state.player.attack - curseReduction - dehydrationPenalty) + Math.floor(Math.random() * 3));
 		const dmg = isSneakAttack ? baseDmg * 2 : baseDmg;
 		target.hp -= dmg;
 		state.stats.damageDealt += dmg;
@@ -1109,6 +1122,9 @@ export function handleInput(state: GameState, key: string): GameState {
 		state.player.hp = Math.min(state.player.maxHp, state.player.hp + heal);
 		state.map.tiles[ny][nx] = '.';
 		addMessage(state, `Picked up a potion! Healed ${heal} HP.`, 'healing');
+		// Potions also restore some thirst
+		const thirstMsg = restoreThirst(state, 15);
+		if (thirstMsg.text) addMessage(state, thirstMsg.text, thirstMsg.type);
 	}
 
 	// pick up loot drop
@@ -1156,6 +1172,9 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.stats.maxDungeonLevel = Math.max(next.stats.maxDungeonLevel, next.level);
 		next.unlockedAchievements = [...state.unlockedAchievements];
 		next.bestiary = { ...state.bestiary };
+		next.hunger = state.hunger;
+		next.thirst = state.thirst;
+		next.survivalEnabled = state.survivalEnabled;
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
@@ -1172,6 +1191,13 @@ export function handleInput(state: GameState, key: string): GameState {
 	}
 
 	moveEnemies(state);
+
+	// Tick survival (hunger/thirst)
+	const survivalResult = tickSurvival(state);
+	for (const msg of survivalResult.messages) {
+		state.messages.push(msg);
+	}
+
 	return { ...state };
 }
 

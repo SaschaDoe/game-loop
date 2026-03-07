@@ -1,7 +1,7 @@
 import type { GameState, Tile, GameStats } from './types';
 import { createDefaultStats } from './achievements';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -44,6 +44,9 @@ interface SerializedState {
 	stats: GameStats;
 	unlockedAchievements: string[];
 	bestiary: GameState['bestiary'];
+	hunger: number;
+	thirst: number;
+	survivalEnabled: boolean;
 }
 
 export function serializeState(state: GameState): string {
@@ -83,7 +86,10 @@ export function serializeState(state: GameState): string {
 			lieCount: state.lieCount,
 			stats: state.stats,
 			unlockedAchievements: state.unlockedAchievements,
-			bestiary: state.bestiary
+			bestiary: state.bestiary,
+			hunger: state.hunger,
+			thirst: state.thirst,
+			survivalEnabled: state.survivalEnabled
 		}
 	};
 	return JSON.stringify(data);
@@ -130,6 +136,9 @@ export function deserializeState(json: string): GameState {
 		stats: s.stats ?? createDefaultStats(),
 		unlockedAchievements: s.unlockedAchievements ?? [],
 		bestiary: s.bestiary ?? {},
+		hunger: s.hunger ?? 100,
+		thirst: s.thirst ?? 100,
+		survivalEnabled: s.survivalEnabled ?? true,
 		activeDialogue: null
 	};
 }

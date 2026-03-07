@@ -38,6 +38,13 @@ export const STORIES: Record<string, Story> = {
 	morrigan_economy: story('morrigan_economy', 'The Dungeon Economy', 'According to Morrigan, the dungeon has a fully functioning economy. Goblins mine ore. Skeletons provide manual labor (cheap — they don\'t eat). Mimics run the banking sector ("very trustworthy if you don\'t try to open them"). Slimes handle waste management. The only thing the dungeon lacks is a tax authority, which Morrigan considers its greatest feature. "Pure capitalism," she says reverently. "Adam Smith would weep."', 'Morrigan', 'tall_tale'),
 	corwin_circle: story('corwin_circle', 'The Perfect Circle', 'Corwin walked in a perfect circle for three hours on level six. He knows this because he counted his steps — 847 per loop — and made a tally mark on the wall each time. When he finally stopped, he found that his tally marks had been joined by someone else\'s. Smaller marks. Neater. In a different color. Someone — or something — had been walking the circle with him, keeping count. He never saw them. The marks were still there the last time he checked.', 'Corwin', 'personal'),
 	corwin_map: story('corwin_map', 'The Map That Mapped Back', 'On level four, Corwin\'s map started updating itself. Lines appeared that he hadn\'t drawn — accurate lines, showing rooms he hadn\'t visited yet. At first he was thrilled. Then the map drew a room with a stick figure inside it. The stick figure was holding a map. The map in the drawing had a smaller stick figure. And so on. It was maps all the way down. He burned that map. The ashes reformed into a smaller, smugger map.', 'Corwin', 'personal'),
+	mother_moonpetal: story('mother_moonpetal', 'The Moonpetal Harvest', 'Moonpetal flowers bloom only during thunderstorms, in the three seconds between lightning and thunder. You must pick them in that window or they dissolve. The player\'s mother once stayed out in a storm for six hours to gather enough for one healing salve. She was struck by lightning twice. Both times she got back up and kept picking. "The flowers don\'t pick themselves," she told her husband. He suggested she wait for the next storm. She gave him a look that made the lightning seem gentle.', 'Mother', 'personal'),
+	mother_maren: story('mother_maren', 'Maren\'s Last Theory', 'Before she disappeared into the dungeon, the scholar Maren left a note on the village notice board. It read: "I believe the dungeon is a living argument between two cosmic forces who disagree about whether consciousness should exist. The monsters are counter-arguments. The treasure is bribery. The stairs going down are a rhetorical device. I am going to find out who is winning. If I don\'t come back, water my plants. The cactus is named Gerald." Gerald is still alive. He is the only being in Willowmere who has outlived every adventurer.', 'Mother', 'cautionary'),
+	father_hat: story('father_hat', 'The Hat on Level Three', 'The player\'s father lost his favorite hat to a teleportation trap on level three. It was brown leather with a phoenix hawk feather. He spent four hours trying to get it back. He triggered the trap seventeen more times, sending increasingly angry notes to "whoever is in charge of this trap" through the teleportation field. The seventeenth note came back. It said "No." In his handwriting. The dungeon had learned to write by copying him. It kept the hat. He has never recovered.', 'Father', 'personal'),
+	father_chair: story('father_chair', 'The Mirror Room', 'On level three, there is a room with nothing in it except a chair and a mirror. The mirror shows possible futures. The player\'s father sat in it twenty years ago and saw two paths: one where he died alone in the dungeon, and one where he grew old watching his child grow up. He chose the second path and never went back. He sometimes wonders what the mirror would show now. He does not wonder out loud. The chair, presumably, is still waiting.', 'Father', 'cautionary'),
+	grikkle_rocks: story('grikkle_rocks', 'The Legend of Se\u00f1or Pebbleston', 'Se\u00f1or Pebbleston was, according to Grikkle, a rock of "extraordinary charisma and business acumen." Grikkle found him on level two and immediately recognized his potential. Se\u00f1or Pebbleston served as Grikkle\'s business partner for three months, during which time Grikkle claims the rock negotiated seventeen favorable trades, intimidated a rival goblin merchant, and once prevented a cave-in through "sheer force of geological personality." Se\u00f1or Pebbleston was tragically lost when Grikkle accidentally sold him to a Skeleton who mistook him for a premium kidney stone. Grikkle mourns daily.', 'Grikkle', 'tall_tale'),
+	grikkle_bones: story('grikkle_bones', 'Mr. Bones and the Customer Service Dispute', 'Grikkle once sold a Skeleton named Mr. Bones a "Premium Reconstitution Kit" which was, in fact, a bag of random bones from the floor. Mr. Bones assembled himself with the new bones and ended up with three arms, two ribcages, and a pelvis where his head should be. He filed a formal complaint. In Morse code. By clacking his jaw. Grikkle offered a full refund (two pebbles) but Mr. Bones demanded "emotional damages." They reached a settlement: Grikkle would not sell bone-based products for one week. Grikkle lasted two days.', 'Grikkle', 'tall_tale'),
+	shade_architects: story('shade_architects', 'The Architects\' Argument', 'The Whispering Shade speaks of the Architects not as builders but as debaters. They disagreed about everything — the length of corridors, the placement of traps, the philosophical implications of treasure chests. The dungeon\'s inconsistent layout is not poor design; it is the physical manifestation of an argument that has been running for millennia. Every dead end is a point conceded. Every loop is a circular argument. The boss rooms are dramatic conclusions to chapters of debate. The thing at the bottom is what they were arguing ABOUT.', 'Whispering Shade', 'lore'),
 };
 
 // ─── RUMOR CATALOGUE ───
@@ -89,8 +96,29 @@ export const MOTHER_DIALOGUE: DialogueTree = {
 			[
 				opt('What can you tell me about the dungeon?', 'dungeon_info', '#ff4'),
 				opt('Tell me about Willowmere.', 'village_lore', '#8cf'),
+				opt('Tell me a story, Mother.', 'mother_stories', '#c8f'),
 				opt('Just checking in.', 'checkin', '#4f4', { onSelect: { mood: 'friendly' } }),
 				opt('Goodbye, Mother.', 'farewell', '#0ff'),
+			]
+		),
+		mother_stories: node('mother_stories',
+			'*She settles into her chair with the air of someone who has been WAITING to be asked.* Oh, you want stories? I have stories. Every mother does. We collect them like recipes \u2014 some sweet, some bitter, all worth sharing.',
+			[
+				opt('Tell me about the moonpetal harvest.', 'story_moonpetal', '#c8f', { once: true }),
+				opt('Tell me about Maren\'s last theory.', 'story_maren_theory', '#c8f', { once: true }),
+				opt('No more stories for now.', 'return', '#0ff'),
+			]
+		),
+		story_moonpetal: node('story_moonpetal',
+			'*She holds up her hands, showing faint scars.* You see these? Lightning marks. From the night I gathered moonpetal flowers for your first healing salve. They only bloom during thunderstorms \u2014 in the three seconds between lightning and thunder. Miss the window and they dissolve. I stood in that storm for six hours. Got struck twice. Got up both times. Your father begged me to come inside. I gave him a look. *She smiles.* He stopped asking after the second lightning strike. Said my expression was scarier than the storm. He wasn\'t wrong.',
+			[
+				opt('You got struck by lightning. TWICE. For me. [Story collected]', 'mother_stories', '#4f4', { onSelect: { story: STORIES.mother_moonpetal, message: 'You learned the story of your mother\'s impossible devotion.' } }),
+			]
+		),
+		story_maren_theory: node('story_maren_theory',
+			'*She looks wistful.* Before Maren disappeared into the dungeon, she pinned a note to the village board. It read: "I believe the dungeon is a living argument between two cosmic forces who disagree about whether consciousness should exist. The monsters are counter-arguments. The treasure is bribery. I am going to find out who is winning. If I don\'t come back, water my plants. The cactus is named Gerald." *She pauses.* I\'ve been watering Gerald ever since. Twenty years. He\'s the only being in Willowmere who has outlived every adventurer. He\'s also very prickly. I respect that.',
+			[
+				opt('Gerald the immortal cactus. I love it. [Story collected]', 'mother_stories', '#4f4', { onSelect: { story: STORIES.mother_maren, message: 'You learned about Maren\'s last theory and the immortal cactus Gerald.' } }),
 			]
 		),
 		dungeon_info: node('dungeon_info',
@@ -253,8 +281,29 @@ export const FATHER_DIALOGUE: DialogueTree = {
 			[
 				opt('Any combat advice?', 'combat_tips', '#ff4'),
 				opt('Tell me about your adventuring days.', 'his_past', '#8cf'),
+				opt('Tell me a story from the dungeon.', 'father_stories', '#c8f'),
 				opt('Just saying hello.', 'hello', '#4f4'),
 				opt('Goodbye, Father.', 'farewell', '#0ff'),
+			]
+		),
+		father_stories: node('father_stories',
+			'*He sets down his sword and leans forward.* Stories? From the dungeon? *He gets a faraway look.* I have a few. They\'re not bedtime stories. Then again, you\'re heading INTO a dungeon, so maybe that\'s appropriate.',
+			[
+				opt('Tell me about your hat.', 'story_hat', '#c8f', { once: true }),
+				opt('Tell me about the mirror room.', 'story_mirror', '#c8f', { once: true }),
+				opt('No stories today.', 'return', '#0ff'),
+			]
+		),
+		story_hat: node('story_hat',
+			'*His jaw tightens.* The Hat Incident. Level three. Teleportation trap. I was walking through a corridor, feeling confident \u2014 stupid word, confidence, it\'s just fear wearing a hat. Speaking of hats \u2014 MINE teleported off my head. Not me. Just the hat. I could see it on the other side of the trap, sitting on a rock, looking SMUG. I triggered the trap seventeen more times trying to retrieve it. I sent NOTES through the teleportation field. The seventeenth one came back. In my OWN HANDWRITING. It said "No." *Long pause.* The dungeon learned to write by copying me. It kept my hat. I have never forgiven it.',
+			[
+				opt('The dungeon WROTE BACK?! [Story collected]', 'father_stories', '#f44', { onSelect: { story: STORIES.father_hat, message: 'You learned the tragic tale of Father\'s lost hat.' } }),
+			]
+		),
+		story_mirror: node('story_mirror',
+			'*He goes very still.* Level three. There\'s a room. Nothing in it except a chair and a mirror. I sat down. I don\'t know why. Something TOLD me to sit. And the mirror... it showed me futures. Two of them, clear as day. In the first, I was on level thirteen. Alone. Fighting something I couldn\'t see. And losing. In the second... *His voice thickens.* ...I was old. Grey hair. Bad knee. Sitting in a house in Willowmere, watching a child run through the yard. MY child. *He looks at you.* I chose the second future. Walked out of the dungeon that night. Never went back. The mirror showed me you. And you were worth more than whatever is at the bottom.',
+			[
+				opt('...Dad. [Story collected]', 'father_stories', '#4f4', { onSelect: { story: STORIES.father_chair, message: 'You learned why your father truly left the dungeon. It was for you.' } }),
 			]
 		),
 		ready: node('ready',
@@ -3233,7 +3282,15 @@ export const SHADE_DIALOGUE: DialogueTree = {
 				opt('[Ask who they are]', 'who', '#ff4'),
 				opt('[Ask what this place is]', 'place', '#ff4'),
 				opt('[Ask about the Eye]', 'eye', '#f44'),
+				opt('[Ask about the Architects\' argument]', 'shade_story_argument', '#c8f'),
 				opt('[Leave quietly]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		shade_story_argument: node('shade_story_argument',
+			'*The Shade\'s form pulses with what might be amusement \u2014 or indigestion, if ethereal beings experienced such things.* The Architects argued. About everything. They could not agree on the length of corridors. One faction insisted all corridors should be prime numbers of paces. Another faction demanded they follow the golden ratio. A third faction \u2014 the one I originated from \u2014 argued that corridors should be whatever length felt aesthetically right. We were considered the radicals. *The Shade\'s edges ripple.* The boss rooms are where they reached dramatic conclusions. Each boss is a physical manifestation of a philosophical point scored. The dead ends are arguments that went nowhere. The loops are circular reasoning. And the thing at the bottom? That is what they were arguing ABOUT. They could never agree on what to do with it. So they argued. And built. And argued. And built. For aeons. Until the argument became the dungeon, and the dungeon became the argument, and nobody could remember which came first.',
+			[
+				opt('[A dungeon built from an argument. Incredible. Story collected]', 'garbled_greeting', '#4f4', { onSelect: { story: STORIES.shade_architects, message: 'The Shade shares the Architects\' eternal argument \u2014 the true blueprint of the dungeon.' } }),
 			],
 			'Deepscript'
 		),
@@ -3379,6 +3436,7 @@ export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
 			[
 				opt('Show me what you\'ve got.', 'grikkle_wares', '#ff4'),
 				opt('Do you know anything useful about this level?', 'grikkle_info', '#8cf'),
+				opt('Tell me a story, Grikkle.', 'grikkle_stories', '#c8f'),
 				opt('Tell me about yourself, Grikkle.', 'grikkle_backstory', '#c8f'),
 				opt('I could just... take your stuff.', 'grikkle_threaten', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 6, successNode: 'grikkle_intimidated', failNode: 'grikkle_unimpressed' } }),
 				opt('Goodbye, Grikkle.', 'farewell', '#0ff'),
@@ -3619,6 +3677,26 @@ export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
 			'*Used as social check routing node.*',
 			[
 				opt('[This node should not display]', 'return', '#888'),
+			]
+		),
+		grikkle_stories: node('grikkle_stories',
+			'*He claps his tiny hands.* STORIES?! Grikkle LOVES stories! Stories is FREE marketing! Every story is advertisement for Grikkle brand! You sit! Grikkle tell!',
+			[
+				opt('Tell me about Se\u00f1or Pebbleston.', 'story_pebbleston', '#c8f', { once: true }),
+				opt('Tell me about Mr. Bones.', 'story_mr_bones', '#c8f', { once: true }),
+				opt('No more stories.', 'return', '#0ff'),
+			]
+		),
+		story_pebbleston: node('story_pebbleston',
+			'*His eyes go misty.* Se\u00f1or Pebbleston. *He removes his tiny top hat and holds it to his chest.* Greatest business partner Grikkle ever had. Found him on level two. IMMEDIATELY knew he was special. He had... PRESENCE. Other rocks? Just rocks. Se\u00f1or Pebbleston? He had CHARISMA. He had VISION. He had... well, he was very shiny. Grikkle cleaned him and put tiny hat on him. MATCHING hats! We were business TEAM! Se\u00f1or Pebbleston negotiated seventeen trades! Just by sitting there! Clients assumed the rock was powerful artifact! Grikkle did not correct them! GENIUS marketing! *His lip trembles.* Then Grikkle ACCIDENTALLY sold him to a skeleton who thought he was premium kidney stone. Grikkle has never forgiven self. Se\u00f1or Pebbleston, if you can hear Grikkle... Grikkle is SORRY.',
+			[
+				opt('That is the saddest business story I\'ve ever heard. [Story collected]', 'grikkle_stories', '#4f4', { onSelect: { story: STORIES.grikkle_rocks, message: 'You learned the tragic tale of Se\u00f1or Pebbleston, goblin business legend.' } }),
+			]
+		),
+		story_mr_bones: node('story_mr_bones',
+			'*He cackles.* Mr. Bones! Best worst customer! Grikkle sold him "Premium Reconstitution Kit" for when bones fall off! Very common skeleton problem! Kit was... bag of random bones from floor. Grikkle may have been... CREATIVE with sourcing. Mr. Bones assembled himself with new bones. Got THREE arms! TWO ribcages! Pelvis on HEAD! Very avant-garde look! Mr. Bones was NOT happy! Filed complaint! In Morse code! By clacking jaw! Very persistent! Grikkle offered refund \u2014 two pebbles! Mr. Bones wanted "emotional damages!" *He shakes his head.* Skeletons don\'t HAVE emotions! They don\'t even have brains! But Mr. Bones INSISTED. Settlement was: Grikkle no sell bone products for one week. Grikkle lasted two days. Mr. Bones still comes for polish though. With all three arms. Good customer.',
+			[
+				opt('Mr. Bones filed a complaint in Morse code. Amazing. [Story collected]', 'grikkle_stories', '#4f4', { onSelect: { story: STORIES.grikkle_bones, message: 'You learned about Mr. Bones and the customer service dispute of the century.' } }),
 			]
 		),
 		farewell: node('farewell',
