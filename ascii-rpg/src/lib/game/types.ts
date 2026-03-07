@@ -16,6 +16,42 @@ export interface CharacterConfig {
 	startingLocation: StartingLocation;
 }
 
+export interface DialogueEffect {
+	hp?: number;
+	atk?: number;
+	message?: string;
+}
+
+export interface DialogueOption {
+	text: string;
+	nextNode: string;
+	color?: string;
+	onSelect?: DialogueEffect;
+	once?: boolean;
+}
+
+export interface DialogueNode {
+	id: string;
+	npcText: string;
+	options: DialogueOption[];
+}
+
+export interface DialogueTree {
+	startNode: string;
+	returnNode?: string;
+	nodes: Record<string, DialogueNode>;
+}
+
+export interface ActiveDialogue {
+	npcName: string;
+	npcChar: string;
+	npcColor: string;
+	currentNodeId: string;
+	tree: DialogueTree;
+	visitedNodes: Set<string>;
+	givenItems: boolean;
+}
+
 export interface NPC {
 	pos: Position;
 	char: string;
@@ -25,9 +61,10 @@ export interface NPC {
 	dialogueIndex: number;
 	gives?: { hp?: number; atk?: number };
 	given: boolean;
+	dialogueTree?: DialogueTree;
 }
 
-export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep';
+export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse';
 
 export interface StatusEffect {
 	type: StatusEffectType;
@@ -112,4 +149,5 @@ export interface GameState {
 	hazards: Hazard[];
 	npcs: NPC[];
 	chests: Chest[];
+	activeDialogue: ActiveDialogue | null;
 }

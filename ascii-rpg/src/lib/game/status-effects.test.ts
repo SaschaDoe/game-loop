@@ -133,6 +133,52 @@ describe('tickEffects', () => {
 		tickEffects(entity);
 		expect(entity.hp).toBe(-3);
 	});
+
+	it('applies burn damage', () => {
+		const entity = makeEntity({ hp: 20 });
+		applyEffect(entity, 'burn', 3, 4);
+		const result = tickEffects(entity);
+		expect(result.damage).toBe(4);
+		expect(entity.hp).toBe(16);
+		expect(result.messages).toContain('TestEntity burns for 4 fire damage!');
+	});
+
+	it('burn stacks with poison damage', () => {
+		const entity = makeEntity({ hp: 20 });
+		applyEffect(entity, 'poison', 3, 2);
+		applyEffect(entity, 'burn', 3, 3);
+		const result = tickEffects(entity);
+		expect(result.damage).toBe(5);
+		expect(entity.hp).toBe(15);
+	});
+
+	it('freeze produces message and decrements', () => {
+		const entity = makeEntity({ hp: 20 });
+		applyEffect(entity, 'freeze', 2, 0);
+		const result = tickEffects(entity);
+		expect(result.damage).toBe(0);
+		expect(entity.hp).toBe(20);
+		expect(result.messages).toContain('TestEntity is frozen!');
+		expect(entity.statusEffects[0].duration).toBe(1);
+	});
+
+	it('blind produces message without damage', () => {
+		const entity = makeEntity({ hp: 20 });
+		applyEffect(entity, 'blind', 3, 0);
+		const result = tickEffects(entity);
+		expect(result.damage).toBe(0);
+		expect(entity.hp).toBe(20);
+		expect(result.messages).toContain('TestEntity is blinded!');
+	});
+
+	it('curse produces message showing ATK reduction', () => {
+		const entity = makeEntity({ hp: 20 });
+		applyEffect(entity, 'curse', 3, 2);
+		const result = tickEffects(entity);
+		expect(result.damage).toBe(0);
+		expect(entity.hp).toBe(20);
+		expect(result.messages).toContain('TestEntity is cursed! (-2 ATK)');
+	});
 });
 
 describe('effectColor', () => {
@@ -158,5 +204,36 @@ describe('effectColor', () => {
 	it('returns null when no effects', () => {
 		const entity = makeEntity();
 		expect(effectColor(entity)).toBeNull();
+	});
+
+	it('returns freeze color', () => {
+		const entity = makeEntity();
+		applyEffect(entity, 'freeze', 2, 0);
+		expect(effectColor(entity)).toBe('#88ccff');
+	});
+
+	it('returns burn color', () => {
+		const entity = makeEntity();
+		applyEffect(entity, 'burn', 2, 1);
+		expect(effectColor(entity)).toBe('#ff6600');
+	});
+
+	it('returns curse color', () => {
+		const entity = makeEntity();
+		applyEffect(entity, 'curse', 2, 1);
+		expect(effectColor(entity)).toBe('#aa00ff');
+	});
+
+	it('returns blind color', () => {
+		const entity = makeEntity();
+		applyEffect(entity, 'blind', 2, 0);
+		expect(effectColor(entity)).toBe('#888888');
+	});
+
+	it('freeze has higher priority than poison', () => {
+		const entity = makeEntity();
+		applyEffect(entity, 'poison', 3, 1);
+		applyEffect(entity, 'freeze', 2, 0);
+		expect(effectColor(entity)).toBe('#88ccff');
 	});
 });

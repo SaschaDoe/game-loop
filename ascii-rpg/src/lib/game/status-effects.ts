@@ -30,8 +30,21 @@ export function tickEffects(entity: Entity): { damage: number; healing: number; 
 				healing += effect.potency;
 				messages.push(`${entity.name} regenerates ${effect.potency} HP.`);
 				break;
+			case 'burn':
+				damage += effect.potency;
+				messages.push(`${entity.name} burns for ${effect.potency} fire damage!`);
+				break;
 			case 'stun':
 				messages.push(`${entity.name} is stunned!`);
+				break;
+			case 'freeze':
+				messages.push(`${entity.name} is frozen!`);
+				break;
+			case 'blind':
+				messages.push(`${entity.name} is blinded!`);
+				break;
+			case 'curse':
+				messages.push(`${entity.name} is cursed! (-${effect.potency} ATK)`);
 				break;
 			case 'sleep':
 				// Sleep doesn't tick — it's removed externally when woken
@@ -51,6 +64,10 @@ export function tickEffects(entity: Entity): { damage: number; healing: number; 
 export function effectColor(entity: Entity): string | null {
 	if (hasEffect(entity, 'sleep')) return '#666688';
 	if (hasEffect(entity, 'stun')) return '#ffff00';
+	if (hasEffect(entity, 'freeze')) return '#88ccff';
+	if (hasEffect(entity, 'burn')) return '#ff6600';
+	if (hasEffect(entity, 'curse')) return '#aa00ff';
+	if (hasEffect(entity, 'blind')) return '#888888';
 	if (hasEffect(entity, 'poison')) return '#00ff00';
 	if (hasEffect(entity, 'regeneration')) return '#00ffaa';
 	return null;

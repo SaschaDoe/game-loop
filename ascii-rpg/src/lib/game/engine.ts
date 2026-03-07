@@ -291,7 +291,7 @@ function moveEnemies(state: GameState, defending = false) {
 	tickEntityEffects(state, state.player);
 
 	for (const enemy of state.enemies) {
-		if (hasEffect(enemy, 'stun') || hasEffect(enemy, 'sleep')) continue;
+		if (hasEffect(enemy, 'stun') || hasEffect(enemy, 'sleep') || hasEffect(enemy, 'freeze')) continue;
 
 		const behavior = getMonsterBehavior(enemy);
 		const move = decideMoveDirection(enemy, state.player.pos, state.enemies, behavior);
@@ -301,6 +301,12 @@ function moveEnemies(state: GameState, defending = false) {
 		const ny = enemy.pos.y + move.dy;
 
 		if (nx === state.player.pos.x && ny === state.player.pos.y) {
+			// Blind miss check
+			if (hasEffect(enemy, 'blind') && Math.random() < 0.5) {
+				addMessage(state, `${enemy.name} swings blindly and misses!`, 'info');
+				continue;
+			}
+
 			// Dodge check — bosses are undodgeable
 			const dodgeChance = DODGE_CHANCE[state.characterConfig.characterClass] * (defending ? 2 : 1);
 			if (!isBoss(enemy) && Math.random() < dodgeChance) {
@@ -308,7 +314,8 @@ function moveEnemies(state: GameState, defending = false) {
 				continue;
 			}
 
-			const rawDmg = Math.max(1, enemy.attack + Math.floor(Math.random() * 2));
+			const curseReduction = enemy.statusEffects.find((e) => e.type === 'curse')?.potency ?? 0;
+			const rawDmg = Math.max(1, (enemy.attack - curseReduction) + Math.floor(Math.random() * 2));
 			const blockValue = BLOCK_REDUCTION[state.characterConfig.characterClass] * (defending ? 2 : 1);
 			const dmg = Math.max(1, rawDmg - blockValue);
 			if (blockValue > 0 && rawDmg > dmg) {
@@ -525,9 +532,14 @@ export function handleInput(state: GameState, key: string): GameState {
 	else if (key === 'd' || key === 'ArrowRight') dx = 1;
 	else return state;
 
-	// Stunned player loses their turn
+	// Stunned or frozen player loses their turn
 	if (hasEffect(state.player, 'stun')) {
 		addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+		moveEnemies(state);
+		return { ...state };
+	}
+	if (hasEffect(state.player, 'freeze')) {
+		addMessage(state, 'You are frozen and cannot move!', 'damage_taken');
 		moveEnemies(state);
 		return { ...state };
 	}
@@ -587,11 +599,18 @@ export function handleInput(state: GameState, key: string): GameState {
 	// attack enemy?
 	const target = state.enemies.find((e) => e.pos.x === nx && e.pos.y === ny);
 	if (target) {
+		// Blind miss check for player
+		if (hasEffect(state.player, 'blind') && Math.random() < 0.5) {
+			addMessage(state, 'You swing blindly and miss!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
 		const isSneakAttack = hasEffect(target, 'sleep');
 		if (isSneakAttack) {
 			target.statusEffects = target.statusEffects.filter((e) => e.type !== 'sleep');
 		}
-		const baseDmg = Math.max(1, state.player.attack + Math.floor(Math.random() * 3));
+		const curseReduction = state.player.statusEffects.find((e) => e.type === 'curse')?.potency ?? 0;
+		const baseDmg = Math.max(1, (state.player.attack - curseReduction) + Math.floor(Math.random() * 3));
 		const dmg = isSneakAttack ? baseDmg * 2 : baseDmg;
 		target.hp -= dmg;
 		if (isSneakAttack) {

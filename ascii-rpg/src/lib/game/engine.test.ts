@@ -57,6 +57,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		hazards: [],
 		npcs: [],
 		chests: [],
+		activeDialogue: null,
 		...overrides
 	};
 }
@@ -1297,5 +1298,98 @@ describe('disarm on walking onto detected trap', () => {
 		const result = handleInput(state, 'd');
 		expect(result.player.hp).toBeLessThan(20);
 		expect(trap.triggered).toBe(true);
+	});
+});
+
+describe('extended status effects in combat', () => {
+	it('frozen enemy skips their turn', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50, attack: 5 });
+		applyEffect(enemy, 'freeze', 3, 0);
+		const state = makeTestState({ enemies: [enemy] });
+		// Use 'g' (defend) to avoid FOV recalc; enemy should not attack because frozen
+		const result = handleInput(state, 'g');
+		expect(result.player.hp).toBe(20); // No damage taken
+	});
+
+	it('frozen player cannot move', () => {
+		const state = makeTestState();
+		applyEffect(state.player, 'freeze', 2, 0);
+		const result = handleInput(state, 'd');
+		expect(result.player.pos.x).toBe(5); // Didn't move
+		expect(result.messages.some((m) => m.text.includes('frozen'))).toBe(true);
+	});
+
+	it('blinded enemy can miss attacks', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50, attack: 5 });
+		applyEffect(enemy, 'blind', 5, 0);
+		const state = makeTestState({ enemies: [enemy] });
+		const orig = Math.random;
+		Math.random = () => 0.1; // Below 0.5 threshold → miss
+		try {
+			const result = handleInput(state, 'g');
+			expect(result.messages.some((m) => m.text.includes('blindly') && m.text.includes('misses'))).toBe(true);
+			expect(result.player.hp).toBe(20);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('blinded player can miss attacks', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		applyEffect(state.player, 'blind', 5, 0);
+		const orig = Math.random;
+		Math.random = () => 0.1; // Below 0.5 threshold → miss
+		try {
+			const result = handleInput(state, 'd'); // Try to attack enemy at (6,5)
+			expect(result.messages.some((m) => m.text.includes('blindly') && m.text.includes('miss'))).toBe(true);
+			expect(enemy.hp).toBe(50); // No damage dealt
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('cursed enemy deals reduced damage', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50, attack: 10 });
+		applyEffect(enemy, 'curse', 5, 5); // -5 ATK
+		const state = makeTestState({ enemies: [enemy] });
+		const orig = Math.random;
+		// High random to pass blind/dodge checks, 0 for damage roll
+		Math.random = () => 0.99;
+		try {
+			const result = handleInput(state, 'g');
+			const dmgTaken = 20 - result.player.hp;
+			// attack=10, curse=-5 → effective 5, +0or1 random, -block
+			// Without curse it would be ~10-12 damage, with curse ~3-5
+			expect(dmgTaken).toBeLessThanOrEqual(6);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('cursed player deals reduced damage', () => {
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 50, maxHp: 50, attack: 1 });
+		const state = makeTestState({ enemies: [enemy] });
+		state.player.attack = 10;
+		applyEffect(state.player, 'curse', 5, 5); // -5 ATK
+		const orig = Math.random;
+		Math.random = () => 0.99; // Pass blind check, max damage roll
+		try {
+			handleInput(state, 'd');
+			const dmgDealt = 50 - enemy.hp;
+			// attack=10, curse=-5 → effective 5, +2 random roll → 7
+			expect(dmgDealt).toBeLessThanOrEqual(8);
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('burn deals DoT each turn via enemy tick', () => {
+		const enemy = makeEnemy(8, 8, { name: 'TestEnemy', hp: 20, maxHp: 20, attack: 1 });
+		applyEffect(enemy, 'burn', 3, 4);
+		const state = makeTestState({ enemies: [enemy] });
+		// Defend to trigger moveEnemies which ticks effects
+		handleInput(state, 'g');
+		expect(enemy.hp).toBe(16); // 20 - 4 burn damage
 	});
 });
