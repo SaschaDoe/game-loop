@@ -393,7 +393,7 @@ function detectAdjacentSecrets(state: GameState): void {
 function tryDropLoot(state: GameState, enemy: Entity): void {
 	const tier = getMonsterTier(enemy);
 	const boss = isBoss(enemy);
-	const drop = rollLootDrop(enemy.pos, state.level, tier, boss);
+	const drop = rollLootDrop(enemy.pos, state.level, tier, boss, enemy.name);
 	if (drop) {
 		state.lootDrops.push(drop);
 	}

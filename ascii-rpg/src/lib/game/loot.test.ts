@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rollLootDrop, lootChar, lootColor, lootName, pickupLoot, getLootAt } from './loot';
+import { rollLootDrop, lootChar, lootColor, lootName, pickupLoot, getLootAt, getMonsterLootTable, MONSTER_LOOT_TABLES, DEFAULT_LOOT_TABLE } from './loot';
 import type { LootDrop } from './types';
 
 describe('rollLootDrop', () => {
@@ -80,6 +80,97 @@ describe('rollLootDrop', () => {
 		try {
 			const drop = rollLootDrop({ x: 0, y: 0 }, 1, 1, false);
 			expect(['healing', 'xp_bonus', 'atk_bonus']).toContain(drop!.type);
+		} finally {
+			Math.random = orig;
+		}
+	});
+});
+
+describe('monster loot tables', () => {
+	it('getMonsterLootTable returns specific table for known monsters', () => {
+		const ratTable = getMonsterLootTable('Rat');
+		expect(ratTable).not.toBe(DEFAULT_LOOT_TABLE);
+		expect(ratTable.length).toBeGreaterThan(0);
+	});
+
+	it('getMonsterLootTable returns default for unknown monsters', () => {
+		const table = getMonsterLootTable('UnknownBeast');
+		expect(table).toBe(DEFAULT_LOOT_TABLE);
+	});
+
+	it('all monster loot tables have valid entries', () => {
+		for (const [name, table] of Object.entries(MONSTER_LOOT_TABLES)) {
+			expect(table.length).toBeGreaterThan(0);
+			for (const entry of table) {
+				expect(['healing', 'xp_bonus', 'atk_bonus']).toContain(entry.type);
+				expect(entry.weight).toBeGreaterThan(0);
+				expect(entry.minValue).toBeGreaterThanOrEqual(0);
+			}
+		}
+	});
+
+	it('all base monsters have loot tables', () => {
+		const expected = ['Rat', 'Bat', 'Slime', 'Goblin', 'Spider', 'Skeleton', 'Wolf', 'Ogre', 'Wraith', 'Troll', 'Minotaur'];
+		for (const name of expected) {
+			expect(MONSTER_LOOT_TABLES[name]).toBeDefined();
+		}
+	});
+
+	it('rollLootDrop uses monster-specific table when name provided', () => {
+		// Rat table has no atk_bonus, so drops should never be atk_bonus
+		const orig = Math.random;
+		let drops = 0;
+		let atkDrops = 0;
+		Math.random = () => 0.01; // always drops, picks first entry (healing for Rat)
+		try {
+			for (let i = 0; i < 20; i++) {
+				const drop = rollLootDrop({ x: 0, y: 0 }, 1, 1, false, 'Rat');
+				if (drop) {
+					drops++;
+					if (drop.type === 'atk_bonus') atkDrops++;
+				}
+			}
+		} finally {
+			Math.random = orig;
+		}
+		expect(drops).toBe(20);
+		expect(atkDrops).toBe(0); // Rat table doesn't have atk_bonus
+	});
+
+	it('boss drop uses monster table but guarantees atk_bonus', () => {
+		// Skeleton table has atk_bonus, so boss skeleton should get it
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const drop = rollLootDrop({ x: 0, y: 0 }, 5, 2, true, 'Skeleton');
+			expect(drop).not.toBeNull();
+			expect(drop!.type).toBe('atk_bonus');
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('boss drop falls back to default atk_bonus if monster table lacks it', () => {
+		// Rat table has no atk_bonus — boss should fall back to default
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const drop = rollLootDrop({ x: 0, y: 0 }, 5, 1, true, 'Rat');
+			expect(drop).not.toBeNull();
+			expect(drop!.type).toBe('atk_bonus');
+		} finally {
+			Math.random = orig;
+		}
+	});
+
+	it('higher-tier monsters have better loot values', () => {
+		const orig = Math.random;
+		Math.random = () => 0.01;
+		try {
+			const ratDrop = rollLootDrop({ x: 0, y: 0 }, 5, 1, false, 'Rat');
+			const wraith = rollLootDrop({ x: 0, y: 0 }, 5, 3, false, 'Wraith');
+			// Wraith's first entry (xp_bonus: minValue 10 + 5*5 = 35) > Rat's first (healing: 1 + 1*5 = 6)
+			expect(wraith!.value).toBeGreaterThan(ratDrop!.value);
 		} finally {
 			Math.random = orig;
 		}
