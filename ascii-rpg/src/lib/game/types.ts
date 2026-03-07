@@ -18,11 +18,21 @@ export interface CharacterConfig {
 
 export type NPCMood = 'friendly' | 'neutral' | 'hostile' | 'afraid' | 'amused' | 'sad';
 
+export type RumorAccuracy = 'true' | 'exaggerated' | 'false';
+
+export interface Rumor {
+	id: string;
+	text: string;
+	source: string;
+	accuracy: RumorAccuracy;
+}
+
 export interface DialogueEffect {
 	hp?: number;
 	atk?: number;
 	message?: string;
 	mood?: NPCMood;
+	rumor?: Rumor;
 }
 
 export interface DialogueOption {
@@ -163,5 +173,8 @@ export interface GameState {
 	npcs: NPC[];
 	chests: Chest[];
 	lootDrops: LootDrop[];
+	skillPoints: number;
+	unlockedSkills: string[];
 	activeDialogue: ActiveDialogue | null;
+	rumors: Rumor[];
 }

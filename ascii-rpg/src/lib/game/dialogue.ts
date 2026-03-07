@@ -1,4 +1,4 @@
-import type { DialogueTree, DialogueNode } from './types';
+import type { DialogueTree, DialogueNode, Rumor } from './types';
 
 function node(id: string, npcText: string, options: DialogueNode['options']): DialogueNode {
 	return { id, npcText, options };
@@ -7,6 +7,38 @@ function node(id: string, npcText: string, options: DialogueNode['options']): Di
 function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean }): DialogueNode['options'][0] {
 	return { text, nextNode, color, ...extras };
 }
+
+function rumor(id: string, text: string, source: string, accuracy: Rumor['accuracy']): Rumor {
+	return { id, text, source, accuracy };
+}
+
+// ─── RUMOR CATALOGUE ───
+// TRUE: real gameplay hints
+// EXAGGERATED: partially true, misleading
+// FALSE: total nonsense (funny)
+
+const RUMORS = {
+	// True rumors — actual gameplay hints
+	secret_walls: rumor('secret_walls', 'Some dungeon walls hide secret passages. Search near dead ends.', 'The Barkeep', 'true'),
+	mimics: rumor('mimics', 'Gold chests can be Mimics in disguise. Approach with caution.', 'The Barkeep', 'true'),
+	boss_every_five: rumor('boss_every_five', 'A powerful boss lurks every five levels. Prepare before descending.', 'The Barkeep', 'true'),
+	traps_near_treasure: rumor('traps_near_treasure', 'Traps cluster near treasure rooms. Rogues detect them more easily.', 'Hooded Stranger', 'true'),
+	potions_matter: rumor('potions_matter', 'Healing potions become scarce in deeper levels. Never pass one up.', 'Hooded Stranger', 'true'),
+	corridor_chokepoint: rumor('corridor_chokepoint', 'Narrow corridors are your friend — fight enemies one at a time.', 'Hooded Stranger', 'true'),
+
+	// Exaggerated rumors — partially true, misleading scale
+	level_ten_horror: rumor('level_ten_horror', 'Below level ten, the monsters grow as large as houses. HOUSES!', 'Garvus (drunk)', 'exaggerated'),
+	treasure_room: rumor('treasure_room', 'There is a room made entirely of gold on level seven. Entirely!', 'Garvus (drunk)', 'exaggerated'),
+	singing_walls: rumor('singing_walls', 'The walls sing on the deeper levels. Beautiful, haunting melodies.', 'Garvus (drunk)', 'exaggerated'),
+	merchant_everywhere: rumor('merchant_everywhere', 'A merchant appears on every single dungeon level. Never misses one!', 'Morrigan', 'exaggerated'),
+
+	// False rumors — entertaining nonsense
+	skeleton_king: rumor('skeleton_king', 'The Skeleton King on level three will spare you if you bow.', 'Morrigan', 'false'),
+	backwards_walking: rumor('backwards_walking', 'Walking backwards makes you invisible to all monsters.', 'Garvus (drunk)', 'false'),
+	lava_potion: rumor('lava_potion', 'Lava is actually a healing bath if you have fire resistance potions.', 'Morrigan', 'false'),
+	friendly_mimics: rumor('friendly_mimics', 'If you compliment a Mimic on its woodwork, it becomes your ally.', 'The Barkeep', 'false'),
+	dungeon_password: rumor('dungeon_password', 'Shouting "PARSLEY" at any locked door will open it instantly.', 'Hooded Stranger', 'false'),
+} as const;
 
 // ─── VILLAGE: MOTHER ───
 
@@ -413,6 +445,7 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 			[
 				opt('I\'ll take a drink. [Accept heal]', 'drink', '#4f4', { onSelect: { hp: 3, message: 'The Barkeep pours you a drink! +3 HP' } }),
 				opt('Tell me about the dungeon below.', 'dungeon', '#ff4'),
+				opt('Heard any good rumors lately?', 'rumors_menu', '#ff4'),
 				opt('Who are the other patrons?', 'patrons', '#8cf'),
 				opt('Nice place you\'ve got here.', 'tavern_story', '#8cf'),
 				opt('Just passing through.', 'farewell', '#0ff'),
@@ -422,6 +455,7 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 			'Back for another round? You look like you could use it. The dungeon tends to do that to people.',
 			[
 				opt('Any news while I was gone?', 'news', '#ff4'),
+				opt('Heard any rumors?', 'rumors_menu', '#ff4'),
 				opt('Tell me about the dungeon.', 'dungeon', '#ff4'),
 				opt('Just need a moment to rest.', 'rest', '#4f4'),
 				opt('See you later, Barkeep.', 'farewell', '#0ff'),
@@ -542,6 +576,40 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
 		),
+		rumors_menu: node('rumors_menu',
+			'*He leans on the bar conspiratorially.* Rumors? This tavern runs on rumors. They\'re eighty percent of my business — people come in to gossip, stay for the ale, and leave their coin purses. What do you want to hear about?',
+			[
+				opt('What about secret passages?', 'rumor_secrets', '#ff4', { once: true }),
+				opt('Anything about treasure chests?', 'rumor_mimics', '#ff4', { once: true }),
+				opt('Tell me about the bosses.', 'rumor_bosses', '#ff4', { once: true }),
+				opt('Give me the wildest rumor you\'ve got.', 'rumor_wild', '#ff4', { once: true }),
+				opt('That\'s enough gossip.', 'start', '#0ff'),
+			]
+		),
+		rumor_secrets: node('rumor_secrets',
+			'*He drops his voice.* You didn\'t hear this from me, but... the dungeon has secret rooms. Hidden behind walls that look solid. Old Maren \u2014 rest her soul \u2014 used to say you can feel the draft near the hidden passages. Stay alert near dead ends. Press your hand against the stone. Sometimes it gives. *He taps his nose.* That one\'s free. Next rumor costs a drink.',
+			[
+				opt('Good to know. [Rumor learned]', 'rumors_menu', '#4f4', { onSelect: { rumor: RUMORS.secret_walls } }),
+			]
+		),
+		rumor_mimics: node('rumor_mimics',
+			'Oh, the chests. Yes. Not all chests are... chests. Some of them are alive. Mimics, they call them. Nasty things. They look exactly like a treasure chest until you open them, and then suddenly you\'re fighting furniture. Gold chests are the worst \u2014 they\'re the most convincing disguise. Lost a customer to one last week. He said "Ooh, shiny!" and it was the last thing he ever said.',
+			[
+				opt('I\'ll watch out for that. [Rumor learned]', 'rumors_menu', '#4f4', { onSelect: { rumor: RUMORS.mimics } }),
+			]
+		),
+		rumor_bosses: node('rumor_bosses',
+			'Every five levels, something BIG shows up. Something that doesn\'t just wander the halls \u2014 something that OWNS the floor. I\'ve heard adventurers call them floor bosses. They\'re tougher, meaner, and they don\'t let you run. A warrior came back from level five missing an arm and said the boss "politely requested" he leave. By throwing him through a wall.',
+			[
+				opt('Every five levels. Got it. [Rumor learned]', 'rumors_menu', '#4f4', { onSelect: { rumor: RUMORS.boss_every_five } }),
+			]
+		),
+		rumor_wild: node('rumor_wild',
+			'*He grins.* Alright, here\'s one from the drunk in the corner \u2014 he swears that if you compliment a Mimic on the quality of its woodwork, it\'ll stop attacking and become your friend. Says he "tamed" one on level four. Named it Chester. *The Barkeep rolls his eyes.* Chester ate two people last week. I don\'t think the compliments are working.',
+			[
+				opt('I\'ll... keep that in mind. [Rumor learned]', 'rumors_menu', '#ff4', { onSelect: { rumor: RUMORS.friendly_mimics } }),
+			]
+		),
 	}
 };
 
@@ -556,6 +624,7 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 			[
 				opt('Expecting me? What do you mean?', 'expecting', '#ff4'),
 				opt('What do you know about the dungeon?', 'dungeon_knowledge', '#ff4'),
+				opt('Do you know any secrets?', 'stranger_rumors', '#ff4'),
 				opt('Who are you?', 'identity', '#8cf'),
 				opt('You\'re a little creepy, you know that?', 'creepy', '#f44'),
 				opt('Nevermind.', 'farewell', '#0ff'),
@@ -566,6 +635,7 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 			[
 				opt('What do you mean, the dungeon\'s mark?', 'mark', '#f44'),
 				opt('Tell me about the deeper levels.', 'deep_levels', '#ff4'),
+				opt('Know any useful secrets?', 'stranger_rumors', '#ff4'),
 				opt('Any new insights?', 'insights', '#8cf'),
 				opt('I need to go.', 'farewell', '#0ff'),
 			]
@@ -753,6 +823,40 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
 		),
+		stranger_rumors: node('stranger_rumors',
+			'*The stranger steeples their fingers.* Secrets? I traffic in secrets. They are the only currency that appreciates in value. What would you like to know?',
+			[
+				opt('How do I survive the traps?', 'rumor_traps', '#ff4', { once: true }),
+				opt('Tell me about potions in the dungeon.', 'rumor_potions', '#ff4', { once: true }),
+				opt('Any combat tactics I should know?', 'rumor_corridors', '#ff4', { once: true }),
+				opt('Tell me something... strange.', 'rumor_strange', '#ff4', { once: true }),
+				opt('That\'s enough secrets for now.', 'start', '#0ff'),
+			]
+		),
+		rumor_traps: node('rumor_traps',
+			'*They lean forward, voice barely above a whisper.* The dungeon places traps with purpose, not randomness. Treasure attracts the greedy. Traps punish them. You will find the densest trap clusters near the most valuable rooms. Rogues have a sixth sense for them \u2014 their training attunes them to the subtle changes in air pressure and floor texture. If you are not a rogue... step carefully.',
+			[
+				opt('Traps near treasure. Noted. [Rumor learned]', 'stranger_rumors', '#4f4', { onSelect: { rumor: RUMORS.traps_near_treasure } }),
+			]
+		),
+		rumor_potions: node('rumor_potions',
+			'*They produce a small vial from within their cloak, hold it to the light, then make it vanish.* Healing potions are the difference between life and death below. The dungeon provides them generously on the upper levels \u2014 a kindness, or perhaps a strategy. It wants you comfortable. Dependent. Because on the deeper levels, the potions thin out. And by then, you need them more than ever. Never walk past one.',
+			[
+				opt('Never pass up a potion. Got it. [Rumor learned]', 'stranger_rumors', '#4f4', { onSelect: { rumor: RUMORS.potions_matter } }),
+			]
+		),
+		rumor_corridors: node('rumor_corridors',
+			'*They trace a narrow rectangle on the bar with one finger.* The dungeon\'s corridors are your greatest ally. A single-file passage negates numerical superiority. Ten goblins in a corridor? You fight them one at a time. Ten goblins in an open room? You die. Geometry is the adventurer\'s most underappreciated weapon. Learn to love narrow spaces.',
+			[
+				opt('Use chokepoints. Smart. [Rumor learned]', 'stranger_rumors', '#4f4', { onSelect: { rumor: RUMORS.corridor_chokepoint } }),
+			]
+		),
+		rumor_strange: node('rumor_strange',
+			'*Their voice takes on an odd quality \u2014 distant, as if remembering something from very far away.* There is a word. An old word, from before the dungeon was built. Some say it was the Architects\' master key \u2014 a command word that could open any sealed passage. *They pause dramatically.* The word is "parsley." *A long silence.* I am joking, of course. Or am I? Try it on the next locked door you find. What\'s the worst that could happen?',
+			[
+				opt('...You\'re messing with me. [Rumor learned]', 'stranger_rumors', '#ff4', { onSelect: { rumor: RUMORS.dungeon_password } }),
+			]
+		),
 	}
 };
 
@@ -767,6 +871,7 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			[
 				opt('I heard you used to be an adventurer.', 'adventurer', '#ff4'),
 				opt('Tell me about the dungeon.', 'dungeon_drunk', '#ff4'),
+				opt('Know any dungeon rumors?', 'drunk_rumors', '#ff4'),
 				opt('Are you okay?', 'okay', '#4f4'),
 				opt('Sorry to bother you.', 'farewell', '#0ff'),
 			]
@@ -961,6 +1066,40 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			'*He waves his mug vaguely.* G\'luck, kid. Don\'t die. It\'sh overrated. Dying, I mean. Very inconvenient. Lottsha paperwork. *hic*',
 			[
 				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		drunk_rumors: node('drunk_rumors',
+			'*He perks up, delighted to have an audience.* Rumorsh? I\'ve GOT rumorsh! I\'ve got the BESHT rumorsh! *He nearly falls off his stool.* What do you wanna know?',
+			[
+				opt('What\'s the deepest level like?', 'rumor_deep', '#ff4', { once: true }),
+				opt('Any tricks to avoid monsters?', 'rumor_backwards', '#ff4', { once: true }),
+				opt('Tell me about level ten.', 'rumor_level_ten', '#ff4', { once: true }),
+				opt('Know anything about treasure rooms?', 'rumor_treasure', '#ff4', { once: true }),
+				opt('I think you\'ve shared enough.', 'farewell', '#0ff'),
+			]
+		),
+		rumor_deep: node('rumor_deep',
+			'*He leans in, breath toxic.* The wallsh down there? They SHING, my friend. Not like a bard shingsh. Like... like the whole mountain ish humming a lullaby. A very, very shad lullaby. About wormsh. Or maybe about love. Hard to tell with the acousticsh. *He sniffles.* It wash beautiful. And horrifying. Beautifully horrifying. Horrifyingly beautiful.',
+			[
+				opt('Singing walls. Sure. [Rumor learned]', 'drunk_rumors', '#ff4', { onSelect: { rumor: RUMORS.singing_walls } }),
+			]
+		),
+		rumor_backwards: node('rumor_backwards',
+			'*He grabs your arm with surprising strength.* Lishten. LISHTEN. I dischovered shomething INCREDIBLE on level twelve. If you walk backwardsh — BACKWARDSH — the monstersh can\'t see you! I did it for THREE WHOLE FLOORSH! Walked backwards the entire time! *He beams proudly.* ...I alsho walked into seven wallsh, fell down two pitsh, and the monstersh definitely shaw me becaushe three of them chased me. But OTHER than that? Invisible.',
+			[
+				opt('Brilliant strategy, Garvus. [Rumor learned]', 'drunk_rumors', '#ff4', { onSelect: { rumor: RUMORS.backwards_walking } }),
+			]
+		),
+		rumor_level_ten: node('rumor_level_ten',
+			'*His voice drops and his eyes widen to saucers.* Level ten. LEVEL TEN. The monshtersh are as big ash HOUSHESH! I shaw a shlime the shize of a BARN! A shkleton riding a DRAGON! A goblin wearing a CROWN made of SHMALLER GOBLINS! *He pauses.* ...okay, shome of that might be the ale talking. But the monshtersh DO get bigger. That part ish true. Probably.',
+			[
+				opt('House-sized monsters. Got it. [Rumor learned]', 'drunk_rumors', '#ff4', { onSelect: { rumor: RUMORS.level_ten_horror } }),
+			]
+		),
+		rumor_treasure: node('rumor_treasure',
+			'*He cups his hands together reverently.* Level sheven. There ish a room. Made. Entirely. Of gold. The WALLSH are gold. The FLOOR ish gold. The AIR ish probably gold. I never actually SHAW it because I was running from a very angry troll at the time. But the troll was carrying gold, sho by exshtension, it MUSHT be real. Logic. Flawlessh logic.',
+			[
+				opt('Flawless indeed. [Rumor learned]', 'drunk_rumors', '#ff4', { onSelect: { rumor: RUMORS.treasure_room } }),
 			]
 		),
 	}
@@ -1346,6 +1485,7 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 			'*She beams at you.* My favorite customer! Well, my only living customer. The distinction matters less than you\'d think.',
 			[
 				opt('Got anything for me?', 'wares', '#ff4'),
+				opt('Heard any trade gossip?', 'merchant_rumors', '#ff4'),
 				opt('How\'s business?', 'business', '#8cf'),
 				opt('Any tips about this level?', 'tips', '#ff4'),
 				opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
@@ -1492,6 +1632,33 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 			'*She waves cheerfully.* Happy dungeoning! Remember: if it looks like a chest, poke it first! If it looks like a wall, it might be a door! And if it looks like a merchant, it\'s probably me! Unless it\'s a Mimic. In which case — sorry, I sold it the disguise kit. Professional ethics prevent me from warning you further! Toodles!',
 			[
 				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		merchant_rumors: node('merchant_rumors',
+			'*She perks up immediately.* Trade gossip is my specialty! Information is the SECOND most valuable currency down here, right after teeth. Apparently. What do you want to know?',
+			[
+				opt('What do monsters buy from you?', 'rumor_skeleton', '#ff4', { once: true }),
+				opt('Any merchant secrets?', 'rumor_merchant_everywhere', '#ff4', { once: true }),
+				opt('Know anything about lava?', 'rumor_lava', '#ff4', { once: true }),
+				opt('That\'s enough gossip.', 'return', '#0ff'),
+			]
+		),
+		rumor_skeleton: node('rumor_skeleton',
+			'*She counts on her fingers.* The skeletons buy joint lubricant. The slimes buy accessories. But the BEST customer story? There\'s a skeleton on level three who calls himself a king. Wears a crown made of rat bones. Very dignified. He told me \u2014 and I quote \u2014 "Any adventurer who bows before me shall be spared." I asked if that was true. He said "No, but it makes them hold still." Clever, in a horrible sort of way.',
+			[
+				opt('Don\'t bow to skeletons. Noted. [Rumor learned]', 'merchant_rumors', '#f44', { onSelect: { rumor: RUMORS.skeleton_king } }),
+			]
+		),
+		rumor_merchant_everywhere: node('rumor_merchant_everywhere',
+			'*She puffs up with pride.* You know, people say I appear on every single dungeon level. Every. Single. One. It\'s very flattering but wildly inaccurate. I appear on MOST levels. Maybe thirty percent? I have a route. Tuesdays and Thursdays are levels one through ten. Weekends are the deep floors. Mondays I take off. Even eldritch dungeon merchants need self-care days.',
+			[
+				opt('A merchant on every level. Sure. [Rumor learned]', 'merchant_rumors', '#ff4', { onSelect: { rumor: RUMORS.merchant_everywhere } }),
+			]
+		),
+		rumor_lava: node('rumor_lava',
+			'*She leans in with the expression of someone about to share forbidden knowledge.* Okay, I HAVE heard \u2014 from a very unreliable source, mind you, a slime wearing a monocle \u2014 that lava pools are actually therapeutic if you have fire resistance. Like a hot spring, but hotter. MUCH hotter. *She pauses.* I feel I should clarify: I have never tested this, I don\'t sell fire resistance potions, and my insurance does not cover lava-related incidents.',
+			[
+				opt('A healing lava bath. Right. [Rumor learned]', 'merchant_rumors', '#f44', { onSelect: { rumor: RUMORS.lava_potion } }),
 			]
 		),
 	}

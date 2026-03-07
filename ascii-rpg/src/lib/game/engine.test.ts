@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -58,7 +58,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		npcs: [],
 		chests: [],
 		lootDrops: [],
+		skillPoints: 0,
+		unlockedSkills: [],
 		activeDialogue: null,
+		rumors: [],
 		...overrides
 	};
 }
@@ -1592,5 +1595,67 @@ describe('loot drops', () => {
 		state.player.hp = 19;
 		const result = handleInput(state, 'd');
 		expect(result.player.hp).toBe(20); // maxHp is 20
+	});
+});
+
+describe('skill tree integration', () => {
+	it('awards 1 skill point on level up', () => {
+		const state = makeTestState({ xp: 0, characterLevel: 1, skillPoints: 0 });
+		state.enemies = [makeEnemy(6, 5, { hp: 1, maxHp: 1 })];
+		// xpForLevel(2) = floor(50 * 1.4^1) = 70, xpReward = 5 + 1*2 + 1 = 8
+		state.xp = 65;
+		const result = handleInput(state, 'd');
+		expect(result.characterLevel).toBe(2);
+		expect(result.skillPoints).toBe(1);
+		expect(result.messages.some(m => m.text.includes('Skill Point'))).toBe(true);
+	});
+
+	it('skill sight bonus increases effective sight radius', () => {
+		const state = makeTestState({ unlockedSkills: ['w_tac_1'] }); // +1 sight
+		expect(effectiveSightRadius(state)).toBe(9); // base 8 + 1
+	});
+
+	it('skill sight bonus stacks with multiple skills', () => {
+		const state = makeTestState({ unlockedSkills: ['m_know_1', 'm_know_3'] }); // +1 + +2 sight
+		expect(effectiveSightRadius(state)).toBe(11); // base 8 + 3
+	});
+
+	it('skill block bonus reduces incoming damage', () => {
+		// Warrior base block = 2, with w_def_2 (+1 block) = 3
+		const state = makeTestState({
+			unlockedSkills: ['w_def_1', 'w_def_2']
+		});
+		state.enemies = [makeEnemy(6, 5, { hp: 100, maxHp: 100, attack: 5 })];
+		applyEffect(state.enemies[0], 'freeze', 1, 0); // freeze so it doesn't move after
+
+		const originalRandom = Math.random;
+		Math.random = () => 0.99; // Fail dodge, no blind, minimal random damage
+		try {
+			const result = handleInput(state, 'g'); // defend doubles block: (2+1)*2 = 6
+			// Enemy attack 5 + floor(0.99*2)=1 = 6 raw, block 6, min 1 damage
+			const blockMsg = result.messages.find(m => m.text.includes('block'));
+			expect(blockMsg).toBeDefined();
+		} finally {
+			Math.random = originalRandom;
+		}
+	});
+
+	it('XP multiplier from skills increases XP earned', () => {
+		// m_know_2 gives +10% XP multiplier
+		const state = makeTestState({ unlockedSkills: ['m_know_1', 'm_know_2'] });
+		state.enemies = [makeEnemy(6, 5, { hp: 1, maxHp: 5 })];
+		const baseXp = xpReward(state.enemies[0], state.level); // 5 + 2 + 5 = 12
+		const expectedXp = Math.floor(baseXp * 1.10); // 13
+
+		const result = handleInput(state, 'd');
+		expect(result.xp).toBe(expectedXp);
+	});
+
+	it('skill points and unlocked skills persist through level transition', () => {
+		const state = makeTestState({ skillPoints: 3, unlockedSkills: ['w_arms_1', 'w_def_1'] });
+		state.map.tiles[5][6] = '>';
+		const result = handleInput(state, 'd');
+		expect(result.skillPoints).toBe(3);
+		expect(result.unlockedSkills).toEqual(['w_arms_1', 'w_def_1']);
 	});
 });

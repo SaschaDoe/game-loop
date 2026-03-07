@@ -74,7 +74,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		npcs: [],
 		chests: [],
 		lootDrops: [],
+		skillPoints: 0,
+		unlockedSkills: [],
 		activeDialogue: null,
+		rumors: [],
 		...overrides
 	};
 }
@@ -221,6 +224,13 @@ describe('serializeState / deserializeState round-trip', () => {
 		expect(restored.detectedSecrets.size).toBe(0);
 		expect(restored.detectedTraps).toBeInstanceOf(Set);
 		expect(restored.detectedTraps.size).toBe(0);
+	});
+
+	it('preserves skillPoints and unlockedSkills', () => {
+		const state = makeTestState({ skillPoints: 3, unlockedSkills: ['w_arms_1', 'w_def_1'] });
+		const restored = deserializeState(serializeState(state));
+		expect(restored.skillPoints).toBe(3);
+		expect(restored.unlockedSkills).toEqual(['w_arms_1', 'w_def_1']);
 	});
 
 	it('produces valid JSON string', () => {

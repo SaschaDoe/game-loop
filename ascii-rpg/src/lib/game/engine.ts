@@ -12,6 +12,7 @@ import { placeChests, getChestAt, openChest, chestChar, chestColor } from './che
 import { generateStartingLocation } from './locations';
 import { NPC_DIALOGUE_TREES } from './dialogue';
 import { rollLootDrop, getLootAt, pickupLoot, lootChar, lootColor } from './loot';
+import { getSkillBonuses } from './skills';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -24,6 +25,17 @@ export function xpReward(enemy: Entity, dungeonLevel: number): number {
 	return 5 + dungeonLevel * 2 + enemy.maxHp;
 }
 
+function applyXpMultiplier(baseXp: number, state: GameState): number {
+	const bonuses = getSkillBonuses(state.unlockedSkills);
+	const multiplier = 1 + (bonuses.xpMultiplier ?? 0);
+	return Math.floor(baseXp * multiplier);
+}
+
+export function effectiveSightRadius(state: GameState): number {
+	const bonuses = getSkillBonuses(state.unlockedSkills);
+	return state.sightRadius + (bonuses.sightRadius ?? 0);
+}
+
 function checkLevelUp(state: GameState): void {
 	let threshold = xpForLevel(state.characterLevel + 1);
 	while (state.xp >= threshold && state.characterLevel < 50) {
@@ -34,7 +46,8 @@ function checkLevelUp(state: GameState): void {
 		state.player.maxHp += hpGain;
 		state.player.hp += hpGain;
 		state.player.attack += atkGain;
-		addMessage(state, `Level up! You are now level ${state.characterLevel}. +${hpGain} HP${atkGain ? `, +${atkGain} ATK` : ''}.`, 'level_up');
+		state.skillPoints++;
+		addMessage(state, `Level up! You are now level ${state.characterLevel}. +${hpGain} HP${atkGain ? `, +${atkGain} ATK` : ''}, +1 Skill Point.`, 'level_up');
 		threshold = xpForLevel(state.characterLevel + 1);
 	}
 }
@@ -110,7 +123,10 @@ export function createGame(config?: CharacterConfig): GameState {
 		hazards: [],
 		chests: [],
 		lootDrops: [],
-		activeDialogue: null
+		skillPoints: 0,
+		unlockedSkills: [],
+		activeDialogue: null,
+		rumors: []
 	};
 
 	// Apply class bonuses
@@ -125,7 +141,7 @@ export function createGame(config?: CharacterConfig): GameState {
 		state.player.hp = Math.max(1, Math.floor(state.player.hp * locResult.initialHpFactor));
 	}
 
-	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+	updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 	return state;
 }
 
@@ -242,7 +258,10 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		npcs,
 		chests: filteredChests,
 		lootDrops: [],
-		activeDialogue: null
+		skillPoints: 0,
+		unlockedSkills: [],
+		activeDialogue: null,
+		rumors: []
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -394,7 +413,7 @@ function moveEnemies(state: GameState, defending = false) {
 	state.enemies = state.enemies.filter((e) => {
 		if (e.hp <= 0) {
 			tryDropLoot(state, e);
-			const reward = xpReward(e, state.level);
+			const reward = applyXpMultiplier(xpReward(e, state.level), state);
 			state.xp += reward;
 			addMessage(state, `${e.name} perished in a hazard! +${reward} XP`, 'player_attack');
 			return false;
@@ -410,7 +429,7 @@ function moveEnemies(state: GameState, defending = false) {
 	state.enemies = state.enemies.filter((e) => {
 		if (e.hp <= 0) {
 			tryDropLoot(state, e);
-			const reward = xpReward(e, state.level);
+			const reward = applyXpMultiplier(xpReward(e, state.level), state);
 			state.xp += reward;
 			addMessage(state, `${e.name} died from status effects! +${reward} XP`, 'player_attack');
 			return false;
@@ -440,7 +459,8 @@ function moveEnemies(state: GameState, defending = false) {
 			}
 
 			// Dodge check — bosses are undodgeable
-			const dodgeChance = DODGE_CHANCE[state.characterConfig.characterClass] * (defending ? 2 : 1);
+			const skillBonuses = getSkillBonuses(state.unlockedSkills);
+			const dodgeChance = (DODGE_CHANCE[state.characterConfig.characterClass] + (skillBonuses.dodgeChance ?? 0)) * (defending ? 2 : 1);
 			if (!isBoss(enemy) && Math.random() < dodgeChance) {
 				addMessage(state, `You dodge ${enemy.name}'s attack!`, 'info');
 				continue;
@@ -448,7 +468,7 @@ function moveEnemies(state: GameState, defending = false) {
 
 			const curseReduction = enemy.statusEffects.find((e) => e.type === 'curse')?.potency ?? 0;
 			const rawDmg = Math.max(1, (enemy.attack - curseReduction) + Math.floor(Math.random() * 2));
-			const blockValue = BLOCK_REDUCTION[state.characterConfig.characterClass] * (defending ? 2 : 1);
+			const blockValue = (BLOCK_REDUCTION[state.characterConfig.characterClass] + (skillBonuses.blockReduction ?? 0)) * (defending ? 2 : 1);
 			const dmg = Math.max(1, rawDmg - blockValue);
 			if (blockValue > 0 && rawDmg > dmg) {
 				addMessage(state, `You block ${rawDmg - dmg} damage from ${enemy.name}!`, 'info');
@@ -593,7 +613,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				const bossKill = isBoss(enemy);
 				const rareKill = isRare(enemy);
 				const baseReward = xpReward(enemy, state.level);
-				const reward = bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward;
+				const reward = applyXpMultiplier(bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward, state);
 				state.xp += reward;
 				addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
 			}
@@ -601,7 +621,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			if (killed.length > 0) checkLevelUp(state);
 			if (result.teleportPos) {
 				state.player.pos = result.teleportPos;
-				updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+				updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 				detectAdjacentSecrets(state);
 			}
 			moveEnemies(state);
@@ -634,7 +654,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		}
 		if (fleeResult.moved) {
 			state.player.pos = fleeResult.moved;
-			updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+			updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 			detectAdjacentSecrets(state);
 		}
 		moveEnemies(state);
@@ -795,7 +815,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			const rareKill = isRare(target);
 			const baseReward = xpReward(target, state.level);
 			const multiplier = envKill ? ENVIRONMENTAL_KILL_BONUS : 1;
-			const reward = Math.floor((bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward) * multiplier);
+			const reward = applyXpMultiplier(Math.floor((bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward) * multiplier), state);
 			state.xp += reward;
 			state.enemies = state.enemies.filter((e) => e !== target);
 			if (envKill) {
@@ -823,7 +843,7 @@ export function handleInput(state: GameState, key: string): GameState {
 	}
 
 	state.player.pos = { x: nx, y: ny };
-	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+	updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
 		addMessage(state, msg, 'discovery');
@@ -841,7 +861,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 			if (!disarmResult.success && disarmResult.triggerResult?.teleportPos) {
 				state.player.pos = disarmResult.triggerResult.teleportPos;
-				updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+				updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 				detectAdjacentSecrets(state);
 				for (const msg2 of detectAdjacentTraps(state)) {
 					addMessage(state, msg2, 'discovery');
@@ -855,7 +875,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 			if (result.teleportPos) {
 				state.player.pos = result.teleportPos;
-				updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+				updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 				detectAdjacentSecrets(state);
 				for (const msg2 of detectAdjacentTraps(state)) {
 					addMessage(state, msg2, 'discovery');
@@ -910,6 +930,8 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.characterConfig = state.characterConfig;
 		next.player.name = state.player.name;
 		next.abilityCooldown = state.abilityCooldown;
+		next.skillPoints = state.skillPoints;
+		next.unlockedSkills = [...state.unlockedSkills];
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
 	}
@@ -958,6 +980,11 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			state.activeDialogue.mood = option.onSelect.mood;
 			const npc = state.npcs.find((n) => n.name === state.activeDialogue!.npcName);
 			if (npc) npc.mood = option.onSelect.mood;
+		}
+		// Learn rumors
+		if (option.onSelect.rumor && !state.rumors.some(r => r.id === option.onSelect!.rumor!.id)) {
+			state.rumors = [...state.rumors, option.onSelect.rumor];
+			addMessage(state, `Rumor learned: "${option.onSelect.rumor.text}"`, 'discovery');
 		}
 	}
 

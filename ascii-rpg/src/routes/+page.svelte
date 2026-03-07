@@ -37,6 +37,7 @@
 	let grid = $derived(renderColored(state));
 	let nameInput: HTMLInputElement;
 	let logExpanded = $state(false);
+	let journalOpen = $state(false);
 	let messagesEl: HTMLDivElement;
 	let dialogueSelection = $state(0);
 	let typewriterText = $state('');
@@ -160,6 +161,15 @@
 				return;
 			}
 			const key = e.key;
+			if (key === 'j') {
+				e.preventDefault();
+				journalOpen = !journalOpen;
+				return;
+			}
+			if (journalOpen) {
+				if (key === 'Escape') journalOpen = false;
+				return;
+			}
 			if (key === 'l') {
 				e.preventDefault();
 				logExpanded = !logExpanded;
@@ -322,6 +332,9 @@
 {/if}{/each}</pre>
 		<div class="combat-log-header">
 			<span class="log-title">Combat Log</span>
+			<button class="log-toggle" onclick={() => journalOpen = !journalOpen}>
+				Journal ({state.rumors.length}) (J)
+			</button>
 			<button class="log-toggle" onclick={() => logExpanded = !logExpanded}>
 				{logExpanded ? '▼ Collapse' : '▲ Expand'} (L)
 			</button>
@@ -424,6 +437,36 @@
 				{:else}
 					<div class="dialogue-hint">W/S to navigate &middot; ENTER to select &middot; 1-{node?.options.length ?? 0} quick select &middot; ESC to leave</div>
 				{/if}
+			</div>
+		</div>
+	{/if}
+	{#if journalOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="journal-overlay" onclick={() => journalOpen = false}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="journal-box" onclick={(e) => e.stopPropagation()}>
+				<div class="journal-header">
+					<span class="journal-title">Journal — Rumors & Secrets</span>
+					<button class="dialogue-close" onclick={() => journalOpen = false}>ESC</button>
+				</div>
+				{#if state.rumors.length === 0}
+					<div class="journal-empty">No rumors learned yet. Talk to NPCs to learn secrets about the dungeon.</div>
+				{:else}
+					<div class="journal-list">
+						{#each state.rumors as r}
+							<div class="journal-entry">
+								<span class="journal-rumor-text">"{r.text}"</span>
+								<span class="journal-rumor-source">— {r.source || 'Unknown'}</span>
+								<span class="journal-accuracy" class:accuracy-true={r.accuracy === 'true'} class:accuracy-exaggerated={r.accuracy === 'exaggerated'} class:accuracy-false={r.accuracy === 'false'}>
+									{r.accuracy === 'true' ? '(Seems reliable)' : r.accuracy === 'exaggerated' ? '(Possibly exaggerated)' : '(Dubious)'}
+								</span>
+							</div>
+						{/each}
+					</div>
+				{/if}
+				<div class="dialogue-hint">ESC or click outside to close</div>
 			</div>
 		</div>
 	{/if}
@@ -1100,6 +1143,73 @@
 		background: #422;
 		border-color: #f66;
 	}
+
+	/* ── Journal ── */
+	.journal-overlay {
+		position: fixed;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0, 0, 0, 0.85);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 200;
+	}
+	.journal-box {
+		background: #1a1a2e;
+		border: 2px solid #444;
+		border-radius: 8px;
+		padding: 16px;
+		max-width: 550px;
+		width: 90%;
+		max-height: 70vh;
+		overflow-y: auto;
+	}
+	.journal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 12px;
+		border-bottom: 1px solid #444;
+		padding-bottom: 8px;
+	}
+	.journal-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #ff4;
+		letter-spacing: 2px;
+	}
+	.journal-empty {
+		color: #666;
+		font-style: italic;
+		padding: 16px 0;
+		text-align: center;
+	}
+	.journal-list {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.journal-entry {
+		border-left: 3px solid #444;
+		padding: 6px 10px;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.journal-rumor-text {
+		color: #ddd;
+		font-style: italic;
+	}
+	.journal-rumor-source {
+		color: #888;
+		font-size: 11px;
+	}
+	.journal-accuracy {
+		font-size: 11px;
+	}
+	.accuracy-true { color: #4f4; }
+	.accuracy-exaggerated { color: #ff4; }
+	.accuracy-false { color: #f44; }
 
 	/* ── Version ── */
 	.version {
