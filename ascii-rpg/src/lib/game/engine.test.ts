@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, DODGE_CHANCE, BLOCK_REDUCTION } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -1045,5 +1045,115 @@ describe('treasure chests', () => {
 		const result = handleInput(state, 'd');
 		// Player walks through (chest already opened, treated as empty tile)
 		expect(result.player.pos.x).toBe(6);
+	});
+});
+
+describe('dodge and block', () => {
+	it('dodge chance constants are defined per class', () => {
+		expect(DODGE_CHANCE.rogue).toBeGreaterThan(DODGE_CHANCE.warrior);
+		expect(DODGE_CHANCE.mage).toBeGreaterThan(DODGE_CHANCE.warrior);
+		expect(DODGE_CHANCE.rogue).toBeGreaterThan(DODGE_CHANCE.mage);
+	});
+
+	it('block reduction constants are defined per class', () => {
+		expect(BLOCK_REDUCTION.warrior).toBeGreaterThan(BLOCK_REDUCTION.mage);
+		expect(BLOCK_REDUCTION.warrior).toBeGreaterThan(BLOCK_REDUCTION.rogue);
+	});
+
+	it('dodge causes enemy attack to miss', () => {
+		const origRandom = Math.random;
+		Math.random = () => 0.0; // Always dodge (below any dodge chance)
+
+		// Use 'g' (defend) so player stays at (5,5); aggressive enemy at (6,5) attacks
+		// Name 'TestEnemy' → not in MONSTER_DEFS → defaults to aggressive behavior
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 5 });
+		const state = makeTestState({ enemies: [enemy] });
+		const startHp = state.player.hp;
+
+		const result = handleInput(state, 'g');
+		// Dodged → player takes no damage
+		expect(result.player.hp).toBe(startHp);
+		const dodgeMsg = result.messages.find((m) => m.text.includes('dodge'));
+		expect(dodgeMsg).toBeDefined();
+
+		Math.random = origRandom;
+	});
+
+	it('warrior blocks some damage from attacks', () => {
+		const origRandom = Math.random;
+		Math.random = () => 0.99; // dodge fails, block still applies
+
+		// Aggressive enemy at (6,5), player stays at (5,5) via 'g'
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 10 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+		});
+		const startHp = state.player.hp;
+
+		const result = handleInput(state, 'g');
+		// Attack: 10 + floor(0.99*2)=1 → rawDmg=11, defending block=2*2=4, dmg=max(1,11-4)=7
+		const blockMsg = result.messages.find((m) => m.text.includes('block'));
+		expect(blockMsg).toBeDefined();
+		expect(result.player.hp).toBe(startHp - 7);
+
+		Math.random = origRandom;
+	});
+
+	it('defend action doubles dodge chance', () => {
+		const origRandom = Math.random;
+		// Warrior dodge = 0.10, defending doubles to 0.20
+		// Set random to 0.15 → 0.15 < 0.20 → dodge!
+		Math.random = () => 0.15;
+
+		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 5 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+		});
+		const startHp = state.player.hp;
+
+		const result = handleInput(state, 'g');
+		expect(result.messages.some((m) => m.text.includes('defensive stance'))).toBe(true);
+		expect(result.player.hp).toBe(startHp); // Dodged thanks to defend
+
+		Math.random = origRandom;
+	});
+
+	it('boss attacks are undodgeable', () => {
+		const origRandom = Math.random;
+		Math.random = () => 0.0; // Would normally always dodge
+
+		// Boss at (6,5), player defends at (5,5), boss attacks
+		const boss = makeEnemy(6, 5, { name: 'The Hollow King', char: 'K', hp: 30, maxHp: 30, attack: 5 });
+		const state = makeTestState({
+			enemies: [boss],
+			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+		});
+		const startHp = state.player.hp;
+
+		const result = handleInput(state, 'g');
+		// Boss attack bypasses dodge
+		expect(result.player.hp).toBeLessThan(startHp);
+		const dodgeMsg = result.messages.find((m) => m.text.includes('dodge'));
+		expect(dodgeMsg).toBeUndefined();
+
+		Math.random = origRandom;
+	});
+
+	it('stunned player cannot defend', () => {
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10 });
+		const state = makeTestState({ enemies: [enemy] });
+		applyEffect(state.player, 'stun', 2, 0);
+
+		const result = handleInput(state, 'g');
+		const stunMsg = result.messages.find((m) => m.text.includes('stunned'));
+		expect(stunMsg).toBeDefined();
+	});
+
+	it('defend message appears when using g key', () => {
+		const state = makeTestState();
+		const result = handleInput(state, 'g');
+		expect(result.messages.some((m) => m.text.includes('defensive stance'))).toBe(true);
 	});
 });

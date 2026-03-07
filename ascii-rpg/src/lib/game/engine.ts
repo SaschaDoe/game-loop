@@ -236,7 +236,19 @@ function tickEntityEffects(state: GameState, entity: Entity): void {
 	}
 }
 
-function moveEnemies(state: GameState) {
+export const DODGE_CHANCE: Record<CharacterClass, number> = {
+	rogue: 0.25,
+	mage: 0.15,
+	warrior: 0.10
+};
+
+export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
+	warrior: 2,
+	mage: 0,
+	rogue: 1
+};
+
+function moveEnemies(state: GameState, defending = false) {
 	tickAbilityCooldown(state);
 
 	// Apply hazard effects to all entities
@@ -289,7 +301,19 @@ function moveEnemies(state: GameState) {
 		const ny = enemy.pos.y + move.dy;
 
 		if (nx === state.player.pos.x && ny === state.player.pos.y) {
-			const dmg = Math.max(1, enemy.attack + Math.floor(Math.random() * 2));
+			// Dodge check — bosses are undodgeable
+			const dodgeChance = DODGE_CHANCE[state.characterConfig.characterClass] * (defending ? 2 : 1);
+			if (!isBoss(enemy) && Math.random() < dodgeChance) {
+				addMessage(state, `You dodge ${enemy.name}'s attack!`, 'info');
+				continue;
+			}
+
+			const rawDmg = Math.max(1, enemy.attack + Math.floor(Math.random() * 2));
+			const blockValue = BLOCK_REDUCTION[state.characterConfig.characterClass] * (defending ? 2 : 1);
+			const dmg = Math.max(1, rawDmg - blockValue);
+			if (blockValue > 0 && rawDmg > dmg) {
+				addMessage(state, `You block ${rawDmg - dmg} damage from ${enemy.name}!`, 'info');
+			}
 			state.player.hp -= dmg;
 			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`, 'damage_taken');
 			const onHit = getMonsterOnHitEffect(enemy);
@@ -429,6 +453,18 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 			moveEnemies(state);
 		}
+		return { ...state };
+	}
+
+	// Defend key
+	if (key === 'g') {
+		if (hasEffect(state.player, 'stun')) {
+			addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
+			moveEnemies(state);
+			return { ...state };
+		}
+		addMessage(state, 'You take a defensive stance!', 'info');
+		moveEnemies(state, true);
 		return { ...state };
 	}
 

@@ -84,7 +84,7 @@
 			}
 		} else if (phase === 'playing') {
 			const key = e.key;
-			if (['w', 'a', 's', 'd', 'q', 'r', 'f', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+			if (['w', 'a', 's', 'd', 'q', 'r', 'f', 'g', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
 				e.preventDefault();
 				sendInput(key);
 			}
@@ -273,6 +273,7 @@
 					{#if state.abilityCooldown > 0}({state.abilityCooldown}){/if}
 				</button>
 				<button class="dpad-btn dpad-flee" ontouchstart={dpadTouch('f')} onclick={dpadClick('f')}>Flee</button>
+				<button class="dpad-btn dpad-defend" ontouchstart={dpadTouch('g')} onclick={dpadClick('g')}>Defend</button>
 			</div>
 			{#if state.gameOver}
 				<div class="dpad-row">
@@ -729,6 +730,19 @@
 	.dpad-flee:active {
 		background: #123;
 		border-color: #adf;
+	}
+
+	.dpad-defend {
+		width: auto;
+		padding: 0 16px;
+		font-size: 12px;
+		color: #ac8;
+		border-color: #ac8;
+	}
+
+	.dpad-defend:active {
+		background: #132;
+		border-color: #afd;
 	}
 
 	.dpad-restart {
