@@ -484,6 +484,9 @@ export function attemptFlee(state: GameState): FleeResult {
 }
 
 export function handleInput(state: GameState, key: string): GameState {
+	// Block game input during dialogue
+	if (state.activeDialogue) return state;
+
 	if (state.gameOver) {
 		if (key === 'r') {
 			if (isPermadeath(state.characterConfig.difficulty)) {

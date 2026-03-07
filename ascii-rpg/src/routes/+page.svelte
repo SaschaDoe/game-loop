@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, renderColored, xpForLevel, CLASS_BONUSES } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES } from '$lib/game/engine';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
@@ -38,6 +38,7 @@
 	let nameInput: HTMLInputElement;
 	let logExpanded = $state(false);
 	let messagesEl: HTMLDivElement;
+	let dialogueSelection = $state(0);
 
 	function advanceIntro() {
 		if (introStep < INTRO_LINES.length - 1) {
@@ -89,6 +90,31 @@
 				else if (e.key === '3') selectedClass = 'rogue';
 			}
 		} else if (phase === 'playing') {
+			// Dialogue mode input
+			if (state.activeDialogue) {
+				e.preventDefault();
+				const key = e.key;
+				const node = state.activeDialogue.tree.nodes[state.activeDialogue.currentNodeId];
+				if (!node) return;
+				if (key === 'w' || key === 'ArrowUp') {
+					dialogueSelection = Math.max(0, dialogueSelection - 1);
+				} else if (key === 's' || key === 'ArrowDown') {
+					dialogueSelection = Math.min(node.options.length - 1, dialogueSelection + 1);
+				} else if (key === 'Enter' || key === ' ') {
+					state = handleDialogueChoice(state, dialogueSelection);
+					dialogueSelection = 0;
+				} else if (key === 'Escape') {
+					state = closeDialogue(state);
+					dialogueSelection = 0;
+				} else if (key >= '1' && key <= '9') {
+					const idx = parseInt(key) - 1;
+					if (idx < node.options.length) {
+						state = handleDialogueChoice(state, idx);
+						dialogueSelection = 0;
+					}
+				}
+				return;
+			}
 			const key = e.key;
 			if (key === 'l') {
 				e.preventDefault();
@@ -300,6 +326,50 @@
 			{/if}
 		</div>
 	</div>
+	{#if state.activeDialogue}
+		{@const dlg = state.activeDialogue}
+		{@const node = dlg.tree.nodes[dlg.currentNodeId]}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="dialogue-overlay" onclick={(e) => e.stopPropagation()}>
+			<div class="dialogue-box">
+				<div class="dialogue-header">
+					<span class="dialogue-portrait" style="color:{dlg.npcColor}">{dlg.npcChar}</span>
+					<span class="dialogue-name" style="color:{dlg.npcColor}">{dlg.npcName}</span>
+					<button class="dialogue-close" onclick={() => { state = closeDialogue(state); dialogueSelection = 0; }}>ESC</button>
+				</div>
+				{#if node}
+					<div class="dialogue-text">{node.npcText}</div>
+					<div class="dialogue-options">
+						{#each node.options as option, i}
+							{@const isGiftOption = option.onSelect && dlg.givenItems}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<div
+								class="dialogue-option"
+								class:selected={dialogueSelection === i}
+								class:visited={dlg.visitedNodes.has(option.nextNode)}
+								class:disabled={isGiftOption}
+								style="color:{isGiftOption ? '#555' : (option.color ?? '#ccc')}"
+								onclick={() => {
+									if (!isGiftOption) {
+										state = handleDialogueChoice(state, i);
+										dialogueSelection = 0;
+									}
+								}}
+							>
+								<span class="option-key">[{i + 1}]</span>
+								{option.text}
+								{#if isGiftOption} (already received){/if}
+								{#if dlg.visitedNodes.has(option.nextNode)} *{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+				<div class="dialogue-hint">W/S to navigate &middot; ENTER to select &middot; 1-{node?.options.length ?? 0} quick select &middot; ESC to leave</div>
+			</div>
+		</div>
+	{/if}
 {/if}
 
 <div class="version">v{__APP_VERSION__} #{__BUILD_NUMBER__}</div>
@@ -706,6 +776,136 @@
 	.msg-npc {
 		color: #8cf;
 		font-style: italic;
+	}
+
+	/* ── Dialogue Overlay ── */
+	.dialogue-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.85);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100;
+		padding: 16px;
+		box-sizing: border-box;
+	}
+
+	.dialogue-box {
+		background: #1a1a1a;
+		border: 2px solid #555;
+		border-radius: 4px;
+		padding: 20px;
+		max-width: 600px;
+		width: 100%;
+		max-height: 80vh;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.dialogue-header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		border-bottom: 1px solid #333;
+		padding-bottom: 12px;
+	}
+
+	.dialogue-portrait {
+		font-size: 36px;
+		font-weight: bold;
+		width: 48px;
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #0a0a0a;
+		border: 1px solid #444;
+		border-radius: 4px;
+	}
+
+	.dialogue-name {
+		font-size: 18px;
+		font-weight: bold;
+		letter-spacing: 2px;
+		flex: 1;
+	}
+
+	.dialogue-close {
+		background: #222;
+		border: 1px solid #555;
+		color: #888;
+		font-family: 'Courier New', monospace;
+		font-size: 11px;
+		padding: 4px 8px;
+		cursor: pointer;
+		border-radius: 2px;
+	}
+
+	.dialogue-close:hover {
+		color: #ccc;
+		border-color: #888;
+	}
+
+	.dialogue-text {
+		font-size: 14px;
+		line-height: 1.6;
+		color: #ddd;
+		white-space: pre-line;
+		padding: 8px 0;
+	}
+
+	.dialogue-options {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.dialogue-option {
+		padding: 8px 12px;
+		border: 1px solid #333;
+		border-radius: 2px;
+		cursor: pointer;
+		font-size: 13px;
+		transition: background 0.15s, border-color 0.15s;
+	}
+
+	.dialogue-option:hover {
+		background: #252525;
+		border-color: #666;
+	}
+
+	.dialogue-option.selected {
+		background: #1a2a1a;
+		border-color: #8cf;
+	}
+
+	.dialogue-option.visited {
+		opacity: 0.7;
+	}
+
+	.dialogue-option.disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.option-key {
+		color: #666;
+		font-size: 11px;
+		margin-right: 6px;
+	}
+
+	.dialogue-hint {
+		font-size: 10px;
+		color: #555;
+		text-align: center;
+		border-top: 1px solid #333;
+		padding-top: 8px;
 	}
 
 	.legend {
