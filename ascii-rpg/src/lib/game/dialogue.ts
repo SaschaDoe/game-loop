@@ -1,7 +1,7 @@
 import type { DialogueTree, DialogueNode, Rumor } from './types';
 
-function node(id: string, npcText: string, options: DialogueNode['options']): DialogueNode {
-	return { id, npcText, options };
+function node(id: string, npcText: string, options: DialogueNode['options'], language?: string): DialogueNode {
+	return { id, npcText, options, language };
 }
 
 function opt(text: string, nextNode: string, color?: string, extras?: { onSelect?: DialogueNode['options'][0]['onSelect']; once?: boolean }): DialogueNode['options'][0] {
@@ -1332,8 +1332,29 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 		deepscript: node('deepscript',
 			'An ancient writing system found etched into the deepest walls of the dungeon. It predates every known civilization. Some glyphs seem to shift when you\'re not looking \u2014 yes, I know how that sounds. The partial translations we have suggest it\'s not a language of communication but of instruction. Commands. As if someone \u2014 or something \u2014 was programming the dungeon itself.',
 			[
+				opt('Can you teach me to read Deepscript?', 'teach_deepscript', '#ff4'),
 				opt('Programming the dungeon...', 'programming', '#f44'),
 				opt('I need to go now. I\'ll find your notes.', 'sit_tight', '#4f4'),
+			]
+		),
+		teach_deepscript: node('teach_deepscript',
+			'*Her face lights up with genuine excitement.* You want to LEARN it? Nobody ever wants to learn it! Aldric said it was "a waste of research funding." The Academy called it "academically irrelevant." Even Garvus said "why read the menu when you can just eat the food?" Which is a terrible metaphor because the food is MONSTERS. *She takes a breath.* Yes. Yes, I can teach you the basics. The glyphs follow phonetic patterns \u2014 once you grasp the root forms, the rest is pattern matching. Here...',
+			[
+				opt('[Study the Deepscript basics with Thessaly]', 'learned_deepscript', '#4f4', { onSelect: { learnLanguage: 'Deepscript', message: 'Thessaly teaches you the basics of Deepscript! You can now understand Deepscript speakers.' } }),
+			]
+		),
+		learned_deepscript: node('learned_deepscript',
+			'*After what feels like an hour of tracing glyphs in the dust and repeating guttural syllables, something clicks.* There! You\'re reading! It\'s rudimentary, but you can parse the base constructs. If you encounter anything written in Deepscript \u2014 or any being that speaks it \u2014 you should be able to understand the gist. *She beams with scholarly pride.* I just taught a subject the Academy said was irrelevant. Take THAT, peer review board.',
+			[
+				opt('Thank you, Thessaly. This could save my life.', 'rescue', '#4f4'),
+				opt('Who else speaks Deepscript?', 'who_speaks', '#ff4'),
+			]
+		),
+		who_speaks: node('who_speaks',
+			'The dungeon\'s older entities. Not the monsters \u2014 they\'re generated, they speak nothing. But the... remnants. The Architects left pieces of themselves behind \u2014 echoes, fragments of consciousness embedded in the structure. Shades, we call them. Translucent figures that flicker in the deeper levels. Most adventurers run from them. But they\'re not hostile \u2014 they\'re WARNING SIGNS. They speak Deepscript because that\'s what they were written in. They are literal footnotes in the dungeon\'s source code.',
+			[
+				opt('I\'ll seek them out.', 'rescue', '#4f4'),
+				opt('Living footnotes. That\'s wild.', 'rescue', '#4f4'),
 			]
 		),
 		programming: node('programming',
@@ -1922,6 +1943,158 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── DUNGEON: WHISPERING SHADE ───
+
+export const SHADE_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*The translucent figure turns toward you. Its mouth moves but the sounds that emerge are not words you recognize — an ancient, resonant language that makes the air itself vibrate.*',
+			[
+				opt('[Listen carefully to the alien sounds]', 'garbled_greeting', '#8cf'),
+				opt('[Back away slowly]', '__exit__', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*The Shade flickers and regards you again, its ethereal form pulsing with a slow rhythm.*',
+			[
+				opt('[Try to communicate]', 'garbled_greeting', '#8cf'),
+				opt('[Leave]', '__exit__', '#0ff'),
+			]
+		),
+		garbled_greeting: node('garbled_greeting',
+			'I have waited here since the walls were young. You are the first warm-blooded thing to approach without a sword drawn. How... refreshing. Most of your kind scream and run. The rest scream and attack. You are the rare third option: the one who listens.',
+			[
+				opt('[Ask who they are]', 'who', '#ff4'),
+				opt('[Ask what this place is]', 'place', '#ff4'),
+				opt('[Ask about the Eye]', 'eye', '#f44'),
+				opt('[Leave quietly]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		who: node('who',
+			'I am a memory. A thought the dungeon had and forgot to un-think. When the Architects built this place, they left fragments of their consciousness in the stone — safety protocols, maintenance routines, warning systems. I am a warning. Specifically, I am the warning that nobody reads. You know those messages that say "Terms and Conditions Apply"? I am the terms and conditions. Of reality.',
+			[
+				opt('[Ask about the Architects]', 'architects', '#8cf'),
+				opt('[Ask what the warning is]', 'warning', '#f44'),
+				opt('[Leave]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		architects: node('architects',
+			'They had no name for themselves. Names imply an audience, and they had none. They were the first and, for a very long time, the only. They built the dungeon as one builds a cage — not for cruelty, but for containment. Something existed before them. Something that should not exist. They could not destroy it, so they buried it. Deep. The dungeon is the lock. Every level is a tumbler. And every adventurer who descends is unwittingly testing whether the lock still holds.',
+			[
+				opt('[Ask what is locked away]', 'eye', '#f44'),
+				opt('[Ask about the levels as tumblers]', 'tumblers', '#8cf'),
+				opt('[This is overwhelming. Leave.]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		tumblers: node('tumblers',
+			'Each level serves a purpose in the containment matrix. The upper levels generate threats — monsters, traps — to discourage descent. The middle levels confuse — shifting corridors, false exits — to disorient those who persist. The lower levels... persuade. They show you what you want. Gold. Power. Answers. The things that make people dig deeper. The dungeon is not trying to kill you. It is trying to make you CHOOSE to go deeper. That is far more effective.',
+			[
+				opt('[Ask why that matters]', 'choice', '#ff4'),
+				opt('[Ask about the lowest levels]', 'lowest', '#f44'),
+			],
+			'Deepscript'
+		),
+		choice: node('choice',
+			'Because the lock responds to intention. A person who falls into the depths damages nothing — the containment holds. But a person who CHOOSES to descend, who actively pushes deeper, who overrides every warning... that person becomes a key. Their will erodes the bindings. The Architects understood this. They made the dungeon unpleasant to discourage willpower. But your species has an infuriating abundance of it.',
+			[
+				opt('[So adventurers weaken the prison?]', 'weaken', '#f44'),
+				opt('[Leave with this unsettling knowledge]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		weaken: node('weaken',
+			'Every hero who reaches a new depth loosens the bonds slightly. Every boss killed removes a warden. Every treasure taken unravels an anchor. The dungeon replenishes — it must — but each cycle weakens it. The thing below is patient. It has been patient for aeons. It can wait for one more adventurer. And one more after that. Until eventually, someone reaches the bottom and opens the door. Not because they wanted to. Because the dungeon made them want to.',
+			[
+				opt('[Is there any way to stop it?]', 'stop', '#4f4'),
+				opt('[I need to leave. Now.]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		stop: node('stop',
+			'The Severance. The Architects built a fail-safe — a way to permanently sever the connection between the Eye and the surface world. It requires understanding the Deepscript, finding the Anchor Stones, and performing a ritual at the very bottom. The irony is exquisite: to save the world, you must do the one thing the dungeon wants — go all the way down. But you must do it with the RIGHT intention. The lock reads the heart.',
+			[
+				opt('[I understand. Thank you.]', 'farewell_deep', '#4f4'),
+				opt('[That is terrifying.]', 'terrifying', '#f44'),
+			],
+			'Deepscript'
+		),
+		terrifying: node('terrifying',
+			'Yes. The Architects thought so too. That is why they left warnings — entities like me, scattered through the levels, speaking in a language nobody bothers to learn. We are the instruction manual that humanity threw away. "Who reads the manual?" you ask. The answer is: the person who survives. I have told you more than I was designed to. The rest... you must discover for yourself.',
+			[
+				opt('[Thank them and leave]', 'farewell_deep', '#4f4'),
+			],
+			'Deepscript'
+		),
+		eye: node('eye',
+			'*The Shade\'s form flickers violently, its edges fraying like smoke in wind.* Do not speak of it by name. Names are connections. Connections are pathways. Pathways go both ways. It is old. Older than this dungeon. Older than the Architects. It exists in a state that your language has no word for — not alive, not dead, not sleeping, not awake. It simply... persists. And it is aware. Always aware. It has been watching you since you entered. It watches everyone.',
+			[
+				opt('[Ask how to protect myself]', 'protection', '#ff4'),
+				opt('[Ask about the Severance]', 'stop', '#8cf'),
+				opt('[I\'ve heard enough]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		protection: node('protection',
+			'Speed. Do not linger on any level longer than necessary. The longer you stay, the more it learns about you. Detachment. Do not become attached to treasure, power, or progress. Attachment is a lever it can pull. And most importantly: purpose. Know WHY you are here. Hold that reason in your mind like a flame. The thing below cannot extinguish a flame it did not light. Your will is your armor. Do not let the dungeon replace it with desire.',
+			[
+				opt('[Wise advice. Thank you.]', 'farewell_deep', '#4f4'),
+			],
+			'Deepscript'
+		),
+		place: node('place',
+			'This is the space between. The dungeon has layers — the physical corridors you walk, the metaphysical structure that maintains them, and the void beneath. I exist in the second layer. Think of me as... a comment in the code. Invisible to most. Meaningful to those who read the source. The Architects left many of us. Most have degraded. I persist because my warning is particularly important. Or because I am particularly stubborn. Perhaps both.',
+			[
+				opt('[What is your warning?]', 'warning', '#f44'),
+				opt('[Tell me about the Architects]', 'architects', '#8cf'),
+				opt('[Leave]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		warning: node('warning',
+			'Do not trust the treasure. Do not trust the power. Do not trust the feeling that you are special, that you are different, that YOU will be the one to conquer the dungeon. Every adventurer before you felt the same. That feeling is not yours. It is implanted. The dungeon cultivates heroes because heroes go deeper than cowards. And depth is all that matters to the thing below.',
+			[
+				opt('[I\'ll remember that]', 'farewell_deep', '#4f4'),
+				opt('[How do I fight something I can\'t see?]', 'stop', '#ff4'),
+			],
+			'Deepscript'
+		),
+		lowest: node('lowest',
+			'I have not seen them. My awareness extends only to the levels the Architects designated as "surface containment." But I have felt what lies below level twenty. The containment there is... thinner. The separation between the dungeon and the thing it contains becomes ambiguous. Garvus — a human who came through decades ago — reached those depths. He understood what he saw. That understanding broke him. Some truths are corrosive.',
+			[
+				opt('[Garvus? The drunk in the tavern?]', 'garvus_shade', '#ff4'),
+				opt('[I should leave]', 'farewell', '#0ff'),
+			],
+			'Deepscript'
+		),
+		garvus_shade: node('garvus_shade',
+			'You know him? Then you know what the dungeon does to those who see too much. He was strong — stronger than most. His mind survived the seeing, if not intact. He drinks to forget. I exist to remember. Between us, the truth persists. Broken, distributed, but persistent. Perhaps that is enough. Perhaps someone — perhaps you — can reassemble it.',
+			[
+				opt('[I\'ll try.]', 'farewell_deep', '#4f4'),
+			],
+			'Deepscript'
+		),
+		farewell: node('farewell',
+			'*The Shade watches you go with hollow, luminous eyes.* You will return. They always return. The dungeon ensures it.',
+			[
+				opt('[Leave]', '__exit__', '#0ff'),
+			],
+			'Deepscript'
+		),
+		farewell_deep: node('farewell_deep',
+			'*The Shade inclines its head — almost a bow.* You carry knowledge now. Knowledge is weight. Let it anchor you, not drag you down. And if you find more of my kind deeper in the dungeon... listen. We have been waiting a very long time to be heard.',
+			[
+				opt('[Leave with new understanding]', '__exit__', '#0ff'),
+			],
+			'Deepscript'
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -1931,4 +2104,5 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Thessaly': PRISONER_DIALOGUE,
 	'Morrigan': MERCHANT_DIALOGUE,
 	'Corwin': LOST_ADVENTURER_DIALOGUE,
+	'Whispering Shade': SHADE_DIALOGUE,
 };

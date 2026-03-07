@@ -45,6 +45,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		unlockedSkills: [],
 		activeDialogue: null,
 		rumors: [],
+		knownLanguages: [],
+		landmarks: [],
 		...overrides
 	};
 }

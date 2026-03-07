@@ -13,6 +13,7 @@ import { generateStartingLocation } from './locations';
 import { NPC_DIALOGUE_TREES } from './dialogue';
 import { rollLootDrop, getLootAt, pickupLoot, lootChar, lootColor } from './loot';
 import { getSkillBonuses } from './skills';
+import { placeLandmarks, getLandmarkAt, getLandmarkDef, getAdjacentLandmarks, examineLandmark, landmarkChar, landmarkColor } from './landmarks';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -126,7 +127,9 @@ export function createGame(config?: CharacterConfig): GameState {
 		skillPoints: 0,
 		unlockedSkills: [],
 		activeDialogue: null,
-		rumors: []
+		rumors: [],
+		knownLanguages: [],
+		landmarks: []
 	};
 
 	// Apply class bonuses
@@ -160,6 +163,7 @@ interface DungeonNPCDef {
 const DUNGEON_NPCS: DungeonNPCDef[] = [
 	{ char: '$', color: '#ff8', name: 'Morrigan', dialogue: ['Welcome to Morrigan\'s Mobile Emporium!', 'We go where the customers are!', 'Even monster-infested death traps!'], gives: { hp: 5 }, minLevel: 2, weight: 3 },
 	{ char: 'C', color: '#8bf', name: 'Corwin', dialogue: ['Oh thank the gods, a person!', 'I\'ve been lost for days...', 'My maps are completely useless here.'], minLevel: 3, weight: 2 },
+	{ char: 'W', color: '#a8f', name: 'Whispering Shade', dialogue: ['*An ethereal figure flickers in the shadows, murmuring in an alien tongue...*'], minLevel: 5, weight: 2 },
 ];
 
 const NPC_SPAWN_CHANCE = 0.3;
@@ -228,6 +232,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 	for (const t of filteredTraps) occupiedPositions.add(`${t.pos.x},${t.pos.y}`);
 	for (const c of filteredChests) occupiedPositions.add(`${c.pos.x},${c.pos.y}`);
 	const npcs = spawnDungeonNPCs(map, level, occupiedPositions);
+	for (const n of npcs) occupiedPositions.add(`${n.pos.x},${n.pos.y}`);
+	const landmarks = placeLandmarks(map, level, occupiedPositions);
 
 	const state: GameState = {
 		player: {
@@ -261,7 +267,9 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		skillPoints: 0,
 		unlockedSkills: [],
 		activeDialogue: null,
-		rumors: []
+		rumors: [],
+		knownLanguages: [],
+		landmarks
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -669,11 +677,20 @@ export function handleInput(state: GameState, key: string): GameState {
 			return { ...state };
 		}
 		const found = searchForTraps(state);
-		if (found.length > 0) {
-			for (const msg of found) {
-				addMessage(state, msg, 'discovery');
-			}
-		} else {
+		for (const msg of found) {
+			addMessage(state, msg, 'discovery');
+		}
+
+		// Examine adjacent landmarks
+		const nearbyLandmarks = getAdjacentLandmarks(state.landmarks, state.player.pos);
+		for (const lm of nearbyLandmarks) {
+			const def = getLandmarkDef(lm.type);
+			const text = examineLandmark(lm);
+			lm.examined = true;
+			addMessage(state, `[${def?.name ?? 'Landmark'}] ${text}`, 'discovery');
+		}
+
+		if (found.length === 0 && nearbyLandmarks.length === 0) {
 			addMessage(state, 'You search the area but find nothing.', 'info');
 		}
 		moveEnemies(state);
@@ -987,6 +1004,11 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			state.rumors = [...state.rumors, option.onSelect.rumor];
 			addMessage(state, `Rumor learned: "${option.onSelect.rumor.text}"`, 'discovery');
 		}
+		// Learn languages
+		if (option.onSelect.learnLanguage && !state.knownLanguages.includes(option.onSelect.learnLanguage)) {
+			state.knownLanguages = [...state.knownLanguages, option.onSelect.learnLanguage];
+			addMessage(state, `Language learned: ${option.onSelect.learnLanguage}! You can now understand speakers of this tongue.`, 'discovery');
+		}
 	}
 
 	// Exit dialogue
@@ -1010,6 +1032,25 @@ export const MOOD_DISPLAY: Record<string, { label: string; color: string }> = {
 	amused: { label: 'Amused', color: '#ff4' },
 	sad: { label: 'Sad', color: '#48f' },
 };
+
+const DEEPSCRIPT_GLYPHS = 'ᚠᚡᚢᚣᚤᚥᚦᚧᚨᚩᚪᚫᚬᚭᚮᚯᚰᚱᚲᚳᚴᚵᚶᚷᚸᚹᚺᚻᚼᚽᚾᚿ';
+const ORCISH_GLYPHS = 'ɤʁʂʃʇʈʊʋʌʍʎʏɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿ';
+
+export function garbleText(text: string, language: string): string {
+	const glyphs = language === 'Deepscript' ? DEEPSCRIPT_GLYPHS : language === 'Orcish' ? ORCISH_GLYPHS : DEEPSCRIPT_GLYPHS;
+	let result = '';
+	for (const ch of text) {
+		if (ch === ' ' || ch === '\n' || ch === '.' || ch === ',' || ch === '!' || ch === '?') {
+			result += ch;
+		} else if (ch === '*') {
+			result += ch;
+		} else {
+			const idx = (ch.charCodeAt(0) * 7 + result.length * 3) % glyphs.length;
+			result += glyphs[idx];
+		}
+	}
+	return result;
+}
 
 export function closeDialogue(state: GameState): GameState {
 	state.activeDialogue = null;
@@ -1089,6 +1130,10 @@ export function renderColored(state: GameState): { char: string; color: string }
 				} else if (getLootAt(state.lootDrops, x, y)) {
 					const ld = getLootAt(state.lootDrops, x, y)!;
 					row.push({ char: lootChar(ld.type), color: lootColor(ld.type) });
+				} else if (getLandmarkAt(state.landmarks, x, y)) {
+					const lm = getLandmarkAt(state.landmarks, x, y)!;
+					const lmColor = lm.examined ? dimColor(landmarkColor(lm.type)) : landmarkColor(lm.type);
+					row.push({ char: landmarkChar(lm.type), color: lmColor });
 				} else {
 					const key = `${x},${y}`;
 					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
@@ -1110,6 +1155,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 				const lootDrop = getLootAt(state.lootDrops, x, y);
 				if (lootDrop) {
 					row.push({ char: lootChar(lootDrop.type), color: dimColor(lootColor(lootDrop.type)) });
+				} else if (getLandmarkAt(state.landmarks, x, y)) {
+					const lm = getLandmarkAt(state.landmarks, x, y)!;
+					row.push({ char: landmarkChar(lm.type), color: dimColor(landmarkColor(lm.type)) });
 				} else {
 					const key = `${x},${y}`;
 					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);

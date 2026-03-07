@@ -33,6 +33,7 @@ export interface DialogueEffect {
 	message?: string;
 	mood?: NPCMood;
 	rumor?: Rumor;
+	learnLanguage?: string;
 }
 
 export interface DialogueOption {
@@ -47,6 +48,7 @@ export interface DialogueNode {
 	id: string;
 	npcText: string;
 	options: DialogueOption[];
+	language?: string;
 }
 
 export interface DialogueTree {
@@ -131,6 +133,14 @@ export interface LootDrop {
 	value: number;
 }
 
+export type LandmarkType = 'graffiti' | 'campsite' | 'statue' | 'bones' | 'bloodstain' | 'shrine';
+
+export interface Landmark {
+	pos: Position;
+	type: LandmarkType;
+	examined: boolean;
+}
+
 export type Tile = '#' | '.' | '>' | '*';
 
 export enum Visibility {
@@ -177,4 +187,6 @@ export interface GameState {
 	unlockedSkills: string[];
 	activeDialogue: ActiveDialogue | null;
 	rumors: Rumor[];
+	knownLanguages: string[];
+	landmarks: Landmark[];
 }

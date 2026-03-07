@@ -3,7 +3,7 @@ import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
-import type { GameState, Entity, Trap, Hazard, Chest, LootDrop } from './types';
+import type { GameState, Entity, Trap, Hazard, Chest, LootDrop, Landmark } from './types';
 import { Visibility } from './types';
 
 function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
@@ -62,6 +62,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		unlockedSkills: [],
 		activeDialogue: null,
 		rumors: [],
+		knownLanguages: [],
+		landmarks: [],
 		...overrides
 	};
 }
@@ -1657,5 +1659,49 @@ describe('skill tree integration', () => {
 		const result = handleInput(state, 'd');
 		expect(result.skillPoints).toBe(3);
 		expect(result.unlockedSkills).toEqual(['w_arms_1', 'w_def_1']);
+	});
+});
+
+describe('environmental storytelling (landmarks)', () => {
+	it('examining adjacent landmark produces discovery message', () => {
+		const landmark: Landmark = { pos: { x: 6, y: 5 }, type: 'graffiti', examined: false };
+		const state = makeTestState({ landmarks: [landmark] });
+		const result = handleInput(state, 'e');
+		const discoveryMsg = result.messages.find(m => m.type === 'discovery' && m.text.includes('Wall Graffiti'));
+		expect(discoveryMsg).toBeDefined();
+	});
+
+	it('examining landmark marks it as examined', () => {
+		const landmark: Landmark = { pos: { x: 6, y: 5 }, type: 'statue', examined: false };
+		const state = makeTestState({ landmarks: [landmark] });
+		const result = handleInput(state, 'e');
+		expect(result.landmarks[0].examined).toBe(true);
+	});
+
+	it('already examined landmarks are not re-examined', () => {
+		const landmark: Landmark = { pos: { x: 6, y: 5 }, type: 'graffiti', examined: true };
+		const state = makeTestState({ landmarks: [landmark] });
+		const result = handleInput(state, 'e');
+		// Should show "find nothing" since the adjacent landmark is already examined
+		const nothingMsg = result.messages.find(m => m.text.includes('find nothing'));
+		expect(nothingMsg).toBeDefined();
+	});
+
+	it('non-adjacent landmarks are not examined', () => {
+		const landmark: Landmark = { pos: { x: 8, y: 8 }, type: 'campsite', examined: false };
+		const state = makeTestState({ landmarks: [landmark] });
+		const result = handleInput(state, 'e');
+		expect(result.landmarks[0].examined).toBe(false);
+	});
+
+	it('search finds both traps and landmarks', () => {
+		const landmark: Landmark = { pos: { x: 6, y: 5 }, type: 'bones', examined: false };
+		const trap: Trap = { pos: { x: 5, y: 6 }, type: 'spike', triggered: false };
+		const state = makeTestState({ landmarks: [landmark], traps: [trap] });
+		const result = handleInput(state, 'e');
+		// Both trap detection and landmark examination should happen
+		const landmarkMsg = result.messages.find(m => m.text.includes("Adventurer's Remains"));
+		expect(landmarkMsg).toBeDefined();
+		expect(result.landmarks[0].examined).toBe(true);
 	});
 });

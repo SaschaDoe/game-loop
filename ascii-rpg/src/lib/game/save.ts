@@ -1,6 +1,6 @@
 import type { GameState, Tile } from './types';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -36,6 +36,8 @@ interface SerializedState {
 	skillPoints: number;
 	unlockedSkills: string[];
 	rumors: GameState['rumors'];
+	knownLanguages: string[];
+	landmarks: GameState['landmarks'];
 }
 
 export function serializeState(state: GameState): string {
@@ -68,7 +70,9 @@ export function serializeState(state: GameState): string {
 			lootDrops: state.lootDrops,
 			skillPoints: state.skillPoints,
 			unlockedSkills: state.unlockedSkills,
-			rumors: state.rumors
+			rumors: state.rumors,
+			knownLanguages: state.knownLanguages,
+			landmarks: state.landmarks
 		}
 	};
 	return JSON.stringify(data);
@@ -108,6 +112,8 @@ export function deserializeState(json: string): GameState {
 		skillPoints: s.skillPoints ?? 0,
 		unlockedSkills: s.unlockedSkills ?? [],
 		rumors: s.rumors ?? [],
+		knownLanguages: s.knownLanguages ?? [],
+		landmarks: s.landmarks ?? [],
 		activeDialogue: null
 	};
 }

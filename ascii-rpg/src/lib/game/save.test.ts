@@ -78,6 +78,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		unlockedSkills: [],
 		activeDialogue: null,
 		rumors: [],
+		knownLanguages: [],
+		landmarks: [],
 		...overrides
 	};
 }
@@ -224,6 +226,20 @@ describe('serializeState / deserializeState round-trip', () => {
 		expect(restored.detectedSecrets.size).toBe(0);
 		expect(restored.detectedTraps).toBeInstanceOf(Set);
 		expect(restored.detectedTraps.size).toBe(0);
+	});
+
+	it('preserves landmarks', () => {
+		const state = makeTestState({
+			landmarks: [
+				{ pos: { x: 3, y: 4 }, type: 'graffiti', examined: false },
+				{ pos: { x: 7, y: 2 }, type: 'statue', examined: true },
+			]
+		});
+		const restored = deserializeState(serializeState(state));
+		expect(restored.landmarks).toHaveLength(2);
+		expect(restored.landmarks[0].type).toBe('graffiti');
+		expect(restored.landmarks[0].examined).toBe(false);
+		expect(restored.landmarks[1].examined).toBe(true);
 	});
 
 	it('preserves skillPoints and unlockedSkills', () => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText } from '$lib/game/engine';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
@@ -386,24 +386,31 @@
 	{#if state.activeDialogue}
 		{@const dlg = state.activeDialogue}
 		{@const node = dlg.tree.nodes[dlg.currentNodeId]}
-		{void startTypewriter(node?.npcText ?? '', dlg.currentNodeId)}
+		{@const isGarbled = !!(node?.language && !state.knownLanguages.includes(node.language))}
+		{@const displayText = isGarbled ? garbleText(node?.npcText ?? '', node?.language ?? '') : (node?.npcText ?? '')}
+		{void startTypewriter(displayText, dlg.currentNodeId)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="dialogue-overlay" onclick={(e) => {
 			e.stopPropagation();
-			if (!typewriterDone && node) skipTypewriter(node.npcText);
+			if (!typewriterDone && node) skipTypewriter(displayText);
 		}}>
 			<div class="dialogue-box">
 				<div class="dialogue-header">
 					<span class="dialogue-portrait" style="color:{dlg.npcColor}">{dlg.npcChar}</span>
 					<div class="dialogue-name-row">
 						<span class="dialogue-name" style="color:{dlg.npcColor}">{dlg.npcName}</span>
-						<span class="dialogue-mood" style="color:{MOOD_DISPLAY[dlg.mood]?.color ?? '#888'}">[{MOOD_DISPLAY[dlg.mood]?.label ?? dlg.mood}]</span>
+						{#if isGarbled}
+							<span class="dialogue-mood" style="color:#a8f">[Speaking {node?.language}]</span>
+						{:else}
+							<span class="dialogue-mood" style="color:{MOOD_DISPLAY[dlg.mood]?.color ?? '#888'}">[{MOOD_DISPLAY[dlg.mood]?.label ?? dlg.mood}]</span>
+						{/if}
 					</div>
 					<button class="dialogue-close" onclick={() => { state = closeDialogue(state); dialogueSelection = 0; typewriterNodeId = ''; }}>ESC</button>
 				</div>
 				{#if node}
-					<div class="dialogue-text">{typewriterText}{#if !typewriterDone}<span class="typewriter-cursor">|</span>{/if}</div>
+					<div class="dialogue-text" class:garbled={isGarbled}>{typewriterText}{#if !typewriterDone}<span class="typewriter-cursor">|</span>{/if}</div>
+					{#if isGarbled}<div class="garbled-hint">You do not understand this language. Perhaps someone could teach you {node.language}...</div>{/if}
 					{#if typewriterDone}
 					<div class="dialogue-options">
 						{#each node.options as option, i}
@@ -973,6 +980,17 @@
 	.typewriter-cursor {
 		animation: blink 0.6s step-end infinite;
 		color: #fff;
+	}
+	.garbled {
+		color: #a8f;
+		font-style: italic;
+		letter-spacing: 1px;
+	}
+	.garbled-hint {
+		color: #666;
+		font-size: 11px;
+		font-style: italic;
+		margin-top: 4px;
 	}
 	@keyframes blink {
 		50% { opacity: 0; }
