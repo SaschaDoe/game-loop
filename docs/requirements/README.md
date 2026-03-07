@@ -54,3 +54,11 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 40-shapeshifting-and-polymorphism | Druid forms, polymorph spell, mimic enemies |
 | 41-dreams-and-nightmares | Dream realm, nightmare encounters, lucid dreaming |
 | 42-guild-and-organizations | Guild membership, ranks, secret societies |
+| 43-horror-and-madness | Sanity system, eldritch encounters, phobias |
+| 44-cooking-and-taverns | Cooking recipes, tavern activities, drinking |
+| 45-detective-and-mystery | Crime investigation, murder mysteries, disguise infiltration |
+| 46-arena-and-tournaments | Tournament circuit, monster arena, competitive combat |
+| 47-religion-and-deities | Deity worship, divine intervention, holy/unholy ground |
+| 48-summoning-and-conjuration | Summon creatures, conjured objects, planar binding |
+| 49-magitech-and-artificer | Mechanical companions, gadgets, enchantment engineering |
+| 50-weather-and-elemental-mastery | Weather manipulation, elemental attunement |

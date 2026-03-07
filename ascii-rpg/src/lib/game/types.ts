@@ -27,7 +27,7 @@ export interface NPC {
 	given: boolean;
 }
 
-export type StatusEffectType = 'poison' | 'stun' | 'regeneration';
+export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep';
 
 export interface StatusEffect {
 	type: StatusEffectType;

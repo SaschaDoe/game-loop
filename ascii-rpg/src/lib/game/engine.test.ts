@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { createGame, handleInput, xpForLevel, xpReward } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
-import type { GameState, Entity, Trap } from './types';
+import { applyEffect, hasEffect } from './status-effects';
+import type { GameState, Entity, Trap, Hazard } from './types';
 import { Visibility } from './types';
 
 function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
@@ -759,5 +760,93 @@ describe('Difficulty scaling integration', () => {
 
 		const result = handleInput(state, 'd');
 		expect(result.characterConfig.difficulty).toBe('hard');
+	});
+});
+
+describe('sleeping monsters', () => {
+	it('sleeping enemies do not move or attack', () => {
+		const enemy = makeEnemy(6, 5, { hp: 10, maxHp: 10, attack: 5 });
+		applyEffect(enemy, 'sleep', 999, 0);
+		const state = makeTestState({ enemies: [enemy] });
+		// Player moves away — enemy should not follow
+		const result = handleInput(state, 'a'); // move left
+		const e = result.enemies[0];
+		expect(e.pos.x).toBe(6);
+		expect(e.pos.y).toBe(5);
+	});
+
+	it('sneak attack deals double damage to sleeping enemy', () => {
+		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100, attack: 1 });
+		applyEffect(enemy, 'sleep', 999, 0);
+		const state = makeTestState({
+			enemies: [enemy],
+			player: { pos: { x: 5, y: 5 }, char: '@', color: '#ff0', name: 'Hero', hp: 20, maxHp: 20, attack: 10, statusEffects: [] }
+		});
+
+		const result = handleInput(state, 'd'); // attack sleeping enemy
+		const sneakMsg = result.messages.find((m) => m.text.includes('Sneak attack'));
+		expect(sneakMsg).toBeDefined();
+		// Damage should be at least 2x base attack (10*2 = 20 minimum)
+		const e = result.enemies[0];
+		expect(e.hp).toBeLessThanOrEqual(100 - 20);
+	});
+
+	it('sleeping enemy wakes up when hit', () => {
+		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100, attack: 1 });
+		applyEffect(enemy, 'sleep', 999, 0);
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = handleInput(state, 'd');
+		expect(hasEffect(result.enemies[0], 'sleep')).toBe(false);
+	});
+
+	it('sleeping enemies wake when player moves adjacent', () => {
+		// Enemy at (7, 5), player at (5, 5), player moves right to (6, 5) — now adjacent
+		const enemy = makeEnemy(7, 5, { hp: 10, maxHp: 10, attack: 1 });
+		applyEffect(enemy, 'sleep', 999, 0);
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = handleInput(state, 'd'); // player moves to (6,5), adjacent to enemy at (7,5)
+		expect(hasEffect(result.enemies[0], 'sleep')).toBe(false);
+		const wakeMsg = result.messages.find((m) => m.text.includes('wakes up'));
+		expect(wakeMsg).toBeDefined();
+	});
+
+	it('player can sneak past sleeping enemy without waking it', () => {
+		// Enemy at (8, 5), player at (5, 5), player moves left — stays far away
+		const enemy = makeEnemy(8, 5, { hp: 10, maxHp: 10, attack: 1 });
+		applyEffect(enemy, 'sleep', 999, 0);
+		const state = makeTestState({ enemies: [enemy] });
+
+		const result = handleInput(state, 'a'); // move left, away from enemy
+		expect(hasEffect(result.enemies[0], 'sleep')).toBe(true);
+	});
+});
+
+describe('hazard avoidance', () => {
+	it('non-relentless enemies avoid hazard tiles', () => {
+		// Aggressive enemy at (7, 5), player at (5, 5), lava at (6, 5) between them
+		const enemy = makeEnemy(7, 5, { name: 'Ogre', hp: 20, maxHp: 20, attack: 4 });
+		const hazard: Hazard = { pos: { x: 6, y: 5 }, type: 'lava' };
+		const state = makeTestState({ enemies: [enemy], hazards: [hazard] });
+
+		// Move player left so enemy turn triggers — enemy should not step onto lava
+		const result = handleInput(state, 'a');
+		const e = result.enemies[0];
+		// Ogre is aggressive but should avoid the lava tile at (6,5)
+		expect(!(e.pos.x === 6 && e.pos.y === 5)).toBe(true);
+	});
+
+	it('relentless enemies walk through hazard tiles', () => {
+		// Relentless Skeleton at (7, 5), player at (5, 5), lava at (6, 5)
+		const enemy = makeEnemy(7, 5, { name: 'Skeleton', char: 'S', hp: 20, maxHp: 20, attack: 3 });
+		const hazard: Hazard = { pos: { x: 6, y: 5 }, type: 'lava' };
+		const state = makeTestState({ enemies: [enemy], hazards: [hazard] });
+
+		const result = handleInput(state, 'a');
+		const e = result.enemies[0];
+		// Skeleton is relentless so it moves toward player through the lava
+		expect(e.pos.x).toBe(6);
+		expect(e.pos.y).toBe(5);
 	});
 });

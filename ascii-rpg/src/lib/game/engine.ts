@@ -45,6 +45,9 @@ function createEnemy(pos: Position, level: number, difficulty: Difficulty): Enti
 		enemy = createMonster(pos, level, def);
 	}
 	applyDifficultyToEnemy(enemy, difficulty);
+	if (def.sleepChance && Math.random() < def.sleepChance) {
+		applyEffect(enemy, 'sleep', 999, 0);
+	}
 	return enemy;
 }
 
@@ -270,7 +273,7 @@ function moveEnemies(state: GameState) {
 	tickEntityEffects(state, state.player);
 
 	for (const enemy of state.enemies) {
-		if (hasEffect(enemy, 'stun')) continue;
+		if (hasEffect(enemy, 'stun') || hasEffect(enemy, 'sleep')) continue;
 
 		const behavior = getMonsterBehavior(enemy);
 		const move = decideMoveDirection(enemy, state.player.pos, state.enemies, behavior);
@@ -292,6 +295,8 @@ function moveEnemies(state: GameState) {
 				handlePlayerDeath(state);
 			}
 		} else if (!isBlocked(state, nx, ny) && !state.enemies.some((e) => e !== enemy && e.pos.x === nx && e.pos.y === ny)) {
+			// Non-relentless enemies avoid hazard tiles
+			if (behavior !== 'relentless' && getHazardAt(state.hazards, nx, ny)) continue;
 			enemy.pos = { x: nx, y: ny };
 		}
 	}
@@ -387,9 +392,18 @@ export function handleInput(state: GameState, key: string): GameState {
 	// attack enemy?
 	const target = state.enemies.find((e) => e.pos.x === nx && e.pos.y === ny);
 	if (target) {
-		const dmg = Math.max(1, state.player.attack + Math.floor(Math.random() * 3));
+		const isSneakAttack = hasEffect(target, 'sleep');
+		if (isSneakAttack) {
+			target.statusEffects = target.statusEffects.filter((e) => e.type !== 'sleep');
+		}
+		const baseDmg = Math.max(1, state.player.attack + Math.floor(Math.random() * 3));
+		const dmg = isSneakAttack ? baseDmg * 2 : baseDmg;
 		target.hp -= dmg;
-		addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
+		if (isSneakAttack) {
+			addMessage(state, `Sneak attack! You hit ${target.name} for ${dmg}!`, 'player_attack');
+		} else {
+			addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
+		}
 		if (target.hp <= 0) {
 			const bossKill = isBoss(target);
 			const rareKill = isRare(target);
@@ -471,6 +485,16 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.abilityCooldown = state.abilityCooldown;
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
+	}
+
+	// Wake sleeping enemies adjacent to the player
+	for (const enemy of state.enemies) {
+		if (hasEffect(enemy, 'sleep') &&
+			Math.abs(enemy.pos.x - state.player.pos.x) <= 1 &&
+			Math.abs(enemy.pos.y - state.player.pos.y) <= 1) {
+			enemy.statusEffects = enemy.statusEffects.filter((e) => e.type !== 'sleep');
+			addMessage(state, `${enemy.name} wakes up!`, 'info');
+		}
 	}
 
 	moveEnemies(state);

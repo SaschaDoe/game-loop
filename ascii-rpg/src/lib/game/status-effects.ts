@@ -33,8 +33,11 @@ export function tickEffects(entity: Entity): { damage: number; healing: number; 
 			case 'stun':
 				messages.push(`${entity.name} is stunned!`);
 				break;
+			case 'sleep':
+				// Sleep doesn't tick — it's removed externally when woken
+				break;
 		}
-		effect.duration--;
+		if (effect.type !== 'sleep') effect.duration--;
 	}
 
 	entity.statusEffects = entity.statusEffects.filter((e) => e.duration > 0);
@@ -46,6 +49,7 @@ export function tickEffects(entity: Entity): { damage: number; healing: number; 
 }
 
 export function effectColor(entity: Entity): string | null {
+	if (hasEffect(entity, 'sleep')) return '#666688';
 	if (hasEffect(entity, 'stun')) return '#ffff00';
 	if (hasEffect(entity, 'poison')) return '#00ff00';
 	if (hasEffect(entity, 'regeneration')) return '#00ffaa';

@@ -17,6 +17,7 @@ export interface MonsterDef {
 	attackPerLevel: number;
 	behavior: MonsterBehavior;
 	onHitEffect?: { type: StatusEffectType; duration: number; potency: number };
+	sleepChance?: number;
 	boss?: boolean;
 	phases?: MonsterPhase[];
 }
@@ -26,10 +27,10 @@ export type MonsterBehavior = 'aggressive' | 'cowardly' | 'erratic' | 'pack' | '
 export const MONSTER_DEFS: MonsterDef[] = [
 	// Tier 1 — dungeon levels 1-3
 	{ name: 'Rat', char: 'r', color: '#aa8866', tier: 1, baseHp: 2, hpPerLevel: 1, baseAttack: 1, attackPerLevel: 0.3, behavior: 'cowardly' },
-	{ name: 'Bat', char: 'b', color: '#ff00ff', tier: 1, baseHp: 1, hpPerLevel: 1, baseAttack: 1, attackPerLevel: 0.2, behavior: 'erratic' },
+	{ name: 'Bat', char: 'b', color: '#ff00ff', tier: 1, baseHp: 1, hpPerLevel: 1, baseAttack: 1, attackPerLevel: 0.2, behavior: 'erratic', sleepChance: 0.5 },
 	{ name: 'Slime', char: 's', color: '#00ffff', tier: 1, baseHp: 3, hpPerLevel: 2, baseAttack: 1, attackPerLevel: 0.3, behavior: 'relentless', onHitEffect: { type: 'poison', duration: 3, potency: 1 } },
 	{ name: 'Goblin', char: 'g', color: '#00ff00', tier: 1, baseHp: 3, hpPerLevel: 1, baseAttack: 2, attackPerLevel: 0.5, behavior: 'pack' },
-	{ name: 'Spider', char: 'x', color: '#886644', tier: 1, baseHp: 2, hpPerLevel: 1, baseAttack: 2, attackPerLevel: 0.4, behavior: 'aggressive', onHitEffect: { type: 'poison', duration: 2, potency: 1 } },
+	{ name: 'Spider', char: 'x', color: '#886644', tier: 1, baseHp: 2, hpPerLevel: 1, baseAttack: 2, attackPerLevel: 0.4, behavior: 'aggressive', onHitEffect: { type: 'poison', duration: 2, potency: 1 }, sleepChance: 0.3 },
 
 	// Tier 2 — dungeon levels 4-7
 	{ name: 'Skeleton', char: 'S', color: '#ffffff', tier: 2, baseHp: 5, hpPerLevel: 2, baseAttack: 3, attackPerLevel: 0.6, behavior: 'relentless' },
