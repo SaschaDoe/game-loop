@@ -1,6 +1,6 @@
 import type { GameState, Tile } from './types';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -31,6 +31,7 @@ interface SerializedState {
 	abilityCooldown: number;
 	hazards: GameState['hazards'];
 	npcs: GameState['npcs'];
+	chests: GameState['chests'];
 }
 
 export function serializeState(state: GameState): string {
@@ -58,7 +59,8 @@ export function serializeState(state: GameState): string {
 			characterConfig: state.characterConfig,
 			abilityCooldown: state.abilityCooldown,
 			hazards: state.hazards,
-			npcs: state.npcs
+			npcs: state.npcs,
+			chests: state.chests
 		}
 	};
 	return JSON.stringify(data);
@@ -92,7 +94,8 @@ export function deserializeState(json: string): GameState {
 		characterConfig: s.characterConfig,
 		abilityCooldown: s.abilityCooldown,
 		hazards: s.hazards,
-		npcs: s.npcs ?? []
+		npcs: s.npcs ?? [],
+		chests: s.chests ?? []
 	};
 }
 

@@ -8,6 +8,7 @@ import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, hazardChar, hazardColor } from './hazards';
 import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './difficulty';
+import { placeChests, getChestAt, openChest, chestChar, chestColor } from './chests';
 import { generateStartingLocation } from './locations';
 
 const MAP_W = 50;
@@ -104,7 +105,8 @@ export function createGame(config?: CharacterConfig): GameState {
 		detectedTraps: new Set<string>(),
 		characterConfig: cfg,
 		abilityCooldown: 0,
-		hazards: []
+		hazards: [],
+		chests: []
 	};
 
 	// Apply class bonuses
@@ -144,6 +146,9 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 	// Don't place hazards on player spawn
 	const filteredHazards = hazards.filter((h) => !(h.pos.x === playerPos.x && h.pos.y === playerPos.y));
 
+	const chests = placeChests(map, level);
+	const filteredChests = chests.filter((c) => !(c.pos.x === playerPos.x && c.pos.y === playerPos.y));
+
 	const state: GameState = {
 		player: {
 			pos: playerPos,
@@ -170,7 +175,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		characterConfig: DEFAULT_CONFIG,
 		abilityCooldown: 0,
 		hazards: filteredHazards,
-		npcs: []
+		npcs: [],
+		chests: filteredChests
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -485,6 +491,34 @@ export function handleInput(state: GameState, key: string): GameState {
 		return { ...state };
 	}
 
+	// Open chest?
+	const chest = getChestAt(state.chests, nx, ny);
+	if (chest) {
+		const isRogue = state.characterConfig.characterClass === 'rogue';
+		const result = openChest(chest, state.level, isRogue);
+		for (const msg of result.messages) {
+			addMessage(state, msg.text, msg.type);
+		}
+		if (result.trapDamage > 0) {
+			state.player.hp -= result.trapDamage;
+			if (state.player.hp <= 0) {
+				handlePlayerDeath(state);
+				return { ...state };
+			}
+		}
+		if (result.loot) {
+			state.player.hp = Math.min(state.player.maxHp, state.player.hp + result.loot.healing);
+			state.player.attack += result.loot.atkBonus;
+			state.xp += result.loot.xpBonus;
+			checkLevelUp(state);
+		}
+		if (result.mimicEnemy) {
+			state.enemies.push(result.mimicEnemy);
+		}
+		moveEnemies(state);
+		return { ...state };
+	}
+
 	// attack enemy?
 	const target = state.enemies.find((e) => e.pos.x === nx && e.pos.y === ny);
 	if (target) {
@@ -664,6 +698,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 					row.push({ char: enemy.char, color: enemyColor });
 				} else if (npc) {
 					row.push({ char: npc.char, color: npc.color });
+				} else if (getChestAt(state.chests, x, y)) {
+					const ch = getChestAt(state.chests, x, y)!;
+					row.push({ char: chestChar(ch.type), color: chestColor(ch.type) });
 				} else {
 					const key = `${x},${y}`;
 					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);

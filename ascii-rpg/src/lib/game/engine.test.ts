@@ -3,7 +3,7 @@ import { createGame, handleInput, xpForLevel, xpReward, attemptFlee } from './en
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
-import type { GameState, Entity, Trap, Hazard } from './types';
+import type { GameState, Entity, Trap, Hazard, Chest } from './types';
 import { Visibility } from './types';
 
 function makeEnemy(x: number, y: number, overrides?: Partial<Entity>): Entity {
@@ -56,6 +56,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		abilityCooldown: 0,
 		hazards: [],
 		npcs: [],
+		chests: [],
 		...overrides
 	};
 }
@@ -980,5 +981,69 @@ describe('flee from combat', () => {
 		expect(result.messages.some((m) => m.text.includes('nowhere to go'))).toBe(true);
 
 		Math.random = origRandom;
+	});
+});
+
+describe('treasure chests', () => {
+	it('bumping into a chest opens it and gives loot', () => {
+		const chest: Chest = { pos: { x: 6, y: 5 }, type: 'wooden', opened: false, trapped: false, mimic: false };
+		const state = makeTestState({ chests: [chest], level: 1 });
+		const startHp = state.player.hp;
+		const startXp = state.xp;
+
+		const result = handleInput(state, 'd');
+		expect(chest.opened).toBe(true);
+		expect(result.xp).toBeGreaterThan(startXp);
+		expect(result.messages.some((m) => m.text.includes('chest opened'))).toBe(true);
+	});
+
+	it('trapped chest damages non-rogue player', () => {
+		// Wooden at level 10: trap=17, heal=13 → net -4 damage
+		const chest: Chest = { pos: { x: 6, y: 5 }, type: 'wooden', opened: false, trapped: true, mimic: false };
+		const state = makeTestState({
+			chests: [chest],
+			level: 10,
+			player: { pos: { x: 5, y: 5 }, char: '@', color: '#ff0', name: 'Hero', hp: 50, maxHp: 50, attack: 10, statusEffects: [] }
+		});
+
+		const result = handleInput(state, 'd');
+		expect(result.player.hp).toBeLessThan(50);
+		expect(result.messages.some((m) => m.text.includes('trap springs'))).toBe(true);
+	});
+
+	it('rogue disarms trapped chest', () => {
+		const chest: Chest = { pos: { x: 6, y: 5 }, type: 'iron', opened: false, trapped: true, mimic: false };
+		const state = makeTestState({
+			chests: [chest],
+			level: 3,
+			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+		});
+		const startHp = state.player.hp;
+
+		const result = handleInput(state, 'd');
+		// Rogue takes no trap damage — HP only changes from loot healing
+		expect(result.player.hp).toBeGreaterThanOrEqual(startHp);
+		expect(result.messages.some((m) => m.text.includes('disarm'))).toBe(true);
+	});
+
+	it('mimic chest spawns an enemy', () => {
+		const chest: Chest = { pos: { x: 6, y: 5 }, type: 'gold', opened: false, trapped: false, mimic: true };
+		const state = makeTestState({ chests: [chest], level: 3 });
+
+		const result = handleInput(state, 'd');
+		const mimic = result.enemies.find((e) => e.name === 'Mimic');
+		expect(mimic).toBeDefined();
+		expect(mimic!.pos.x).toBe(6);
+		expect(mimic!.pos.y).toBe(5);
+		expect(result.messages.some((m) => m.text.includes('Mimic'))).toBe(true);
+	});
+
+	it('opened chest cannot be interacted with again', () => {
+		const chest: Chest = { pos: { x: 6, y: 5 }, type: 'wooden', opened: true, trapped: false, mimic: false };
+		const state = makeTestState({ chests: [chest] });
+
+		const result = handleInput(state, 'd');
+		// Player walks through (chest already opened, treated as empty tile)
+		expect(result.player.pos.x).toBe(6);
 	});
 });

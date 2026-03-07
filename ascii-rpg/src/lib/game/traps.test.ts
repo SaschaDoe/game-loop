@@ -39,6 +39,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		abilityCooldown: 0,
 		hazards: [],
 		npcs: [],
+		chests: [],
 		...overrides
 	};
 }

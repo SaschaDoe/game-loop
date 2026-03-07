@@ -61,6 +61,16 @@ export interface Hazard {
 	type: HazardType;
 }
 
+export type ChestType = 'wooden' | 'iron' | 'gold';
+
+export interface Chest {
+	pos: Position;
+	type: ChestType;
+	opened: boolean;
+	trapped: boolean;
+	mimic: boolean;
+}
+
 export type Tile = '#' | '.' | '>' | '*';
 
 export enum Visibility {
@@ -101,4 +111,5 @@ export interface GameState {
 	abilityCooldown: number;
 	hazards: Hazard[];
 	npcs: NPC[];
+	chests: Chest[];
 }
