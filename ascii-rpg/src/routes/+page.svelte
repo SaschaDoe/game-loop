@@ -2,7 +2,10 @@
 	import { onMount } from 'svelte';
 	import { createGame, handleInput, renderColored, xpForLevel, CLASS_BONUSES } from '$lib/game/engine';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
-	import type { GameState, CharacterClass, CharacterConfig } from '$lib/game/types';
+	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
+	import { STARTING_LOCATIONS } from '$lib/game/locations';
+	import { DIFFICULTY_DEFS, DIFFICULTIES, isPermadeath } from '$lib/game/difficulty';
+	import { deleteSave } from '$lib/game/save';
 
 	declare const __APP_VERSION__: string;
 	declare const __BUILD_NUMBER__: string;
@@ -22,11 +25,14 @@
 		mage: 'MAGE',
 		rogue: 'ROGUE'
 	};
+	const LOCATIONS: StartingLocation[] = ['village', 'tavern', 'cave'];
 
 	let phase: GamePhase = $state('intro');
 	let introStep = $state(0);
 	let playerName = $state('');
 	let selectedClass: CharacterClass = $state('warrior');
+	let selectedLocation: StartingLocation = $state('village');
+	let selectedDifficulty: Difficulty = $state('normal');
 	let state: GameState = $state(createGame());
 	let grid = $derived(renderColored(state));
 	let nameInput: HTMLInputElement;
@@ -42,14 +48,21 @@
 	function startGame() {
 		const config: CharacterConfig = {
 			name: playerName.trim() || 'Hero',
-			characterClass: selectedClass
+			characterClass: selectedClass,
+			difficulty: selectedDifficulty,
+			startingLocation: selectedLocation
 		};
 		state = createGame(config);
 		phase = 'playing';
 	}
 
 	function sendInput(key: string) {
+		const wasAlive = !state.gameOver;
 		state = handleInput(state, key);
+		// Delete save on permadeath
+		if (wasAlive && state.gameOver && isPermadeath(state.characterConfig.difficulty)) {
+			deleteSave();
+		}
 	}
 
 	function onKeyDown(e: KeyboardEvent) {
@@ -162,7 +175,39 @@
 			{/each}
 		</div>
 
-		<button class="start-btn" onclick={startGame}>Enter the Dungeon</button>
+		<p class="class-label">Choose your starting location:</p>
+		<div class="class-grid">
+			{#each LOCATIONS as loc}
+				{@const info = STARTING_LOCATIONS[loc]}
+				<button
+					class="class-card"
+					class:selected={selectedLocation === loc}
+					onclick={() => (selectedLocation = loc)}
+				>
+					<span class="class-name">{info.label}</span>
+					<span class="class-desc">{info.description}</span>
+					<span class="class-stats">{info.difficulty}</span>
+				</button>
+			{/each}
+		</div>
+
+		<p class="class-label">Difficulty:</p>
+		<div class="class-grid">
+			{#each DIFFICULTIES as diff}
+				{@const info = DIFFICULTY_DEFS[diff]}
+				<button
+					class="class-card"
+					class:selected={selectedDifficulty === diff}
+					class:permadeath={diff === 'permadeath'}
+					onclick={() => (selectedDifficulty = diff)}
+				>
+					<span class="class-name">{info.label}</span>
+					<span class="class-desc">{info.description}</span>
+				</button>
+			{/each}
+		</div>
+
+		<button class="start-btn" onclick={startGame}>Begin Adventure</button>
 		<p class="creation-hint">Press 1/2/3 to pick class &middot; ENTER to begin</p>
 	</div>
 {:else}
@@ -170,8 +215,11 @@
 		<div class="hud">
 			<span class="hp">HP: {state.player.hp}/{state.player.maxHp}</span>
 			<span class="atk">ATK: {state.player.attack}</span>
-			<span class="level">Dungeon: {state.level}</span>
+			<span class="level">{state.level === 0 ? 'Starting Area' : `Dungeon: ${state.level}`}</span>
 			<span class="char-level">Lv {state.characterLevel} {state.player.name}</span>
+			{#if state.characterConfig.difficulty !== 'normal'}
+				<span class="difficulty difficulty-{state.characterConfig.difficulty}">{DIFFICULTY_DEFS[state.characterConfig.difficulty].label}</span>
+			{/if}
 			{#each state.player.statusEffects as effect}
 				<span class="status-effect status-{effect.type}">{effect.type} ({effect.duration})</span>
 			{/each}
@@ -484,6 +532,36 @@
 		border: 1px solid #0fa;
 	}
 
+	.difficulty {
+		font-size: 12px;
+		padding: 1px 6px;
+		border-radius: 2px;
+	}
+
+	.difficulty-easy {
+		color: #4f4;
+		border: 1px solid #4f4;
+	}
+
+	.difficulty-hard {
+		color: #fa4;
+		border: 1px solid #fa4;
+	}
+
+	.difficulty-permadeath {
+		color: #f44;
+		border: 1px solid #f44;
+	}
+
+	.class-card.permadeath.selected {
+		border-color: #f44;
+		background: #221010;
+	}
+
+	.class-card.permadeath .class-name {
+		color: #f44;
+	}
+
 	.xp-bar-container {
 		position: relative;
 		width: 100%;
@@ -566,6 +644,11 @@
 
 	.msg-trap {
 		color: #fa4;
+	}
+
+	.msg-npc {
+		color: #8cf;
+		font-style: italic;
 	}
 
 	.legend {

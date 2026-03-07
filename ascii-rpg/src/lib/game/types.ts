@@ -5,9 +5,26 @@ export interface Position {
 
 export type CharacterClass = 'warrior' | 'mage' | 'rogue';
 
+export type Difficulty = 'easy' | 'normal' | 'hard' | 'permadeath';
+
+export type StartingLocation = 'village' | 'tavern' | 'cave';
+
 export interface CharacterConfig {
 	name: string;
 	characterClass: CharacterClass;
+	difficulty: Difficulty;
+	startingLocation: StartingLocation;
+}
+
+export interface NPC {
+	pos: Position;
+	char: string;
+	color: string;
+	name: string;
+	dialogue: string[];
+	dialogueIndex: number;
+	gives?: { hp?: number; atk?: number };
+	given: boolean;
 }
 
 export type StatusEffectType = 'poison' | 'stun' | 'regeneration';
@@ -52,7 +69,7 @@ export enum Visibility {
 	Visible = 2
 }
 
-export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap';
+export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap' | 'npc';
 
 export interface GameMessage {
 	text: string;
@@ -83,4 +100,5 @@ export interface GameState {
 	characterConfig: CharacterConfig;
 	abilityCooldown: number;
 	hazards: Hazard[];
+	npcs: NPC[];
 }

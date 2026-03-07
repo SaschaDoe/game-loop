@@ -68,9 +68,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedSecrets: new Set<string>(),
 		traps: [],
 		detectedTraps: new Set<string>(),
-		characterConfig: { name: 'Hero', characterClass: 'warrior' as const },
+		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const },
 		abilityCooldown: 0,
 		hazards: [],
+		npcs: [],
 		...overrides
 	};
 }
@@ -199,11 +200,13 @@ describe('serializeState / deserializeState round-trip', () => {
 
 	it('preserves characterConfig', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Gandalf', characterClass: 'mage' }
+			characterConfig: { name: 'Gandalf', characterClass: 'mage', difficulty: 'hard', startingLocation: 'tavern' }
 		});
 		const restored = deserializeState(serializeState(state));
 		expect(restored.characterConfig.name).toBe('Gandalf');
 		expect(restored.characterConfig.characterClass).toBe('mage');
+		expect(restored.characterConfig.difficulty).toBe('hard');
+		expect(restored.characterConfig.startingLocation).toBe('tavern');
 	});
 
 	it('preserves empty Sets', () => {

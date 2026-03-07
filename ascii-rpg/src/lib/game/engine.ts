@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
@@ -7,6 +7,8 @@ import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLe
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, hazardChar, hazardColor } from './hazards';
+import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './difficulty';
+import { generateStartingLocation } from './locations';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -34,20 +36,25 @@ function checkLevelUp(state: GameState): void {
 	}
 }
 
-function createEnemy(pos: Position, level: number): Entity {
+function createEnemy(pos: Position, level: number, difficulty: Difficulty): Entity {
 	const def = pickMonsterDef(level);
+	let enemy: Entity;
 	if (Math.random() < RARE_SPAWN_CHANCE) {
-		return createRareMonster(pos, level, def);
+		enemy = createRareMonster(pos, level, def);
+	} else {
+		enemy = createMonster(pos, level, def);
 	}
-	return createMonster(pos, level, def);
+	applyDifficultyToEnemy(enemy, difficulty);
+	return enemy;
 }
 
-function spawnEnemies(positions: Position[], level: number): Entity[] {
-	const enemies = positions.map((p) => createEnemy(p, level));
+function spawnEnemies(positions: Position[], level: number, difficulty: Difficulty): Entity[] {
+	const enemies = positions.map((p) => createEnemy(p, level, difficulty));
 	if (isBossLevel(level) && positions.length > 0) {
 		const bossDef = pickBossDef(level);
-		// Replace the last enemy with the boss
-		enemies[enemies.length - 1] = createMonster(positions[positions.length - 1], level, bossDef);
+		const boss = createMonster(positions[positions.length - 1], level, bossDef);
+		applyDifficultyToEnemy(boss, difficulty);
+		enemies[enemies.length - 1] = boss;
 	}
 	return enemies;
 }
@@ -58,19 +65,56 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	rogue: { hp: 0, atk: 1, sight: 1, description: 'A nimble adventurer with keen senses' }
 };
 
-const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior' };
+const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' };
 
 export function createGame(config?: CharacterConfig): GameState {
 	const cfg = config ?? DEFAULT_CONFIG;
-	const state = newLevel(1);
-	state.characterConfig = cfg;
-	state.player.name = cfg.name;
 
+	// Level 0: starting location; level 1+: dungeon
+	const locResult = generateStartingLocation(cfg.startingLocation, MAP_W, MAP_H);
+	const sightRadius = DEFAULT_SIGHT_RADIUS;
+	const visibility = createVisibilityGrid(MAP_W, MAP_H);
+
+	const state: GameState = {
+		player: {
+			pos: locResult.playerPos,
+			char: '@',
+			color: '#ff0',
+			name: cfg.name,
+			hp: 12,
+			maxHp: 12,
+			attack: 3,
+			statusEffects: []
+		},
+		enemies: locResult.enemies,
+		npcs: locResult.npcs,
+		map: locResult.map,
+		messages: [{ text: locResult.welcomeMessage, type: 'info' as const }],
+		level: 0,
+		gameOver: false,
+		xp: 0,
+		characterLevel: 1,
+		visibility,
+		sightRadius,
+		detectedSecrets: new Set<string>(),
+		traps: [],
+		detectedTraps: new Set<string>(),
+		characterConfig: cfg,
+		abilityCooldown: 0,
+		hazards: []
+	};
+
+	// Apply class bonuses
 	const bonuses = CLASS_BONUSES[cfg.characterClass];
 	state.player.hp += bonuses.hp;
 	state.player.maxHp += bonuses.hp;
 	state.player.attack += bonuses.atk;
 	state.sightRadius += bonuses.sight;
+
+	// Apply starting location HP factor (cave start = 60%)
+	if (locResult.initialHpFactor < 1.0) {
+		state.player.hp = Math.max(1, Math.floor(state.player.hp * locResult.initialHpFactor));
+	}
 
 	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
 	return state;
@@ -78,9 +122,11 @@ export function createGame(config?: CharacterConfig): GameState {
 
 const DEFAULT_SIGHT_RADIUS = 8;
 
-function newLevel(level: number): GameState {
+function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
+	const baseEnemyCount = 3 + level;
+	const enemyCount = difficultySpawnCount(baseEnemyCount, difficulty);
 	const map = generateMap(MAP_W, MAP_H, level);
-	const spawns = getSpawnPositions(map, 1 + 3 + level);
+	const spawns = getSpawnPositions(map, 1 + enemyCount);
 	const playerPos = spawns[0];
 	const enemyPositions = spawns.slice(1);
 	const sightRadius = DEFAULT_SIGHT_RADIUS;
@@ -106,7 +152,7 @@ function newLevel(level: number): GameState {
 			attack: 2 + level,
 			statusEffects: []
 		},
-		enemies: spawnEnemies(enemyPositions, level),
+		enemies: spawnEnemies(enemyPositions, level, difficulty),
 		map,
 		messages: [{ text: `Welcome to dungeon level ${level}. Use WASD or arrow keys to move.`, type: 'info' as const }],
 		level,
@@ -120,7 +166,8 @@ function newLevel(level: number): GameState {
 		detectedTraps: new Set<string>(),
 		characterConfig: DEFAULT_CONFIG,
 		abilityCooldown: 0,
-		hazards: filteredHazards
+		hazards: filteredHazards,
+		npcs: []
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -135,6 +182,15 @@ function newLevel(level: number): GameState {
 
 function addMessage(state: GameState, msg: string, type: MessageType = 'info') {
 	state.messages = [...state.messages.slice(-49), { text: msg, type }];
+}
+
+function handlePlayerDeath(state: GameState): void {
+	state.gameOver = true;
+	if (isPermadeath(state.characterConfig.difficulty)) {
+		addMessage(state, 'You have been slain! Your journey ends here forever.', 'death');
+	} else {
+		addMessage(state, 'You have been slain! Press R to restart.', 'death');
+	}
 }
 
 function isBlocked(state: GameState, x: number, y: number): boolean {
@@ -167,8 +223,7 @@ function tickEntityEffects(state: GameState, entity: Entity): void {
 		addMessage(state, msg, type);
 	}
 	if (entity === state.player && entity.hp <= 0) {
-		state.gameOver = true;
-		addMessage(state, 'You have been slain! Press R to restart.', 'death');
+		handlePlayerDeath(state);
 	}
 }
 
@@ -181,8 +236,7 @@ function moveEnemies(state: GameState) {
 		addMessage(state, effect.text, effect.type);
 	}
 	if (state.player.hp <= 0) {
-		state.gameOver = true;
-		addMessage(state, 'You have been slain! Press R to restart.', 'death');
+		handlePlayerDeath(state);
 	}
 
 	// Remove enemies killed by hazards and award XP
@@ -235,8 +289,7 @@ function moveEnemies(state: GameState) {
 				addMessage(state, `${enemy.name}'s attack inflicts ${onHit.type}!`, 'damage_taken');
 			}
 			if (state.player.hp <= 0) {
-				state.gameOver = true;
-				addMessage(state, 'You have been slain! Press R to restart.', 'death');
+				handlePlayerDeath(state);
 			}
 		} else if (!isBlocked(state, nx, ny) && !state.enemies.some((e) => e !== enemy && e.pos.x === nx && e.pos.y === ny)) {
 			enemy.pos = { x: nx, y: ny };
@@ -246,7 +299,13 @@ function moveEnemies(state: GameState) {
 
 export function handleInput(state: GameState, key: string): GameState {
 	if (state.gameOver) {
-		if (key === 'r') return createGame(state.characterConfig);
+		if (key === 'r') {
+			if (isPermadeath(state.characterConfig.difficulty)) {
+				// Permadeath: reset to default config (forces new character creation in UI)
+				return createGame();
+			}
+			return createGame(state.characterConfig);
+		}
 		return state;
 	}
 
@@ -303,6 +362,27 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	const nx = state.player.pos.x + dx;
 	const ny = state.player.pos.y + dy;
+
+	// Talk to NPC?
+	const npc = state.npcs.find((n) => n.pos.x === nx && n.pos.y === ny);
+	if (npc) {
+		const lineIdx = Math.min(npc.dialogueIndex, npc.dialogue.length - 1);
+		addMessage(state, `${npc.name}: "${npc.dialogue[lineIdx]}"`, 'npc');
+		if (npc.dialogueIndex < npc.dialogue.length - 1) npc.dialogueIndex++;
+		if (!npc.given && npc.gives) {
+			if (npc.gives.hp) {
+				state.player.hp = Math.min(state.player.maxHp, state.player.hp + npc.gives.hp);
+				addMessage(state, `${npc.name} healed you for ${npc.gives.hp} HP!`, 'healing');
+			}
+			if (npc.gives.atk) {
+				state.player.attack += npc.gives.atk;
+				addMessage(state, `${npc.name} gave you a weapon! +${npc.gives.atk} ATK`, 'level_up');
+			}
+			npc.given = true;
+		}
+		moveEnemies(state);
+		return { ...state };
+	}
 
 	// attack enemy?
 	const target = state.enemies.find((e) => e.pos.x === nx && e.pos.y === ny);
@@ -362,8 +442,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 		}
 		if (state.player.hp <= 0) {
-			state.gameOver = true;
-			addMessage(state, 'You have been slain! Press R to restart.', 'death');
+			handlePlayerDeath(state);
 			return { ...state };
 		}
 	}
@@ -378,7 +457,8 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	// stairs
 	if (state.map.tiles[ny][nx] === '>') {
-		const next = newLevel(state.level + 1);
+		const nextLevel = state.level === 0 ? 1 : state.level + 1;
+		const next = newLevel(nextLevel, state.characterConfig.difficulty);
 		next.player.hp = state.player.hp;
 		next.player.maxHp = Math.max(state.player.maxHp, next.player.maxHp);
 		next.player.attack = Math.max(state.player.attack, next.player.attack);
@@ -389,7 +469,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.characterConfig = state.characterConfig;
 		next.player.name = state.player.name;
 		next.abilityCooldown = state.abilityCooldown;
-		addMessage(next, `Descended to level ${next.level}.`);
+		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
 	}
 
@@ -458,9 +538,12 @@ export function renderColored(state: GameState): { char: string; color: string }
 				row.push({ char: '@', color: playerColor });
 			} else if (isVisible) {
 				const enemy = state.enemies.find((e) => e.pos.x === x && e.pos.y === y);
+				const npc = state.npcs.find((n) => n.pos.x === x && n.pos.y === y);
 				if (enemy) {
 					const enemyColor = effectColor(enemy) ?? enemy.color;
 					row.push({ char: enemy.char, color: enemyColor });
+				} else if (npc) {
+					row.push({ char: npc.char, color: npc.color });
 				} else {
 					const key = `${x},${y}`;
 					const detectedTrap = state.detectedTraps.has(key) && state.traps.some((t) => t.pos.x === x && t.pos.y === y && !t.triggered);
