@@ -81,3 +81,6 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 67-theater-and-performance | Stage plays, disguise acting, street performance |
 | 68-plague-and-epidemic | Disease mechanics, plague doctor, quarantine zones |
 | 69-lycanthropy-gameplay | Werewolf transformation, beast forms, silver economy |
+| 70-companion-system | Companion personalities, combat AI, backstories |
+| 71-minigames | Lockpicking, fishing, smithing minigames |
+| 72-necromancy-gameplay | Undead army, soul harvesting, death domain spells |
