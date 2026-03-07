@@ -4,13 +4,17 @@ import {
 	BOSS_DEFS,
 	monstersForLevel,
 	createMonster,
+	createRareMonster,
 	pickMonsterDef,
 	pickBossDef,
 	isBossLevel,
 	isBoss,
+	isRare,
+	getRareBaseName,
 	decideMoveDirection,
 	getMonsterBehavior,
 	getMonsterOnHitEffect,
+	getMonsterDef,
 	type MonsterDef
 } from './monsters';
 import type { Entity } from './types';
@@ -355,5 +359,74 @@ describe('isBoss', () => {
 	it('returns false for regular monsters', () => {
 		const monster = createMonster({ x: 0, y: 0 }, 1, MONSTER_DEFS[0]);
 		expect(isBoss(monster)).toBe(false);
+	});
+});
+
+describe('Rare monsters', () => {
+	it('createRareMonster returns entity with prefixed name', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Goblin')!;
+		const rare = createRareMonster({ x: 0, y: 0 }, 1, def);
+		expect(rare.name).toContain('Goblin');
+		expect(rare.name).not.toBe('Goblin');
+		expect(isRare(rare)).toBe(true);
+	});
+
+	it('rare monsters have 2x HP compared to normal', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Goblin')!;
+		const normal = createMonster({ x: 0, y: 0 }, 5, def);
+		const rare = createRareMonster({ x: 0, y: 0 }, 5, def);
+		expect(rare.maxHp).toBe(normal.maxHp * 2);
+	});
+
+	it('rare monsters have ~1.5x attack compared to normal', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Ogre')!;
+		const normal = createMonster({ x: 0, y: 0 }, 5, def);
+		const rare = createRareMonster({ x: 0, y: 0 }, 5, def);
+		expect(rare.attack).toBe(Math.floor(normal.attack * 1.5));
+	});
+
+	it('rare monsters use uppercase char', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Rat')!;
+		const rare = createRareMonster({ x: 0, y: 0 }, 1, def);
+		expect(rare.char).toBe(def.char.toUpperCase());
+	});
+
+	it('rare monsters have distinct color', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Goblin')!;
+		const rare = createRareMonster({ x: 0, y: 0 }, 1, def);
+		expect(rare.color).not.toBe(def.color);
+	});
+
+	it('isRare returns false for normal monsters', () => {
+		const normal = createMonster({ x: 0, y: 0 }, 1, MONSTER_DEFS[0]);
+		expect(isRare(normal)).toBe(false);
+	});
+
+	it('getRareBaseName strips prefix correctly', () => {
+		expect(getRareBaseName('Ancient Goblin')).toBe('Goblin');
+		expect(getRareBaseName('Shadow Rat')).toBe('Rat');
+		expect(getRareBaseName('Goblin')).toBeUndefined();
+	});
+
+	it('getMonsterDef finds base def for rare monsters', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Slime')!;
+		const rare = createRareMonster({ x: 0, y: 0 }, 1, def);
+		const found = getMonsterDef(rare);
+		expect(found).toBeDefined();
+		expect(found!.name).toBe('Slime');
+	});
+
+	it('rare monsters inherit base behavior from def', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Rat')!; // cowardly
+		const rare = createRareMonster({ x: 0, y: 0 }, 1, def);
+		expect(getMonsterBehavior(rare)).toBe('cowardly');
+	});
+
+	it('rare monsters inherit on-hit effect from def', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Slime')!; // poison
+		const rare = createRareMonster({ x: 0, y: 0 }, 1, def);
+		const effect = getMonsterOnHitEffect(rare);
+		expect(effect).toBeDefined();
+		expect(effect!.type).toBe('poison');
 	});
 });

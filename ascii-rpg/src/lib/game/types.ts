@@ -3,6 +3,13 @@ export interface Position {
 	y: number;
 }
 
+export type CharacterClass = 'warrior' | 'mage' | 'rogue';
+
+export interface CharacterConfig {
+	name: string;
+	characterClass: CharacterClass;
+}
+
 export type StatusEffectType = 'poison' | 'stun' | 'regeneration';
 
 export interface StatusEffect {
@@ -66,4 +73,5 @@ export interface GameState {
 	detectedSecrets: Set<string>;
 	traps: Trap[];
 	detectedTraps: Set<string>;
+	characterConfig: CharacterConfig;
 }

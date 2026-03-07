@@ -1,9 +1,9 @@
-import type { GameState, Entity, Position, MessageType } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
-import { createMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
+import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap } from './traps';
 
 const MAP_W = 50;
@@ -34,6 +34,9 @@ function checkLevelUp(state: GameState): void {
 
 function createEnemy(pos: Position, level: number): Entity {
 	const def = pickMonsterDef(level);
+	if (Math.random() < RARE_SPAWN_CHANCE) {
+		return createRareMonster(pos, level, def);
+	}
 	return createMonster(pos, level, def);
 }
 
@@ -47,8 +50,28 @@ function spawnEnemies(positions: Position[], level: number): Entity[] {
 	return enemies;
 }
 
-export function createGame(): GameState {
-	return newLevel(1);
+export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; sight: number; description: string }> = {
+	warrior: { hp: 4, atk: 1, sight: -1, description: 'A sturdy fighter with high endurance' },
+	mage: { hp: -2, atk: -1, sight: 3, description: 'A scholar who sees far into the darkness' },
+	rogue: { hp: 0, atk: 1, sight: 1, description: 'A nimble adventurer with keen senses' }
+};
+
+const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior' };
+
+export function createGame(config?: CharacterConfig): GameState {
+	const cfg = config ?? DEFAULT_CONFIG;
+	const state = newLevel(1);
+	state.characterConfig = cfg;
+	state.player.name = cfg.name;
+
+	const bonuses = CLASS_BONUSES[cfg.characterClass];
+	state.player.hp += bonuses.hp;
+	state.player.maxHp += bonuses.hp;
+	state.player.attack += bonuses.atk;
+	state.sightRadius += bonuses.sight;
+
+	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
+	return state;
 }
 
 const DEFAULT_SIGHT_RADIUS = 8;
@@ -88,7 +111,8 @@ function newLevel(level: number): GameState {
 		sightRadius,
 		detectedSecrets: new Set<string>(),
 		traps: filteredTraps,
-		detectedTraps: new Set<string>()
+		detectedTraps: new Set<string>(),
+		characterConfig: DEFAULT_CONFIG
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -190,7 +214,7 @@ function moveEnemies(state: GameState) {
 
 export function handleInput(state: GameState, key: string): GameState {
 	if (state.gameOver) {
-		if (key === 'r') return createGame();
+		if (key === 'r') return createGame(state.characterConfig);
 		return state;
 	}
 
@@ -220,11 +244,15 @@ export function handleInput(state: GameState, key: string): GameState {
 		addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
 		if (target.hp <= 0) {
 			const bossKill = isBoss(target);
-			const reward = bossKill ? xpReward(target, state.level) * 3 : xpReward(target, state.level);
+			const rareKill = isRare(target);
+			const baseReward = xpReward(target, state.level);
+			const reward = bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward;
 			state.xp += reward;
 			state.enemies = state.enemies.filter((e) => e !== target);
 			if (bossKill) {
 				addMessage(state, `${target.name} has been vanquished! +${reward} XP`, 'level_up');
+			} else if (rareKill) {
+				addMessage(state, `${target.name} slain! +${reward} XP`, 'level_up');
 			} else {
 				addMessage(state, `${target.name} defeated! +${reward} XP`, 'player_attack');
 			}
@@ -290,6 +318,8 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.characterLevel = state.characterLevel;
 		next.sightRadius = state.sightRadius;
 		next.player.statusEffects = [...state.player.statusEffects];
+		next.characterConfig = state.characterConfig;
+		next.player.name = state.player.name;
 		addMessage(next, `Descended to level ${next.level}.`);
 		return next;
 	}

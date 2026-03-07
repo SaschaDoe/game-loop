@@ -84,6 +84,41 @@ export function pickBossDef(level: number): MonsterDef {
 	return BOSS_DEFS[index];
 }
 
+const RARE_PREFIXES = ['Ancient', 'Shadow', 'Enraged', 'Cursed', 'Spectral'];
+const RARE_COLORS = ['#ffaa00', '#aa44ff', '#ff2222', '#44ffaa', '#aaaaff'];
+
+export const RARE_SPAWN_CHANCE = 0.05;
+
+export function isRare(enemy: Entity): boolean {
+	return RARE_PREFIXES.some((p) => enemy.name.startsWith(p + ' '));
+}
+
+export function getRareBaseName(name: string): string | undefined {
+	for (const prefix of RARE_PREFIXES) {
+		if (name.startsWith(prefix + ' ')) {
+			return name.slice(prefix.length + 1);
+		}
+	}
+	return undefined;
+}
+
+export function createRareMonster(pos: Position, level: number, def: MonsterDef): Entity {
+	const prefix = RARE_PREFIXES[Math.floor(Math.random() * RARE_PREFIXES.length)];
+	const color = RARE_COLORS[RARE_PREFIXES.indexOf(prefix)];
+	const hp = (def.baseHp + Math.floor(def.hpPerLevel * level)) * 2;
+	const attack = Math.floor((def.baseAttack + Math.floor(def.attackPerLevel * level)) * 1.5);
+	return {
+		pos,
+		char: def.char.toUpperCase(),
+		color,
+		name: `${prefix} ${def.name}`,
+		hp,
+		maxHp: hp,
+		attack,
+		statusEffects: []
+	};
+}
+
 export function monstersForLevel(level: number): MonsterDef[] {
 	if (level <= 3) return MONSTER_DEFS.filter((m) => m.tier === 1);
 	if (level <= 7) return MONSTER_DEFS.filter((m) => m.tier <= 2);
@@ -172,7 +207,12 @@ const MONSTER_BY_NAME = new Map(
 );
 
 export function getMonsterDef(enemy: Entity): MonsterDef | undefined {
-	return MONSTER_BY_NAME.get(enemy.name);
+	const direct = MONSTER_BY_NAME.get(enemy.name);
+	if (direct) return direct;
+	// Check for rare variant — strip prefix to find base def
+	const baseName = getRareBaseName(enemy.name);
+	if (baseName) return MONSTER_BY_NAME.get(baseName);
+	return undefined;
 }
 
 function getActivePhase(def: MonsterDef, enemy: Entity): MonsterPhase | undefined {

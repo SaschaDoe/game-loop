@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, handleInput, xpForLevel, xpReward } from './engine';
-import { BOSS_DEFS, createMonster, isBoss } from './monsters';
+import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import type { GameState, Entity, Trap } from './types';
 import { Visibility } from './types';
 
@@ -50,6 +50,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedSecrets: new Set<string>(),
 		traps: [],
 		detectedTraps: new Set<string>(),
+		characterConfig: { name: 'Hero', characterClass: 'warrior' as const },
 		...overrides
 	};
 }
@@ -508,5 +509,30 @@ describe('Boss encounters integration', () => {
 
 		const result = handleInput(state, 'd');
 		expect(result.xp).toBe(expectedReward);
+	});
+});
+
+describe('Rare monster integration', () => {
+	it('rare monster kill gives 2x XP', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Goblin')!;
+		const rare = createRareMonster({ x: 6, y: 5 }, 1, def);
+		rare.hp = 1;
+		const state = makeTestState({ enemies: [rare], level: 1, characterLevel: 50 });
+		const expectedReward = xpReward(rare, 1) * 2;
+
+		const result = handleInput(state, 'd');
+		expect(result.xp).toBe(expectedReward);
+	});
+
+	it('rare monster defeat shows special message', () => {
+		const def = MONSTER_DEFS.find((m) => m.name === 'Goblin')!;
+		const rare = createRareMonster({ x: 6, y: 5 }, 1, def);
+		rare.hp = 1;
+		const state = makeTestState({ enemies: [rare], level: 1 });
+
+		const result = handleInput(state, 'd');
+		const msg = result.messages.find((m) => m.text.includes('slain'));
+		expect(msg).toBeDefined();
+		expect(msg!.type).toBe('level_up');
 	});
 });
