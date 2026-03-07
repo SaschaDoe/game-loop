@@ -74,6 +74,18 @@
 		typewriterRaf = requestAnimationFrame(tick);
 	}
 
+	$effect(() => {
+		if (state.activeDialogue) {
+			const dlg = state.activeDialogue;
+			const node = dlg.tree.nodes[dlg.currentNodeId];
+			if (node) {
+				const isGarbled = !!(node.language && !state.knownLanguages.includes(node.language));
+				const displayText = isGarbled ? garbleText(node.npcText ?? '', node.language ?? '') : (node.npcText ?? '');
+				startTypewriter(displayText, dlg.currentNodeId);
+			}
+		}
+	});
+
 	function skipTypewriter(fullText: string) {
 		cancelAnimationFrame(typewriterRaf);
 		typewriterText = fullText;
@@ -395,7 +407,6 @@
 		{@const isGarbled = !!(node?.language && !state.knownLanguages.includes(node.language))}
 		{@const displayText = isGarbled ? garbleText(node?.npcText ?? '', node?.language ?? '') : (node?.npcText ?? '')}
 		{@const filteredOpts = (node?.options ?? []).map((opt, origIdx) => ({ opt, origIdx })).filter(({ opt }) => !opt.showIf || checkCondition(opt.showIf, dlg.context))}
-		{void startTypewriter(displayText, dlg.currentNodeId)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="dialogue-overlay" onclick={(e) => {
