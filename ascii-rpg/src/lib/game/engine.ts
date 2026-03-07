@@ -3,11 +3,10 @@ import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
+import { createMonster, pickMonsterDef, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
 
 const MAP_W = 50;
 const MAP_H = 24;
-
-const ENEMY_NAMES = ['Goblin', 'Rat', 'Skeleton', 'Slime', 'Bat'];
 
 export function xpForLevel(level: number): number {
 	return Math.floor(50 * Math.pow(1.4, level - 1));
@@ -33,17 +32,8 @@ function checkLevelUp(state: GameState): void {
 }
 
 function createEnemy(pos: Position, level: number): Entity {
-	const name = ENEMY_NAMES[Math.floor(Math.random() * ENEMY_NAMES.length)];
-	return {
-		pos,
-		char: name[0],
-		color: name === 'Goblin' ? '#0f0' : name === 'Rat' ? '#a86' : name === 'Skeleton' ? '#fff' : name === 'Slime' ? '#0ff' : '#f0f',
-		name,
-		hp: 2 + level,
-		maxHp: 2 + level,
-		attack: 1 + Math.floor(level / 2),
-		statusEffects: []
-	};
+	const def = pickMonsterDef(level);
+	return createMonster(pos, level, def);
 }
 
 export function createGame(): GameState {
@@ -124,26 +114,23 @@ function moveEnemies(state: GameState) {
 	tickEntityEffects(state, state.player);
 
 	for (const enemy of state.enemies) {
-		// Stunned enemies skip their turn
 		if (hasEffect(enemy, 'stun')) continue;
 
-		const dx = Math.sign(state.player.pos.x - enemy.pos.x);
-		const dy = Math.sign(state.player.pos.y - enemy.pos.y);
+		const behavior = getMonsterBehavior(enemy);
+		const move = decideMoveDirection(enemy, state.player.pos, state.enemies, behavior);
+		if (move.skip) continue;
 
-		// only move ~50% of turns
-		if (Math.random() < 0.5) continue;
-
-		const nx = enemy.pos.x + dx;
-		const ny = enemy.pos.y + dy;
+		const nx = enemy.pos.x + move.dx;
+		const ny = enemy.pos.y + move.dy;
 
 		if (nx === state.player.pos.x && ny === state.player.pos.y) {
 			const dmg = Math.max(1, enemy.attack + Math.floor(Math.random() * 2));
 			state.player.hp -= dmg;
 			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`);
-			// Slimes inflict poison on hit
-			if (enemy.name === 'Slime') {
-				applyEffect(state.player, 'poison', 3, 1);
-				addMessage(state, 'You are poisoned!');
+			const onHit = getMonsterOnHitEffect(enemy);
+			if (onHit) {
+				applyEffect(state.player, onHit.type, onHit.duration, onHit.potency);
+				addMessage(state, `${enemy.name}'s attack inflicts ${onHit.type}!`);
 			}
 			if (state.player.hp <= 0) {
 				state.gameOver = true;
