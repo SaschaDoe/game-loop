@@ -42,7 +42,7 @@
 {/if}{/each}</pre>
 	<div class="messages">
 		{#each state.messages as msg}
-			<div class="msg">{msg}</div>
+			<div class="msg msg-{msg.type}">{msg.text}</div>
 		{/each}
 	</div>
 	<div class="legend">
@@ -51,6 +51,7 @@
 		<span><span style="color:#444">#</span> Wall</span>
 		<span><span style="color:#f0f">*</span> Potion</span>
 		<span><span style="color:#ff0">&gt;</span> Stairs</span>
+		<span><span style="color:#f44">^</span> Trap</span>
 		<span>WASD/Arrows to move | Bump to attack | R to restart</span>
 	</div>
 </div>
@@ -164,9 +165,42 @@
 	}
 
 	.msg {
-		color: #aaa;
 		font-size: 13px;
 		padding: 1px 0;
+	}
+
+	.msg-info {
+		color: #aaa;
+	}
+
+	.msg-player_attack {
+		color: #ff4;
+	}
+
+	.msg-damage_taken {
+		color: #f44;
+	}
+
+	.msg-healing {
+		color: #4f4;
+	}
+
+	.msg-level_up {
+		color: #4ff;
+		font-weight: bold;
+	}
+
+	.msg-discovery {
+		color: #c8f;
+	}
+
+	.msg-death {
+		color: #f00;
+		font-weight: bold;
+	}
+
+	.msg-trap {
+		color: #fa4;
 	}
 
 	.legend {

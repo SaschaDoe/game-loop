@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position } from './types';
+import type { GameState, Entity, Position, MessageType } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createVisibilityGrid, updateVisibility } from './fov';
@@ -27,7 +27,7 @@ function checkLevelUp(state: GameState): void {
 		state.player.maxHp += hpGain;
 		state.player.hp += hpGain;
 		state.player.attack += atkGain;
-		addMessage(state, `Level up! You are now level ${state.characterLevel}. +${hpGain} HP${atkGain ? `, +${atkGain} ATK` : ''}.`);
+		addMessage(state, `Level up! You are now level ${state.characterLevel}. +${hpGain} HP${atkGain ? `, +${atkGain} ATK` : ''}.`, 'level_up');
 		threshold = xpForLevel(state.characterLevel + 1);
 	}
 }
@@ -69,7 +69,7 @@ function newLevel(level: number): GameState {
 		},
 		enemies: enemyPositions.map((p) => createEnemy(p, level)),
 		map,
-		messages: [`Welcome to dungeon level ${level}. Use WASD or arrow keys to move.`],
+		messages: [{ text: `Welcome to dungeon level ${level}. Use WASD or arrow keys to move.`, type: 'info' as const }],
 		level,
 		gameOver: false,
 		xp: 0,
@@ -87,8 +87,8 @@ function newLevel(level: number): GameState {
 	return state;
 }
 
-function addMessage(state: GameState, msg: string) {
-	state.messages = [...state.messages.slice(-7), msg];
+function addMessage(state: GameState, msg: string, type: MessageType = 'info') {
+	state.messages = [...state.messages.slice(-49), { text: msg, type }];
 }
 
 function isBlocked(state: GameState, x: number, y: number): boolean {
@@ -109,7 +109,7 @@ function detectAdjacentSecrets(state: GameState): void {
 		const key = `${nx},${ny}`;
 		if (state.map.secretWalls.has(key) && !state.detectedSecrets.has(key)) {
 			state.detectedSecrets.add(key);
-			addMessage(state, 'You notice a hidden passage in the wall!');
+			addMessage(state, 'You notice a hidden passage in the wall!', 'discovery');
 		}
 	}
 }
@@ -117,11 +117,12 @@ function detectAdjacentSecrets(state: GameState): void {
 function tickEntityEffects(state: GameState, entity: Entity): void {
 	const result = tickEffects(entity);
 	for (const msg of result.messages) {
-		addMessage(state, msg);
+		const type = entity === state.player ? 'damage_taken' : 'player_attack';
+		addMessage(state, msg, type);
 	}
 	if (entity === state.player && entity.hp <= 0) {
 		state.gameOver = true;
-		addMessage(state, 'You have been slain! Press R to restart.');
+		addMessage(state, 'You have been slain! Press R to restart.', 'death');
 	}
 }
 
@@ -134,7 +135,7 @@ function moveEnemies(state: GameState) {
 		if (e.hp <= 0) {
 			const reward = xpReward(e, state.level);
 			state.xp += reward;
-			addMessage(state, `${e.name} died from status effects! +${reward} XP`);
+			addMessage(state, `${e.name} died from status effects! +${reward} XP`, 'player_attack');
 			return false;
 		}
 		return true;
@@ -157,15 +158,15 @@ function moveEnemies(state: GameState) {
 		if (nx === state.player.pos.x && ny === state.player.pos.y) {
 			const dmg = Math.max(1, enemy.attack + Math.floor(Math.random() * 2));
 			state.player.hp -= dmg;
-			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`);
+			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`, 'damage_taken');
 			const onHit = getMonsterOnHitEffect(enemy);
 			if (onHit) {
 				applyEffect(state.player, onHit.type, onHit.duration, onHit.potency);
-				addMessage(state, `${enemy.name}'s attack inflicts ${onHit.type}!`);
+				addMessage(state, `${enemy.name}'s attack inflicts ${onHit.type}!`, 'damage_taken');
 			}
 			if (state.player.hp <= 0) {
 				state.gameOver = true;
-				addMessage(state, 'You have been slain! Press R to restart.');
+				addMessage(state, 'You have been slain! Press R to restart.', 'death');
 			}
 		} else if (!isBlocked(state, nx, ny) && !state.enemies.some((e) => e !== enemy && e.pos.x === nx && e.pos.y === ny)) {
 			enemy.pos = { x: nx, y: ny };
@@ -189,7 +190,7 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	// Stunned player loses their turn
 	if (hasEffect(state.player, 'stun')) {
-		addMessage(state, 'You are stunned and cannot act!');
+		addMessage(state, 'You are stunned and cannot act!', 'damage_taken');
 		moveEnemies(state);
 		return { ...state };
 	}
@@ -202,12 +203,12 @@ export function handleInput(state: GameState, key: string): GameState {
 	if (target) {
 		const dmg = Math.max(1, state.player.attack + Math.floor(Math.random() * 3));
 		target.hp -= dmg;
-		addMessage(state, `You hit ${target.name} for ${dmg}!`);
+		addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
 		if (target.hp <= 0) {
 			const reward = xpReward(target, state.level);
 			state.xp += reward;
 			state.enemies = state.enemies.filter((e) => e !== target);
-			addMessage(state, `${target.name} defeated! +${reward} XP`);
+			addMessage(state, `${target.name} defeated! +${reward} XP`, 'player_attack');
 			checkLevelUp(state);
 		}
 		moveEnemies(state);
@@ -220,14 +221,14 @@ export function handleInput(state: GameState, key: string): GameState {
 	const tileKey = `${nx},${ny}`;
 	if (state.map.tiles[ny][nx] === '#' && state.map.secretWalls.has(tileKey) && state.detectedSecrets.has(tileKey)) {
 		state.map.tiles[ny][nx] = '.';
-		addMessage(state, 'You push through the hidden passage!');
+		addMessage(state, 'You push through the hidden passage!', 'discovery');
 	}
 
 	state.player.pos = { x: nx, y: ny };
 	updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
-		addMessage(state, msg);
+		addMessage(state, msg, 'discovery');
 	}
 
 	// Check for trap at new position
@@ -235,19 +236,19 @@ export function handleInput(state: GameState, key: string): GameState {
 	if (trap && !state.detectedTraps.has(`${nx},${ny}`)) {
 		const result = triggerTrap(state, trap);
 		for (const msg of result.messages) {
-			addMessage(state, msg);
+			addMessage(state, msg, 'trap');
 		}
 		if (result.teleportPos) {
 			state.player.pos = result.teleportPos;
 			updateVisibility(state.visibility, state.map, state.player.pos, state.sightRadius);
 			detectAdjacentSecrets(state);
 			for (const msg2 of detectAdjacentTraps(state)) {
-				addMessage(state, msg2);
+				addMessage(state, msg2, 'discovery');
 			}
 		}
 		if (state.player.hp <= 0) {
 			state.gameOver = true;
-			addMessage(state, 'You have been slain! Press R to restart.');
+			addMessage(state, 'You have been slain! Press R to restart.', 'death');
 			return { ...state };
 		}
 	}
@@ -257,7 +258,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		const heal = 3 + state.level;
 		state.player.hp = Math.min(state.player.maxHp, state.player.hp + heal);
 		state.map.tiles[ny][nx] = '.';
-		addMessage(state, `Picked up a potion! Healed ${heal} HP.`);
+		addMessage(state, `Picked up a potion! Healed ${heal} HP.`, 'healing');
 	}
 
 	// stairs

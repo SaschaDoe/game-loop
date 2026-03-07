@@ -38,6 +38,13 @@ export enum Visibility {
 	Visible = 2
 }
 
+export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap';
+
+export interface GameMessage {
+	text: string;
+	type: MessageType;
+}
+
 export interface GameMap {
 	width: number;
 	height: number;
@@ -49,7 +56,7 @@ export interface GameState {
 	player: Entity;
 	enemies: Entity[];
 	map: GameMap;
-	messages: string[];
+	messages: GameMessage[];
 	level: number;
 	gameOver: boolean;
 	xp: number;

@@ -143,7 +143,7 @@ describe('XP on enemy kill', () => {
 		const state = makeTestState({ enemies: [enemy] });
 
 		const result = handleInput(state, 'd');
-		const xpMsg = result.messages.find((m) => m.includes('XP'));
+		const xpMsg = result.messages.find((m) => m.text.includes('XP'));
 		expect(xpMsg).toBeDefined();
 	});
 
@@ -202,9 +202,9 @@ describe('Level-up', () => {
 		const state = makeTestState({ enemies: [enemy] });
 
 		const result = handleInput(state, 'd');
-		const lvlMsg = result.messages.find((m) => m.includes('Level up!'));
+		const lvlMsg = result.messages.find((m) => m.text.includes('Level up!'));
 		expect(lvlMsg).toBeDefined();
-		expect(lvlMsg).toContain('level 2');
+		expect(lvlMsg!.text).toContain('level 2');
 	});
 
 	it('can level up multiple times at once with large XP gain', () => {
@@ -271,7 +271,7 @@ describe('Status effects integration', () => {
 		state.player.statusEffects = [{ type: 'stun', duration: 2, potency: 0 }];
 		const result = handleInput(state, 'd');
 		expect(result.player.pos.x).toBe(5); // didn't move
-		expect(result.messages.some((m) => m.includes('stunned'))).toBe(true);
+		expect(result.messages.some((m) => m.text.includes('stunned'))).toBe(true);
 	});
 
 	it('stunned player cannot attack', () => {
@@ -307,7 +307,7 @@ describe('Secret rooms', () => {
 		// Move right to (6,5) — now adjacent to secret wall at (7,5)
 		const result = handleInput(state, 'd');
 		expect(result.detectedSecrets.has('7,5')).toBe(true);
-		expect(result.messages.some((m) => m.includes('hidden passage'))).toBe(true);
+		expect(result.messages.some((m) => m.text.includes('hidden passage'))).toBe(true);
 	});
 
 	it('cannot walk through undetected secret wall', () => {
@@ -326,7 +326,7 @@ describe('Secret rooms', () => {
 		state.detectedSecrets.add('6,5');
 		const result = handleInput(state, 'd');
 		expect(result.player.pos.x).toBe(6); // walked through
-		expect(result.messages.some((m) => m.includes('hidden passage'))).toBe(true);
+		expect(result.messages.some((m) => m.text.includes('hidden passage'))).toBe(true);
 	});
 
 	it('opening a secret wall turns it into floor', () => {
@@ -369,7 +369,7 @@ describe('Traps integration', () => {
 		const result = handleInput(state, 'd');
 		expect(result.traps[0].triggered).toBe(true);
 		expect(result.player.hp).toBeLessThan(20);
-		expect(result.messages.some((m) => m.includes('Spike Trap'))).toBe(true);
+		expect(result.messages.some((m) => m.text.includes('Spike Trap'))).toBe(true);
 	});
 
 	it('detected trap is not triggered when walking onto it', () => {
@@ -395,5 +395,81 @@ describe('Traps integration', () => {
 		// Move right to (6,5) — adjacent to trap at (7,5)
 		const result = handleInput(state, 'd');
 		expect(result.detectedTraps.has('7,5')).toBe(true);
+	});
+});
+
+describe('Combat log messages', () => {
+	it('createGame starts with typed messages', () => {
+		const state = createGame();
+		expect(state.messages.length).toBeGreaterThan(0);
+		expect(state.messages[0].text).toContain('Welcome');
+		expect(state.messages[0].type).toBe('info');
+	});
+
+	it('player attack messages have player_attack type', () => {
+		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: 3 });
+		const state = makeTestState({ enemies: [enemy] });
+		const result = handleInput(state, 'd');
+		const attackMsg = result.messages.find((m) => m.text.includes('You hit'));
+		expect(attackMsg).toBeDefined();
+		expect(attackMsg!.type).toBe('player_attack');
+	});
+
+	it('enemy defeat messages have player_attack type', () => {
+		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: 3 });
+		const state = makeTestState({ enemies: [enemy] });
+		const result = handleInput(state, 'd');
+		const defeatMsg = result.messages.find((m) => m.text.includes('defeated'));
+		expect(defeatMsg).toBeDefined();
+		expect(defeatMsg!.type).toBe('player_attack');
+	});
+
+	it('level-up messages have level_up type', () => {
+		const threshold = xpForLevel(2);
+		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: threshold });
+		const state = makeTestState({ enemies: [enemy] });
+		const result = handleInput(state, 'd');
+		const lvlMsg = result.messages.find((m) => m.text.includes('Level up!'));
+		expect(lvlMsg).toBeDefined();
+		expect(lvlMsg!.type).toBe('level_up');
+	});
+
+	it('healing messages have healing type', () => {
+		const state = makeTestState();
+		state.player.hp = 10;
+		state.map.tiles[5][6] = '*';
+		const result = handleInput(state, 'd');
+		const healMsg = result.messages.find((m) => m.text.includes('Healed'));
+		expect(healMsg).toBeDefined();
+		expect(healMsg!.type).toBe('healing');
+	});
+
+	it('trap messages have trap type', () => {
+		const state = makeTestState();
+		state.traps = [{ pos: { x: 6, y: 5 }, type: 'spike', triggered: false }];
+		const result = handleInput(state, 'd');
+		const trapMsg = result.messages.find((m) => m.text.includes('Spike Trap'));
+		expect(trapMsg).toBeDefined();
+		expect(trapMsg!.type).toBe('trap');
+	});
+
+	it('secret discovery messages have discovery type', () => {
+		const state = makeTestState();
+		state.map.tiles[5][7] = '#';
+		state.map.secretWalls.add('7,5');
+		const result = handleInput(state, 'd');
+		const discoveryMsg = result.messages.find((m) => m.text.includes('hidden passage'));
+		expect(discoveryMsg).toBeDefined();
+		expect(discoveryMsg!.type).toBe('discovery');
+	});
+
+	it('retains up to 50 messages', () => {
+		const state = makeTestState();
+		state.messages = Array.from({ length: 50 }, (_, i) => ({ text: `msg ${i}`, type: 'info' as const }));
+		// Move to add another message (trap detection nearby)
+		state.traps = [{ pos: { x: 7, y: 5 }, type: 'spike', triggered: false }];
+		const result = handleInput(state, 'd');
+		expect(result.messages.length).toBeLessThanOrEqual(50);
+		expect(result.messages.length).toBeGreaterThan(0);
 	});
 });
