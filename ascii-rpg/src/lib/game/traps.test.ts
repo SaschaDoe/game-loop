@@ -47,6 +47,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		rumors: [],
 		knownLanguages: [],
 		landmarks: [],
+		heardStories: [],
 		...overrides
 	};
 }

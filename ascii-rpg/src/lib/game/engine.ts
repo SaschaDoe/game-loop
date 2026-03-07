@@ -129,7 +129,8 @@ export function createGame(config?: CharacterConfig): GameState {
 		activeDialogue: null,
 		rumors: [],
 		knownLanguages: [],
-		landmarks: []
+		landmarks: [],
+		heardStories: []
 	};
 
 	// Apply class bonuses
@@ -269,7 +270,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 		activeDialogue: null,
 		rumors: [],
 		knownLanguages: [],
-		landmarks
+		landmarks,
+		heardStories: []
 	};
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -1008,6 +1010,12 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 		if (option.onSelect.learnLanguage && !state.knownLanguages.includes(option.onSelect.learnLanguage)) {
 			state.knownLanguages = [...state.knownLanguages, option.onSelect.learnLanguage];
 			addMessage(state, `Language learned: ${option.onSelect.learnLanguage}! You can now understand speakers of this tongue.`, 'discovery');
+		}
+		// Collect stories
+		if (option.onSelect.story && !state.heardStories.includes(option.onSelect.story.id)) {
+			state.heardStories = [...state.heardStories, option.onSelect.story.id];
+			addMessage(state, `Story collected: "${option.onSelect.story.title}" (+5 XP)`, 'discovery');
+			state.xp += 5;
 		}
 	}
 

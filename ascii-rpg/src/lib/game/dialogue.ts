@@ -1,4 +1,4 @@
-import type { DialogueTree, DialogueNode, Rumor } from './types';
+import type { DialogueTree, DialogueNode, Rumor, Story } from './types';
 
 function node(id: string, npcText: string, options: DialogueNode['options'], language?: string): DialogueNode {
 	return { id, npcText, options, language };
@@ -11,6 +11,30 @@ function opt(text: string, nextNode: string, color?: string, extras?: { onSelect
 function rumor(id: string, text: string, source: string, accuracy: Rumor['accuracy']): Rumor {
 	return { id, text, source, accuracy };
 }
+
+function story(id: string, title: string, text: string, teller: string, type: Story['type']): Story {
+	return { id, title, text, teller, type };
+}
+
+// ─── STORY CATALOGUE ───
+
+export const STORIES: Record<string, Story> = {
+	barkeep_merton: story('barkeep_merton', 'Old Merton\'s Last Patron', 'The previous tavern owner, Merton, served a customer who ordered "something strong enough to forget." Merton brewed a concoction so potent it erased the man\'s entire identity. He now works as a nameless farmhand outside Willowmere, perfectly content, growing turnips. Merton sold the tavern out of guilt. The recipe was lost. Probably for the best.', 'The Barkeep', 'personal'),
+	barkeep_door: story('barkeep_door', 'The Slime and the Door', 'During the last dungeon surge, a gelatinous slime squeezed through the Rusty Flagon\'s cellar door, absorbed all of the Tuesday special, and then tried to pay for it. It left a gold coin in a puddle of dissolved stew. The coin was real. The Barkeep accepted it. "A paying customer is a paying customer, even if they\'re technically a liquid."', 'The Barkeep', 'personal'),
+	barkeep_founders: story('barkeep_founders', 'The Founding of Willowmere', 'Two centuries ago, Aldric Willowmere set out from the capital with twelve wagons of trade goods, a hand-drawn map, and boundless optimism. He arrived at a clearing with zero wagons, no map, and the phrase "this is fine" tattooed on his increasingly limited worldview. He built a house. Others joined him, presumably also lost. Nobody has successfully navigated to or from the capital since. Willowmere exists because cartography is hard.', 'The Barkeep', 'legend'),
+	stranger_first: story('stranger_first', 'The First Adventurer', 'The first person to enter the dungeon was a shepherd named Brin who chased a lost sheep through a crack in the earth. She descended forty levels, defeated the Guardian of the Threshold, befriended a colony of sentient mushrooms, and retrieved her sheep. When asked about the experience, she said: "Bit dark." She returned to shepherding and never spoke of it again. The mushrooms still ask about her.', 'Hooded Stranger', 'legend'),
+	stranger_architects: story('stranger_architects', 'The Architects\' Departure', 'The beings who built the dungeon did not die. They did not leave. They were... compiled. Their consciousness was compressed into the walls, the floors, the traps, the treasure. Every room you enter is a fragment of a thought. Every corridor is a sentence in an unfinished argument. The dungeon is not a building. It is a conversation that has been happening for millennia, in a language of stone and shadow.', 'Hooded Stranger', 'lore'),
+	stranger_convergence: story('stranger_convergence', 'The Convergence', 'Once every three hundred years, the dungeon aligns with something beyond this world. The walls thin. The floors become translucent. For one night, you can see through the stone to the spaces between realities — vast, dark oceans of nothing, with things moving in them. The last Convergence was two hundred and ninety-nine years ago. The next one is... soon. Very soon.', 'Hooded Stranger', 'cautionary'),
+	drunk_chester: story('drunk_chester', 'Chester the Friendly Mimic', 'Garvus swears he once befriended a Mimic on level four by complimenting its grain pattern. "Beautiful oak finish," he told it, mid-attack. The Mimic was so flattered it stopped biting. They shared a meal — Garvus ate trail rations while Chester ate an adventurer\'s boot. They parted ways as friends. Garvus named it Chester. Chester has since eaten at least seven people. "But never me," Garvus insists proudly. "We have a bond."', 'Garvus', 'tall_tale'),
+	drunk_delvers: story('drunk_delvers', 'The Silver Delvers\' Last Job', 'Five adventurers with matching cloaks and a team name descended to level fifteen. What they found there — a library of living text, an Eye that watched from below — split them apart more than any monster could. Four returned. One stayed. The four never spoke to each other again. Garvus drinks. Korrin disappeared. Lila took a contract in another kingdom. Brenn became a librarian, which everyone agrees is deeply ironic.', 'Garvus', 'personal'),
+	drunk_recipe: story('drunk_recipe', 'Garvus\'s Secret Recipe', 'Between his sixth and ninth ale, Garvus will swear on his mother\'s grave that he invented a potion that makes you invisible to bosses. The ingredients: three mushrooms, a spider fang, and "the tears of someone who genuinely believes in you." He claims the last ingredient is the hardest to find in a dungeon. He has never successfully brewed this potion. The mushrooms were poisonous. He was hospitalized for a week. He still believes in the recipe.', 'Garvus', 'tall_tale'),
+	thessaly_deepscript: story('thessaly_deepscript', 'The Language Before Language', 'Before mortal tongues shaped words, the Architects wrote Deepscript into the bones of the world. It is not a language of communication but of creation — each glyph is an instruction, a command to reality itself. The dungeon\'s walls are covered in it. The traps are sentences. The boss rooms are paragraphs. The entire dungeon is a program, still running, still executing code written by beings who no longer exist in any conventional sense.', 'Thessaly', 'lore'),
+	thessaly_eye: story('thessaly_eye', 'The Eye Below', 'At the deepest point of the dungeon, embedded in living rock, there is an Eye. Not a creature\'s eye. Something older. Something that was here before the dungeon, before the Architects, before the world had a name. Thessaly believes the Architects didn\'t build the dungeon — they found the Eye and built the dungeon around it. A container. A prison. A monument. The Eye dreams, and its dreams become the dungeon\'s reality. When it blinks, floors rearrange. When it dreams deeply, new levels appear.', 'Thessaly', 'lore'),
+	morrigan_slime: story('morrigan_slime', 'The Slime Fashion Industry', 'Morrigan once sold a decorative bow to a gelatinous slime. The slime absorbed it, became fashionable, and started a trend. Within a week, every slime on the level wanted accessories. Morrigan sold forty-seven tiny hats, twelve monocles, and a cravat. "Best week of my career," she recalls. "The cravat slime became their leader. President Cravat. Very dignified. Ate three adventurers with impeccable manners."', 'Morrigan', 'tall_tale'),
+	morrigan_economy: story('morrigan_economy', 'The Dungeon Economy', 'According to Morrigan, the dungeon has a fully functioning economy. Goblins mine ore. Skeletons provide manual labor (cheap — they don\'t eat). Mimics run the banking sector ("very trustworthy if you don\'t try to open them"). Slimes handle waste management. The only thing the dungeon lacks is a tax authority, which Morrigan considers its greatest feature. "Pure capitalism," she says reverently. "Adam Smith would weep."', 'Morrigan', 'tall_tale'),
+	corwin_circle: story('corwin_circle', 'The Perfect Circle', 'Corwin walked in a perfect circle for three hours on level six. He knows this because he counted his steps — 847 per loop — and made a tally mark on the wall each time. When he finally stopped, he found that his tally marks had been joined by someone else\'s. Smaller marks. Neater. In a different color. Someone — or something — had been walking the circle with him, keeping count. He never saw them. The marks were still there the last time he checked.', 'Corwin', 'personal'),
+	corwin_map: story('corwin_map', 'The Map That Mapped Back', 'On level four, Corwin\'s map started updating itself. Lines appeared that he hadn\'t drawn — accurate lines, showing rooms he hadn\'t visited yet. At first he was thrilled. Then the map drew a room with a stick figure inside it. The stick figure was holding a map. The map in the drawing had a smaller stick figure. And so on. It was maps all the way down. He burned that map. The ashes reformed into a smaller, smugger map.', 'Corwin', 'personal'),
+};
 
 // ─── RUMOR CATALOGUE ───
 // TRUE: real gameplay hints
@@ -446,6 +470,7 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('I\'ll take a drink. [Accept heal]', 'drink', '#4f4', { onSelect: { hp: 3, message: 'The Barkeep pours you a drink! +3 HP' } }),
 				opt('Tell me about the dungeon below.', 'dungeon', '#ff4'),
 				opt('Heard any good rumors lately?', 'rumors_menu', '#ff4'),
+				opt('Got any good stories?', 'stories_menu', '#c8f'),
 				opt('Who are the other patrons?', 'patrons', '#8cf'),
 				opt('Nice place you\'ve got here.', 'tavern_story', '#8cf'),
 				opt('Just passing through.', 'farewell', '#0ff'),
@@ -456,6 +481,7 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 			[
 				opt('Any news while I was gone?', 'news', '#ff4'),
 				opt('Heard any rumors?', 'rumors_menu', '#ff4'),
+				opt('Tell me a story.', 'stories_menu', '#c8f'),
 				opt('Tell me about the dungeon.', 'dungeon', '#ff4'),
 				opt('Just need a moment to rest.', 'rest', '#4f4'),
 				opt('See you later, Barkeep.', 'farewell', '#0ff'),
@@ -610,6 +636,33 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('I\'ll... keep that in mind. [Rumor learned]', 'rumors_menu', '#ff4', { onSelect: { rumor: RUMORS.friendly_mimics } }),
 			]
 		),
+		stories_menu: node('stories_menu',
+			'*He sets down the mug he\'s polishing.* Stories? Oh, I\'ve got plenty. Running a dungeon-adjacent tavern, you hear things. What kind of story do you want?',
+			[
+				opt('Tell me about the previous owner.', 'story_merton', '#c8f', { once: true }),
+				opt('What\'s the funniest thing that happened here?', 'story_door', '#c8f', { once: true }),
+				opt('How was this village founded?', 'story_founders', '#c8f', { once: true }),
+				opt('That\'s enough stories.', 'start', '#0ff'),
+			]
+		),
+		story_merton: node('story_merton',
+			'*He leans on the bar.* Old Merton owned this place before me. Good man. Terrible mixologist. One night, a customer walks in and says: "Give me something strong enough to forget." Merton took it as a CHALLENGE. He brewed something from dungeon mushrooms, spider venom, and \u2014 I think \u2014 turpentine. The customer drank it, stood up, and said: "Who am I? Where am I? What is a name?" *The Barkeep shakes his head.* Complete identity erasure. The customer was delighted. He\'s now a turnip farmer outside town. Happiest man in Willowmere. Doesn\'t know his own name. Doesn\'t care. Merton sold the tavern the next day.',
+			[
+				opt('That\'s both tragic and hilarious. [Story collected]', 'stories_menu', '#4f4', { onSelect: { story: STORIES.barkeep_merton } }),
+			]
+		),
+		story_door: node('story_door',
+			'*He laughs before he even starts.* The Slime Incident. Last dungeon surge, right? A gelatinous slime oozes up through my cellar. Absorbs the entire Tuesday special \u2014 twelve servings of beef stew. I\'m standing there with a broom, ready to fight, and it just... stops. Sits there. Jiggles contentedly. Then it EXTRUDES A GOLD COIN. Pushes one right out of its body. Plop. On the bar. And then it slides back into the cellar like nothing happened. *He holds up a coin.* Genuine gold. A paying customer is a paying customer, even if they\'re technically a liquid.',
+			[
+				opt('You accepted payment from a slime?! [Story collected]', 'stories_menu', '#4f4', { onSelect: { story: STORIES.barkeep_door } }),
+			]
+		),
+		story_founders: node('story_founders',
+			'*He straightens up \u2014 this one he takes seriously.* Two hundred years ago, a merchant named Aldric Willowmere left the capital with twelve wagons and a hand-drawn map. The map was spectacularly wrong. "Ocean where there should be mountains" wrong. He got SO lost that he stood in a clearing, looked around, and said \u2014 I quote his journal \u2014 "This is fine." Built a house. Other lost travelers found him. Someone opened a shop. Someone planted crops. Eventually they had a village entirely populated by people who couldn\'t find anywhere else. We don\'t talk about it.',
+			[
+				opt('Founded by accident. Classic. [Story collected]', 'stories_menu', '#4f4', { onSelect: { story: STORIES.barkeep_founders } }),
+			]
+		),
 	}
 };
 
@@ -625,6 +678,7 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('Expecting me? What do you mean?', 'expecting', '#ff4'),
 				opt('What do you know about the dungeon?', 'dungeon_knowledge', '#ff4'),
 				opt('Do you know any secrets?', 'stranger_rumors', '#ff4'),
+				opt('Tell me a tale of the dungeon.', 'stranger_stories', '#c8f'),
 				opt('Who are you?', 'identity', '#8cf'),
 				opt('You\'re a little creepy, you know that?', 'creepy', '#f44'),
 				opt('Nevermind.', 'farewell', '#0ff'),
@@ -636,6 +690,7 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('What do you mean, the dungeon\'s mark?', 'mark', '#f44'),
 				opt('Tell me about the deeper levels.', 'deep_levels', '#ff4'),
 				opt('Know any useful secrets?', 'stranger_rumors', '#ff4'),
+				opt('Share a tale with me.', 'stranger_stories', '#c8f'),
 				opt('Any new insights?', 'insights', '#8cf'),
 				opt('I need to go.', 'farewell', '#0ff'),
 			]
@@ -857,6 +912,33 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('...You\'re messing with me. [Rumor learned]', 'stranger_rumors', '#ff4', { onSelect: { rumor: RUMORS.dungeon_password } }),
 			]
 		),
+		stranger_stories: node('stranger_stories',
+			'*The stranger settles back, their hood casting deeper shadows.* A tale? I am old, adventurer. Very old. And I have witnessed things that would make a historian weep. Which tale do you wish to hear?',
+			[
+				opt('Tell me about the first person to enter the dungeon.', 'story_first', '#c8f', { once: true }),
+				opt('What happened to the Architects?', 'story_architects', '#c8f', { once: true }),
+				opt('Tell me about the Convergence.', 'story_convergence', '#c8f', { once: true }),
+				opt('That\'s enough tales.', 'start', '#0ff'),
+			]
+		),
+		story_first: node('story_first',
+			'*They lean forward.* The first soul to enter the dungeon was not an adventurer. She was a shepherd named Brin, who chased a lost sheep through a crack in the earth. She descended forty levels. FORTY. Defeated the Guardian of the Threshold \u2014 a being of living stone and starlight. Befriended a colony of sentient mushrooms who taught her their language. And retrieved her sheep. *A pause.* When the village asked about her experience, she said: "Bit dark." She returned to shepherding and never spoke of it again. The mushrooms still ask about her. Every time I descend to level twelve, they ask: "Where is the Shepherd? When will she return?" I never know what to tell them.',
+			[
+				opt('The mushrooms remember her? [Story collected]', 'stranger_stories', '#4f4', { onSelect: { story: STORIES.stranger_first } }),
+			]
+		),
+		story_architects: node('story_architects',
+			'*Their voice drops to something barely louder than breathing.* The Architects did not die. They did not leave. They were... compiled. Their consciousness was compressed into the walls, the floors, the traps, the treasure. Every room you enter is a fragment of a thought. Every corridor is a sentence in an unfinished argument. *They spread their hands.* The dungeon is not a building, adventurer. It is a conversation that has been happening for millennia, in a language of stone and shadow. And the Eye at the bottom? It is the one who started the conversation. Still waiting for a reply.',
+			[
+				opt('A conversation in stone... [Story collected]', 'stranger_stories', '#4f4', { onSelect: { story: STORIES.stranger_architects } }),
+			]
+		),
+		story_convergence: node('story_convergence',
+			'*The temperature drops perceptibly.* Once every three hundred years, the dungeon aligns with something beyond this world. The walls thin. The floors become translucent. For one night, you can see THROUGH the stone to the spaces between realities \u2014 vast, dark oceans of nothing, with things moving in them. Things with too many angles. Things that notice you noticing them. *They grip the table.* The last Convergence was two hundred and ninety-nine years ago. The next one is... *They look at you meaningfully.* ...soon. Very soon. Be deep in the dungeon when it happens, and you may see things that cannot be unseen. Be at the surface, and you\'ll merely feel a wrongness in the air. Like the world hiccuping.',
+			[
+				opt('The next one is SOON?! [Story collected]', 'stranger_stories', '#4f4', { onSelect: { story: STORIES.stranger_convergence } }),
+			]
+		),
 	}
 };
 
@@ -872,6 +954,7 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 				opt('I heard you used to be an adventurer.', 'adventurer', '#ff4'),
 				opt('Tell me about the dungeon.', 'dungeon_drunk', '#ff4'),
 				opt('Know any dungeon rumors?', 'drunk_rumors', '#ff4'),
+				opt('Got any stories for me?', 'drunk_stories', '#c8f'),
 				opt('Are you okay?', 'okay', '#4f4'),
 				opt('Sorry to bother you.', 'farewell', '#0ff'),
 			]
@@ -880,6 +963,7 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 			'*He blinks.* Oh. It\'sh YOU again. You\'re shtill alive? Impressive. Mosht people I talk to end up dead. Not becaushe of me! Jusht... statistically.',
 			[
 				opt('What can you tell me about the deeper levels?', 'deep_drunk', '#ff4'),
+				opt('Tell me a story, Garvus.', 'drunk_stories', '#c8f'),
 				opt('How are you holding up?', 'okay', '#4f4'),
 				opt('Any advice for me?', 'advice', '#ff4'),
 				opt('I\'ll leave you to it.', 'farewell', '#0ff'),
@@ -1102,6 +1186,33 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 				opt('Flawless indeed. [Rumor learned]', 'drunk_rumors', '#ff4', { onSelect: { rumor: RUMORS.treasure_room } }),
 			]
 		),
+		drunk_stories: node('drunk_stories',
+			'*He perks up slightly, sloshing ale.* Shtories? Oh, I\'ve got SHTOREES. *He holds up a finger.* The BESHT shtories. Mosht of them are even TRUE. ...Probably. What d\'you wanna hear?',
+			[
+				opt('Tell me about Chester the Mimic.', 'story_chester', '#c8f', { once: true }),
+				opt('Tell me about the Silver Delvers.', 'story_delvers', '#c8f', { once: true }),
+				opt('Tell me about your secret recipe.', 'story_recipe', '#c8f', { once: true }),
+				opt('That\'s enough stories.', 'start', '#0ff'),
+			]
+		),
+		story_chester: node('story_chester',
+			'*His eyes light up.* CHESHTER! My besht friend! Level four, right? I open a chesht, and TEETH. Big teeth. It bitesh my arm. And I \u2014 genius that I am \u2014 inshtead of fighting, I shay: "Beautiful oak finish you\'ve got there." And it SHTOPS. Just shtops biting. Looksh at me. And I shwear on my mother\'sh grave, it BLUSHES. A chesht. Blushing. From a compliment. We shared a meal \u2014 I ate trail rationsh, Chester ate someone\'sh boot. We parted ash friends. *He sniffles.* He\'sh eaten sheven people shince then. But never me. We have a bond.',
+			[
+				opt('That\'s... oddly touching. [Story collected]', 'drunk_stories', '#4f4', { onSelect: { story: STORIES.drunk_chester } }),
+			]
+		),
+		story_delvers: node('story_delvers',
+			'*His face goes through about seven emotions in two seconds.* The Shilver Delversh. Five of ush. Matching cloaksh. A TEAM NAME. *He stares into his mug.* Garvush the Bold \u2014 me. Thesshaly the Wishe. Korrin Ironfisht \u2014 dwarf, punched EVERYTHING. Lila Shadowshtep \u2014 could shteal your teeth while you\'re talking. And Brenn the Unfortunate \u2014 our healer. Fell into every trap. EVERY. SHINGLE. ONE. *A long pause.* We made it to level fifteen. Found the library. Found... other things. Four came back. Thesshaly didn\'t. Korrin vanished. Lila went far away. Brenn became a librarian. And I... *He gestures around.* ...became thish.',
+			[
+				opt('I\'m sorry, Garvus. [Story collected]', 'drunk_stories', '#4f4', { onSelect: { story: STORIES.drunk_delvers, mood: 'sad' } }),
+			]
+		),
+		story_recipe: node('story_recipe',
+			'*He leans in with the intensity of someone sharing nuclear launch codes.* I have invented... a potion... that makesh you invisible to bossesh. INVISHIBLE. The recipe: three mushrooms \u2014 the purple onesh, not the green, NEVER the green \u2014 a shpider fang, and... *He drops his voice.* ...the tearsh of shomeone who genuinely believesh in you. *He sits back triumphantly.* The lasht ingredient ish the hardesht to find in a dungeon. I tried using my OWN tears but apparently "believing in yourshelf" doesh\'nt count. Also the mushrooms were poishonoush. I was in bed for a week. *He raises his mug.* But the THEORY is sound!',
+			[
+				opt('I believe in you, Garvus. [Story collected]', 'drunk_stories', '#4f4', { onSelect: { story: STORIES.drunk_recipe, mood: 'amused' } }),
+			]
+		),
 	}
 };
 
@@ -1127,6 +1238,7 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 				opt('Tell me more about yourself.', 'who', '#ff4'),
 				opt('Any tips for fighting goblins?', 'goblin_tips', '#ff4'),
 				opt('What were you doing before you got captured?', 'research', '#8cf'),
+				opt('Tell me a scholarly tale.', 'thessaly_stories', '#c8f'),
 				opt('Tell me about what lies below.', 'below', '#f44'),
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
@@ -1484,6 +1596,33 @@ export const PRISONER_DIALOGUE: DialogueTree = {
 				opt('[Leave conversation]', '__exit__', '#0ff'),
 			]
 		),
+		thessaly_stories: node('thessaly_stories',
+			'*Her eyes light up with academic fervor.* Oh! You want to hear about my research? Most people\'s eyes glaze over within thirty seconds. I timed Aldric once. Seventeen seconds. New record. What interests you?',
+			[
+				opt('Tell me about Deepscript.', 'story_deepscript', '#c8f', { once: true }),
+				opt('Tell me about the Eye Below.', 'story_eye', '#c8f', { once: true }),
+				opt('That\'s enough scholarship.', 'return', '#0ff'),
+			]
+		),
+		story_deepscript: node('story_deepscript',
+			'*She sits up straighter, chains clinking with excitement.* Before mortal tongues shaped words, the Architects wrote Deepscript into the bones of the world. It is not a language of communication \u2014 it is a language of CREATION. Each glyph is an instruction. A command to reality itself. *She traces symbols in the dust.* The dungeon\'s walls are covered in it. The traps? Sentences. Boss rooms? Paragraphs. The entire dungeon is a PROGRAM, still running, still executing code written by beings who no longer exist in any conventional sense. *She grins.* I presented this at the Athenaeum. Aldric called it "fanciful." Aldric\'s research was on the mating habits of cave bats. WHO\'S FANCIFUL NOW, ALDRIC.',
+			[
+				opt('A dungeon that\'s a running program... [Story collected]', 'thessaly_stories', '#4f4', { onSelect: { story: STORIES.thessaly_deepscript } }),
+			]
+		),
+		story_eye: node('story_eye',
+			'*Her voice drops to barely a whisper.* At the deepest point of the dungeon, embedded in living rock, there is an Eye. Not a creature\'s eye. Something older. Something that was here before the dungeon, before the Architects, before the world had a name. *She hugs her knees.* I believe the Architects didn\'t BUILD the dungeon. They found the Eye and built the dungeon around it. A container. A prison. A monument. It dreams, and its dreams become the dungeon\'s reality. When it blinks, floors rearrange. When it dreams deeply, new levels appear. *A pause.* I went looking for it once. With the Silver Delvers. I found it. And it... found me. I understood everything for one terrible, beautiful moment. And then I chose to come back. Most people don\'t make that choice.',
+			[
+				opt('What did you understand? [Story collected]', 'story_eye_truth', '#4f4', { onSelect: { story: STORIES.thessaly_eye } }),
+			]
+		),
+		story_eye_truth: node('story_eye_truth',
+			'*She\'s quiet for a long time.* That the dungeon isn\'t meant to be conquered. It\'s meant to be... experienced. Every trap, every monster, every treasure \u2014 it\'s all a curriculum. The Eye is teaching. Every adventurer who enters is a student. And the final exam... *She looks at you.* ...is whether you walk back out or stay to learn more. Thessaly chose to learn. Part of her is still down there, studying. Part of her is here, in chains, regretting the study abroad program. *She manages a weak laugh.* Academic humor. Sorry.',
+			[
+				opt('You\'re remarkable, Thessaly.', 'return', '#4f4'),
+				opt('I\'ll take that exam when the time comes.', 'return', '#ff4'),
+			]
+		),
 	}
 };
 
@@ -1507,6 +1646,7 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 			[
 				opt('Got anything for me?', 'wares', '#ff4'),
 				opt('Heard any trade gossip?', 'merchant_rumors', '#ff4'),
+				opt('Tell me a trade story.', 'morrigan_stories', '#c8f'),
 				opt('How\'s business?', 'business', '#8cf'),
 				opt('Any tips about this level?', 'tips', '#ff4'),
 				opt('Goodbye, Morrigan.', 'farewell', '#0ff'),
@@ -1682,6 +1822,26 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('A healing lava bath. Right. [Rumor learned]', 'merchant_rumors', '#f44', { onSelect: { rumor: RUMORS.lava_potion } }),
 			]
 		),
+		morrigan_stories: node('morrigan_stories',
+			'*She claps her hands.* Oh, you want to hear about my business ventures? Most people just want potions. You, my friend, want ENTERTAINMENT. I like that. What shall I tell you about?',
+			[
+				opt('Tell me about the slime fashion industry.', 'story_slime', '#c8f', { once: true }),
+				opt('How does the dungeon economy work?', 'story_economy', '#c8f', { once: true }),
+				opt('No more stories, thanks.', 'return', '#0ff'),
+			]
+		),
+		story_slime: node('story_slime',
+			'*She beams.* My greatest achievement! I sold a decorative bow to a gelatinous slime. It absorbed it. Became FASHIONABLE. Started a TREND. Within a WEEK, every slime on the level wanted accessories. I sold forty-seven tiny hats, twelve monocles, and a cravat. The cravat slime became their leader. President Cravat. Very dignified. Ate three adventurers with impeccable manners. *She wipes a proud tear.* I made more gold that week than most merchants make in a year. And all I had to do was accessorize sentient ooze. The market was RIGHT THERE. Nobody else saw it.',
+			[
+				opt('President Cravat. Amazing. [Story collected]', 'morrigan_stories', '#4f4', { onSelect: { story: STORIES.morrigan_slime } }),
+			]
+		),
+		story_economy: node('story_economy',
+			'*She pulls out what appears to be a ledger.* Oh, the dungeon has a FULL economy. Goblins mine ore \u2014 terrible miners, but enthusiastic. Skeletons provide manual labor \u2014 cheap, they don\'t eat, excellent work ethic, never complain. Mimics run the banking sector. Very trustworthy, if you don\'t try to open them. Slimes handle waste management \u2014 they eat everything, very efficient. The only thing the dungeon lacks is a tax authority. *She places a hand on her heart.* Which I consider its single greatest feature. Pure capitalism. No regulations. No returns policy. Customer ate the product? Not my problem. Customer was eaten BY the product? ALSO not my problem. It\'s beautiful.',
+			[
+				opt('This is the weirdest economy ever. [Story collected]', 'morrigan_stories', '#4f4', { onSelect: { story: STORIES.morrigan_economy } }),
+			]
+		),
 	}
 };
 
@@ -1705,6 +1865,7 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 			[
 				opt('The walls might actually be moving.', 'walls_move', '#f44'),
 				opt('Tell me more about yourself.', 'backstory', '#8cf'),
+				opt('Tell me about something weird you saw.', 'corwin_stories', '#c8f'),
 				opt('Any dangers I should know about?', 'dangers', '#ff4'),
 				opt('Good luck out there.', 'farewell', '#0ff'),
 			]
@@ -1938,6 +2099,26 @@ export const LOST_ADVENTURER_DIALOGUE: DialogueTree = {
 			'*They give you a grateful nod.* Thanks for stopping. Most people down here either try to eat me or run away screaming. A normal conversation is... nice. If you make it to the surface, tell the Cartographers\' Guild that Corwin says their maps are all wrong. They\'ll know it\'s me. I say it every time. *A tired smile.* Good luck down there.',
 			[
 				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+		corwin_stories: node('corwin_stories',
+			'*They shudder.* Weird things? Oh, I\'ve seen PLENTY of weird things. This dungeon is basically a factory for weird things. What do you want to hear about?',
+			[
+				opt('Tell me about walking in circles.', 'story_circle', '#c8f', { once: true }),
+				opt('Tell me about the map that mapped back.', 'story_map', '#c8f', { once: true }),
+				opt('No more stories, thanks.', 'return', '#0ff'),
+			]
+		),
+		story_circle: node('story_circle',
+			'*They hold up a hand.* So I\'m on level six, right? Walking. Making notes. Standard cartography. And I realize I\'ve passed the same rock three times. Same scratch marks. Same cobwebs. I start counting steps. 847 per loop. Exactly. Every time. So I make a tally mark on the wall. Walk the loop again. Tally mark. Again. Tally mark. After three hours, I stop. And I notice... *They swallow hard.* ...there are OTHER tally marks. Next to mine. Smaller. Neater. In a different color. Someone \u2014 or something \u2014 was walking the circle WITH me. Keeping count. I never saw them. I never heard them. But they were there. Walking right beside me. For three hours. *They wrap their arms around themselves.* The marks were still there the last time I checked.',
+			[
+				opt('That\'s deeply unsettling. [Story collected]', 'corwin_stories', '#4f4', { onSelect: { story: STORIES.corwin_circle } }),
+			]
+		),
+		story_map: node('story_map',
+			'*They pull out a blank parchment with a traumatized expression.* Level four. My map started UPDATING ITSELF. Lines appeared that I hadn\'t drawn. Accurate lines. Rooms I hadn\'t visited. At first I was thrilled! Free cartography! Then the map drew a room. With a stick figure inside it. The stick figure was holding a map. The map in the drawing had a SMALLER stick figure. Holding a SMALLER map. It was maps all the way down. *They shudder.* I burned the map. The ashes reformed into a smaller, smugger-looking map. I burned THAT. It reformed again. Smaller. SMUGGER. I eventually sealed it in a jar and threw it into a pit. I can still hear it... rustling.',
+			[
+				opt('A sentient, smug map. [Story collected]', 'corwin_stories', '#4f4', { onSelect: { story: STORIES.corwin_map } }),
 			]
 		),
 	}

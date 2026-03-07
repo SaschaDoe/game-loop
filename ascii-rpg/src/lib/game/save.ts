@@ -1,6 +1,6 @@
 import type { GameState, Tile } from './types';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -38,6 +38,7 @@ interface SerializedState {
 	rumors: GameState['rumors'];
 	knownLanguages: string[];
 	landmarks: GameState['landmarks'];
+	heardStories: string[];
 }
 
 export function serializeState(state: GameState): string {
@@ -72,7 +73,8 @@ export function serializeState(state: GameState): string {
 			unlockedSkills: state.unlockedSkills,
 			rumors: state.rumors,
 			knownLanguages: state.knownLanguages,
-			landmarks: state.landmarks
+			landmarks: state.landmarks,
+			heardStories: state.heardStories
 		}
 	};
 	return JSON.stringify(data);
@@ -114,6 +116,7 @@ export function deserializeState(json: string): GameState {
 		rumors: s.rumors ?? [],
 		knownLanguages: s.knownLanguages ?? [],
 		landmarks: s.landmarks ?? [],
+		heardStories: s.heardStories ?? [],
 		activeDialogue: null
 	};
 }

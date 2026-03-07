@@ -27,6 +27,14 @@ export interface Rumor {
 	accuracy: RumorAccuracy;
 }
 
+export interface Story {
+	id: string;
+	title: string;
+	text: string;
+	teller: string;
+	type: 'legend' | 'tall_tale' | 'cautionary' | 'personal' | 'lore';
+}
+
 export interface DialogueEffect {
 	hp?: number;
 	atk?: number;
@@ -34,6 +42,7 @@ export interface DialogueEffect {
 	mood?: NPCMood;
 	rumor?: Rumor;
 	learnLanguage?: string;
+	story?: Story;
 }
 
 export interface DialogueOption {
@@ -189,4 +198,5 @@ export interface GameState {
 	rumors: Rumor[];
 	knownLanguages: string[];
 	landmarks: Landmark[];
+	heardStories: string[];
 }

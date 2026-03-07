@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText } from '$lib/game/engine';
+	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
@@ -333,7 +334,7 @@
 		<div class="combat-log-header">
 			<span class="log-title">Combat Log</span>
 			<button class="log-toggle" onclick={() => journalOpen = !journalOpen}>
-				Journal ({state.rumors.length}) (J)
+				Journal ({state.rumors.length + state.heardStories.length}) (J)
 			</button>
 			<button class="log-toggle" onclick={() => logExpanded = !logExpanded}>
 				{logExpanded ? '▼ Collapse' : '▲ Expand'} (L)
@@ -455,11 +456,12 @@
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="journal-box" onclick={(e) => e.stopPropagation()}>
 				<div class="journal-header">
-					<span class="journal-title">Journal — Rumors & Secrets</span>
+					<span class="journal-title">Journal</span>
 					<button class="dialogue-close" onclick={() => journalOpen = false}>ESC</button>
 				</div>
+				<div class="journal-section-title">Rumors & Secrets ({state.rumors.length})</div>
 				{#if state.rumors.length === 0}
-					<div class="journal-empty">No rumors learned yet. Talk to NPCs to learn secrets about the dungeon.</div>
+					<div class="journal-empty">No rumors learned yet. Talk to NPCs to learn secrets.</div>
 				{:else}
 					<div class="journal-list">
 						{#each state.rumors as r}
@@ -470,6 +472,28 @@
 									{r.accuracy === 'true' ? '(Seems reliable)' : r.accuracy === 'exaggerated' ? '(Possibly exaggerated)' : '(Dubious)'}
 								</span>
 							</div>
+						{/each}
+					</div>
+				{/if}
+				<div class="journal-section-title">Stories Collected ({state.heardStories.length}/{Object.keys(STORIES).length})</div>
+				{#if state.heardStories.length === 0}
+					<div class="journal-empty">No stories heard yet. Ask NPCs to tell you tales.</div>
+				{:else}
+					<div class="journal-list">
+						{#each state.heardStories as storyId}
+							{@const s = STORIES[storyId]}
+							{#if s}
+								<div class="journal-entry">
+									<div class="journal-story-header">
+										<span class="journal-story-title">{s.title}</span>
+										<span class="journal-story-type" class:type-legend={s.type === 'legend'} class:type-tall-tale={s.type === 'tall_tale'} class:type-cautionary={s.type === 'cautionary'} class:type-personal={s.type === 'personal'} class:type-lore={s.type === 'lore'}>
+											{s.type === 'tall_tale' ? 'Tall Tale' : s.type.charAt(0).toUpperCase() + s.type.slice(1)}
+										</span>
+									</div>
+									<span class="journal-story-text">{s.text}</span>
+									<span class="journal-rumor-source">— told by {s.teller}</span>
+								</div>
+							{/if}
 						{/each}
 					</div>
 				{/if}
@@ -1228,6 +1252,40 @@
 	.accuracy-true { color: #4f4; }
 	.accuracy-exaggerated { color: #ff4; }
 	.accuracy-false { color: #f44; }
+	.journal-section-title {
+		color: #c8f;
+		font-size: 13px;
+		font-weight: bold;
+		border-bottom: 1px solid #333;
+		padding: 8px 0 4px;
+		margin-top: 6px;
+	}
+	.journal-story-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.journal-story-title {
+		color: #fff;
+		font-weight: bold;
+		font-size: 13px;
+	}
+	.journal-story-type {
+		font-size: 10px;
+		padding: 1px 6px;
+		border-radius: 3px;
+		background: #333;
+	}
+	.type-legend { color: #ff4; background: #332800; }
+	.type-tall-tale { color: #f84; background: #331800; }
+	.type-cautionary { color: #f44; background: #330808; }
+	.type-personal { color: #8cf; background: #082033; }
+	.type-lore { color: #c8f; background: #200833; }
+	.journal-story-text {
+		color: #bbb;
+		font-size: 12px;
+		line-height: 1.4;
+	}
 
 	/* ── Version ── */
 	.version {
