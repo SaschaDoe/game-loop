@@ -245,6 +245,8 @@ export interface GameStats {
 	maxDungeonLevel: number;
 }
 
+export type LocationMode = 'overworld' | 'location';
+
 export interface GameState {
 	player: Entity;
 	enemies: Entity[];
@@ -280,6 +282,10 @@ export interface GameState {
 	thirst: number;
 	survivalEnabled: boolean;
 	turnCount: number;
+	locationMode: LocationMode;
+	worldMap: unknown | null;      // WorldMap from overworld.ts (typed as unknown to avoid circular deps)
+	overworldPos: Position | null;  // player position on the overworld grid
+	currentLocationId: string | null; // which settlement/dungeon we're inside
 }
 
 export interface BestiaryEntry {

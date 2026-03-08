@@ -27,10 +27,24 @@ As a player, I want a large tile-based overworld map so that I can explore a vas
 - The overworld is generated once per playthrough (seed-based) and persists
 
 **Acceptance Criteria:**
-- [ ] Overworld renders with distinct terrain types using ASCII characters and colors
-- [ ] Player can move on the overworld with standard controls
-- [ ] Terrain types are visually distinguishable
-- [ ] World persists across save/load
+- [x] Overworld renders with distinct terrain types using ASCII characters and colors
+- [x] Player can move on the overworld with standard controls
+- [x] Terrain types are visually distinguishable
+- [x] World persists across save/load
+
+**Implementation Notes (completed):**
+- `GameState` extended with `locationMode` ('overworld'|'location'), `worldMap`, `overworldPos`, `currentLocationId`
+- `createGame()` generates full `WorldMap` and starts player inside their starting settlement
+- `handleOverworldInput()`: WASD movement on the 200×200 grid with terrain passability checks
+- `renderOverworldColored()`: 50×24 viewport centered on player, camera clamped to world bounds
+- Terrain rendered via `TERRAIN_DISPLAY` chars/colors, roads as =/-, settlements as v/T/C/F/c, dungeons as >, POIs as ?
+- Fog of war: `revealOverworldArea()` reveals circular area around player position
+- Hidden POIs only visible when player is adjacent
+- Location entry: settlements generate interior, dungeons start at level 1, POIs grant discovery XP
+- `exitToOverworld()`: returns player to overworld from level 0 via stairs
+- Save/load: world regenerated from seed on load, explored grid and discovered POIs serialized (SAVE_VERSION 14)
+- Dungeon level transitions carry overworld state through all levels
+- 4 new engine tests: worldMap generation, location mode, overworld position, fog of war
 
 ---
 

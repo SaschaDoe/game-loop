@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
@@ -20,6 +20,7 @@ import { checkAchievements, getAchievement, createDefaultStats } from './achieve
 import { recordSeen, recordKill } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
+import { generateWorld, TERRAIN_DISPLAY, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest } from './overworld';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -177,7 +178,18 @@ const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior
 export function createGame(config?: CharacterConfig): GameState {
 	const cfg = config ? { ...config, worldSeed: config.worldSeed || randomSeedString() } : { ...DEFAULT_CONFIG, worldSeed: randomSeedString() };
 
-	// Level 0: starting location; level 1+: dungeon
+	// Generate the overworld
+	const worldMap = generateWorld(cfg.worldSeed);
+
+	// Find the starting settlement on the overworld
+	const startSettlement = worldMap.settlements.find(s => s.isStartingLocation === cfg.startingLocation)
+		?? worldMap.settlements[0];
+	const overworldPos = { ...startSettlement.pos };
+
+	// Reveal tiles around starting position
+	revealOverworldArea(worldMap, overworldPos, OVERWORLD_SIGHT_RADIUS);
+
+	// Generate starting location interior
 	const locResult = generateStartingLocation(cfg.startingLocation, MAP_W, MAP_H);
 	const sightRadius = DEFAULT_SIGHT_RADIUS;
 	const visibility = createVisibilityGrid(MAP_W, MAP_H);
@@ -225,7 +237,11 @@ export function createGame(config?: CharacterConfig): GameState {
 		hunger: MAX_SURVIVAL,
 		thirst: MAX_SURVIVAL,
 		survivalEnabled: cfg.difficulty !== 'easy',
-		turnCount: 0
+		turnCount: 0,
+		locationMode: 'location',
+		worldMap,
+		overworldPos,
+		currentLocationId: startSettlement.id,
 	};
 
 	// Apply class bonuses
@@ -245,6 +261,286 @@ export function createGame(config?: CharacterConfig): GameState {
 }
 
 const DEFAULT_SIGHT_RADIUS = 8;
+const OVERWORLD_SIGHT_RADIUS = 5;
+const OVERWORLD_VIEWPORT_W = MAP_W;
+const OVERWORLD_VIEWPORT_H = MAP_H;
+
+// ── Overworld Helpers ──
+
+/** Reveal tiles in a radius around a position on the overworld explored grid. */
+function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: number): void {
+	for (let dy = -radius; dy <= radius; dy++) {
+		for (let dx = -radius; dx <= radius; dx++) {
+			if (dx * dx + dy * dy > radius * radius) continue;
+			const wx = pos.x + dx;
+			const wy = pos.y + dy;
+			if (wx >= 0 && wy >= 0 && wx < worldMap.width && wy < worldMap.height) {
+				worldMap.explored[wy][wx] = true;
+			}
+		}
+	}
+}
+
+/** Check if overworld terrain is passable for walking. */
+function isOverworldPassable(tile: OverworldTile): boolean {
+	return tile.terrain !== 'water' && tile.terrain !== 'mountain' && tile.terrain !== 'lava';
+}
+
+/** Get the location (settlement/dungeon/poi) at an overworld position, if any. */
+function getOverworldLocation(worldMap: WorldMap, pos: Position): { type: 'settlement'; data: Settlement } | { type: 'dungeon'; data: DungeonEntrance } | { type: 'poi'; data: PointOfInterest } | null {
+	const tile = worldMap.tiles[pos.y]?.[pos.x];
+	if (!tile?.locationId) return null;
+	const settlement = worldMap.settlements.find(s => s.id === tile.locationId);
+	if (settlement) return { type: 'settlement', data: settlement };
+	const dungeon = worldMap.dungeonEntrances.find(d => d.id === tile.locationId);
+	if (dungeon) return { type: 'dungeon', data: dungeon };
+	const poi = worldMap.pois.find(p => p.id === tile.locationId);
+	if (poi) return { type: 'poi', data: poi };
+	return null;
+}
+
+/** Handle overworld movement and location entry. */
+function handleOverworldInput(state: GameState, key: string): GameState {
+	if (state.gameOver) {
+		if (key === 'r') return createGame(state.characterConfig);
+		return state;
+	}
+
+	let dx = 0, dy = 0;
+	if (key === 'w' || key === 'ArrowUp') dy = -1;
+	else if (key === 's' || key === 'ArrowDown') dy = 1;
+	else if (key === 'a' || key === 'ArrowLeft') dx = -1;
+	else if (key === 'd' || key === 'ArrowRight') dx = 1;
+	else return state;
+
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos!;
+	const nx = pos.x + dx;
+	const ny = pos.y + dy;
+
+	if (nx < 0 || ny < 0 || nx >= worldMap.width || ny >= worldMap.height) return state;
+	if (!isOverworldPassable(worldMap.tiles[ny][nx])) {
+		addMessage(state, `The ${worldMap.tiles[ny][nx].terrain} blocks your path.`, 'info');
+		return { ...state };
+	}
+
+	// Move on overworld
+	state.overworldPos = { x: nx, y: ny };
+	revealOverworldArea(worldMap, state.overworldPos, OVERWORLD_SIGHT_RADIUS);
+
+	// Tick survival on overworld movement
+	if (state.survivalEnabled) {
+		const survivalResult = tickSurvival(state);
+		for (const msg of survivalResult.messages) {
+			addMessage(state, msg.text, msg.type);
+		}
+	}
+
+	state.turnCount++;
+
+	// Check for location entry
+	const location = getOverworldLocation(worldMap, state.overworldPos);
+	if (location) {
+		if (location.type === 'settlement') {
+			enterSettlement(state, location.data);
+		} else if (location.type === 'dungeon') {
+			enterDungeon(state, location.data);
+		} else if (location.type === 'poi') {
+			discoverPOI(state, location.data);
+		}
+	} else {
+		// Show terrain info
+		const tile = worldMap.tiles[ny][nx];
+		const regionDef = worldMap.regions.find(r => r.id === tile.region);
+		if (tile.road) {
+			addMessage(state, `You travel along the ${tile.road === 'main' ? 'road' : 'path'} through ${regionDef?.name ?? tile.region}.`, 'info');
+		}
+	}
+
+	return { ...state };
+}
+
+/** Enter a settlement from the overworld. */
+function enterSettlement(state: GameState, settlement: Settlement): void {
+	const locResult = generateStartingLocation(
+		settlement.isStartingLocation ?? 'village',
+		MAP_W, MAP_H
+	);
+	state.map = locResult.map;
+	state.player.pos = locResult.playerPos;
+	state.enemies = locResult.enemies;
+	state.npcs = locResult.npcs;
+	state.visibility = createVisibilityGrid(MAP_W, MAP_H);
+	state.traps = [];
+	state.detectedTraps = new Set();
+	state.detectedSecrets = new Set();
+	state.hazards = [];
+	state.chests = [];
+	state.lootDrops = [];
+	state.landmarks = [];
+	state.level = 0;
+	state.locationMode = 'location';
+	state.currentLocationId = settlement.id;
+	updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
+	addMessage(state, `You enter ${settlement.name}.`, 'discovery');
+}
+
+/** Enter a dungeon from the overworld. */
+function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
+	const next = newLevel(1, state.characterConfig.difficulty, state.characterConfig.worldSeed);
+	// Carry over player state
+	next.player.hp = state.player.hp;
+	next.player.maxHp = Math.max(state.player.maxHp, next.player.maxHp);
+	next.player.attack = Math.max(state.player.attack, next.player.attack);
+	next.player.name = state.player.name;
+	next.player.statusEffects = [...state.player.statusEffects];
+	next.xp = state.xp;
+	next.characterLevel = state.characterLevel;
+	next.sightRadius = state.sightRadius;
+	next.characterConfig = state.characterConfig;
+	next.abilityCooldown = state.abilityCooldown;
+	next.skillPoints = state.skillPoints;
+	next.unlockedSkills = [...state.unlockedSkills];
+	next.rumors = [...state.rumors];
+	next.knownLanguages = [...state.knownLanguages];
+	next.heardStories = [...state.heardStories];
+	next.lieCount = state.lieCount;
+	next.stats = { ...state.stats };
+	next.unlockedAchievements = [...state.unlockedAchievements];
+	next.bestiary = { ...state.bestiary };
+	next.hunger = state.hunger;
+	next.thirst = state.thirst;
+	next.survivalEnabled = state.survivalEnabled;
+	next.turnCount = state.turnCount;
+	next.worldMap = state.worldMap;
+	next.overworldPos = state.overworldPos;
+	next.locationMode = 'location';
+	next.currentLocationId = dungeon.id;
+	// Copy into state (mutate in place since we're inside handleOverworldInput)
+	Object.assign(state, next);
+	addMessage(state, `You descend into ${dungeon.name}...`, 'discovery');
+}
+
+/** Discover a POI on the overworld. */
+function discoverPOI(state: GameState, poi: PointOfInterest): void {
+	if (!poi.discovered) {
+		poi.discovered = true;
+		addMessage(state, `Discovered: ${poi.name}!`, 'discovery');
+		state.stats.secretsFound++;
+		// Small XP reward for discovery
+		const xpGain = 10 + (state.characterLevel * 2);
+		state.xp += xpGain;
+		addMessage(state, `+${xpGain} XP for exploration.`, 'level_up');
+		checkLevelUp(state);
+		processAchievements(state);
+	} else {
+		addMessage(state, `${poi.name} — you've been here before.`, 'info');
+	}
+}
+
+/** Return to the overworld from a location. */
+export function exitToOverworld(state: GameState): GameState {
+	if (!state.worldMap || !state.overworldPos) return state;
+	state.locationMode = 'overworld';
+	state.currentLocationId = null;
+	state.enemies = [];
+	state.npcs = [];
+	state.traps = [];
+	state.hazards = [];
+	state.chests = [];
+	state.lootDrops = [];
+	state.landmarks = [];
+	addMessage(state, 'You return to the overworld.', 'info');
+	return { ...state };
+}
+
+/** Render the overworld as a viewport-sized colored grid. */
+export function renderOverworldColored(state: GameState): { char: string; color: string }[][] {
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos!;
+	const halfW = Math.floor(OVERWORLD_VIEWPORT_W / 2);
+	const halfH = Math.floor(OVERWORLD_VIEWPORT_H / 2);
+	const camX = Math.max(halfW, Math.min(worldMap.width - halfW - 1, pos.x));
+	const camY = Math.max(halfH, Math.min(worldMap.height - halfH - 1, pos.y));
+	const startX = camX - halfW;
+	const startY = camY - halfH;
+
+	const grid: { char: string; color: string }[][] = [];
+	for (let vy = 0; vy < OVERWORLD_VIEWPORT_H; vy++) {
+		const row: { char: string; color: string }[] = [];
+		const wy = startY + vy;
+		for (let vx = 0; vx < OVERWORLD_VIEWPORT_W; vx++) {
+			const wx = startX + vx;
+
+			if (wx < 0 || wy < 0 || wx >= worldMap.width || wy >= worldMap.height) {
+				row.push({ char: ' ', color: '#000' });
+				continue;
+			}
+
+			if (!worldMap.explored[wy][wx]) {
+				row.push({ char: ' ', color: '#000' });
+				continue;
+			}
+
+			// Player position
+			if (wx === pos.x && wy === pos.y) {
+				row.push({ char: '@', color: '#ff0' });
+				continue;
+			}
+
+			const tile = worldMap.tiles[wy][wx];
+			const isNearPlayer = Math.abs(wx - pos.x) <= OVERWORLD_SIGHT_RADIUS && Math.abs(wy - pos.y) <= OVERWORLD_SIGHT_RADIUS;
+
+			// Locations
+			if (tile.locationId) {
+				const settlement = worldMap.settlements.find(s => s.id === tile.locationId);
+				if (settlement) {
+					const char = settlement.type === 'city' ? 'C' : settlement.type === 'town' ? 'T' : settlement.type === 'fortress' ? 'F' : settlement.type === 'village' ? 'v' : 'c';
+					const color = isNearPlayer ? '#ff8' : '#886';
+					row.push({ char, color });
+					continue;
+				}
+				const dungeon = worldMap.dungeonEntrances.find(d => d.id === tile.locationId);
+				if (dungeon) {
+					row.push({ char: '>', color: isNearPlayer ? '#f88' : '#844' });
+					continue;
+				}
+				const poi = worldMap.pois.find(p => p.id === tile.locationId);
+				if (poi) {
+					if (poi.hidden && !isNearPlayer) {
+						// Hidden POI: render as normal terrain unless adjacent
+						const display = TERRAIN_DISPLAY[tile.terrain];
+						row.push({ char: display.char, color: dimColor(display.color) });
+						continue;
+					}
+					row.push({ char: '?', color: isNearPlayer ? '#af8' : '#585' });
+					continue;
+				}
+			}
+
+			// Signpost
+			if (tile.signpost) {
+				row.push({ char: '+', color: isNearPlayer ? '#db8' : '#864' });
+				continue;
+			}
+
+			// Road
+			if (tile.road) {
+				const roadChar = tile.road === 'main' ? '=' : '-';
+				const roadColor = isNearPlayer ? '#ca8' : '#654';
+				row.push({ char: roadChar, color: roadColor });
+				continue;
+			}
+
+			// Terrain
+			const display = TERRAIN_DISPLAY[tile.terrain];
+			const color = isNearPlayer ? display.color : dimColor(display.color);
+			row.push({ char: display.char, color });
+		}
+		grid.push(row);
+	}
+	return grid;
+}
 
 interface DungeonNPCDef {
 	char: string;
@@ -383,7 +679,11 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		hunger: MAX_SURVIVAL,
 		thirst: MAX_SURVIVAL,
 		survivalEnabled: difficulty !== 'easy',
-		turnCount: 0
+		turnCount: 0,
+		locationMode: 'location' as const,
+		worldMap: null,
+		overworldPos: null,
+		currentLocationId: null,
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -745,6 +1045,11 @@ export function attemptFlee(state: GameState): FleeResult {
 }
 
 export function handleInput(state: GameState, key: string): GameState {
+	// Overworld mode: delegate to overworld handler
+	if (state.locationMode === 'overworld') {
+		return handleOverworldInput(state, key);
+	}
+
 	// Block game input during dialogue
 	if (state.activeDialogue) return state;
 
@@ -1187,6 +1492,11 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	// stairs
 	if (state.map.tiles[ny][nx] === '>') {
+		// Level 0 stairs: exit to overworld (if we have one)
+		if (state.level === 0 && state.worldMap && state.overworldPos) {
+			return exitToOverworld(state);
+		}
+
 		const nextLevel = state.level === 0 ? 1 : state.level + 1;
 		const next = newLevel(nextLevel, state.characterConfig.difficulty, state.characterConfig.worldSeed);
 		next.player.hp = state.player.hp;
@@ -1214,6 +1524,11 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.thirst = state.thirst;
 		next.survivalEnabled = state.survivalEnabled;
 		next.turnCount = state.turnCount;
+		// Carry overworld state through dungeon levels
+		next.worldMap = state.worldMap;
+		next.overworldPos = state.overworldPos;
+		next.locationMode = 'location';
+		next.currentLocationId = state.currentLocationId;
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
@@ -1471,6 +1786,9 @@ function tileColor(tile: string, isDetectedSecret: boolean = false): string {
 }
 
 export function renderColored(state: GameState): { char: string; color: string }[][] {
+	if (state.locationMode === 'overworld') {
+		return renderOverworldColored(state);
+	}
 	const grid: { char: string; color: string }[][] = [];
 	for (let y = 0; y < state.map.height; y++) {
 		const row: { char: string; color: string }[] = [];

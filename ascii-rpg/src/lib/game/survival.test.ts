@@ -72,6 +72,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		thirst: MAX_SURVIVAL,
 		survivalEnabled: true,
 		turnCount: 0,
+		locationMode: 'location' as const,
+		worldMap: null,
+		overworldPos: null,
+		currentLocationId: null,
 		...overrides
 	};
 }

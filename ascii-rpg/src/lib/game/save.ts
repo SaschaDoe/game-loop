@@ -1,7 +1,8 @@
-import type { GameState, Tile, GameStats } from './types';
+import type { GameState, Tile, GameStats, LocationMode } from './types';
 import { createDefaultStats } from './achievements';
+import { generateWorld, type WorldMap } from './overworld';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -48,6 +49,11 @@ interface SerializedState {
 	thirst: number;
 	survivalEnabled: boolean;
 	turnCount: number;
+	locationMode: LocationMode;
+	overworldPos: { x: number; y: number } | null;
+	currentLocationId: string | null;
+	overworldExplored: boolean[][] | null;
+	discoveredPois: string[];
 }
 
 export function serializeState(state: GameState): string {
@@ -91,7 +97,12 @@ export function serializeState(state: GameState): string {
 			hunger: state.hunger,
 			thirst: state.thirst,
 			survivalEnabled: state.survivalEnabled,
-			turnCount: state.turnCount
+			turnCount: state.turnCount,
+			locationMode: state.locationMode,
+			overworldPos: state.overworldPos,
+			currentLocationId: state.currentLocationId,
+			overworldExplored: state.worldMap ? (state.worldMap as WorldMap).explored : null,
+			discoveredPois: state.worldMap ? (state.worldMap as WorldMap).pois.filter(p => p.discovered).map(p => p.id) : [],
 		}
 	};
 	return JSON.stringify(data);
@@ -142,8 +153,33 @@ export function deserializeState(json: string): GameState {
 		thirst: s.thirst ?? 100,
 		survivalEnabled: s.survivalEnabled ?? true,
 		turnCount: s.turnCount ?? 0,
-		activeDialogue: null
+		activeDialogue: null,
+		locationMode: s.locationMode ?? 'location',
+		worldMap: null,
+		overworldPos: s.overworldPos ?? null,
+		currentLocationId: s.currentLocationId ?? null,
 	};
+
+	// Regenerate world from seed and restore explored/discovered state
+	if (result.characterConfig.worldSeed) {
+		const worldMap = generateWorld(result.characterConfig.worldSeed);
+		if (s.overworldExplored) {
+			for (let y = 0; y < Math.min(worldMap.height, s.overworldExplored.length); y++) {
+				for (let x = 0; x < Math.min(worldMap.width, s.overworldExplored[y].length); x++) {
+					worldMap.explored[y][x] = s.overworldExplored[y][x];
+				}
+			}
+		}
+		if (s.discoveredPois) {
+			for (const poiId of s.discoveredPois) {
+				const poi = worldMap.pois.find(p => p.id === poiId);
+				if (poi) poi.discovered = true;
+			}
+		}
+		result.worldMap = worldMap;
+	}
+
+	return result;
 }
 
 export function saveGame(state: GameState): boolean {

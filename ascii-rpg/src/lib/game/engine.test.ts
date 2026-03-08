@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -73,6 +73,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		thirst: 100,
 		survivalEnabled: true,
 		turnCount: 0,
+		locationMode: 'location' as const,
+		worldMap: null,
+		overworldPos: null,
+		currentLocationId: null,
 		...overrides
 	};
 }
@@ -1966,5 +1970,39 @@ describe('day-night cycle integration', () => {
 	it('sight radius has minimum of 2', () => {
 		const state = makeTestState({ turnCount: 95, sightRadius: 2 }); // midnight, low base
 		expect(effectiveSightRadius(state)).toBeGreaterThanOrEqual(2);
+	});
+});
+
+describe('overworld integration', () => {
+	it('createGame generates a worldMap', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-test' });
+		expect(state.worldMap).not.toBeNull();
+		expect(state.overworldPos).not.toBeNull();
+		expect(state.locationMode).toBe('location'); // starts inside starting location
+		expect(state.currentLocationId).toBeTruthy();
+	});
+
+	it('starts in location mode inside the starting settlement', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'tavern', worldSeed: 'ow-test2' });
+		expect(state.locationMode).toBe('location');
+		expect(state.level).toBe(0);
+	});
+
+	it('overworld position is near starting settlement', () => {
+		const state = createGame({ name: 'Test', characterClass: 'rogue', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-pos' });
+		expect(state.overworldPos).not.toBeNull();
+		const worldMap = state.worldMap as any;
+		const settlement = worldMap.settlements.find((s: any) => s.isStartingLocation === 'village');
+		expect(settlement).toBeDefined();
+		expect(state.overworldPos!.x).toBe(settlement.pos.x);
+		expect(state.overworldPos!.y).toBe(settlement.pos.y);
+	});
+
+	it('overworld has explored tiles around starting position', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-fog' });
+		const worldMap = state.worldMap as any;
+		const pos = state.overworldPos!;
+		// Starting position and nearby should be explored
+		expect(worldMap.explored[pos.y][pos.x]).toBe(true);
 	});
 });
