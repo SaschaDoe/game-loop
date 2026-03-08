@@ -36,8 +36,8 @@ describe('generateWorld', () => {
 	});
 
 	it('same seed produces identical world', { timeout: 15000 }, () => {
-		const world1 = generateWorld('determinism-check');
-		const world2 = generateWorld('determinism-check');
+		const world1 = generateWorld('determinism-check', 60, 60);
+		const world2 = generateWorld('determinism-check', 60, 60);
 		// Check tile grid equality
 		for (let y = 0; y < world1.height; y++) {
 			for (let x = 0; x < world1.width; x++) {
@@ -69,9 +69,9 @@ describe('generateWorld', () => {
 });
 
 describe('region placement (US-WG-02)', () => {
-	it('has 8 regions including Underdepths', () => {
+	it('has 9 regions including Underdepths', () => {
 		const world = getTestWorld();
-		expect(world.regions.length).toBe(8);
+		expect(world.regions.length).toBe(9);
 		const ids = world.regions.map(r => r.id);
 		expect(ids).toContain('greenweald');
 		expect(ids).toContain('ashlands');
@@ -80,13 +80,14 @@ describe('region placement (US-WG-02)', () => {
 		expect(ids).toContain('drowned_mire');
 		expect(ids).toContain('sunstone_expanse');
 		expect(ids).toContain('thornlands');
+		expect(ids).toContain('pale_coast');
 		expect(ids).toContain('underdepths');
 	});
 
-	it('7 surface regions are present on the tile grid', () => {
+	it('8 surface regions are present on the tile grid', () => {
 		const world = getTestWorld();
 		const counts = getRegionTileCounts(world);
-		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands'];
+		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast'];
 		for (const id of surfaceRegions) {
 			expect(counts[id]).toBeGreaterThan(0);
 		}
@@ -95,7 +96,7 @@ describe('region placement (US-WG-02)', () => {
 	it('no surface region is too small (minimum ~400 tiles)', () => {
 		const world = getTestWorld();
 		const counts = getRegionTileCounts(world);
-		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands'];
+		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast'];
 		for (const id of surfaceRegions) {
 			expect(counts[id]).toBeGreaterThan(400);
 		}

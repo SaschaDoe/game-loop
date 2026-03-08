@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode, CachedLocationState } from './types';
+import type { GameState, GameMap, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode, CachedLocationState } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
@@ -74,9 +74,14 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 }
 
 const SOCIAL_CLASS_BONUS: Record<CharacterClass, Record<SocialSkill, number>> = {
-	warrior: { persuade: 0, intimidate: 4, deceive: -1 },
-	mage:    { persuade: 4, intimidate: -1, deceive: 1 },
-	rogue:   { persuade: 1, intimidate: 0, deceive: 4 },
+	warrior:     { persuade: 0, intimidate: 4, deceive: -1 },
+	mage:        { persuade: 4, intimidate: -1, deceive: 1 },
+	rogue:       { persuade: 1, intimidate: 0, deceive: 4 },
+	ranger:      { persuade: 1, intimidate: 1, deceive: 0 },
+	cleric:      { persuade: 3, intimidate: 0, deceive: -2 },
+	paladin:     { persuade: 2, intimidate: 3, deceive: -3 },
+	necromancer: { persuade: -1, intimidate: 4, deceive: 2 },
+	bard:        { persuade: 4, intimidate: -1, deceive: 3 },
 };
 
 export function rollSocialCheck(check: SocialCheck, state: GameState): { success: boolean; roll: number; bonus: number; total: number } {
@@ -173,7 +178,12 @@ function spawnEnemies(positions: Position[], level: number, difficulty: Difficul
 export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; sight: number; description: string }> = {
 	warrior: { hp: 4, atk: 1, sight: -1, description: 'A sturdy fighter with high endurance' },
 	mage: { hp: -2, atk: -1, sight: 3, description: 'A scholar who sees far into the darkness' },
-	rogue: { hp: 0, atk: 1, sight: 1, description: 'A nimble adventurer with keen senses' }
+	rogue: { hp: 0, atk: 1, sight: 1, description: 'A nimble adventurer with keen senses' },
+	ranger: { hp: 1, atk: 0, sight: 2, description: 'A wilderness tracker with sharp eyes' },
+	cleric: { hp: 3, atk: -1, sight: 0, description: 'A divine servant who heals and protects' },
+	paladin: { hp: 5, atk: 0, sight: -1, description: 'A holy knight of unwavering resolve' },
+	necromancer: { hp: -3, atk: 2, sight: 1, description: 'A dark mage who commands death itself' },
+	bard: { hp: 0, atk: 0, sight: 1, description: 'A charming performer whose songs shape fate' },
 };
 
 const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
@@ -256,6 +266,10 @@ export function createGame(config?: CharacterConfig): GameState {
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
 		locationCache: {},
+		quests: [],
+		completedQuestIds: [],
+		failedQuestIds: [],
+		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 	};
 
 	// Apply class bonuses
@@ -264,6 +278,27 @@ export function createGame(config?: CharacterConfig): GameState {
 	state.player.maxHp += bonuses.hp;
 	state.player.attack += bonuses.atk;
 	state.sightRadius += bonuses.sight;
+
+	// Give starting equipment based on class
+	const CLASS_STARTING_ITEMS: Record<CharacterClass, { equip: [EquipmentSlot, string][]; inventory: string[] }> = {
+		warrior:     { equip: [['leftHand', 'iron_sword'], ['rightHand', 'wooden_shield'], ['body', 'leather_armor']], inventory: ['health_potion', 'health_potion'] },
+		mage:        { equip: [['leftHand', 'mage_staff'], ['body', 'cloth_robe']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
+		rogue:       { equip: [['leftHand', 'dagger'], ['back', 'traveler_cloak']], inventory: ['health_potion', 'health_potion'] },
+		ranger:      { equip: [['leftHand', 'shortbow'], ['back', 'quiver'], ['body', 'leather_armor']], inventory: ['health_potion', 'bread'] },
+		cleric:      { equip: [['leftHand', 'holy_mace'], ['rightHand', 'holy_symbol'], ['body', 'chainmail']], inventory: ['health_potion', 'health_potion'] },
+		paladin:     { equip: [['leftHand', 'paladin_sword'], ['rightHand', 'tower_shield'], ['head', 'plate_helm']], inventory: ['health_potion'] },
+		necromancer: { equip: [['leftHand', 'bone_staff'], ['back', 'death_shroud']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
+		bard:        { equip: [['leftHand', 'rapier'], ['rightHand', 'lute'], ['head', 'fancy_hat']], inventory: ['health_potion', 'bread', 'water_flask'] },
+	};
+	const startingGear = CLASS_STARTING_ITEMS[cfg.characterClass];
+	for (const [slot, itemId] of startingGear.equip) {
+		const item = ITEM_CATALOG[itemId];
+		if (item) state.equipment[slot] = { ...item };
+	}
+	for (const itemId of startingGear.inventory) {
+		const item = ITEM_CATALOG[itemId];
+		if (item) addToInventory(state.inventory, { ...item });
+	}
 
 	// Apply starting location HP factor (cave start = 60%)
 	if (locResult.initialHpFactor < 1.0) {
@@ -312,6 +347,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	drowned_mire: 'The ground squelches underfoot. A sour mist clings to the dead trees.',
 	sunstone_expanse: 'Endless dunes ripple under a blazing sun. Sand whispers against stone.',
 	thornlands: 'Rugged highlands choked with thorny undergrowth. Rusted iron relics dot the ridgeline.',
+	pale_coast: 'Salt spray stings your face. Grey waves crash against pale cliffs. The Hollow Sea stretches to the horizon.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -391,6 +427,7 @@ const REGION_COLORS: Record<string, string> = {
 	drowned_mire: '#6a6',
 	sunstone_expanse: '#fa4',
 	thornlands: '#a86',
+	pale_coast: '#8bd',
 	underdepths: '#a4f',
 };
 
@@ -578,22 +615,27 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 	greenweald: [
 		{ char: 'E', color: '#8f8', name: 'Elven Ranger', dialogue: ['The forest watches over those who respect it.', 'I patrol these woods daily. The corruption spreads from the east.', 'May the canopy shelter you.'], mood: 'friendly' },
 		{ char: 'D', color: '#4a4', name: 'Druid', dialogue: ['The Elder Oak speaks of dark times ahead.', 'Nature provides, if you know where to look.', 'Have you visited the Fey Circle? The stones hum with power.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'H', color: '#6a4', name: 'Forest Hermit', dialogue: ['I\'ve lived among these trees for forty years. They remember things we\'ve forgotten.', 'The Prismatic Ruins glow at midnight. Crystalborn magic still lives there.', 'Old Magic doesn\'t need a god\'s permission. Remember that.'], mood: 'neutral' },
 	],
 	ashlands: [
 		{ char: 'O', color: '#f84', name: 'Orc Blacksmith', dialogue: ['You want weapon? I forge best steel in Ashlands.', 'The goblin clans grow restless. War comes.', 'Respect the fire, outsider, and it will not burn you.'], gives: { atk: 1 }, mood: 'neutral' },
 		{ char: 'G', color: '#a64', name: 'Goblin Trader', dialogue: ['Cheap goods! Good goods! Only slightly stolen!', 'The Charred Fortress has treasures... and death.', 'Boss not happy lately. Bad sign for everyone.'], mood: 'friendly' },
+		{ char: 'W', color: '#f44', name: 'War Shaman', dialogue: ['Ira-Sethi burned here long ago. The land still remembers.', 'The Ashblooms grow only where divine fire once touched the earth.', 'Khorvan calls himself god of war. But before him, there was only Energy — pure and purposeless.'], mood: 'neutral' },
 	],
 	hearthlands: [
 		{ char: 'M', color: '#da4', name: 'Merchant', dialogue: ['Trade is the lifeblood of the Hearthlands.', 'The roads have become dangerous — bandits everywhere.', 'I hear the King\'s Stones hold ancient magic.'], mood: 'friendly' },
 		{ char: 'G', color: '#8a4', name: 'Guard Captain', dialogue: ['Keep your weapons sheathed within town walls.', 'We\'ve had reports of strange creatures on the roads.', 'The Old Watchtower was abandoned years ago. Haunted, they say.'], gives: { hp: 2 }, mood: 'neutral' },
+		{ char: 'B', color: '#fa8', name: 'Wandering Bard', dialogue: ['Seven thrones sit in shadow deep, where stolen gods their vigil keep...', 'It\'s just a song, friend. Nobody takes it seriously. Well, almost nobody.', 'I collect stories from every region. The ones that match across borders — those are the true ones.'], mood: 'friendly' },
 	],
 	frostpeak: [
 		{ char: 'D', color: '#8df', name: 'Dwarven Smith', dialogue: ['These mountains hold iron that sings when struck.', 'The frozen halls above... even we dare not enter.', 'Take this — you\'ll need warmth where you\'re going.'], gives: { hp: 3 }, mood: 'friendly' },
 		{ char: 'R', color: '#aaf', name: 'Runekeeper', dialogue: ['The runes speak truths that words cannot.', 'Frostpeak was old when the world was young.', 'The ice holds secrets of the First Age.'], mood: 'neutral' },
+		{ char: 'I', color: '#4af', name: 'Ice Fisher', dialogue: ['The lakes beneath the glaciers hold fish that glow.', 'I once pulled up an artifact from the deep ice. Sold it. Wish I hadn\'t.', 'The dwarves say there\'s a frozen throne beneath the Glacial Stones. I believe them.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
 	drowned_mire: [
 		{ char: 'W', color: '#6a6', name: 'Swamp Witch', dialogue: ['The mire gives and takes in equal measure.', 'Drink this. It tastes foul but wards off the plague.', 'The bog spirits are restless tonight...'], gives: { hp: 4 }, mood: 'friendly' },
 		{ char: 'H', color: '#886', name: 'Herbalist', dialogue: ['These mushrooms cure most poisons. Most.', 'Don\'t stray from the stilts after dark.', 'The Sunken Altar holds power over the drowned dead.'], mood: 'neutral' },
+		{ char: 'B', color: '#464', name: 'Bog Walker', dialogue: ['I walk the deep paths where others won\'t go.', 'The spirits here aren\'t evil — they\'re confused. They died before the Ascension and don\'t recognize the new gods.', 'Whispertongue is the language of the dead. Learn it, and they\'ll talk to you.'], mood: 'neutral' },
 	],
 	sunstone_expanse: [
 		{ char: 'N', color: '#fa4', name: 'Nomad Guide', dialogue: ['The desert tests all who cross it.', 'Follow the stars — they never lie, unlike the sands.', 'The buried temples hold treasures of forgotten kings.'], mood: 'friendly' },
@@ -602,6 +644,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 	thornlands: [
 		{ char: 'E', color: '#a86', name: 'Iron Remnant Engineer', dialogue: ['The Republic fell, but its principles endure.', 'These machines once powered an entire civilization. Now they rust.', 'Magic is a crutch. Gears and steel — that\'s real power.'], gives: { atk: 1 }, mood: 'neutral' },
 		{ char: 'S', color: '#da8', name: 'Thorn Ranger', dialogue: ['The undergrowth here is alive — and not friendly.', 'The old Iron roads are still the safest path through these highlands.', 'I\'ve seen foundry smoke rising from ruins that should be dead. Unsettling.'], gives: { hp: 2 }, mood: 'friendly' },
+	],
+	pale_coast: [
+		{ char: 'H', color: '#8bd', name: 'Harbor Master', dialogue: ['Welcome to the coast, traveler. Mind the tides — they\'re unnatural here.', 'Ships vanish in the Hollow Sea. Whole crews gone without a trace.', 'The sea gives back things it shouldn\'t have. Artifacts from before the Ascension wash ashore.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'F', color: '#68a', name: 'Old Fisherman', dialogue: ['Been fishing these waters fifty years. They\'ve changed.', 'Sometimes the water goes clear — perfectly clear — down to the bottom. Miles of nothing. That\'s the Hollow Sea.', 'Dro-Mahk died here, they say. The Principle of Matter itself. That\'s why things feel... thin.'], mood: 'neutral' },
+		{ char: 'D', color: '#4af', name: 'Diver', dialogue: ['I dive for salvage in the shallows. The deeper wrecks are too dangerous.', 'Found a crystal last week that hummed when I held it. Crystalborn make, I reckon.', 'There\'s a sunken city out past the reef. On clear days you can see the spires beneath the waves.'], gives: { atk: 1 }, mood: 'friendly' },
 	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
@@ -750,6 +797,7 @@ const GRAVE_LORE: Record<string, string> = {
 	drowned_mire:     'A swamp witch who sacrificed herself to seal a plague beneath the waters.',
 	sunstone_expanse: 'A nomadic stargazer who mapped the constellations into the desert stones.',
 	thornlands:       'An Iron Republic founder who swore that gears would outlast gods.',
+	pale_coast:       'A lighthouse keeper who watched the Hollow Sea swallow the old harbor.',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -858,6 +906,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	drowned_mire:     { combat: ['Slime', 'Spider', 'Zombie'], nonCombat: ['A swamp witch offers a bitter tonic that restores health.', 'You find dry ground and an abandoned camp with supplies.'] },
 	sunstone_expanse: { combat: ['Skeleton', 'Rat', 'Ogre'], nonCombat: ['A nomadic stargazer reads your fortune.', 'A desert trader sells you water from an oasis.'] },
 	thornlands:       { combat: ['Wolf', 'Goblin', 'Spider'], nonCombat: ['An Iron Remnant tinker offers to repair your gear.', 'You find a rusted automaton half-buried in thorns — its gears still turn slowly.'] },
+	pale_coast:       { combat: ['Slime', 'Rat', 'Skeleton'], nonCombat: ['A fisherman shares his catch with you. "The sea provides," he says.', 'You find a washed-up chest half-buried in sand. Inside: a crystal that hums faintly.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 
@@ -887,7 +936,7 @@ function triggerCombatEncounter(state: GameState, regionId: string): void {
 	// Remove stairs from encounter arena (no descending)
 	for (let y = 0; y < arenaH; y++) {
 		for (let x = 0; x < arenaW; x++) {
-			if (arenaMap.tiles[y][x] === '<' || arenaMap.tiles[y][x] === '>') {
+			if (arenaMap.tiles[y][x] === '>') {
 				arenaMap.tiles[y][x] = '.';
 			}
 		}
@@ -918,7 +967,7 @@ function triggerCombatEncounter(state: GameState, regionId: string): void {
 	state.level = 0; // level 0 so stairs will exit back to overworld
 	state.visibility = createVisibilityGrid(arenaW, arenaH);
 	state.sightRadius = DEFAULT_SIGHT_RADIUS;
-	updateVisibility(arenaMap, playerPos, state.sightRadius, state.visibility);
+	updateVisibility(state.visibility, arenaMap, playerPos, state.sightRadius);
 	state.traps = [];
 	state.hazards = [];
 	state.chests = [];
@@ -1497,6 +1546,10 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
 		locationCache: {},
+		quests: [],
+		completedQuestIds: [],
+		failedQuestIds: [],
+		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -1572,19 +1625,34 @@ function tickEntityEffects(state: GameState, entity: Entity): void {
 export const DODGE_CHANCE: Record<CharacterClass, number> = {
 	rogue: 0.25,
 	mage: 0.15,
-	warrior: 0.10
+	warrior: 0.10,
+	ranger: 0.20,
+	cleric: 0.08,
+	paladin: 0.05,
+	necromancer: 0.12,
+	bard: 0.18,
 };
 
 export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
 	warrior: 2,
 	mage: 0,
-	rogue: 1
+	rogue: 1,
+	ranger: 1,
+	cleric: 1,
+	paladin: 3,
+	necromancer: 0,
+	bard: 0,
 };
 
 export const PUSH_CHANCE: Record<CharacterClass, number> = {
 	warrior: 1.0,
 	rogue: 0.40,
-	mage: 0.30
+	mage: 0.30,
+	ranger: 0.45,
+	cleric: 0.35,
+	paladin: 0.80,
+	necromancer: 0.20,
+	bard: 0.25,
 };
 
 const ENVIRONMENTAL_KILL_BONUS = 1.5;
@@ -1784,7 +1852,12 @@ function moveEnemies(state: GameState, defending = false) {
 const FLEE_CHANCE: Record<CharacterClass, number> = {
 	rogue: 0.75,
 	mage: 0.60,
-	warrior: 0.50
+	warrior: 0.50,
+	ranger: 0.70,
+	cleric: 0.45,
+	paladin: 0.40,
+	necromancer: 0.55,
+	bard: 0.65,
 };
 
 interface FleeResult {
