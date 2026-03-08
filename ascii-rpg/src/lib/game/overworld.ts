@@ -752,7 +752,7 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'standing_stones', name: 'Thundercrown Circle', hidden: false },
 		{ type: 'shrine', name: 'Storm Altar', hidden: false },
 		{ type: 'obelisk', name: 'The Fulgurite Spire', hidden: false },
-		{ type: 'hidden_cave', name: 'Shaper\'s Vein Entrance', hidden: true },
+		{ type: 'hidden_cave', name: 'Glazed Tunnel Entrance', hidden: true },
 		{ type: 'hot_spring', name: 'Lightning Glass Pool', hidden: true },
 		{ type: 'grave_site', name: 'Storm Warden\'s Cairn', hidden: true },
 		{ type: 'ancient_tree', name: 'The Charred Sentinel', hidden: false },
@@ -1119,7 +1119,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	grey_wastes: ['The Hollow Vein', 'Veiled Laboratory', 'Petrified Grove Depths', 'Ley Line Corpse', 'Pilgrim\'s Catacombs', 'Scar Trench Tunnels', 'Blighted Root Cellar'],
 	korthaven: ['City Sewers', 'Thieves\' Catacombs', 'Smuggler\'s Tunnels', 'Arena Undercroft', 'Noble\'s Vault', 'Old Prison', 'Guild Cellar'],
 	eldergrove: ['Forgotten Elven Temple', 'Bandit Warrens', 'Rootbound Crypt', 'Spider-Silk Cavern', 'Moonlit Catacombs', 'Beast Lord\'s Den', 'Thorn-Choked Ruins', 'Canopy Stalker\'s Nest', 'Vine-Strangled Vault', 'The Deep Hollow', 'Mushroom Caves', 'Poacher\'s Tunnel', 'Treant\'s Grotto'],
-	stormcradle: ['Lightning-Split Cavern', 'Shaper\'s Vein Tunnel', 'Storm Warden\'s Crypt', 'Fulgurite Mines', 'Thunderbird Nest', 'Collapsed Signal Tower', 'Electrified Ruins'],
+	stormcradle: ['Lightning-Split Cavern', 'Ancient Vein Tunnel', 'Storm Warden\'s Crypt', 'Fulgurite Mines', 'Thunderbird Nest', 'Shattered Observatory', 'Electrified Ruins'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 
