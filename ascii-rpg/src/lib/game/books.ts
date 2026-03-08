@@ -760,6 +760,118 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`I'm remembering.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 11. The Seventh Warden's Report — Void Serpent / The Cage / Cover-up
+	// -----------------------------------------------------------------------
+	book_seventh_warden: {
+		id: 'book_seventh_warden',
+		name: "The Seventh Warden's Report",
+		char: 'B',
+		color: '#6655aa',
+		type: 'book',
+		description:
+			"A thin sheaf of papers bound with wax cord. The handwriting is precise and small, as if the writer was accustomed to working in darkness.",
+		pages: [
+			`REPORT — LOWER SEAL SURVEY\n` +
+				`Warden Designation: Seventh\n` +
+				`Shaft: Nine, Eastern Descent\n` +
+				`Cycle: 4,717th since Founding\n\n` +
+				`Standard inspection of the first three\n` +
+				`seal-stones. Structural integrity within\n` +
+				`acceptable parameters. Luminance steady.\n` +
+				`Harmonic resonance at expected frequency.\n\n` +
+				`One anomaly. The grain of the second\n` +
+				`seal-stone has shifted. Not cracked —\n` +
+				`the stone remains whole. But the mineral\n` +
+				`pattern within the rock has rearranged\n` +
+				`itself into lines. Regular. Deliberate.\n` +
+				`As though the stone were trying to write.\n\n` +
+				`I recorded the pattern. It does not match\n` +
+				`any known script. I will include a\n` +
+				`transcription with this report, though\n` +
+				`I cannot read it.\n\n` +
+				`The third seal-stone is warm. Previous\n` +
+				`surveys recorded it as cold. I have\n` +
+				`marked this for follow-up and descended.`,
+
+			`The fourth seal shows a hairline\n` +
+				`fracture. I wish to be precise: it is\n` +
+				`not broken. The seal holds. But there\n` +
+				`is a crack no wider than a thread, and\n` +
+				`through it comes warmth. Not heat —\n` +
+				`warmth. The difference matters. Heat is\n` +
+				`a property of energy. Warmth is a\n` +
+				`property of presence.\n\n` +
+				`Something on the other side of the seal\n` +
+				`is aware of the crack.\n\n` +
+				`I performed standard diagnostic rituals.\n` +
+				`The results were normal in every respect\n` +
+				`except one: the echo came back wrong.\n` +
+				`When you sound a seal, it should return\n` +
+				`your own resonance. This one returned\n` +
+				`a question.\n\n` +
+				`I do not know how to describe a question\n` +
+				`that has no words. It was a feeling —\n` +
+				`patient, vast, and very old — that\n` +
+				`pressed against my mind the way a hand\n` +
+				`presses against a closed door.\n\n` +
+				`Do you know their names?\n\n` +
+				`That is as close as I can render it.\n` +
+				`I withdrew to the third seal-stone and\n` +
+				`composed myself before continuing.`,
+
+			`I returned to the second seal-stone on\n` +
+				`my ascent. The grain pattern had changed.\n\n` +
+				`Where before it showed symbols I could\n` +
+				`not read, it now displayed seven words\n` +
+				`in common script. Seven names.\n\n` +
+				`I will not write them here. The Circle\n` +
+				`will understand why when they read the\n` +
+				`transcription I have appended to this\n` +
+				`report under separate seal.\n\n` +
+				`I will say only this: the names were\n` +
+				`almost — but not quite — the names we\n` +
+				`use in prayer. As if someone who knew\n` +
+				`the true names was shouting them through\n` +
+				`a wall, and the wall was changing the\n` +
+				`sounds just enough to make them\n` +
+				`unfamiliar.\n\n` +
+				`Or as if the names we pray to are\n` +
+				`themselves the distortion, and what the\n` +
+				`stone wrote is closer to the truth.\n\n` +
+				`I do not know which interpretation\n` +
+				`is correct. I do not know which\n` +
+				`I prefer.`,
+
+			`RECOMMENDATION:\n\n` +
+				`Reinforce all seals in Shaft Nine.\n` +
+				`The hairline fracture in the fourth\n` +
+				`stone requires immediate attention.\n\n` +
+				`SECONDARY RECOMMENDATION:\n\n` +
+				`I have served the Circle for thirty\n` +
+				`years. I was taught that the Contained\n` +
+				`is mindless — a force, not an\n` +
+				`intelligence. A danger like fire or\n` +
+				`flood, powerful but purposeless.\n\n` +
+				`This is not accurate. The Contained\n` +
+				`thinks. It remembers. It asked me a\n` +
+				`question and wrote seven names and\n` +
+				`waited for me to read them. Nothing\n` +
+				`mindless waits.\n\n` +
+				`I request a full review of our founding\n` +
+				`documents. Someone told the first\n` +
+				`Wardens that the Contained does not\n` +
+				`think. I want to know who told them\n` +
+				`this, and whether that person had\n` +
+				`reason to want us incurious.\n\n` +
+				`I am not afraid of what is beneath\n` +
+				`the seal. I am afraid of how carefully\n` +
+				`I was taught not to look at it.\n\n` +
+				`    — Seventh Warden\n` +
+				`    Report filed. Unanswered.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
