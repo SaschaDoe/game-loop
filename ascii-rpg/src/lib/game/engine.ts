@@ -357,6 +357,8 @@ const REGION_FLAVOR: Record<string, string> = {
 	timeless_wastes: 'The sky flickers between noon and dusk. Your shadow moves before you do. The landscape repeats — or did you walk this path already? Time is wounded here.',
 	hollow_sea: 'The water stretches beyond sight, impossibly clear. Far below, drowned spires shimmer like a mirage. Where Dro-Mahk was torn, matter itself grew thin.',
 	grey_wastes: 'The trees stand like bones, grey and leafless. The ground is ashen and silent. Somewhere beneath your feet, a dead Ley Line lies like a severed nerve — and the land has never stopped grieving.',
+	korthaven: 'Golden wheat fields stretch between walled farmsteads and merchant caravans. The spires of Korthaven rise in the distance — the Free Cities\' greatest market, where coin speaks louder than prayer.',
+	eldergrove: 'The trees here are immense — silver-barked giants whose canopy swallows the sky. Shafts of green-gold light pierce the perpetual twilight. Somewhere above, elven bridges span the branches like spider silk, and the forest hums with a music older than prayer.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -444,6 +446,8 @@ const REGION_COLORS: Record<string, string> = {
 	timeless_wastes: '#da8',
 	hollow_sea: '#48a',
 	grey_wastes: '#898',
+	korthaven: '#da6',
+	eldergrove: '#6d8',
 	underdepths: '#a4f',
 };
 
@@ -701,6 +705,16 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'V', color: '#686', name: 'Scar-Walker', dialogue: ['The grey gets in your bones. Changes you. Some call it corruption. I call it the land\'s grief made physical.', 'I found a journal in the Veiled Hand outpost. Someone ordered the Ley Line killed. Deliberately. The signature was burned away.', 'The scavengers strip what they can. The Pilgrims heal what they can. Nobody asks who killed it in the first place.'], gives: { atk: 1 }, mood: 'neutral' },
 		{ char: 'C', color: '#7a7', name: 'Cairn-Keeper Moss', dialogue: ['The Pilgrims heal. The scavengers take. The Veiled Hand watches. And beneath it all, the dead Ley Line dreams of what it was.', 'Can you hear it? That hum beneath the silence? The Ley Line is trying to remember itself. After all these centuries.', 'The Petrified Grove was alive once. Oldest forest in the world. Now it\'s stone and memory and grief.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
+	eldergrove: [
+		{ char: 'E', color: '#8fc', name: 'Warden Ithilra', dialogue: ['You walk beneath the Eldest Trees. Step softly — the roots remember every footfall.', 'The Eldergrove sheltered our people when the Ascended burned our libraries. We will not forget.', 'Sylvan is the tongue the trees speak. Learn it, and the forest opens paths no outsider can find.'], gives: { hp: 3 }, mood: 'neutral' },
+		{ char: 'A', color: '#6ea', name: 'Archivist Faelorn', dialogue: ['The Moonlit Archives hold texts the Veiled Hand believes they destroyed. We let them believe it.', 'Before the Ascension, the elves practiced magic without prayer. We still do — quietly.', 'Selvara claims she grew the World Oak. The trees laugh at that. They remember who truly planted the first seeds.'], mood: 'friendly' },
+		{ char: 'R', color: '#4a6', name: 'Ranger Thandril', dialogue: ['Bandits on the south road again. The Briarwood Gang — they prey on pilgrims heading for the temples.', 'Crystalline Stags still roam the deep paths. If you see one, do not follow. They lead the unworthy to their deaths.', 'Something prowls the Thornveil at night. Larger than a bear. The tracks vanish at the treeline, as if it climbs.'], gives: { atk: 1 }, mood: 'friendly' },
+	],
+	korthaven: [
+		{ char: 'A', color: '#da6', name: 'Aldric Fenn', dialogue: ['Have you seen anything unusual? Anything that glows? Anything that\'s warm when it shouldn\'t be?', 'Eight centuries of collecting curiosities. You\'d be amazed what washes up in markets — artifacts from before the Ascension, still humming with power.', 'The Merchants\' Guild thinks I\'m eccentric. They\'re not wrong. But I remember when this city was a crossroads camp and the gods wore different faces.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'G', color: '#fa8', name: 'Guild Factor', dialogue: ['Korthaven moves more coin in a day than most kingdoms see in a year. The Free Cities built that.', 'Mercatus blesses the harvest and the ledger alike. Though between you and me, gold prays louder than grain.', 'We don\'t ask where goods come from. We ask what they\'re worth. That\'s Trade Common for you.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'H', color: '#ca8', name: 'Caravan Master Halda', dialogue: ['Twelve years I\'ve carried this coin. Won\'t leave my pocket. Won\'t spend. Won\'t melt. My uninvited guest.', 'The roads between cities are the real kingdom. Whoever controls the caravans controls everything.', 'I\'ve seen impossible things on the trade roads. Merchants learn to accept the impossible and price it accordingly.'], gives: { hp: 2 }, mood: 'friendly' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -760,7 +774,7 @@ function enterSettlement(state: GameState, settlement: Settlement): void {
 	// Generate fresh — use starting location generator for starting settlements, type-based for others
 	const locResult = settlement.isStartingLocation
 		? generateStartingLocation(settlement.isStartingLocation, MAP_W, MAP_H)
-		: generateSettlementByType(settlement.type, MAP_W, MAP_H);
+		: generateSettlementByType(settlement.type, MAP_W, MAP_H, settlement.name);
 	state.map = locResult.map;
 	state.player.pos = locResult.playerPos;
 	state.enemies = locResult.enemies;
@@ -861,6 +875,8 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	timeless_wastes:  'The entrance flickers — there, then not, then there again. Inside, torchlight illuminates dust that falls upward.',
 	hollow_sea:       'The tunnel slopes down into brackish water. Bioluminescent coral lines the walls, pulsing in rhythms that feel like breathing.',
 	grey_wastes:      'The stone is veined with dull crystal — dead Ley Line fragments. The deeper you go, the more the walls seem to weep grey dust.',
+	korthaven:        'Brick gives way to older stone. The smell of sewage fades into something mustier — old vaults, forgotten cellars, the bones of the city beneath the city.',
+	eldergrove:       'Roots twist into a staircase descending beneath the forest floor. The walls are living wood, and sap glows faintly amber in the crevices. Something ancient breathes below.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -881,6 +897,8 @@ const GRAVE_LORE: Record<string, string> = {
 	timeless_wastes:  'A cartographer who mapped every version of this place. Her final entry: "The map is correct. The land has moved."',
 	hollow_sea:       'A Dominion navigator who surfaced once to warn the land-dwellers. Her final log: "The membrane thins. Pelagathis sinks not into water but into nothing."',
 	grey_wastes:      'A Grey Pilgrim who sang to the dead Ley Line every dawn for forty years. Her final words: "It answered. Once. Then went silent forever."',
+	korthaven:        'A merchant prince who funded expeditions to every corner of the world. His ledger\'s last entry: "The gods trade in souls. We merely trade in coin. I wonder which currency is more honest."',
+	eldergrove:       'An elven archivist who hid the last pre-Ascension texts beneath the roots. Her final note: "They burned the library at Ashfall. They will come for these next. The trees will not let them take them."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -997,6 +1015,8 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	timeless_wastes:  { combat: ['Wraith', 'Skeleton', 'Troll'], nonCombat: ['A traveler walks past you — then walks past you again, wearing different clothes. She doesn\'t notice.', 'You find a campfire still warm with yesterday\'s embers. Your journal says you lit it tomorrow.'] },
 	hollow_sea:       { combat: ['Slime', 'Wraith', 'Troll'], nonCombat: ['The water goes crystal-clear. Far below, you see drowned spires glowing faintly — then the clarity passes, and there is only dark sea.', 'A coral artifact washes ashore at your feet, still warm. It hums a melody in a language you almost understand.'] },
 	grey_wastes:      { combat: ['Wraith', 'Zombie', 'Spider'], nonCombat: ['A Grey Pilgrim kneels beside a dead tree, whispering in Old Primal. For a moment, a single grey leaf unfurls — then crumbles.', 'The ground hums beneath your feet. A faint warmth rises through your boots — the dead Ley Line, dreaming.'] },
+	korthaven:        { combat: ['Rat', 'Goblin', 'Wolf'], nonCombat: ['A merchant caravan rumbles past, guards eyeing you warily. The factor tips his hat and tosses you a bread roll.', 'A street performer juggles coins that catch the light strangely — one of them hums. She winks and pockets it before you can look closer.'] },
+	eldergrove:       { combat: ['Spider', 'Wolf', 'Troll'], nonCombat: ['A silver-barked tree shifts its branches, revealing a hidden path that was not there a moment ago.', 'An elven scout drops from the canopy, studies you in silence, then vanishes back into the leaves with a curt nod.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 

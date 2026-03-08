@@ -69,9 +69,9 @@ describe('generateWorld', () => {
 });
 
 describe('region placement (US-WG-02)', () => {
-	it('has 16 regions including Underdepths', () => {
+	it('has 18 regions including Underdepths', () => {
 		const world = getTestWorld();
-		expect(world.regions.length).toBe(16);
+		expect(world.regions.length).toBe(18);
 		const ids = world.regions.map(r => r.id);
 		expect(ids).toContain('greenweald');
 		expect(ids).toContain('ashlands');
@@ -88,13 +88,15 @@ describe('region placement (US-WG-02)', () => {
 		expect(ids).toContain('timeless_wastes');
 		expect(ids).toContain('hollow_sea');
 		expect(ids).toContain('grey_wastes');
+		expect(ids).toContain('korthaven');
+		expect(ids).toContain('eldergrove');
 		expect(ids).toContain('underdepths');
 	});
 
-	it('15 surface regions are present on the tile grid', () => {
+	it('17 surface regions are present on the tile grid', () => {
 		const world = getTestWorld();
 		const counts = getRegionTileCounts(world);
-		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes'];
+		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove'];
 		for (const id of surfaceRegions) {
 			expect(counts[id]).toBeGreaterThan(0);
 		}
@@ -103,7 +105,7 @@ describe('region placement (US-WG-02)', () => {
 	it('no surface region is too small (minimum ~400 tiles)', () => {
 		const world = getTestWorld();
 		const counts = getRegionTileCounts(world);
-		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes'];
+		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove'];
 		for (const id of surfaceRegions) {
 			expect(counts[id]).toBeGreaterThan(400);
 		}

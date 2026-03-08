@@ -678,6 +678,231 @@ function generateHarbor(width: number, height: number): LocationResult {
 	};
 }
 
+function generateKorthaven(width: number, height: number): LocationResult {
+	const tiles = makeWallGrid(width, height);
+
+	// Open the entire interior
+	fillRect(tiles, 1, 1, width - 2, height - 2, '.');
+
+	// === Duke's Palace (north-center) ===
+	drawBuilding(tiles, 17, 1, 16, 7, 'south');
+	tiles[3][25] = '#'; // throne
+	tiles[3][24] = '#'; // throne dais
+	tiles[3][26] = '#'; // throne dais
+
+	// === Temple of Mercatus (west side) ===
+	drawBuilding(tiles, 2, 3, 12, 7, 'east');
+	tiles[6][7] = '#'; // altar
+	tiles[6][8] = '#'; // altar
+
+	// === The Crucible Arena (east side) ===
+	drawBuilding(tiles, 36, 3, 12, 7, 'west');
+	// Fighting pit (open floor inside)
+	fillRect(tiles, 39, 5, 6, 3, '.');
+	tiles[6][42] = '#'; // arena pillar
+
+	// === Grand Market (center, 6 stalls) ===
+	fillRect(tiles, 10, 10, 3, 2, '#');
+	fillRect(tiles, 16, 10, 3, 2, '#');
+	fillRect(tiles, 22, 10, 3, 2, '#');
+	fillRect(tiles, 28, 10, 3, 2, '#');
+	fillRect(tiles, 34, 10, 3, 2, '#');
+	fillRect(tiles, 40, 10, 3, 2, '#');
+
+	// === Fountain plaza (center) ===
+	tiles[13][25] = '#'; // fountain center
+	tiles[12][25] = '#'; // fountain north
+	tiles[14][25] = '#'; // fountain south
+	tiles[13][24] = '#'; // fountain west
+	tiles[13][26] = '#'; // fountain east
+
+	// === Apothecary (mid-west) ===
+	drawBuilding(tiles, 2, 12, 7, 5, 'east');
+	tiles[14][4] = '*'; // potion on shelf
+
+	// === The Gilded Flagon tavern (south-west) ===
+	drawBuilding(tiles, 2, 18, 12, 6, 'north');
+	tiles[20][5] = '*'; // ale barrel
+	tiles[20][10] = '#'; // bar counter
+	tiles[21][10] = '#'; // bar counter
+
+	// === Guard Barracks (south-east) ===
+	drawBuilding(tiles, 36, 18, 12, 6, 'north');
+	tiles[20][40] = '#'; // weapon rack
+	tiles[20][44] = '#'; // weapon rack
+
+	// === Thieves' Guild hideout (south, small hidden building) ===
+	drawBuilding(tiles, 18, 20, 6, 4, 'north');
+
+	// === Dock warehouse (south-center-east) ===
+	drawBuilding(tiles, 26, 18, 8, 5, 'north');
+	tiles[20][28] = '#'; // crate
+	tiles[20][31] = '#'; // crate
+
+	// === Inspector's post (near Palace, north-east) ===
+	// Just a small open area near the palace with some furnishing
+	tiles[8][30] = '#'; // desk
+
+	// Scattered potions
+	tiles[6][4] = '*';
+	tiles[20][42] = '*';
+	tiles[13][30] = '*';
+
+	// Dungeon entrance
+	tiles[height - 2][width - 3] = '>';
+
+	const playerPos = { x: 25, y: 13 };
+
+	const npcs: NPC[] = [
+		// 1. Duke Arandel — Palace
+		makeNPC(25, 3, 'D', '#ff4', 'Duke Arandel', [
+			'Korthaven stands at the crossroads of trade and power. I intend to keep it that way.',
+			'The merchant guilds grow bold. They forget who granted their charters.',
+			'There are whispers of an old throne beneath the city — older than any duke.',
+			'Serve Korthaven faithfully and you will find me a generous patron.',
+			'Tell no one, but I\'ve seen documents that suggest the gods themselves once walked these docks.'
+		], { hp: 5 }),
+
+		// 2. Arena Master Gorath — Arena
+		makeNPC(41, 5, 'G', '#f84', 'Arena Master Gorath', [
+			'Welcome to the Crucible! Blood and glory, that\'s what we deal in.',
+			'Kael is my best fighter. Undefeated in thirty bouts.',
+			'The crowd loves spectacle. Give them a show and the coin flows.',
+			'Some fighters come from the Thornlands with mechanical limbs. Hard to beat.',
+			'I once saw a man fight with light in his fists. Church shut that down fast.'
+		]),
+
+		// 3. Pit Fighter Kael — Arena
+		makeNPC(43, 7, 'K', '#fa4', 'Pit Fighter Kael', [
+			'You want to challenge me? Get in line.',
+			'I fight because it\'s honest. No politics, no schemes — just steel.',
+			'The Arena Master says I\'m his best. I say I haven\'t met my match yet.',
+			'There\'s a fighter in the underground circuit who uses shadow magic. I want that bout.'
+		]),
+
+		// 4. Brother Aldric — Temple
+		makeNPC(7, 6, 'A', '#ffa', 'Brother Aldric', [
+			'Mercatus teaches that fair exchange elevates the soul.',
+			'Every coin spent honestly is a prayer. Every swindle, a sin.',
+			'The old texts speak of a time before Mercatus held the throne of commerce.',
+			'I sometimes wonder — what was Mercatus before becoming a god?',
+			'Take this blessing. May your trades be just.'
+		], { hp: 3 }),
+
+		// 5. Merchant Prince Zara — Market
+		makeNPC(16, 10, 'Z', '#da4', 'Merchant Prince Zara', [
+			'I control half the trade flowing through Korthaven. The Duke controls the other half.',
+			'The Sunstone Expanse sends spices worth more than gold. If you can survive the delivery.',
+			'Competition is healthy. Monopoly is divine. Guess which I prefer.',
+			'A shipment from the Hollow Sea coast arrived last week. The goods were... changed.',
+			'Buy low, sell high, and never trust a smiling merchant. Including me.'
+		]),
+
+		// 6. Traveling Merchant — Market
+		makeNPC(28, 10, 'T', '#da4', 'Traveling Merchant', [
+			'I\'ve walked every road from the Grey Wastes to the Greenweald.',
+			'The strangest thing I ever traded? A bottled memory. Don\'t ask where I got it.',
+			'Roads are getting dangerous. Bandits near the Thornlands, worse things elsewhere.',
+			'If you need supplies, I\'m your best bet this side of the mountains.'
+		]),
+
+		// 7. Madame Vesper — Tavern
+		makeNPC(5, 20, 'V', '#c8f', 'Madame Vesper', [
+			'The Gilded Flagon has served Korthaven for three generations. My grandmother built it.',
+			'Every secret in this city passes through my tavern eventually.',
+			'The Duke\'s inspector drinks here when he thinks no one is watching.',
+			'Old Daven in the corner knows more than he lets on. Buy him an ale.',
+			'I hear things. For the right price, you might hear them too.'
+		]),
+
+		// 8. Old Daven — Tavern
+		makeNPC(10, 22, 'O', '#888', 'Old Daven', [
+			'I\'ve been drinking at this bar since before your parents were born.',
+			'The tunnels under Korthaven... they connect to something old. Very old.',
+			'I was a sailor once. Saw the Hollow Sea turn to glass under a full moon.',
+			'The Thieves\' Guild thinks they\'re hidden. Everyone knows where they are.',
+			'Buy me another ale and I\'ll tell you about the god who drowned.'
+		]),
+
+		// 9. Inspector Kaelen — near Palace
+		makeNPC(30, 8, 'I', '#8af', 'Inspector Kaelen', [
+			'I keep order in Korthaven. The Duke\'s eyes and ears, they call me.',
+			'The Thieves\' Guild operates brazenly. I\'ll shut them down — eventually.',
+			'Something stirs in the catacombs beneath the old quarter. I need capable hands.',
+			'Take this. Consider it a retainer for services to the city.'
+		], { hp: 2 }),
+
+		// 10. Apothecary Mora — Apothecary
+		makeNPC(4, 14, 'M', '#4a4', 'Apothecary Mora', [
+			'Herbs, tinctures, and remedies for every ailment. Step inside.',
+			'The Grey Wastes yield rare mosses that cure what no prayer can.',
+			'I distill essences from Hollow Sea kelp. The properties are... unusual.',
+			'A healthy adventurer is a living adventurer. Take this draught.',
+			'Some say my potions work too well. I say the plants know what they\'re doing.'
+		], { hp: 4 }),
+
+		// 11. Guildmaster Nyx — Thieves' Guild
+		makeNPC(20, 22, 'N', '#a4f', 'Guildmaster Nyx', [
+			'You found us. Impressive. Or someone told you. Less impressive.',
+			'The Guild offers services the law cannot. Discretion is our currency.',
+			'Inspector Kaelen thinks he\'ll shut us down. He\'s been saying that for years.',
+			'We have eyes in every faction. The Church, the Crown, even the merchant houses.',
+			'There\'s a vault beneath the Duke\'s Palace that no one speaks of. I want in.'
+		]),
+
+		// 12. Sera the Fence — near Thieves' Guild
+		makeNPC(17, 19, 'S', '#a8f', 'Sera the Fence', [
+			'I buy what others can\'t sell. No questions asked.',
+			'Nyx runs a tight ship. Cross the Guild and you disappear.',
+			'I once fenced a relic from a Crystalborn ruin. Buyer went mad within a week.',
+			'Need something moved quietly? I know people who know people.'
+		]),
+
+		// 13. Captain Harsk — Barracks
+		makeNPC(42, 20, 'C', '#88f', 'Captain Harsk', [
+			'Korthaven\'s guard keeps the peace. What passes for peace, anyway.',
+			'My soldiers are stretched thin. Patrols, dock security, arena crowd control.',
+			'The Duke wants more guards. The treasury says otherwise.',
+			'You look capable. Take this — consider it a field commission.',
+			'Something\'s been coming up from the catacombs at night. We need to seal those tunnels.'
+		], { atk: 2 }),
+
+		// 14. Dock Foreman Bram — Dock warehouse
+		makeNPC(29, 20, 'B', '#886', 'Dock Foreman Bram', [
+			'Every crate that enters Korthaven passes through my warehouse.',
+			'The harbor fees are robbery, but the Duke insists.',
+			'A shipment went missing last week. The seals were intact but the contents... gone.',
+			'I don\'t ask what\'s in the sealed crates from the Hollow Sea coast. Neither should you.'
+		]),
+
+		// 15. The Masked Figure — hidden corner
+		makeNPC(width - 3, height - 3, '?', '#ff0', 'The Masked Figure', [
+			'You see me. Few do. That means you\'re either perceptive or doomed.',
+			'The seven thrones were not always occupied by the current gods.',
+			'Mercatus was a mortal once. A swindler. The worst of them.',
+			'The truth is buried in seven places. Korthaven sits atop one.',
+			'Find the others before the Veiled Hand erases them forever.'
+		]),
+
+		// 16. Elira the Bard — Market area
+		makeNPC(22, 12, 'E', '#f8a', 'Elira the Bard', [
+			'A song for a coin? I know ballads from every region.',
+			'The sailors sing of Dro-Mahk\'s fall and the sea that swallowed a god.',
+			'My favorite tale? The one about seven mortals who stole heaven. Just a story, of course.',
+			'Music carries truth where words alone cannot. Listen between the notes.'
+		])
+	];
+
+	return {
+		map: { width, height, tiles, secretWalls: new Set() },
+		playerPos,
+		npcs,
+		enemies: [],
+		initialHpFactor: 1.0,
+		welcomeMessage: 'Korthaven sprawls before you — a city of coin and ambition. Market stalls jostle beneath the Duke\'s palace spires, and the salt breeze carries voices from a hundred trades.'
+	};
+}
+
 export function generateStartingLocation(location: StartingLocation, width: number, height: number): LocationResult {
 	switch (location) {
 		case 'village': return generateVillage(width, height);
@@ -687,7 +912,8 @@ export function generateStartingLocation(location: StartingLocation, width: numb
 }
 
 /** Generate a settlement interior based on the settlement type. */
-export function generateSettlementByType(type: SettlementType, width: number, height: number): LocationResult {
+export function generateSettlementByType(type: SettlementType, width: number, height: number, name?: string): LocationResult {
+	if (name === 'Korthaven') return generateKorthaven(width, height);
 	switch (type) {
 		case 'village': return generateVillage(width, height);
 		case 'town': return generateMarketTown(width, height);

@@ -83,6 +83,13 @@ const RUMORS = {
 	drink_secret_floor: rumor('drink_secret_floor', 'The floor beneath the tavern has a hidden entrance to a shortcut. Look for loose flagstones.', 'Garvus (tipsy)', 'true'),
 	drink_barkeep_past: rumor('drink_barkeep_past', 'The Barkeep was a level-twelve delver before he retired. His mug is made from a Minotaur horn.', 'Garvus (tipsy)', 'true'),
 	drink_dungeon_music: rumor('drink_dungeon_music', 'If you listen closely on level eight, you can hear the dungeon humming. The tune changes every full moon.', 'Garvus (tipsy)', 'exaggerated'),
+
+	// Korthaven rumors
+	korthaven_trade: rumor('korthaven_trade', 'Korthaven is the Free Cities\' greatest market — more coin passes through its gates in a day than most kingdoms see in a year.', 'Morrigan', 'true'),
+	korthaven_murders: rumor('korthaven_murders', 'Merchants in Korthaven are turning up dead with golden masks pressed to their faces. The masks resemble illustrations of the Ascension ritual.', 'Morrigan', 'true'),
+	korthaven_arena: rumor('korthaven_arena', 'The Crucible arena in Korthaven has a sealed chamber beneath it. Champions who win three seasons in a row are invited below — none have returned the same.', 'Arena spectator', 'exaggerated'),
+	korthaven_thieves: rumor('korthaven_thieves', 'The Shadow Court runs Korthaven\'s underworld. Their leader, Nyx, is said to have stolen from a god and lived.', 'Morrigan', 'exaggerated'),
+	korthaven_eighth: rumor('korthaven_eighth', 'There were seven gods who ascended. But some whisper of an eighth — one who refused the throne and chose to remain mortal.', 'The Masked Figure', 'true'),
 } as const;
 
 // ─── VILLAGE: MOTHER ───
@@ -629,7 +636,30 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 				opt('[Cave Escapee] Remember when I escaped those goblins?', 'barkeep_cave_origin', '#8f4', { showIf: { type: 'startingLocation', value: 'cave' } }),
 				opt('Just need a moment to rest.', 'rest', '#4f4'),
 				opt('Look, about all the lies...', 'liar_confession', '#fa4', { showIf: { type: 'knownLiar', value: 3 } }),
+				opt('Heard anything about Korthaven?', 'barkeep_korthaven', '#ff4'),
 				opt('See you later, Barkeep.', 'farewell', '#0ff'),
+			]
+		),
+		barkeep_korthaven: node('barkeep_korthaven',
+			'*He sets down the glass carefully.* Korthaven? The Merchant\'s Crown? Aye, I hear things. Traders pass through Willowmere sometimes — not often, mind you, but when they do, the stories they carry are... troubling. That city used to be the jewel of the Free Cities. Now it sounds more like a jewel with a crack running through it.',
+			[
+				opt('What kind of stories?', 'barkeep_korthaven_rumors', '#ff4'),
+				opt('Tell me about the golden masks.', 'barkeep_korthaven_masks', '#f44'),
+				opt('Never mind. Let\'s talk about something else.', 'return', '#0ff'),
+			]
+		),
+		barkeep_korthaven_rumors: node('barkeep_korthaven_rumors',
+			'*He leans on the bar.* A merchant came through two weeks back — wouldn\'t give his name, paid in foreign coin, drank four ales in silence. On the fifth, he started talking. Said the Duke\'s gone paranoid, the thieves\' guild is bolder than ever, and someone\'s been killing trade barons. Not robbing them. KILLING them. Leaving golden masks on their faces like some kind of signature. *He shakes his head.* The merchant left before dawn. Didn\'t finish his sixth ale. That\'s when you know something\'s really wrong — when a man wastes good ale.',
+			[
+				opt('Golden masks... that sounds ritualistic. [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'The Barkeep shares what he\'s heard about Korthaven\'s murders.' } }),
+				opt('Sounds like Korthaven needs help.', 'return', '#4f4'),
+			]
+		),
+		barkeep_korthaven_masks: node('barkeep_korthaven_masks',
+			'*His voice drops.* The masks are what bothers me most. I\'ve seen drawings of masks like that — in old books, the kind Thessaly used to read. They\'re connected to the Ascension. The ritual where seven mortals became gods. *He glances at the Hooded Stranger.* If someone in Korthaven is recreating Ascension masks... they\'re either studying history or trying to MAKE history. Neither option makes me sleep well. And I need my sleep. Dungeon-adjacent tavern-keeping is exhausting enough without cosmic dread.',
+			[
+				opt('The Ascension... seven mortals becoming gods? [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'The Barkeep connects the masks to the Ascension ritual.' } }),
+				opt('I\'ll look into it if I ever get to Korthaven.', 'return', '#4f4'),
 			]
 		),
 		barkeep_slayer: node('barkeep_slayer',
@@ -1097,7 +1127,28 @@ export const STRANGER_DIALOGUE: DialogueTree = {
 				opt('[Village] I grew up in Willowmere, you know.', 'stranger_village_origin', '#8f4', { showIf: { type: 'startingLocation', value: 'village' } }),
 				opt('[Tavern Regular] I\'ve been drinking here longer than you.', 'stranger_tavern_origin', '#fa8', { showIf: { type: 'startingLocation', value: 'tavern' } }),
 				opt('I hear you\'re not quite what you seem...', 'stranger_liar', '#f44', { showIf: { type: 'minCharLevel', value: 5 } }),
+				opt('What do you know about Korthaven?', 'stranger_korthaven', '#ff4'),
 				opt('I need to go.', 'farewell', '#0ff'),
+			]
+		),
+		stranger_korthaven: node('stranger_korthaven',
+			'*Their posture shifts — something alert, almost predatory, enters their stillness.* Korthaven. *They say the name like it tastes of ash.* The Merchant\'s Crown sits atop one of the seven convergence points — a place where the Ley Lines of Matter knot together so tightly that reality itself is... denser. Heavier. More real than real. The mortals built a marketplace on it because they mistook divine resonance for good fortune. They were not entirely wrong.',
+			[
+				opt('A convergence point? Like the dungeon?', 'stranger_kort_convergence', '#f44'),
+				opt('What about the murders there?', 'stranger_kort_murders', '#c8f'),
+				opt('Let\'s talk about something else.', 'return', '#0ff'),
+			]
+		),
+		stranger_kort_convergence: node('stranger_kort_convergence',
+			'*They nod slowly.* The dungeon sits on a convergence of Spirit. Korthaven sits on a convergence of Matter. There are seven in total — one for each Principle the Original Seven embodied before they became the world\'s bones. *Their voice drops.* Seven convergence points. Seven stolen thrones. The geography of divinity is not subtle, adventurer. It is merely... forgotten.',
+			[
+				opt('Seven convergence points for seven gods. That\'s not a coincidence. [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'The Stranger hints at the deep architecture of divine power.' } }),
+			]
+		),
+		stranger_kort_murders: node('stranger_kort_murders',
+			'*A long silence.* Golden masks on dead merchants. *Their voice is carefully controlled.* The masks are replicas — crude ones — of the faces the Seven wore during the Ascension. Someone in Korthaven has found a fragment of the ritual. They are not merely killing people, adventurer. They are auditioning. Testing which mortals carry the divine resonance. The masks are the test — press one to a mortal face and it will either remain cold metal or... glow. *A pause.* The dead merchants\' masks did not glow. The killer is still searching.',
+			[
+				opt('Searching for someone with divine resonance... [Rumor learned]', 'return', '#f44', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'The Stranger reveals the true purpose behind the golden masks.' } }),
 			]
 		),
 		expecting: node('expecting',
@@ -3069,6 +3120,26 @@ export const MERCHANT_DIALOGUE: DialogueTree = {
 				opt('Too much fire for soap. Best description ever.', 'return', '#4f4', { onSelect: { mood: 'amused', message: 'Morrigan laughs \u2014 a real, warm laugh.' } }),
 			]
 		),
+		morrigan_korthaven: node('morrigan_korthaven',
+			'*Her eyes light up with pure mercantile excitement.* KORTHAVEN! Oh, the Merchant\'s Crown! I used to have a stall in the Grand Market before the dungeon lifestyle chose me. Best city for trade in the ENTIRE world. Six market stalls, a fighting arena, a thieves\' guild that actually pays on time — unlike certain surface customers I could name. *She leans in conspiratorially.* I hear they\'ve got a murder problem now though. Merchants turning up dead with golden masks. BAD for business. GREAT for my "Personal Safety Kit" sales if I ever get back there. Every crisis is an opportunity!',
+			[
+				opt('A thieves\' guild that pays on time?', 'morrigan_kort_thieves', '#a4f'),
+				opt('What about the murders?', 'morrigan_kort_murders', '#f44'),
+				opt('Thanks for the intel.', 'return', '#0ff', { onSelect: { rumor: RUMORS.korthaven_trade, message: 'You learned a rumor about Korthaven from Morrigan.' } }),
+			]
+		),
+		morrigan_kort_thieves: node('morrigan_kort_thieves',
+			'The Shadow Court! Run by a woman named Nyx. Very professional. Very scary. She bought twelve smoke bombs from me once and paid in ACTUAL gold. Not cursed gold, not fake gold, not "IOU" gold — REAL gold. Do you know how rare that is? In my line of work, most payments involve barter, threats, or running very fast. Nyx is a class act. A terrifying, shadowy class act.',
+			[
+				opt('Good to know. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.korthaven_thieves, message: 'You learned about the Shadow Court in Korthaven.' } }),
+			]
+		),
+		morrigan_kort_murders: node('morrigan_kort_murders',
+			'*She shudders — genuinely, for once.* Golden masks on dead merchants. That\'s not robbery. That\'s RITUAL. I\'ve seen masks like that in old illustrations — part of something called the Ascension. Seven mortals becoming gods. Very dramatic. Very messy. If someone\'s recreating that in Korthaven... *She pulls her bags closer.* Well. Suddenly the dungeon feels MUCH safer by comparison.',
+			[
+				opt('The Ascension... [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'You learned about the ritual murders in Korthaven.' } }),
+			]
+		),
 	}
 };
 
@@ -4097,6 +4168,178 @@ export const GOBLIN_PEDDLER_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── ARCHIVIST FAELORN (Eldergrove lore-keeper) ───
+
+const ARCHIVIST_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*An elf with ink-stained fingers looks up from a desk made of living wood. Scrolls and pressed leaves surround them.* Welcome to the Moonlit Archives, outsider. We don\'t receive many visitors — the Veiled Hand saw to that when they burned our twin library in Korthaven. Or thought they did.',
+			[
+				opt('The Veiled Hand burned a library?', 'veiled_hand', '#ff4'),
+				opt('What are the Moonlit Archives?', 'archives', '#4ff'),
+				opt('I\'ve heard rumors about the Eldergrove.', 'rumors', '#f4f'),
+				opt('I need to go. Farewell.', '__exit__', '#888'),
+			]
+		),
+		return: node('return',
+			'*Faelorn nods in recognition.* You return. Good — few outsiders earn a second visit. The Archives remember those who seek truth rather than comfort. What draws you back?',
+			[
+				opt('Tell me about the old gods.', 'old_gods', '#ff4'),
+				opt('What do you know about the blight?', 'blight', '#f44'),
+				opt('I found something in the forest...', 'discovery', '#4f4'),
+				opt('What can you tell me about Selvara?', 'selvara', '#f4f', { showIf: { minSecretsFound: 3 } }),
+				opt('I should go.', '__exit__', '#888'),
+			]
+		),
+		veiled_hand: node('veiled_hand',
+			'The Veiled Hand is the Ascended\'s secret police — founded by Theron himself, if our records are correct. Their purpose is simple: find and destroy every shred of evidence that the gods were once mortal. They burned the Great Library of Korinn. They drowned the Luminari Archives. They came for us two centuries ago. *A thin smile.* We let them burn the decoy.',
+			[
+				opt('Theron — the god of truth — runs a secret police?', 'theron', '#ff4'),
+				opt('What evidence are they destroying?', 'evidence', '#4ff'),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		theron: node('theron',
+			'Ironic, isn\'t it? The God of Truth built his throne on the greatest lie in history. He forged the documents that started the Brother War — four hundred thousand dead because of one man\'s perfect penmanship. Now he sits on the Throne of Truth and drowns in every lie spoken in the world. *Faelorn\'s expression hardens.* We do not pity him.',
+			[
+				opt('How do you know all this?', 'how_know', '#ff4'),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		how_know: node('how_know',
+			'Because the trees remember. Silverwood bark stores sound the way stone stores heat — slowly, deeply, for centuries. The Rootmothers taught us to read the rings. *Faelorn traces a finger along the desk\'s grain.* This desk remembers conversations from eight hundred years ago. If you learn Sylvan, I can teach you to listen.',
+			[
+				opt('I want to learn Sylvan.', 'learn_sylvan', '#4f4', { onSelect: { learnLanguage: 'Sylvan', message: 'Faelorn speaks a single word. It sounds like wind through silver leaves. Something shifts in your understanding.' } }),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		archives: node('archives',
+			'Every forbidden text. Every banned treatise. Every scroll the Veiled Hand hunted across three continents — we offered sanctuary. The Moonlit Archives contain fragments of pre-Ascension history that the gods themselves would kill to destroy. Not metaphorically. *Literally.* They have tried.',
+			[
+				opt('What\'s the most dangerous text you have?', 'dangerous_text', '#f44'),
+				opt('Why take the risk?', 'why_risk', '#ff4'),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		dangerous_text: node('dangerous_text',
+			'*Faelorn hesitates.* We have a journal. Written by someone who called herself Selvara — before the Ascension. Before she was a goddess. In it she describes, in meticulous detail, the creation and deployment of an alchemical compound she calls "the Grey." She writes about dosages. Field tests. Acceptable casualty estimates. Three million people were acceptable casualties. *A long silence.* She calls it "necessary ecology."',
+			[
+				opt('Selvara... the goddess of nature?', 'selvara', '#f4f'),
+				opt('That\'s horrifying.', 'horrifying', '#f44'),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		selvara: node('selvara',
+			'The woman who killed the Verdant Basin — the greatest forest and oasis the world ever knew — now sits on the throne of Nature and plays at being mother of all growing things. The Eldergrove remembers what she did. Every Sylvan funeral includes the Lament for the Verdant Basin. We will never forget. We will never forgive.',
+			[
+				opt('Is the Eldergrove in danger from her?', 'blight', '#f44', { onSelect: { rumor: rumor('rumor_selvara_danger', 'The Archivist believes the blight appearing in the Eldergrove is the same compound that destroyed the Verdant Basin — tested again by agents of the Veiled Hand.', 'Archivist Faelorn', 'true') } }),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		horrifying: node('horrifying',
+			'*Faelorn nods slowly.* Now you understand why the Veiled Hand wants us destroyed. Not because we are heretics. Not because we practice Old Magic. Because we have *proof.* Names, dates, methods, motives. The gods are not divine. They are the worst mortals who ever lived, wearing stolen crowns.',
+			[
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		why_risk: node('why_risk',
+			'Because truth is the only weapon that cannot be reforged. Swords break. Armies scatter. But a truth, once spoken, can never be unspoken. The Ascended know this — that\'s why they spend more effort destroying knowledge than any other threat. We preserve it because someone must.',
+			[
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		evidence: node('evidence',
+			'Trial records. Journals. Military reports. Anything that connects the seven thrones to seven mortal identities. The Thornhaven documents — proof that Verath was a corrupt magistrate. The Irongate inscription — proof that Khorvan was a coward. The Brother War forgeries — proof that Theron manufactured a war. We have copies of all of them.',
+			[
+				opt('That\'s incredible.', 'return', '#4f4', { onSelect: { rumor: rumor('rumor_archives_evidence', 'The Moonlit Archives in the Eldergrove hold copies of documents proving the gods\' mortal identities — trial records, journals, and military reports the Veiled Hand failed to destroy.', 'Archivist Faelorn', 'true') } }),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		rumors: node('rumors',
+			'Rumors are the currency of those who lack documents. *Faelorn smiles thinly.* But ask your question. Even rumors contain seeds of truth — especially the ones the powerful try hardest to suppress.',
+			[
+				opt('What lives in the deep forest?', 'deep_forest', '#4f4'),
+				opt('Who are the bandits?', 'bandits', '#f84'),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		deep_forest: node('deep_forest',
+			'The usual dangers — spiders, trolls, the occasional displaced bear. But deeper... there is something the Wardens call the Thornveil Beast. Tracks larger than a wagon wheel. The Council knows what it is but has sealed the records. *Faelorn lowers their voice.* I believe it is a guardian. Something the Original Seven left behind. Something that protects what grows here from what sits on the thrones above.',
+			[
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		bandits: node('bandits',
+			'The Briarwood Gang. Led by a dispossessed lord — Aldren Voss, stripped of his lands by the Church of Solaris. A civilized man turned savage by civilized cruelty. The Wardens could end him in a day, but they tolerate his presence as a buffer. Better bandits on the roads than Veiled Hand agents in the canopy.',
+			[
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		old_gods: node('old_gods',
+			'*Faelorn speaks carefully.* Before the Ascension, there were seven principles woven into reality itself. Order, Change, Time, Space, Matter, Energy, Spirit. They were not gods in the way the temples teach — they were the world\'s own nature, given voice. They sacrificed themselves to cage the Void Serpent. And seven mortals stole the thrones they left behind.',
+			[
+				opt('The Void Serpent?', 'void_serpent', '#f4f'),
+				opt('Can the original gods be restored?', 'restoration', '#ff4', { showIf: { minSecretsFound: 5 } }),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		void_serpent: node('void_serpent',
+			'Xal-Nepheth. Entropy given hunger. It tried to unravel reality during the Primordial War. The Original Seven sacrificed themselves to become the Ley Lines — the cage that holds it. The cage is weakening. The Voidblooms near the Worldseed Tree are proof. *Faelorn\'s voice drops.* The Ascended cannot repair what they did not build. If the cage fails, nothing on any throne will save us.',
+			[
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		restoration: node('restoration',
+			'*Faelorn studies you for a long moment.* There is an order — the Restoration — that believes the Original Seven can be separated from the Ley Lines without destroying the cage. They seek the nexus points where the principles crystallized. Three are known. Four remain hidden. *A pause.* The Eldergrove may sit upon one of them. The Rootsong is unusually strong here.',
+			[
+				opt('Let me ask about something else.', 'return', '#888', { onSelect: { story: story('story_restoration_nexus', 'The Nexus Beneath the Roots', 'The Eldergrove may sit upon one of the hidden Ley Line nexus points — places where the Original Seven\'s essence crystallized during the Primordial War. The Restoration seeks these points to free the true gods from their cage.', 'Archivist Faelorn', 'lore') } }),
+			]
+		),
+		blight: node('blight',
+			'Black veins in the bark. Grey discoloration spreading from the forest edge. I have compared samples to the descriptions in Selvara\'s own journal — it is the same compound. "The Grey." Someone is testing it again. *Faelorn\'s hands clench.* If they succeed, the Eldergrove dies the way the Verdant Basin died. And with it, the last library the Ascended haven\'t burned.',
+			[
+				opt('Who would do this?', 'blight_who', '#f44'),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		blight_who: node('blight_who',
+			'The Veiled Hand. They cannot find the Archives by searching — the canopy is too vast, the paths too hidden. So they will kill the forest itself. Burn the library by burning the world around it. It is exactly what Selvara would do. Exactly what she *has* done before.',
+			[
+				opt('I\'ll investigate the blight.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: '*Faelorn\'s eyes widen.* "You would help us? Be careful — the blight is not merely poison. It drains life. It drains magic. Near the worst patches, even Old Magic fails."' } }),
+				opt('Let me ask about something else.', 'return', '#888'),
+			]
+		),
+		discovery: node('discovery',
+			'*Faelorn leans forward, eyes bright.* Show me. Describe it. Every detail. The Archives catalogue everything — if you found something in this forest, there is a record of its twin somewhere in our collection.',
+			[
+				opt('I found an old temple with no name.', 'temple_info', '#ff4'),
+				opt('I saw a Crystalline Stag.', 'stag_info', '#4ff'),
+				opt('Never mind, just passing through.', 'return', '#888'),
+			]
+		),
+		temple_info: node('temple_info',
+			'The Temple of the Forgotten Moon. *Faelorn\'s voice drops to a whisper.* It predates the Ascension by centuries. The inscriptions name no god. They name a principle — Growth. But the Original Seven were Order, Change, Time, Space, Matter, Energy, Spirit. There is no Growth among them. *A long pause.* Unless the Original Seven were not the only principles. Unless something was lost before even they sacrificed themselves.',
+			[
+				opt('An eighth principle?', 'return', '#f4f', { onSelect: { story: story('story_eighth_principle', 'The Eighth Principle', 'The Temple of the Forgotten Moon names a principle of Growth that matches none of the known Original Seven. If an eighth principle existed and was lost before the Primordial War, it could change everything scholars believe about the foundations of reality.', 'Archivist Faelorn', 'lore') } }),
+			]
+		),
+		stag_info: node('stag_info',
+			'*Faelorn stands abruptly.* You saw one? A living Crystalline Stag? They are nearly extinct — hunted to the edge of oblivion for their antlers. The Grey Pilgrims protect the last herds. *Eyes shining.* A Stag in the Eldergrove means the Ley Lines here are strong. Very strong. Perhaps strong enough.',
+			[
+				opt('Strong enough for what?', 'return', '#ff4', { onSelect: { rumor: rumor('rumor_stag_ley_lines', 'A Crystalline Stag appearing in the Eldergrove means the Ley Lines are exceptionally strong here — possibly strong enough to sustain a nexus point. The Restoration would want to know.', 'Archivist Faelorn', 'true') } }),
+			]
+		),
+		learn_sylvan: node('learn_sylvan',
+			'*Faelorn speaks a long, flowing sentence. It sounds like rainfall on silver bark, like roots drinking deep water, like starlight filtered through ten thousand leaves.* You will not understand it all at once. But the forest will begin to open to you. Listen to the trees. They have been talking this whole time.',
+			[
+				opt('Thank you, Archivist.', 'return', '#4f4'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -4108,4 +4351,5 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Corwin': LOST_ADVENTURER_DIALOGUE,
 	'Whispering Shade': SHADE_DIALOGUE,
 	'Grikkle': GOBLIN_PEDDLER_DIALOGUE,
+	'Archivist Faelorn': ARCHIVIST_DIALOGUE,
 };

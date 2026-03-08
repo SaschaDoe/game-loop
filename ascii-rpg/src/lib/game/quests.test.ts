@@ -96,8 +96,8 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 describe('QUEST_CATALOG', () => {
 	const allDefs = Object.values(QUEST_CATALOG);
 
-	it('has the expected number of quests (5 main + 16 side = 21)', () => {
-		expect(Object.keys(QUEST_CATALOG).length).toBe(21);
+	it('has the expected number of quests (5 main + 26 side = 31)', () => {
+		expect(Object.keys(QUEST_CATALOG).length).toBe(31);
 	});
 
 	it('every quest has a valid id that matches its catalog key', () => {
@@ -147,7 +147,7 @@ describe('QUEST_CATALOG', () => {
 		const mainQuests = allDefs.filter((d) => d.isMainQuest);
 		const sideQuests = allDefs.filter((d) => !d.isMainQuest);
 		expect(mainQuests.length).toBe(5);
-		expect(sideQuests.length).toBe(16);
+		expect(sideQuests.length).toBe(26);
 	});
 
 	it('main quests form a prerequisite chain', () => {
@@ -643,9 +643,9 @@ describe('getAvailableQuests', () => {
 	it('returns all available quests when no filters are provided', () => {
 		const state = makeTestState();
 		const available = getAvailableQuests(state);
-		// Only non-prerequisite quests should be available: all side quests (16) + main_01 (no prereq) = 17
-		// main_02-05 are excluded because their prereqs are not met
-		expect(available.length).toBe(17);
+		// Only non-prerequisite quests should be available: side quests without prereqs (25) + main_01 (no prereq) = 26
+		// main_02-05 and side_kort_crown are excluded because their prereqs are not met
+		expect(available.length).toBe(26);
 	});
 
 	it('returns quests filtered by both NPC name and region', () => {

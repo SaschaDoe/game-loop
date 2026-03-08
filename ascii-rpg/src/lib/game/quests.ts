@@ -449,6 +449,244 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 		regionId: 'sunstone_expanse',
 		isMainQuest: false,
 	},
+	// ===================================================================
+	// SIDE QUESTS — Eldergrove (dangerLevel 5)
+	// ===================================================================
+	side_eg_bandits: {
+		id: 'side_eg_bandits',
+		title: 'The Briarwood Gang',
+		description:
+			'A ruthless band of outlaws has fortified a hollow beneath the great roots, ambushing caravans and pilgrims on the forest roads. The Wardens want them routed.',
+		objectives: [
+			{ id: 'eg_bandit_kill', description: 'Defeat bandits in the Eldergrove', type: 'kill', target: 'Bandit', required: 8 },
+		],
+		rewards: { xp: 200, atk: 1 },
+		giverNpcName: 'Ranger Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_temple: {
+		id: 'side_eg_temple',
+		title: 'The Forgotten Moon',
+		description:
+			'Deep in the Eldergrove stands a temple that no map records. The Archivist believes it predates the Ascension — and that something still tends its altar.',
+		objectives: [
+			{ id: 'eg_temple_explore', description: 'Find the Temple of the Forgotten Moon', type: 'explore', target: 'temple_forgotten_moon', required: 1 },
+			{ id: 'eg_temple_talk', description: 'Report your findings to Archivist Faelorn', type: 'talk', target: 'Archivist Faelorn', required: 1 },
+		],
+		rewards: {
+			xp: 250,
+			story: {
+				id: 'story_forgotten_moon',
+				title: 'The Temple That Remembers',
+				text: 'The altar still holds offerings — fresh flowers, undecayed after centuries. The inscriptions name no Ascended god. They name the moon, the roots, and a principle of Growth that predates all seven thrones.',
+				teller: 'Archivist Faelorn',
+				type: 'lore',
+			},
+		},
+		giverNpcName: 'Archivist Faelorn',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_spiders: {
+		id: 'side_eg_spiders',
+		title: 'Silk and Venom',
+		description:
+			'Giant forest spiders have woven webs across the canopy bridges connecting the elven settlements. The weavers cannot cross. The spiders must be dealt with before the city is cut in two.',
+		objectives: [
+			{ id: 'eg_spider_kill', description: 'Kill spiders in the Eldergrove', type: 'kill', target: 'Spider', required: 10 },
+		],
+		rewards: { xp: 220, hp: 3 },
+		giverNpcName: 'Warden Ithilra',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		turnLimit: 80,
+	},
+
+	side_eg_stag: {
+		id: 'side_eg_stag',
+		title: 'The Crystalline Stag',
+		description:
+			'A Crystalline Stag has been sighted near the Worldseed Tree — the first in a generation. The Wardens believe poachers are tracking it. Find the stag before they do.',
+		objectives: [
+			{ id: 'eg_stag_explore', description: 'Find the Crystalline Stag', type: 'explore', target: 'crystalline_stag', required: 1 },
+			{ id: 'eg_stag_kill', description: 'Defeat the poachers', type: 'kill', target: 'Poacher', required: 3 },
+		],
+		rewards: {
+			xp: 280,
+			rumor: {
+				id: 'rumor_crystalline_stag',
+				text: 'The Stag bowed its crystal antlers to the old altar and light poured from the earth — raw Ley Line energy, unfiltered by any god. The trees sang.',
+				source: 'Ranger Thandril',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Ranger Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_corruption: {
+		id: 'side_eg_corruption',
+		title: 'Roots of Corruption',
+		description:
+			'Black veins have appeared in the bark of the Eldest Trees near the forest edge. The Archivist says it resembles descriptions of the Grey — the alchemical weapon that killed the Verdant Basin.',
+		objectives: [
+			{ id: 'eg_corrupt_explore', description: 'Investigate the blighted trees', type: 'explore', target: 'blighted_grove', required: 1 },
+			{ id: 'eg_corrupt_collect', description: 'Collect samples of the corruption', type: 'collect', target: 'blight_sample', required: 3 },
+			{ id: 'eg_corrupt_talk', description: 'Return samples to Archivist Faelorn', type: 'talk', target: 'Archivist Faelorn', required: 1 },
+		],
+		rewards: {
+			xp: 300,
+			hp: 4,
+			rumor: {
+				id: 'rumor_eldergrove_blight',
+				text: 'The blight is not natural disease. It is alchemical — the same compound that killed the Grey Wastes. Someone is testing it again, and the Eldergrove is the target.',
+				source: 'Archivist Faelorn',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Archivist Faelorn',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	// ===================================================================
+	// SIDE QUESTS — Korthaven
+	// ===================================================================
+	side_kort_murders: {
+		id: 'side_kort_murders',
+		title: 'The Gilded Mask Murders',
+		description:
+			'Merchants in Korthaven are turning up dead, each wearing a golden mask. Inspector Kaelen suspects a ritualistic motive. Investigate the murders, gather evidence, and uncover the truth.',
+		objectives: [
+			{ id: 'kort_murders_talk1', description: 'Speak with Inspector Kaelen', type: 'talk', target: 'Inspector Kaelen', required: 1 },
+			{ id: 'kort_murders_talk2', description: 'Speak with Madame Vesper', type: 'talk', target: 'Madame Vesper', required: 1 },
+			{ id: 'kort_murders_collect', description: 'Collect golden mask fragments', type: 'collect', target: 'golden_mask_fragment', required: 3 },
+			{ id: 'kort_murders_explore', description: 'Explore the hidden ritual chamber', type: 'explore', target: 'hidden_ritual_chamber', required: 1 },
+		],
+		rewards: {
+			xp: 400,
+			hp: 5,
+			rumor: {
+				id: 'rumor_gilded_masks',
+				text: 'The golden masks are replicas of those worn during the Ascension. Someone in Korthaven is recreating the old rites — but to what end?',
+				source: 'Inspector Kaelen',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Inspector Kaelen',
+		regionId: 'korthaven',
+		isMainQuest: false,
+	},
+
+	side_kort_thieves: {
+		id: 'side_kort_thieves',
+		title: 'Shadows Over Korthaven',
+		description:
+			'The Shadow Court controls Korthaven\'s underworld. Guildmaster Nyx offers membership — but first, you must prove your worth by recovering a stolen ledger from rival smugglers.',
+		objectives: [
+			{ id: 'kort_thieves_talk1', description: 'Speak with Guildmaster Nyx', type: 'talk', target: 'Guildmaster Nyx', required: 1 },
+			{ id: 'kort_thieves_explore', description: 'Explore the smuggler\'s tunnels', type: 'explore', target: 'smuggler_tunnels', required: 1 },
+			{ id: 'kort_thieves_collect', description: 'Recover the stolen ledger', type: 'collect', target: 'stolen_ledger', required: 1 },
+			{ id: 'kort_thieves_talk2', description: 'Deliver the ledger to Sera the Fence', type: 'talk', target: 'Sera the Fence', required: 1 },
+		],
+		rewards: {
+			xp: 300,
+			atk: 2,
+			rumor: {
+				id: 'rumor_shadow_court',
+				text: 'The Shadow Court is not merely a thieves\' guild. They guard secrets older than Korthaven itself — secrets about what lies beneath the city.',
+				source: 'Guildmaster Nyx',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Guildmaster Nyx',
+		regionId: 'korthaven',
+		isMainQuest: false,
+	},
+
+	side_kort_arena: {
+		id: 'side_kort_arena',
+		title: 'Blood and Glory',
+		description:
+			'The Crucible arena crowns a new champion each season. Arena Master Gorath challenges you to fight your way through the ranks and claim the title.',
+		objectives: [
+			{ id: 'kort_arena_kill1', description: 'Defeat arena fighters', type: 'kill', target: 'Arena Fighter', required: 5 },
+			{ id: 'kort_arena_kill2', description: 'Defeat the Arena Champion', type: 'kill', target: 'Arena Champion', required: 1 },
+		],
+		rewards: {
+			xp: 500,
+			hp: 5,
+			atk: 2,
+			story: {
+				id: 'story_arena_secret',
+				title: 'Beneath the Crucible',
+				text: 'Beneath the arena floor lies a sealed vault. The champion\'s blood — spilled in victory — trickles through the cracks and feeds something old. Gorath knows, but he will never speak of it.',
+				teller: 'Arena Master Gorath',
+				type: 'lore',
+			},
+		},
+		giverNpcName: 'Arena Master Gorath',
+		regionId: 'korthaven',
+		isMainQuest: false,
+	},
+
+	side_kort_crown: {
+		id: 'side_kort_crown',
+		title: 'The Crown of Lies',
+		description:
+			'The murders, the thieves\' guild, the arena — they\'re all connected. Duke Arandel reveals a conspiracy called the Veiled Hand that threatens to recreate the Ascension ritual. Stop them before Korthaven burns.',
+		objectives: [
+			{ id: 'kort_crown_talk1', description: 'Speak with Duke Arandel', type: 'talk', target: 'Duke Arandel', required: 1 },
+			{ id: 'kort_crown_explore', description: 'Infiltrate the Veiled Hand hideout', type: 'explore', target: 'veiled_hand_hideout', required: 1 },
+			{ id: 'kort_crown_collect', description: 'Collect ritual components', type: 'collect', target: 'ritual_component', required: 3 },
+			{ id: 'kort_crown_kill', description: 'Defeat Veiled Hand agents', type: 'kill', target: 'Veiled Hand Agent', required: 4 },
+			{ id: 'kort_crown_talk2', description: 'Confront the Masked Figure', type: 'talk', target: 'The Masked Figure', required: 1 },
+			{ id: 'kort_crown_talk3', description: 'Report back to Duke Arandel', type: 'talk', target: 'Duke Arandel', required: 1 },
+		],
+		rewards: {
+			xp: 800,
+			hp: 8,
+			atk: 3,
+			story: {
+				id: 'story_veiled_hand',
+				title: 'The Veiled Hand\'s Purpose',
+				text: 'The Veiled Hand sought to recreate the Ascension — to steal divinity as it was stolen once before. Their leader whispered of an Eighth throne, empty and waiting. The ritual was stopped, but the throne remains.',
+				teller: 'Duke Arandel',
+				type: 'lore',
+			},
+			rumor: {
+				id: 'rumor_the_eighth',
+				text: 'There are seven thrones, but the Veiled Hand spoke of an Eighth — a seat of power never claimed. If the Ascension can be repeated, anyone could become a god.',
+				source: 'The Masked Figure',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Duke Arandel',
+		regionId: 'korthaven',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_kort_murders',
+	},
+
+	side_kort_smuggler: {
+		id: 'side_kort_smuggler',
+		title: 'The Smuggler\'s Ledger',
+		description:
+			'Dock Foreman Bram needs someone to retrieve a shipping ledger that fell into the wrong hands. The smuggler\'s tunnels beneath the docks hold the answers — and the dangers.',
+		objectives: [
+			{ id: 'kort_smuggler_talk', description: 'Speak with Dock Foreman Bram', type: 'talk', target: 'Dock Foreman Bram', required: 1 },
+			{ id: 'kort_smuggler_explore', description: 'Explore the dockside tunnels', type: 'explore', target: 'dockside_tunnels', required: 1 },
+			{ id: 'kort_smuggler_collect', description: 'Recover the smuggler\'s ledger', type: 'collect', target: 'smuggler_ledger', required: 1 },
+		],
+		rewards: { xp: 200, hp: 3 },
+		giverNpcName: 'Dock Foreman Bram',
+		regionId: 'korthaven',
+		isMainQuest: false,
+		turnLimit: 80,
+	},
 };
 
 // ---------------------------------------------------------------------------

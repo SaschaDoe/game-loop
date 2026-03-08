@@ -171,6 +171,30 @@ As a player exploring The Underdepths, I want to encounter an alien underground 
 
 ---
 
+### The Eldergrove — Legendary Forest / Elven Kingdoms
+
+#### US-RC-10: Sylvan Elven Culture
+As a player exploring The Eldergrove, I want to discover a vast ancient forest with hidden elven cities in the canopy, forgotten temples, dangerous beasts, and bandit-infested roads, so that this region feels like a legendary wilderness where civilization and wild magic coexist.
+
+**Details:**
+- Architecture: massive silverwood platforms, vine-bridge networks, living-wood spires, moonlit archives hidden in trunk hollows
+- ASCII style: deep greens with silver accents, shafts of golden light, towering canopy
+- NPCs: Wardens (ranger-knights), Archivists, sylvan crafters, displaced human bandits, forest hermits
+- Customs: greet with open palms (Sylvan), the forest is sovereign, outsiders earn trust through deeds
+- Tone: ancient, majestic, dangerous beneath the beauty
+- Unique mechanic: Canopy navigation — unlocking Sylvan language reveals hidden paths through the upper forest, bypassing ground-level dangers
+- Shops sell: silvered weapons, moonpetal herbs, living-wood armor, archival scrolls
+- Quest flavor: clear bandit camps, investigate blighted trees, track rare creatures, uncover pre-Ascension temples, protect the forest from alchemical weapons
+
+**Acceptance Criteria:**
+- [ ] Eldergrove settlements use canopy/forest themed ASCII tiles
+- [ ] Sylvan NPCs speak Sylvan (garbled until learned)
+- [ ] Region contains both civilized elven areas and wild dangerous zones
+- [ ] Quests reflect the tension between preservation and encroaching threats
+- [ ] Lore connects to the Verdant Basin destruction and Selvara's crime
+
+---
+
 ### Cross-Cultural Interactions
 
 #### US-RC-08: Cultural Reactions to Outsiders
@@ -222,6 +246,7 @@ As a player, I want each region to have unique periodic events, so that the worl
 | Frostpeak Reach | Norse Saga | Dwarven | Runic | Stoic, industrious |
 | Drowned Mire | Gothic Horror | Swampfolk | Whispertongue | Eerie, unsettling |
 | Sunstone Expanse | Arabian/Egyptian | Nomadic | Sandscript | Mysterious, ancient |
+| Eldergrove | Legendary Forest | Sylvan Elven | Sylvan | Majestic, dangerous |
 | Underdepths | Cosmic Horror | Deep Ones | Deepscript | Alien, maddening |
 
 ## Dependencies
