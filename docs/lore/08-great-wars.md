@@ -217,7 +217,7 @@ The eldest dragons — who remembered the Original Seven — disagreed on how to
 The Clockwork Creed — worshippers of mechanical logic and anti-magic — attempted to build a device that could shield an entire city from divine influence. The Ascended sent a coordinated strike of all seven divine aspects simultaneously. The device was destroyed. The city survived but the Creed was permanently marginalized.
 
 ### The Vampire Emergence (Year 600 After Ascension)
-The first vampires were created when a blood mage attempted to use blood magic to achieve immortality. The resulting curse — vampirism — spread uncontrollably. The Ascended, who could have cured it, chose not to — vampires are dependent on mortal blood, which makes them useful agents of chaos that distract mortals from asking uncomfortable questions about the gods.
+The first vampires were created when a blood mage's attempt to save a dying child through direct life-essence transfusion went catastrophically wrong, producing a self-replicating vampiric curse. The resulting plague spread uncontrollably. The Ascended, who could have cured it, chose not to — vampires are dependent on mortal blood, which makes them useful agents of chaos that distract mortals from asking uncomfortable questions about the gods.
 
 ### The Werewolf Wars (Year 900 After Ascension)
 A lycanthropic plague swept through the northern nations, turning thousands. The resulting wars between infected and uninfected populations lasted decades. The plague's origin was traced to a corrupted Ley Line nexus — though whether the corruption was natural or deliberate remains debated.
