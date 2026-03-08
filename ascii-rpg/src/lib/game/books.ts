@@ -1487,6 +1487,126 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`    (no further entries)`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 17. On the Migration of Griefmoths — ecology reveals the cover-up
+	// -----------------------------------------------------------------------
+	book_griefmoths: {
+		id: 'book_griefmoths',
+		name: 'On the Migration of Griefmoths',
+		char: 'B',
+		color: '#aabbdd',
+		type: 'book',
+		description:
+			'A leather-bound field journal with moth-wing specimens pressed between the pages. The margins are filled with maps and coordinates.',
+		pages: [
+			`ON THE MIGRATION OF GRIEFMOTHS\n` +
+				`Field Notes — Yara Denn,\n` +
+				`Natural Philosopher\n\n` +
+				`The griefmoth (Lacrimosa lepidoptera)\n` +
+				`is common enough to be unremarkable.\n` +
+				`Wings patterned like teardrops. Soft\n` +
+				`blue-white luminescence. Wingbeats\n` +
+				`that produce a sound like distant\n` +
+				`weeping — not true weeping, but close\n` +
+				`enough to unsettle those who hear it\n` +
+				`after dark.\n\n` +
+				`They gather at graveyards, battlefields,\n` +
+				`and houses where someone has recently\n` +
+				`died. This is well known. What is less\n` +
+				`known — what five years of careful\n` +
+				`mapping has shown me — is that their\n` +
+				`densest colonies do not correspond to\n` +
+				`known sites of death or mourning.\n\n` +
+				`The moths swarm thickest in places\n` +
+				`where the histories record nothing\n` +
+				`at all.\n\n` +
+				`This was my first clue that something\n` +
+				`was wrong with the histories.`,
+
+			`THREE ANOMALOUS SITES\n\n` +
+				`Site One: An empty field outside\n` +
+				`Garen's Rest. No battle recorded. No\n` +
+				`cemetery. Just grass. But on summer\n` +
+				`nights the moths swarm so thick the\n` +
+				`air glows blue. An old woman told me\n` +
+				`her grandmother warned her to avoid\n` +
+				`the field because "the ground weeps\n` +
+				`after rain." I dug. I found foundation\n` +
+				`stones, pottery, iron nails — the\n` +
+				`remains of a settlement. Hundreds\n` +
+				`lived there. No record of them exists.\n\n` +
+				`Site Two: A stretch of coastline where\n` +
+				`the moths are so numerous they blot\n` +
+				`out the stars. Fishermen avoid it.\n` +
+				`They say the water tastes of salt and\n` +
+				`sorrow. I found stone foundations\n` +
+				`beneath the surf — streets, walls,\n` +
+				`a market square, all drowned. A city\n` +
+				`erased from every map.\n\n` +
+				`Site Three: A quiet valley in the\n` +
+				`Thornlands. Wild thornbrush and\n` +
+				`birdsong. Beautiful. Peaceful. I\n` +
+				`followed the moths to a hillside\n` +
+				`and found mass graves. Hundreds of\n` +
+				`bodies. Centuries old. No record of\n` +
+				`who they were or what killed them.`,
+
+			`THE PATTERN\n\n` +
+				`Every griefmoth colony marks a wound.\n` +
+				`Not a wound in the earth — a wound\n` +
+				`in memory. These are places where\n` +
+				`grief was never expressed. Where\n` +
+				`people died and no one was allowed\n` +
+				`to mourn them. Where the sorrow was\n` +
+				`cut short, silenced, erased before\n` +
+				`anyone could weep.\n\n` +
+				`The moths come to weep in their\n` +
+				`place.\n\n` +
+				`I have mapped forty-three sites.\n` +
+				`Forty-three places where the\n` +
+				`histories say nothing happened and\n` +
+				`the moths say otherwise. Thousands\n` +
+				`of dead. Settlements, villages,\n` +
+				`a city — all scrubbed from the\n` +
+				`records as if they never existed.\n\n` +
+				`Something is erasing tragedies\n` +
+				`from our history. Systematically.\n` +
+				`Thoroughly. For a very long time.\n\n` +
+				`The moths are the only mourners\n` +
+				`these dead have ever had.`,
+
+			`I attempted to publish my findings.\n` +
+				`My manuscript was rejected by three\n` +
+				`universities. My maps were requested\n` +
+				`by the Church "for safekeeping" — I\n` +
+				`sent copies and kept the originals.\n` +
+				`A colleague took me aside and said:\n` +
+				`"Certain people do not want a map\n` +
+				`of forgotten tragedies. Forgetting\n` +
+				`is the point."\n\n` +
+				`I have been told to stop. I have\n` +
+				`been told my research is inflammatory.\n` +
+				`I have been told that empty fields\n` +
+				`are empty because nothing happened\n` +
+				`there, and that moths are moths and\n` +
+				`their behavior means nothing.\n\n` +
+				`But I have held a griefmoth in my\n` +
+				`hands. I have felt the vibration of\n` +
+				`its wings — that soft, persistent\n` +
+				`weeping that is not its own. It\n` +
+				`weeps for others. It carries grief\n` +
+				`that no living soul was allowed to\n` +
+				`express, on wings too fragile for\n` +
+				`the weight they bear.\n\n` +
+				`I will not stop. One day, when\n` +
+				`someone asks what happened in those\n` +
+				`quiet fields, the moths will still\n` +
+				`be there — patient, luminous,\n` +
+				`faithful — counting the dead that\n` +
+				`no one else will count.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
