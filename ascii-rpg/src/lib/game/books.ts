@@ -3094,6 +3094,116 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`The wind is changing.`,
 		],
 	},
+	book_ring_counter: {
+		id: 'book_ring_counter',
+		name: 'The Ring Counter',
+		char: 'B',
+		color: '#88aa66',
+		type: 'book',
+		description: 'A surveyor\'s notebook with bark rubbings pressed between the pages.',
+		pages: [
+			`THE RING COUNTER\n` +
+				`Field Notes of Tomas Erdh,\n` +
+				`Arboreal Surveyor, 3rd Class\n\n` +
+				`The Society for Arboreal\n` +
+				`Preservation hired me to\n` +
+				`survey ancient trees across\n` +
+				`the Verdant Reach. Good pay.\n` +
+				`Simple work. I core each\n` +
+				`trunk, count the rings,\n` +
+				`record the age, mark the\n` +
+				`location on a map, and send\n` +
+				`my reports to the capital.\n\n` +
+				`The Society says they are\n` +
+				`building a census of old-\n` +
+				`growth forests. Protecting\n` +
+				`them, they say. Ensuring\n` +
+				`their survival.\n\n` +
+				`I have always loved trees.\n` +
+				`I took this work because I\n` +
+				`thought I was helping them\n` +
+				`live.\n\n` +
+				`I was wrong about that.`,
+			`I returned to the Ashwyn\n` +
+				`Grove six months after my\n` +
+				`survey. Three trees I had\n` +
+				`marked were gone. Not fallen.\n` +
+				`Not storm-felled. Cut. Burned.\n` +
+				`The stumps were salted.\n\n` +
+				`All three were over twelve\n` +
+				`hundred years old.\n\n` +
+				`I wrote to the Society. They\n` +
+				`replied: "Disease management.\n` +
+				`The specimens showed signs of\n` +
+				`fungal infection. Removal was\n` +
+				`necessary to protect the\n` +
+				`surrounding forest."\n\n` +
+				`They were not diseased. I\n` +
+				`had cored them myself. Their\n` +
+				`rings were clean, tight, even.\n` +
+				`They were the healthiest trees\n` +
+				`in the grove.\n\n` +
+				`This happened again at Mirren\n` +
+				`Wood. And the Pillar Stands.\n` +
+				`Every tree I report as over\n` +
+				`one thousand years is gone\n` +
+				`within the season. Every one.`,
+			`I looked more carefully at my\n` +
+				`core samples. The rings of\n` +
+				`ordinary trees are random —\n` +
+				`thick in wet years, thin in\n` +
+				`dry. But the oldest trees\n` +
+				`have patterns that are not\n` +
+				`weather.\n\n` +
+				`Sequences. Repetitions.\n` +
+				`Variations on a theme, like\n` +
+				`a language built from growth.\n` +
+				`Thick-thin-thin-thick in\n` +
+				`motifs that recur across\n` +
+				`centuries. I cannot read it.\n` +
+				`But I can see the structure.\n\n` +
+				`These trees are not just\n` +
+				`growing. They are writing.\n` +
+				`They are recording something\n` +
+				`in the only medium they\n` +
+				`have — their own bodies.\n\n` +
+				`I took rubbings of the rings\n` +
+				`before sending my next report.\n` +
+				`I hid them in my pack. I told\n` +
+				`no one.\n\n` +
+				`Then I lied on the form.\n` +
+				`I wrote: 800 years.`,
+			`The Society sent a supervisor.\n\n` +
+				`He was polite. Well-dressed.\n` +
+				`He wore a sigil on his collar\n` +
+				`— a hand holding a veil. I\n` +
+				`had seen it before on temple\n` +
+				`officials but never thought\n` +
+				`to ask what it meant.\n\n` +
+				`"Your recent numbers seem\n` +
+				`low, Tomas. You were so\n` +
+				`thorough before."\n\n` +
+				`I told him the trees in the\n` +
+				`eastern reaches were younger\n` +
+				`than expected. He smiled and\n` +
+				`said nothing. He did not\n` +
+				`check my work. He did not\n` +
+				`look at my samples.\n\n` +
+				`He looked at my pack.\n\n` +
+				`I am not preserving trees.\n` +
+				`I never was. I am finding\n` +
+				`them so someone else can\n` +
+				`silence them. And the oldest\n` +
+				`trees — the ones whose rings\n` +
+				`are full of words — are\n` +
+				`saying something that someone\n` +
+				`with a veiled hand does not\n` +
+				`want read.\n\n` +
+				`I still have the rubbings.\n` +
+				`I need to find someone who\n` +
+				`can read the rings.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
