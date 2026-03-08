@@ -608,6 +608,158 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`and was anything but.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 10. The Gravedigger's Lantern — Soul Shepherd / Hollow Ones
+	// -----------------------------------------------------------------------
+	book_gravediggers_lantern: {
+		id: 'book_gravediggers_lantern',
+		name: "The Gravedigger's Lantern",
+		char: 'B',
+		color: '#7799aa',
+		type: 'book',
+		description:
+			"A hand-stitched journal with no title on the cover. The pages are yellowed and smell faintly of earth and dried flowers.",
+		pages: [
+			`I was sixteen when I started digging\n` +
+				`graves in Ashwick. It was autumn, and\n` +
+				`the soil was soft from rain, and the\n` +
+				`sexton needed young arms because his\n` +
+				`were failing.\n\n` +
+				`I liked the work. That surprises people.\n` +
+				`But there is a kindness in it — making\n` +
+				`the last bed someone will ever need and\n` +
+				`making it well. I smoothed the earth and\n` +
+				`planted wildflowers above each grave,\n` +
+				`though nobody asked me to.\n\n` +
+				`It was the wildflowers that first\n` +
+				`troubled me. I planted marigolds above\n` +
+				`old Hessa's plot on a Tuesday. By\n` +
+				`Thursday they were blooming — not the\n` +
+				`ragged blooms of autumn flowers clinging\n` +
+				`to warmth, but full summer blooms, golden\n` +
+				`and perfect, as if someone had poured a\n` +
+				`whole season into them overnight.\n\n` +
+				`I told the sexton. He said the soil\n` +
+				`was good. The soil was not that good.`,
+
+			`I started staying late. I told myself\n` +
+				`it was to tend the plots, but I was\n` +
+				`watching. Waiting.\n\n` +
+				`On the third night I saw it.\n\n` +
+				`Not a ghost. I have seen ghosts — pale\n` +
+				`things that don't know they're dead,\n` +
+				`bumping against the walls of their old\n` +
+				`houses like moths against glass. This\n` +
+				`was nothing like that. This was a shape\n` +
+				`at the edge of seeing, like heat rising\n` +
+				`from summer stone. It moved between the\n` +
+				`graves with purpose — pausing at each\n` +
+				`one, bending low, making gestures I\n` +
+				`couldn't read. The way a mother tucks\n` +
+				`blankets around a sleeping child.\n\n` +
+				`I should have been afraid. I wasn't.\n` +
+				`There was something in the way it\n` +
+				`moved — careful and worn, like old hands\n` +
+				`doing familiar work. It tended the dead\n` +
+				`the way I tended the earth: with a\n` +
+				`gentleness that expected nothing.\n\n` +
+				`That night I left my lantern burning\n` +
+				`on the cemetery wall. I don't know why.\n` +
+				`It felt right — the way leaving a candle\n` +
+				`in the window feels right when someone\n` +
+				`you love is still out in the dark.`,
+
+			`It came every night. Always at dusk.\n` +
+				`Always the same way — grave to grave,\n` +
+				`pause, bend, those strange gentle\n` +
+				`gestures, then on to the next.\n\n` +
+				`I began talking to it. Small things —\n` +
+				`the weather, the names of the newly\n` +
+				`buried, which flowers I'd planted\n` +
+				`where. It never answered. But I noticed\n` +
+				`things. A fallen leaf placed on a\n` +
+				`headstone, stem pointing east. Stones\n` +
+				`arranged beside my lantern in patterns\n` +
+				`I didn't understand — spirals, nested\n` +
+				`circles, shapes that made my eyes ache\n` +
+				`pleasantly, as if I were almost seeing\n` +
+				`something beautiful.\n\n` +
+				`Once I brought it bread. In the morning\n` +
+				`the bread was untouched, but flowers\n` +
+				`were growing from the cracks in the\n` +
+				`stone where I had set it — tiny blue\n` +
+				`flowers with petals like folded hands.\n\n` +
+				`Whatever it was, it was not empty.\n` +
+				`Scholars speak of hollow things that\n` +
+				`wander old places, going through motions\n` +
+				`without meaning. But there was meaning\n` +
+				`here. Faded meaning, like a letter left\n` +
+				`in the rain — the ink washed pale, but\n` +
+				`the words still there if you held it\n` +
+				`to the light.`,
+
+			`One autumn night I fell asleep against\n` +
+				`the cemetery wall. I dreamed.\n\n` +
+				`I stood in a hall of black stone. Seven\n` +
+				`thrones rose before me, carved from the\n` +
+				`bedrock of the world. Seven figures sat\n` +
+				`upon them, wearing faces that shifted\n` +
+				`and shimmered — beautiful, holy. But\n` +
+				`beneath each shining mask I glimpsed\n` +
+				`another face. Cruel. Frightened. Small.\n\n` +
+				`The thing from the cemetery stood\n` +
+				`beside the last throne. It did not look\n` +
+				`at the figure seated there. It stood\n` +
+				`with its hands open and its head bowed,\n` +
+				`as if the throne were empty — as if the\n` +
+				`shining figure did not exist and had\n` +
+				`never existed.\n\n` +
+				`It turned to me. I felt what it\n` +
+				`carried: a memory of warmth. Someone\n` +
+				`had sat in that throne once. Someone\n` +
+				`patient and kind, who guided every lost\n` +
+				`soul home. That someone had given itself\n` +
+				`away — poured its essence into the bones\n` +
+				`of the world to keep it whole. And then\n` +
+				`a stranger climbed up and sat down and\n` +
+				`put on a beautiful face, and the world\n` +
+				`called the stranger holy, and nobody\n` +
+				`remembered the one who was gone.\n\n` +
+				`Nobody except this thing. This faithful,\n` +
+				`broken thing, still waiting for a master\n` +
+				`who would never return.`,
+
+			`I woke before dawn. The lantern had\n` +
+				`burned to nothing. The cemetery was\n` +
+				`empty. It never came back.\n\n` +
+				`I dug graves in Ashwick for forty-seven\n` +
+				`more years. Every evening I lit a fresh\n` +
+				`lantern and set it on the wall. Every\n` +
+				`morning I found it cold and dark.\n` +
+				`No flowers grew from the stone. No\n` +
+				`stones were arranged in patterns.\n\n` +
+				`I am old now. My hands shake. But I\n` +
+				`still walk to the cemetery at dusk and\n` +
+				`light the lantern, and I stand there\n` +
+				`and listen.\n\n` +
+				`I have never told anyone what I\n` +
+				`dreamed. I saw thrones. I saw masks.\n` +
+				`I felt a grief so old it had worn\n` +
+				`smooth, like river stone, all its\n` +
+				`sharp edges polished away by centuries\n` +
+				`of patient, pointless waiting.\n\n` +
+				`I don't understand it. I don't need to.\n\n` +
+				`I just light the lantern. Every night.\n` +
+				`Because somewhere out there, something\n` +
+				`is still looking for its way home.\n` +
+				`And maybe a small light in the dark\n` +
+				`is enough to remind it that someone\n` +
+				`remembers.\n\n` +
+				`Even if I don't know what\n` +
+				`I'm remembering.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
