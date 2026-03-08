@@ -23,6 +23,8 @@ import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
 import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, REGION_DEFS, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest, type RegionId } from './overworld';
 import { createEmptyInventory, createEmptyEquipment, addToInventory, removeFromInventory, equipItem, unequipItem, addToContainer, removeFromContainer, getEquipmentBonuses, type WorldContainer, type Item, type EquipmentSlot, ITEM_CATALOG } from './items';
 import { BOOK_CATALOG, getAllBookIds } from './books';
+import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn, generateNoise, getAlertSymbol, getAlertColor, initializeAwareness } from './stealth';
+import { updateQuestProgress, checkTimedQuests } from './quests';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -2276,6 +2278,18 @@ export function handleInput(state: GameState, key: string): GameState {
 		return { ...state };
 	}
 
+	// Stealth toggle (Z key)
+	if (key === 'z') {
+		if (state.stealth.isHidden) {
+			exitStealth(state);
+			addMessage(state, 'You step out of the shadows.', 'info');
+		} else {
+			const result = enterStealth(state);
+			addMessage(state, result.message, result.success ? 'discovery' : 'info');
+		}
+		return { ...state };
+	}
+
 	let dx = 0;
 	let dy = 0;
 	if (key === 'w' || key === 'ArrowUp') dy = -1;
@@ -2341,11 +2355,17 @@ export function handleInput(state: GameState, key: string): GameState {
 			if (npc.dialogueIndex === 0) {
 				npc.dialogueIndex = 1;
 				state.stats.npcsSpokenTo++;
+				const talkMsgs = updateQuestProgress(state, 'talk', npc.name);
+				for (const tm of talkMsgs) addMessage(state, tm, 'discovery');
 			}
 			return { ...state };
 		}
 		// Fallback for NPCs without dialogue trees
-		if (npc.dialogueIndex === 0) state.stats.npcsSpokenTo++;
+		if (npc.dialogueIndex === 0) {
+			state.stats.npcsSpokenTo++;
+			const talkMsgs = updateQuestProgress(state, 'talk', npc.name);
+			for (const tm of talkMsgs) addMessage(state, tm, 'discovery');
+		}
 		const lineIdx = Math.min(npc.dialogueIndex, npc.dialogue.length - 1);
 		addMessage(state, `${npc.name}: "${npc.dialogue[lineIdx]}"`, 'npc');
 		if (npc.dialogueIndex < npc.dialogue.length - 1) npc.dialogueIndex++;
@@ -2409,14 +2429,28 @@ export function handleInput(state: GameState, key: string): GameState {
 		const curseReduction = state.player.statusEffects.find((e) => e.type === 'curse')?.potency ?? 0;
 		const dehydrationPenalty = getDehydrationPenalty(state);
 		const baseDmg = Math.max(1, (state.player.attack - curseReduction - dehydrationPenalty) + Math.floor(Math.random() * 3));
-		const dmg = isSneakAttack ? baseDmg * 2 : baseDmg;
-		target.hp -= dmg;
-		state.stats.damageDealt += dmg;
-		if (isSneakAttack) {
+
+		// Backstab check: if player is hidden and has backstab ready
+		const isBackstab = state.stealth.isHidden && state.stealth.backstabReady;
+		let dmg: number;
+		if (isBackstab) {
+			const backstabResult = calculateBackstabDamage(baseDmg, state.characterConfig.characterClass, true);
+			dmg = backstabResult.damage;
+			state.stats.backstabs++;
+			if (target.hp - dmg <= 0) state.stats.stealthKills++;
+			exitStealth(state);
+			addMessage(state, `Backstab! You strike ${target.name} from the shadows for ${dmg}!`, 'player_attack');
+		} else if (isSneakAttack) {
+			dmg = baseDmg * 2;
 			addMessage(state, `Sneak attack! You hit ${target.name} for ${dmg}!`, 'player_attack');
 		} else {
+			dmg = baseDmg;
+			// Break stealth on attack even if not backstab
+			if (state.stealth.isHidden) exitStealth(state);
 			addMessage(state, `You hit ${target.name} for ${dmg}!`, 'player_attack');
 		}
+		target.hp -= dmg;
+		state.stats.damageDealt += dmg;
 		let envKill = false;
 		if (target.hp > 0) {
 			// Attempt push on surviving enemy
@@ -2438,6 +2472,9 @@ export function handleInput(state: GameState, key: string): GameState {
 			if (bossKill) state.stats.bossesKilled++;
 			recordKill(state.bestiary, target);
 			state.enemies = state.enemies.filter((e) => e !== target);
+			// Quest progress on kill
+			const questMsgs = updateQuestProgress(state, 'kill', target.name);
+			for (const qm of questMsgs) addMessage(state, qm, 'discovery');
 			if (envKill) {
 				addMessage(state, `${target.name} perished in the environment! +${reward} XP (Creativity bonus!)`, 'level_up');
 			} else if (bossKill) {
@@ -2617,6 +2654,18 @@ export function handleInput(state: GameState, key: string): GameState {
 	for (const msg of survivalResult.messages) {
 		state.messages.push(msg);
 	}
+
+	// Process stealth detection per turn
+	if (state.stealth.isHidden) {
+		const equipBonuses = getEquipmentBonuses(state.equipment);
+		const lightLevel = getTimePhase(state.turnCount) === 'night' ? 0.3 : 0.8;
+		const stealthMsgs = processStealthTurn(state, state.enemies, lightLevel, equipBonuses.stealthBonus ?? 0, equipBonuses.noiseReduction ?? 0);
+		for (const sm of stealthMsgs) addMessage(state, sm, 'danger');
+	}
+
+	// Check timed quests
+	const timedQuestMsgs = checkTimedQuests(state);
+	for (const tqm of timedQuestMsgs) addMessage(state, tqm, 'danger');
 
 	// Auto-return to overworld after clearing encounter arena
 	if (state.currentLocationId === 'encounter' && state.worldMap && state.overworldPos && state.enemies.length === 0 && state.locationMode === 'location') {

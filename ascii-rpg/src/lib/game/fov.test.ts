@@ -9,7 +9,7 @@ function makeMap(ascii: string[]): GameMap {
 	const tiles: Tile[][] = ascii.map((row) =>
 		row.split('').map((c) => (c === '#' ? '#' : '.') as Tile)
 	);
-	return { width, height, tiles };
+	return { width, height, tiles, secretWalls: new Set<string>() };
 }
 
 describe('computeFOV', () => {

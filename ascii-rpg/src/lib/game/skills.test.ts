@@ -6,12 +6,22 @@ describe('SKILL_DEFS', () => {
 		expect(getClassSkills('warrior')).toHaveLength(9);
 		expect(getClassSkills('rogue')).toHaveLength(9);
 		expect(getClassSkills('mage')).toHaveLength(9);
+		expect(getClassSkills('ranger')).toHaveLength(9);
+		expect(getClassSkills('cleric')).toHaveLength(9);
+		expect(getClassSkills('paladin')).toHaveLength(9);
+		expect(getClassSkills('necromancer')).toHaveLength(9);
+		expect(getClassSkills('bard')).toHaveLength(9);
 	});
 
 	it('each class has 3 branches', () => {
 		expect(getClassBranches('warrior')).toHaveLength(3);
 		expect(getClassBranches('rogue')).toHaveLength(3);
 		expect(getClassBranches('mage')).toHaveLength(3);
+		expect(getClassBranches('ranger')).toHaveLength(3);
+		expect(getClassBranches('cleric')).toHaveLength(3);
+		expect(getClassBranches('paladin')).toHaveLength(3);
+		expect(getClassBranches('necromancer')).toHaveLength(3);
+		expect(getClassBranches('bard')).toHaveLength(3);
 	});
 
 	it('all skill IDs are unique', () => {
@@ -158,5 +168,185 @@ describe('getSkillBonuses', () => {
 	it('full warrior arms branch gives +10 ATK', () => {
 		const bonuses = getSkillBonuses(['w_arms_1', 'w_arms_2', 'w_arms_3']);
 		expect(bonuses.attack).toBe(10);
+	});
+});
+
+describe('Ranger skills', () => {
+	it('has branches Marksman, Survivalist, Beastmaster', () => {
+		const branches = getClassBranches('ranger');
+		expect(branches).toContain('Marksman');
+		expect(branches).toContain('Survivalist');
+		expect(branches).toContain('Beastmaster');
+	});
+
+	it('getClassSkills returns 9 ranger skills', () => {
+		const skills = getClassSkills('ranger');
+		expect(skills).toHaveLength(9);
+		for (const s of skills) {
+			expect(s.characterClass).toBe('ranger');
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('rn_mark_2', [], 'ranger')).toBe(false);
+		expect(canUnlock('rn_mark_2', ['rn_mark_1'], 'ranger')).toBe(true);
+		expect(canUnlock('rn_surv_2', ['rn_surv_1'], 'ranger')).toBe(true);
+		expect(canUnlock('rn_beast_2', ['rn_beast_1'], 'ranger')).toBe(true);
+	});
+
+	it('tier 3 skills require tier 2', () => {
+		expect(canUnlock('rn_mark_3', ['rn_mark_1'], 'ranger')).toBe(false);
+		expect(canUnlock('rn_mark_3', ['rn_mark_1', 'rn_mark_2'], 'ranger')).toBe(true);
+	});
+
+	it('full marksman branch accumulates bonuses', () => {
+		const bonuses = getSkillBonuses(['rn_mark_1', 'rn_mark_2', 'rn_mark_3']);
+		expect(bonuses.attack).toBe(9); // 2 + 3 + 4
+		expect(bonuses.sightRadius).toBe(2);
+	});
+});
+
+describe('Cleric skills', () => {
+	it('has branches Zealot, Healer, Oracle', () => {
+		const branches = getClassBranches('cleric');
+		expect(branches).toContain('Zealot');
+		expect(branches).toContain('Healer');
+		expect(branches).toContain('Oracle');
+	});
+
+	it('getClassSkills returns 9 cleric skills', () => {
+		const skills = getClassSkills('cleric');
+		expect(skills).toHaveLength(9);
+		for (const s of skills) {
+			expect(s.characterClass).toBe('cleric');
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('c_zeal_2', ['c_zeal_1'], 'cleric')).toBe(true);
+		expect(canUnlock('c_heal_2', ['c_heal_1'], 'cleric')).toBe(true);
+		expect(canUnlock('c_orac_2', ['c_orac_1'], 'cleric')).toBe(true);
+	});
+
+	it('full healer branch gives massive HP and block', () => {
+		const bonuses = getSkillBonuses(['c_heal_1', 'c_heal_2', 'c_heal_3']);
+		expect(bonuses.maxHp).toBe(33); // 8 + 10 + 15
+		expect(bonuses.blockReduction).toBe(3); // 1 + 2
+	});
+
+	it('full oracle branch gives sight and XP', () => {
+		const bonuses = getSkillBonuses(['c_orac_1', 'c_orac_2', 'c_orac_3']);
+		expect(bonuses.sightRadius).toBe(5); // 2 + 1 + 2
+		expect(bonuses.xpMultiplier).toBeCloseTo(0.30); // 0.10 + 0.20
+	});
+});
+
+describe('Paladin skills', () => {
+	it('has branches Bulwark, Crusader, Devotion', () => {
+		const branches = getClassBranches('paladin');
+		expect(branches).toContain('Bulwark');
+		expect(branches).toContain('Crusader');
+		expect(branches).toContain('Devotion');
+	});
+
+	it('getClassSkills returns 9 paladin skills', () => {
+		const skills = getClassSkills('paladin');
+		expect(skills).toHaveLength(9);
+		for (const s of skills) {
+			expect(s.characterClass).toBe('paladin');
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('p_bulk_2', ['p_bulk_1'], 'paladin')).toBe(true);
+		expect(canUnlock('p_crus_2', ['p_crus_1'], 'paladin')).toBe(true);
+		expect(canUnlock('p_devo_2', ['p_devo_1'], 'paladin')).toBe(true);
+	});
+
+	it('full bulwark branch gives massive HP and block', () => {
+		const bonuses = getSkillBonuses(['p_bulk_1', 'p_bulk_2', 'p_bulk_3']);
+		expect(bonuses.maxHp).toBe(33); // 8 + 10 + 15
+		expect(bonuses.blockReduction).toBe(5); // 2 + 3
+	});
+
+	it('cannot unlock paladin skills as another class', () => {
+		expect(canUnlock('p_bulk_1', [], 'warrior')).toBe(false);
+		expect(canUnlock('p_crus_1', [], 'mage')).toBe(false);
+	});
+});
+
+describe('Necromancer skills', () => {
+	it('has branches Death Magic, Dark Pact, Undeath', () => {
+		const branches = getClassBranches('necromancer');
+		expect(branches).toContain('Death Magic');
+		expect(branches).toContain('Dark Pact');
+		expect(branches).toContain('Undeath');
+	});
+
+	it('getClassSkills returns 9 necromancer skills', () => {
+		const skills = getClassSkills('necromancer');
+		expect(skills).toHaveLength(9);
+		for (const s of skills) {
+			expect(s.characterClass).toBe('necromancer');
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('n_death_2', ['n_death_1'], 'necromancer')).toBe(true);
+		expect(canUnlock('n_pact_2', ['n_pact_1'], 'necromancer')).toBe(true);
+		expect(canUnlock('n_und_2', ['n_und_1'], 'necromancer')).toBe(true);
+	});
+
+	it('full death magic branch gives +13 ATK', () => {
+		const bonuses = getSkillBonuses(['n_death_1', 'n_death_2', 'n_death_3']);
+		expect(bonuses.attack).toBe(13); // 3 + 4 + 6
+	});
+
+	it('full undeath branch gives HP, XP, and sight', () => {
+		const bonuses = getSkillBonuses(['n_und_1', 'n_und_2', 'n_und_3']);
+		expect(bonuses.maxHp).toBe(30); // 5 + 10 + 15
+		expect(bonuses.xpMultiplier).toBeCloseTo(0.10);
+		expect(bonuses.sightRadius).toBe(1);
+	});
+});
+
+describe('Bard skills', () => {
+	it('has branches Warchanter, Spellsinger, Lorekeeper', () => {
+		const branches = getClassBranches('bard');
+		expect(branches).toContain('Warchanter');
+		expect(branches).toContain('Spellsinger');
+		expect(branches).toContain('Lorekeeper');
+	});
+
+	it('getClassSkills returns 9 bard skills', () => {
+		const skills = getClassSkills('bard');
+		expect(skills).toHaveLength(9);
+		for (const s of skills) {
+			expect(s.characterClass).toBe('bard');
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('b_war_2', ['b_war_1'], 'bard')).toBe(true);
+		expect(canUnlock('b_spell_2', ['b_spell_1'], 'bard')).toBe(true);
+		expect(canUnlock('b_lore_2', ['b_lore_1'], 'bard')).toBe(true);
+	});
+
+	it('full warchanter branch gives ATK and HP', () => {
+		const bonuses = getSkillBonuses(['b_war_1', 'b_war_2', 'b_war_3']);
+		expect(bonuses.attack).toBe(9); // 2 + 3 + 4
+		expect(bonuses.maxHp).toBe(15); // 5 + 10
+	});
+
+	it('full lorekeeper branch gives sight and XP', () => {
+		const bonuses = getSkillBonuses(['b_lore_1', 'b_lore_2', 'b_lore_3']);
+		expect(bonuses.sightRadius).toBe(5); // 1 + 2 + 2
+		expect(bonuses.xpMultiplier).toBeCloseTo(0.30); // 0.10 + 0.20
+		expect(bonuses.maxHp).toBe(5);
+	});
+
+	it('cannot unlock bard skills as another class', () => {
+		expect(canUnlock('b_war_1', [], 'warrior')).toBe(false);
+		expect(canUnlock('b_spell_1', [], 'necromancer')).toBe(false);
 	});
 });

@@ -62,7 +62,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		knownLanguages: [],
 		landmarks: [],
 		heardStories: [],
-		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0 },
+		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0, stealthKills: 0, backstabs: 0, questsCompleted: 0, questsFailed: 0 },
 		unlockedAchievements: [],
 		lieCount: 0,
 		bestiary: {},
@@ -84,15 +84,24 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
 		locationCache: {},
+		quests: [],
+		completedQuestIds: [],
+		failedQuestIds: [],
+		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		...overrides
 	};
 }
 
 describe('ABILITY_DEFS', () => {
-	it('defines abilities for all three classes', () => {
+	it('defines abilities for all eight classes', () => {
 		expect(ABILITY_DEFS.warrior).toBeDefined();
 		expect(ABILITY_DEFS.mage).toBeDefined();
 		expect(ABILITY_DEFS.rogue).toBeDefined();
+		expect(ABILITY_DEFS.ranger).toBeDefined();
+		expect(ABILITY_DEFS.cleric).toBeDefined();
+		expect(ABILITY_DEFS.paladin).toBeDefined();
+		expect(ABILITY_DEFS.necromancer).toBeDefined();
+		expect(ABILITY_DEFS.bard).toBeDefined();
 	});
 
 	it('all abilities have positive cooldowns', () => {
@@ -394,4 +403,362 @@ describe('Rogue Smoke Bomb', () => {
 		const result = useAbility(state);
 		expect(result.messages[0].text).toContain('1 enemy');
 	});
+});
+
+describe('Ranger Rain of Arrows', () => {
+	it('hits all enemies in a 3x3 area', () => {
+		const e1 = makeEnemy(6, 5); // distance 1
+		const e2 = makeEnemy(7, 5); // distance 2
+		const e3 = makeEnemy(5, 7); // distance 2
+		const state = makeTestState({
+			enemies: [e1, e2, e3],
+			characterConfig: { name: 'Hero', characterClass: 'ranger', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+		expect(e1.hp).toBeLessThan(5);
+		expect(e2.hp).toBeLessThan(5);
+		expect(e3.hp).toBeLessThan(5);
+	});
+
+	it('does not hit enemies outside radius 3', () => {
+		const near = makeEnemy(6, 5);
+		const far = makeEnemy(9, 9); // well outside radius
+		const state = makeTestState({
+			enemies: [near, far],
+			characterConfig: { name: 'Hero', characterClass: 'ranger', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		useAbility(state);
+		expect(near.hp).toBeLessThan(5);
+		expect(far.hp).toBe(5); // untouched
+	});
+
+	it('does not use ability when no enemies in range', () => {
+		const state = makeTestState({
+			enemies: [makeEnemy(9, 9)],
+			characterConfig: { name: 'Hero', characterClass: 'ranger', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		const result = useAbility(state);
+		expect(result.used).toBe(false);
+		expect(result.messages[0].text).toContain('No enemies in range');
+	});
+
+	it('deals 80% of player attack damage', () => {
+		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'ranger', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		state.player.attack = 10;
+
+		useAbility(state);
+		expect(enemy.hp).toBe(92); // 100 - floor(10 * 0.8)
+	});
+
+	it('reports kill count in message', () => {
+		const e1 = makeEnemy(6, 5, { hp: 1 });
+		const e2 = makeEnemy(4, 5, { hp: 1 });
+		const state = makeTestState({
+			enemies: [e1, e2],
+			characterConfig: { name: 'Hero', characterClass: 'ranger', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		const killMsg = result.messages.find((m) => m.text.includes('slays'));
+		expect(killMsg).toBeDefined();
+		expect(killMsg!.text).toContain('2');
+	});
+
+	it('uses cooldown of 10', () => {
+		expect(ABILITY_DEFS.ranger.cooldown).toBe(10);
+	});
+});
+
+describe('Cleric Divine Shield', () => {
+	it('grants regeneration effect', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'cleric', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+		expect(state.player.statusEffects.some((e) => e.type === 'regeneration')).toBe(true);
+	});
+
+	it('regeneration lasts 5 turns', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'cleric', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		useAbility(state);
+		const regen = state.player.statusEffects.find((e) => e.type === 'regeneration');
+		expect(regen).toBeDefined();
+		expect(regen!.duration).toBe(5);
+	});
+
+	it('always succeeds (no target needed)', () => {
+		const state = makeTestState({
+			enemies: [],
+			characterConfig: { name: 'Hero', characterClass: 'cleric', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+		expect(result.messages[0].type).toBe('healing');
+	});
+
+	it('message mentions regeneration', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'cleric', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.messages[0].text).toContain('Regeneration');
+	});
+});
+
+describe('Paladin Holy Smite', () => {
+	it('deals extra damage to undead enemies', () => {
+		const undead = makeEnemy(6, 5, { hp: 100, maxHp: 100, name: 'Skeleton' });
+		const state = makeTestState({
+			enemies: [undead],
+			characterConfig: { name: 'Hero', characterClass: 'paladin', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		state.player.attack = 10;
+
+		useAbility(state);
+		expect(undead.hp).toBe(70); // 100 - 10*3
+	});
+
+	it('deals normal damage to non-undead', () => {
+		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100, name: 'Goblin' });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'paladin', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		state.player.attack = 10;
+
+		useAbility(state);
+		expect(enemy.hp).toBe(90); // 100 - 10
+	});
+
+	it('hits all adjacent enemies', () => {
+		const e1 = makeEnemy(6, 5, { hp: 50, maxHp: 50, name: 'Zombie' });
+		const e2 = makeEnemy(4, 5, { hp: 50, maxHp: 50, name: 'Goblin' });
+		const state = makeTestState({
+			enemies: [e1, e2],
+			characterConfig: { name: 'Hero', characterClass: 'paladin', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+		expect(e1.hp).toBeLessThan(50);
+		expect(e2.hp).toBeLessThan(50);
+	});
+
+	it('does not use ability when no enemies nearby', () => {
+		const state = makeTestState({
+			enemies: [makeEnemy(9, 9)],
+			characterConfig: { name: 'Hero', characterClass: 'paladin', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		const result = useAbility(state);
+		expect(result.used).toBe(false);
+		expect(result.messages[0].text).toContain('No enemies nearby');
+	});
+
+	it('uses "sears" for undead and "strikes" for others in message', () => {
+		const undead = makeEnemy(6, 5, { hp: 100, maxHp: 100, name: 'Wraith' });
+		const normal = makeEnemy(4, 5, { hp: 100, maxHp: 100, name: 'Goblin' });
+		const state = makeTestState({
+			enemies: [undead, normal],
+			characterConfig: { name: 'Hero', characterClass: 'paladin', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		const searsMsg = result.messages.find((m) => m.text.includes('sears'));
+		const strikesMsg = result.messages.find((m) => m.text.includes('strikes'));
+		expect(searsMsg).toBeDefined();
+		expect(strikesMsg).toBeDefined();
+	});
+
+	it('reports kill count in message', () => {
+		const e1 = makeEnemy(6, 5, { hp: 1, name: 'Skeleton' });
+		const state = makeTestState({
+			enemies: [e1],
+			characterConfig: { name: 'Hero', characterClass: 'paladin', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		const killMsg = result.messages.find((m) => m.text.includes('destroys'));
+		expect(killMsg).toBeDefined();
+	});
+});
+
+describe('Necromancer Drain Life', () => {
+	it('steals HP from nearest enemy', () => {
+		const enemy = makeEnemy(6, 5, { hp: 20, maxHp: 20 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'necromancer', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		state.player.hp = 10;
+		state.player.attack = 5;
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+		expect(enemy.hp).toBe(13); // 20 - max(2, 5+2) = 20 - 7
+		expect(state.player.hp).toBe(17); // 10 + 7
+	});
+
+	it('targets the nearest enemy among multiple', () => {
+		const far = makeEnemy(8, 5, { hp: 50, maxHp: 50 }); // distance 3
+		const near = makeEnemy(6, 5, { hp: 50, maxHp: 50 }); // distance 1
+		const state = makeTestState({
+			enemies: [far, near],
+			characterConfig: { name: 'Hero', characterClass: 'necromancer', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		useAbility(state);
+		expect(near.hp).toBeLessThan(50); // near enemy should be drained
+		expect(far.hp).toBe(50); // far enemy untouched
+	});
+
+	it('does not heal beyond maxHp', () => {
+		const enemy = makeEnemy(6, 5, { hp: 20, maxHp: 20 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'necromancer', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		state.player.hp = 20; // already at max
+		state.player.attack = 5;
+
+		useAbility(state);
+		expect(state.player.hp).toBe(20); // should not exceed maxHp
+	});
+
+	it('does not use ability when no enemies exist', () => {
+		const state = makeTestState({
+			enemies: [],
+			characterConfig: { name: 'Hero', characterClass: 'necromancer', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		const result = useAbility(state);
+		expect(result.used).toBe(false);
+		expect(result.messages[0].text).toContain('No enemies to drain');
+	});
+
+	it('does not use ability when nearest enemy is beyond range 5', () => {
+		const enemy = makeEnemy(0, 0); // distance 10
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'necromancer', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		const result = useAbility(state);
+		expect(result.used).toBe(false);
+		expect(result.messages[0].text).toContain('No enemies close enough');
+	});
+
+	it('shows healing message when HP is recovered', () => {
+		const enemy = makeEnemy(6, 5, { hp: 20, maxHp: 20 });
+		const state = makeTestState({
+			enemies: [enemy],
+			characterConfig: { name: 'Hero', characterClass: 'necromancer', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		state.player.hp = 10;
+
+		const result = useAbility(state);
+		const healMsg = result.messages.find((m) => m.type === 'healing');
+		expect(healMsg).toBeDefined();
+		expect(healMsg!.text).toContain('recover');
+	});
+});
+
+describe('Bard Inspiring Song', () => {
+	it('boosts ATK by 3', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'bard', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+		const originalAtk = state.player.attack;
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+		expect(state.player.attack).toBe(originalAtk + 3);
+	});
+
+	it('grants regeneration effect', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'bard', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		useAbility(state);
+		expect(state.player.statusEffects.some((e) => e.type === 'regeneration')).toBe(true);
+	});
+
+	it('regeneration lasts 5 turns', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'bard', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		useAbility(state);
+		const regen = state.player.statusEffects.find((e) => e.type === 'regeneration');
+		expect(regen).toBeDefined();
+		expect(regen!.duration).toBe(5);
+	});
+
+	it('always succeeds (no target needed)', () => {
+		const state = makeTestState({
+			enemies: [],
+			characterConfig: { name: 'Hero', characterClass: 'bard', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.used).toBe(true);
+	});
+
+	it('produces two messages (melody + ATK boost)', () => {
+		const state = makeTestState({
+			characterConfig: { name: 'Hero', characterClass: 'bard', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+		});
+
+		const result = useAbility(state);
+		expect(result.messages).toHaveLength(2);
+		expect(result.messages[0].text).toContain('inspiring melody');
+		expect(result.messages[1].text).toContain('+3 ATK');
+	});
+});
+
+describe('All abilities handle no-target case', () => {
+	const classesWithNoTarget: Array<{ characterClass: 'warrior' | 'rogue' | 'ranger' | 'paladin' | 'necromancer'; noTargetText: string }> = [
+		{ characterClass: 'warrior', noTargetText: 'No enemies nearby' },
+		{ characterClass: 'rogue', noTargetText: 'No enemies nearby' },
+		{ characterClass: 'ranger', noTargetText: 'No enemies in range' },
+		{ characterClass: 'paladin', noTargetText: 'No enemies nearby' },
+		{ characterClass: 'necromancer', noTargetText: 'No enemies to drain' },
+	];
+
+	for (const { characterClass, noTargetText } of classesWithNoTarget) {
+		it(`${characterClass} returns used=false with no enemies`, () => {
+			const state = makeTestState({
+				enemies: [],
+				characterConfig: { name: 'Hero', characterClass, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+			});
+			const result = useAbility(state);
+			expect(result.used).toBe(false);
+			expect(result.messages[0].text).toContain(noTargetText);
+		});
+	}
+
+	const selfBuffClasses: Array<'cleric' | 'bard'> = ['cleric', 'bard'];
+
+	for (const characterClass of selfBuffClasses) {
+		it(`${characterClass} always succeeds even with no enemies`, () => {
+			const state = makeTestState({
+				enemies: [],
+				characterConfig: { name: 'Hero', characterClass, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
+			});
+			const result = useAbility(state);
+			expect(result.used).toBe(true);
+		});
+	}
 });

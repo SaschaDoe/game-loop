@@ -65,7 +65,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		knownLanguages: [],
 		landmarks: [],
 		heardStories: [],
-		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0 },
+		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0, stealthKills: 0, backstabs: 0, questsCompleted: 0, questsFailed: 0 },
 		unlockedAchievements: [],
 		lieCount: 0,
 		bestiary: {},
@@ -87,6 +87,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
 		locationCache: {},
+		quests: [],
+		completedQuestIds: [],
+		failedQuestIds: [],
+		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		...overrides
 	};
 }
@@ -290,7 +294,7 @@ describe('handleInput basics', () => {
 
 	it('returns same state for invalid keys', () => {
 		const state = makeTestState();
-		const result = handleInput(state, 'z');
+		const result = handleInput(state, 'x');
 		expect(result).toBe(state);
 	});
 
@@ -2651,13 +2655,9 @@ describe('Regional NPCs in settlements (US-OW-02)', () => {
 	});
 
 	it('each region has at least 2 NPC definitions', () => {
-		const regions = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'underdepths'];
-		for (const region of regions) {
-			const state = createGame({ name: 'Tester', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: `npc-count-${region}` });
-			// We can't directly enter non-starting settlements in test, so just verify the REGIONAL_NPCS table
-			// by checking NPC count in the starting settlement (which uses its region's NPCs)
-		}
-		// This test verifies the system exists and doesn't crash for all regions
-		expect(true).toBe(true);
+		// Check the starting village has regional NPCs spawned (verifies the REGIONAL_NPCS table is wired up)
+		const state = createGame({ name: 'Tester', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'npc-count-test' });
+		// Village start is in greenweald, which should add its regional NPCs
+		expect(state.npcs.length).toBeGreaterThanOrEqual(2);
 	});
 });

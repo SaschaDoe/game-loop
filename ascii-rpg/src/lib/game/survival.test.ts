@@ -64,7 +64,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		knownLanguages: [],
 		landmarks: [],
 		heardStories: [],
-		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0 },
+		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0, stealthKills: 0, backstabs: 0, questsCompleted: 0, questsFailed: 0 },
 		unlockedAchievements: [],
 		lieCount: 0,
 		bestiary: {},
@@ -86,6 +86,10 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
 		locationCache: {},
+		quests: [],
+		completedQuestIds: [],
+		failedQuestIds: [],
+		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		...overrides
 	};
 }

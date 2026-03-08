@@ -59,6 +59,71 @@ export const SKILL_DEFS: SkillDef[] = [
 	{ id: 'm_know_1', name: 'Keen Mind', characterClass: 'mage', branch: 'Knowledge', tier: 1, prerequisite: null, description: '+1 Sight', bonus: { sightRadius: 1 } },
 	{ id: 'm_know_2', name: 'Sage', characterClass: 'mage', branch: 'Knowledge', tier: 2, prerequisite: 'm_know_1', description: '+10% XP', bonus: { xpMultiplier: 0.10 } },
 	{ id: 'm_know_3', name: 'Omniscience', characterClass: 'mage', branch: 'Knowledge', tier: 3, prerequisite: 'm_know_2', description: '+20% XP, +2 Sight', bonus: { xpMultiplier: 0.20, sightRadius: 2 } },
+
+	// Ranger — Marksman
+	{ id: 'rn_mark_1', name: 'Steady Aim', characterClass: 'ranger', branch: 'Marksman', tier: 1, prerequisite: null, description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'rn_mark_2', name: 'Piercing Shot', characterClass: 'ranger', branch: 'Marksman', tier: 2, prerequisite: 'rn_mark_1', description: '+3 ATK', bonus: { attack: 3 } },
+	{ id: 'rn_mark_3', name: 'Eagle Eye', characterClass: 'ranger', branch: 'Marksman', tier: 3, prerequisite: 'rn_mark_2', description: '+4 ATK, +2 Sight', bonus: { attack: 4, sightRadius: 2 } },
+	// Ranger — Survivalist
+	{ id: 'rn_surv_1', name: 'Trailblazer', characterClass: 'ranger', branch: 'Survivalist', tier: 1, prerequisite: null, description: '+1 Sight', bonus: { sightRadius: 1 } },
+	{ id: 'rn_surv_2', name: 'Wilderness Lore', characterClass: 'ranger', branch: 'Survivalist', tier: 2, prerequisite: 'rn_surv_1', description: '+5 HP, +1 Sight', bonus: { maxHp: 5, sightRadius: 1 } },
+	{ id: 'rn_surv_3', name: 'Apex Predator', characterClass: 'ranger', branch: 'Survivalist', tier: 3, prerequisite: 'rn_surv_2', description: '+10 HP, +10% XP', bonus: { maxHp: 10, xpMultiplier: 0.10 } },
+	// Ranger — Beastmaster
+	{ id: 'rn_beast_1', name: 'Animal Bond', characterClass: 'ranger', branch: 'Beastmaster', tier: 1, prerequisite: null, description: '+5 HP', bonus: { maxHp: 5 } },
+	{ id: 'rn_beast_2', name: 'Pack Tactics', characterClass: 'ranger', branch: 'Beastmaster', tier: 2, prerequisite: 'rn_beast_1', description: '+2 ATK, +5 HP', bonus: { attack: 2, maxHp: 5 } },
+	{ id: 'rn_beast_3', name: 'Alpha', characterClass: 'ranger', branch: 'Beastmaster', tier: 3, prerequisite: 'rn_beast_2', description: '+4 ATK, +10 HP', bonus: { attack: 4, maxHp: 10 } },
+
+	// Cleric — Zealot
+	{ id: 'c_zeal_1', name: 'Righteous Fury', characterClass: 'cleric', branch: 'Zealot', tier: 1, prerequisite: null, description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'c_zeal_2', name: 'Wrath of the Divine', characterClass: 'cleric', branch: 'Zealot', tier: 2, prerequisite: 'c_zeal_1', description: '+3 ATK', bonus: { attack: 3 } },
+	{ id: 'c_zeal_3', name: 'Inquisitor', characterClass: 'cleric', branch: 'Zealot', tier: 3, prerequisite: 'c_zeal_2', description: '+5 ATK, +5 HP', bonus: { attack: 5, maxHp: 5 } },
+	// Cleric — Healer
+	{ id: 'c_heal_1', name: 'Mending Touch', characterClass: 'cleric', branch: 'Healer', tier: 1, prerequisite: null, description: '+8 HP', bonus: { maxHp: 8 } },
+	{ id: 'c_heal_2', name: 'Restoration', characterClass: 'cleric', branch: 'Healer', tier: 2, prerequisite: 'c_heal_1', description: '+10 HP, +1 Block', bonus: { maxHp: 10, blockReduction: 1 } },
+	{ id: 'c_heal_3', name: 'Martyr', characterClass: 'cleric', branch: 'Healer', tier: 3, prerequisite: 'c_heal_2', description: '+15 HP, +2 Block', bonus: { maxHp: 15, blockReduction: 2 } },
+	// Cleric — Oracle
+	{ id: 'c_orac_1', name: 'Foresight', characterClass: 'cleric', branch: 'Oracle', tier: 1, prerequisite: null, description: '+2 Sight', bonus: { sightRadius: 2 } },
+	{ id: 'c_orac_2', name: 'Divine Vision', characterClass: 'cleric', branch: 'Oracle', tier: 2, prerequisite: 'c_orac_1', description: '+1 Sight, +10% XP', bonus: { sightRadius: 1, xpMultiplier: 0.10 } },
+	{ id: 'c_orac_3', name: 'Prophecy', characterClass: 'cleric', branch: 'Oracle', tier: 3, prerequisite: 'c_orac_2', description: '+2 Sight, +20% XP', bonus: { sightRadius: 2, xpMultiplier: 0.20 } },
+
+	// Paladin — Bulwark
+	{ id: 'p_bulk_1', name: 'Shield of Faith', characterClass: 'paladin', branch: 'Bulwark', tier: 1, prerequisite: null, description: '+8 HP', bonus: { maxHp: 8 } },
+	{ id: 'p_bulk_2', name: 'Divine Aegis', characterClass: 'paladin', branch: 'Bulwark', tier: 2, prerequisite: 'p_bulk_1', description: '+10 HP, +2 Block', bonus: { maxHp: 10, blockReduction: 2 } },
+	{ id: 'p_bulk_3', name: 'Fortress of Light', characterClass: 'paladin', branch: 'Bulwark', tier: 3, prerequisite: 'p_bulk_2', description: '+15 HP, +3 Block', bonus: { maxHp: 15, blockReduction: 3 } },
+	// Paladin — Crusader
+	{ id: 'p_crus_1', name: 'Holy Strike', characterClass: 'paladin', branch: 'Crusader', tier: 1, prerequisite: null, description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'p_crus_2', name: 'Consecrated Blade', characterClass: 'paladin', branch: 'Crusader', tier: 2, prerequisite: 'p_crus_1', description: '+3 ATK, +5 HP', bonus: { attack: 3, maxHp: 5 } },
+	{ id: 'p_crus_3', name: 'Champion of Dawn', characterClass: 'paladin', branch: 'Crusader', tier: 3, prerequisite: 'p_crus_2', description: '+5 ATK, +10 HP', bonus: { attack: 5, maxHp: 10 } },
+	// Paladin — Devotion
+	{ id: 'p_devo_1', name: 'Blessed Aura', characterClass: 'paladin', branch: 'Devotion', tier: 1, prerequisite: null, description: '+5 HP, +5% Dodge', bonus: { maxHp: 5, dodgeChance: 0.05 } },
+	{ id: 'p_devo_2', name: 'Lay on Hands', characterClass: 'paladin', branch: 'Devotion', tier: 2, prerequisite: 'p_devo_1', description: '+10 HP', bonus: { maxHp: 10 } },
+	{ id: 'p_devo_3', name: 'Undying Oath', characterClass: 'paladin', branch: 'Devotion', tier: 3, prerequisite: 'p_devo_2', description: '+15 HP, +10% XP', bonus: { maxHp: 15, xpMultiplier: 0.10 } },
+
+	// Necromancer — Death Magic
+	{ id: 'n_death_1', name: 'Soul Siphon', characterClass: 'necromancer', branch: 'Death Magic', tier: 1, prerequisite: null, description: '+3 ATK', bonus: { attack: 3 } },
+	{ id: 'n_death_2', name: 'Wither', characterClass: 'necromancer', branch: 'Death Magic', tier: 2, prerequisite: 'n_death_1', description: '+4 ATK', bonus: { attack: 4 } },
+	{ id: 'n_death_3', name: 'Reaper', characterClass: 'necromancer', branch: 'Death Magic', tier: 3, prerequisite: 'n_death_2', description: '+6 ATK', bonus: { attack: 6 } },
+	// Necromancer — Dark Pact
+	{ id: 'n_pact_1', name: 'Blood Bargain', characterClass: 'necromancer', branch: 'Dark Pact', tier: 1, prerequisite: null, description: '+2 ATK, -3 HP', bonus: { attack: 2 } },
+	{ id: 'n_pact_2', name: 'Corpse Shield', characterClass: 'necromancer', branch: 'Dark Pact', tier: 2, prerequisite: 'n_pact_1', description: '+5 HP, +5% Dodge', bonus: { maxHp: 5, dodgeChance: 0.05 } },
+	{ id: 'n_pact_3', name: 'Lich Form', characterClass: 'necromancer', branch: 'Dark Pact', tier: 3, prerequisite: 'n_pact_2', description: '+10 HP, +3 ATK', bonus: { maxHp: 10, attack: 3 } },
+	// Necromancer — Undeath
+	{ id: 'n_und_1', name: 'Unholy Vigor', characterClass: 'necromancer', branch: 'Undeath', tier: 1, prerequisite: null, description: '+5 HP', bonus: { maxHp: 5 } },
+	{ id: 'n_und_2', name: 'Death Ward', characterClass: 'necromancer', branch: 'Undeath', tier: 2, prerequisite: 'n_und_1', description: '+10 HP, +10% XP', bonus: { maxHp: 10, xpMultiplier: 0.10 } },
+	{ id: 'n_und_3', name: 'Eternal Servitude', characterClass: 'necromancer', branch: 'Undeath', tier: 3, prerequisite: 'n_und_2', description: '+15 HP, +1 Sight', bonus: { maxHp: 15, sightRadius: 1 } },
+
+	// Bard — Warchanter
+	{ id: 'b_war_1', name: 'Battle Hymn', characterClass: 'bard', branch: 'Warchanter', tier: 1, prerequisite: null, description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'b_war_2', name: 'Rallying Cry', characterClass: 'bard', branch: 'Warchanter', tier: 2, prerequisite: 'b_war_1', description: '+3 ATK, +5 HP', bonus: { attack: 3, maxHp: 5 } },
+	{ id: 'b_war_3', name: 'Anthem of Valor', characterClass: 'bard', branch: 'Warchanter', tier: 3, prerequisite: 'b_war_2', description: '+4 ATK, +10 HP', bonus: { attack: 4, maxHp: 10 } },
+	// Bard — Spellsinger
+	{ id: 'b_spell_1', name: 'Dissonance', characterClass: 'bard', branch: 'Spellsinger', tier: 1, prerequisite: null, description: '+2 ATK, +1 Sight', bonus: { attack: 2, sightRadius: 1 } },
+	{ id: 'b_spell_2', name: 'Harmonic Shield', characterClass: 'bard', branch: 'Spellsinger', tier: 2, prerequisite: 'b_spell_1', description: '+5 HP, +5% Dodge', bonus: { maxHp: 5, dodgeChance: 0.05 } },
+	{ id: 'b_spell_3', name: 'Crescendo', characterClass: 'bard', branch: 'Spellsinger', tier: 3, prerequisite: 'b_spell_2', description: '+5 ATK, +10% XP', bonus: { attack: 5, xpMultiplier: 0.10 } },
+	// Bard — Lorekeeper
+	{ id: 'b_lore_1', name: 'Traveler\'s Tales', characterClass: 'bard', branch: 'Lorekeeper', tier: 1, prerequisite: null, description: '+1 Sight, +10% XP', bonus: { sightRadius: 1, xpMultiplier: 0.10 } },
+	{ id: 'b_lore_2', name: 'Polyglot', characterClass: 'bard', branch: 'Lorekeeper', tier: 2, prerequisite: 'b_lore_1', description: '+2 Sight, +5 HP', bonus: { sightRadius: 2, maxHp: 5 } },
+	{ id: 'b_lore_3', name: 'Living Legend', characterClass: 'bard', branch: 'Lorekeeper', tier: 3, prerequisite: 'b_lore_2', description: '+20% XP, +2 Sight', bonus: { xpMultiplier: 0.20, sightRadius: 2 } },
 ];
 
 const SKILL_BY_ID = new Map(SKILL_DEFS.map((s) => [s.id, s]));

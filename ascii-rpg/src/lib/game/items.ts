@@ -2,10 +2,24 @@ export type EquipmentSlot = 'head' | 'body' | 'trouser' | 'leftHand' | 'rightHan
 
 export type ItemType = 'equipment' | 'book' | 'consumable' | 'misc';
 
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+export type EnchantmentType = 'fire_damage' | 'frost_damage' | 'life_steal' | 'mana_steal' | 'thorns' | 'fortify';
+
+export interface Enchantment {
+	type: EnchantmentType;
+	potency: number;
+}
+
+export type WeaponEffect = 'vampiric' | 'flaming' | 'freezing' | 'thunderstrike' | 'vorpal' | 'phasing' | 'berserker' | 'guardian' | 'venomous' | 'lunar';
+
 export interface ItemStats {
 	hp?: number;
 	atk?: number;
 	sight?: number;
+	dodgeChance?: number;
+	stealthBonus?: number;
+	noiseReduction?: number;
 }
 
 export interface Item {
@@ -19,6 +33,11 @@ export interface Item {
 	stats?: ItemStats;
 	pages?: string[];
 	consumeEffect?: { hp?: number; hunger?: number; thirst?: number };
+	rarity?: ItemRarity;
+	enchantments?: Enchantment[];
+	weaponEffect?: WeaponEffect;
+	setId?: string;
+	isArtifact?: boolean;
 }
 
 export type ContainerSize = 'small' | 'medium' | 'big';
@@ -356,6 +375,159 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		description: 'A weathered cloak that sharpens awareness of the surroundings.',
 		slot: 'back',
 		stats: { sight: 1 },
+	},
+
+	// --- Equipment: Ranger ---
+	shortbow: {
+		id: 'shortbow',
+		name: 'Shortbow',
+		char: ')',
+		color: '#aa8844',
+		type: 'equipment',
+		description: 'A compact bow suited for quick shots in the wild.',
+		slot: 'leftHand',
+		stats: { atk: 2, sight: 1 },
+		rarity: 'common',
+	},
+	quiver: {
+		id: 'quiver',
+		name: 'Quiver',
+		char: '}',
+		color: '#aa8844',
+		type: 'equipment',
+		description: 'A leather quiver stocked with arrows.',
+		slot: 'back',
+		stats: { atk: 1 },
+		rarity: 'common',
+	},
+	ranger_cloak: {
+		id: 'ranger_cloak',
+		name: "Ranger's Cloak",
+		char: '}',
+		color: '#4a6',
+		type: 'equipment',
+		description: 'A camouflage cloak woven with forest fibers.',
+		slot: 'back',
+		stats: { sight: 1, stealthBonus: 10 },
+		rarity: 'uncommon',
+	},
+
+	// --- Equipment: Cleric ---
+	holy_mace: {
+		id: 'holy_mace',
+		name: 'Holy Mace',
+		char: '/',
+		color: '#ffd700',
+		type: 'equipment',
+		description: 'A blunt weapon blessed by prayer. Effective against the undead.',
+		slot: 'leftHand',
+		stats: { atk: 2, hp: 1 },
+		rarity: 'common',
+	},
+	holy_symbol: {
+		id: 'holy_symbol',
+		name: 'Holy Symbol',
+		char: '+',
+		color: '#ffd700',
+		type: 'equipment',
+		description: 'A sacred emblem that channels divine light.',
+		slot: 'rightHand',
+		stats: { hp: 3 },
+		rarity: 'common',
+	},
+
+	// --- Equipment: Paladin ---
+	paladin_sword: {
+		id: 'paladin_sword',
+		name: 'Crusader Blade',
+		char: '/',
+		color: '#eeeeff',
+		type: 'equipment',
+		description: 'A broad sword inscribed with oaths of protection.',
+		slot: 'leftHand',
+		stats: { atk: 2 },
+		rarity: 'common',
+	},
+	tower_shield: {
+		id: 'tower_shield',
+		name: 'Tower Shield',
+		char: ']',
+		color: '#ccccdd',
+		type: 'equipment',
+		description: 'A massive shield that can block nearly anything.',
+		slot: 'rightHand',
+		stats: { hp: 7 },
+		rarity: 'common',
+	},
+	plate_helm: {
+		id: 'plate_helm',
+		name: 'Plate Helm',
+		char: '^',
+		color: '#ccccdd',
+		type: 'equipment',
+		description: 'A heavy helm of forged steel plates.',
+		slot: 'head',
+		stats: { hp: 4, sight: -1 },
+		rarity: 'common',
+	},
+
+	// --- Equipment: Necromancer ---
+	bone_staff: {
+		id: 'bone_staff',
+		name: 'Bone Staff',
+		char: '|',
+		color: '#aaa088',
+		type: 'equipment',
+		description: 'A staff carved from the femur of a giant. Hums with death magic.',
+		slot: 'leftHand',
+		stats: { atk: 3 },
+		rarity: 'uncommon',
+	},
+	death_shroud: {
+		id: 'death_shroud',
+		name: 'Death Shroud',
+		char: '}',
+		color: '#666',
+		type: 'equipment',
+		description: 'A tattered cloak that reeks of the grave.',
+		slot: 'back',
+		stats: { hp: 2, stealthBonus: 5 },
+		rarity: 'common',
+	},
+
+	// --- Equipment: Bard ---
+	rapier: {
+		id: 'rapier',
+		name: 'Rapier',
+		char: '/',
+		color: '#ccddff',
+		type: 'equipment',
+		description: 'A slender blade for dashing swordplay.',
+		slot: 'leftHand',
+		stats: { atk: 2 },
+		rarity: 'common',
+	},
+	lute: {
+		id: 'lute',
+		name: 'Lute',
+		char: 'J',
+		color: '#da8',
+		type: 'equipment',
+		description: 'A well-tuned instrument that inspires courage in allies.',
+		slot: 'rightHand',
+		stats: { hp: 2 },
+		rarity: 'common',
+	},
+	fancy_hat: {
+		id: 'fancy_hat',
+		name: 'Fancy Hat',
+		char: '^',
+		color: '#f4a',
+		type: 'equipment',
+		description: 'A flamboyant hat with a long feather. Boosts confidence.',
+		slot: 'head',
+		stats: { sight: 1 },
+		rarity: 'common',
 	},
 
 	// --- Consumables ---

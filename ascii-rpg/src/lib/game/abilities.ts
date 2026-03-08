@@ -27,7 +27,37 @@ export const ABILITY_DEFS: Record<CharacterClass, AbilityDef> = {
 		description: 'Stun all nearby enemies for 2 turns',
 		cooldown: 10,
 		key: 'q'
-	}
+	},
+	ranger: {
+		name: 'Rain of Arrows',
+		description: 'Hit all enemies in a 3x3 area',
+		cooldown: 10,
+		key: 'q'
+	},
+	cleric: {
+		name: 'Divine Shield',
+		description: 'Gain regeneration for 5 turns',
+		cooldown: 12,
+		key: 'q'
+	},
+	paladin: {
+		name: 'Holy Smite',
+		description: 'Deal massive holy damage to adjacent undead, normal to others',
+		cooldown: 10,
+		key: 'q'
+	},
+	necromancer: {
+		name: 'Drain Life',
+		description: 'Steal HP from the nearest enemy',
+		cooldown: 8,
+		key: 'q'
+	},
+	bard: {
+		name: 'Inspiring Song',
+		description: 'Boost your ATK by 3 for 5 turns',
+		cooldown: 12,
+		key: 'q'
+	},
 };
 
 export interface AbilityResult {
@@ -118,6 +148,108 @@ function rogueSmokeBomb(state: GameState): AbilityResult {
 	};
 }
 
+function rangerRainOfArrows(state: GameState): AbilityResult {
+	const RADIUS = 3;
+	const { x: px, y: py } = state.player.pos;
+	const inArea = state.enemies.filter(
+		(e) => Math.abs(e.pos.x - px) <= RADIUS && Math.abs(e.pos.y - py) <= RADIUS
+	);
+
+	if (inArea.length === 0) {
+		return { messages: [{ text: 'No enemies in range!', type: 'info' }], used: false };
+	}
+
+	const messages: AbilityResult['messages'] = [];
+	const killed: Entity[] = [];
+	for (const enemy of inArea) {
+		const dmg = Math.max(1, Math.floor(state.player.attack * 0.8));
+		enemy.hp -= dmg;
+		messages.push({ text: `Arrow strikes ${enemy.name} for ${dmg}!`, type: 'player_attack' });
+		if (enemy.hp <= 0) killed.push(enemy);
+	}
+	if (killed.length > 0) {
+		messages.push({ text: `Rain of Arrows slays ${killed.length} ${killed.length === 1 ? 'enemy' : 'enemies'}!`, type: 'level_up' });
+	}
+	return { messages, used: true };
+}
+
+function clericDivineShield(state: GameState): AbilityResult {
+	applyEffect(state.player, 'regeneration', 5, 2);
+	return {
+		messages: [{ text: 'Divine light surrounds you! Regeneration for 5 turns.', type: 'healing' }],
+		used: true
+	};
+}
+
+function paladinHolySmite(state: GameState): AbilityResult {
+	const adjacent = getAdjacentEnemies(state);
+	if (adjacent.length === 0) {
+		return { messages: [{ text: 'No enemies nearby to smite!', type: 'info' }], used: false };
+	}
+
+	const messages: AbilityResult['messages'] = [];
+	const killed: Entity[] = [];
+	const UNDEAD = ['Skeleton', 'Zombie', 'Wraith', 'The Hollow King'];
+
+	for (const enemy of adjacent) {
+		const isUndead = UNDEAD.some(u => enemy.name.includes(u));
+		const dmg = isUndead ? state.player.attack * 3 : Math.max(1, state.player.attack);
+		enemy.hp -= dmg;
+		messages.push({ text: `Holy Smite ${isUndead ? 'sears' : 'strikes'} ${enemy.name} for ${dmg}!`, type: 'player_attack' });
+		if (enemy.hp <= 0) killed.push(enemy);
+	}
+	if (killed.length > 0) {
+		messages.push({ text: `Holy Smite destroys ${killed.length} ${killed.length === 1 ? 'enemy' : 'enemies'}!`, type: 'level_up' });
+	}
+	return { messages, used: true };
+}
+
+function necromancerDrainLife(state: GameState): AbilityResult {
+	if (state.enemies.length === 0) {
+		return { messages: [{ text: 'No enemies to drain!', type: 'info' }], used: false };
+	}
+
+	// Find nearest enemy
+	const { x: px, y: py } = state.player.pos;
+	let nearest = state.enemies[0];
+	let bestDist = Infinity;
+	for (const e of state.enemies) {
+		const dist = Math.abs(e.pos.x - px) + Math.abs(e.pos.y - py);
+		if (dist < bestDist) { bestDist = dist; nearest = e; }
+	}
+
+	if (bestDist > 5) {
+		return { messages: [{ text: 'No enemies close enough to drain!', type: 'info' }], used: false };
+	}
+
+	const dmg = Math.max(2, state.player.attack + 2);
+	nearest.hp -= dmg;
+	const healed = Math.min(dmg, state.player.maxHp - state.player.hp);
+	state.player.hp += healed;
+
+	const messages: AbilityResult['messages'] = [
+		{ text: `Drain Life siphons ${dmg} HP from ${nearest.name}!`, type: 'player_attack' },
+	];
+	if (healed > 0) {
+		messages.push({ text: `You recover ${healed} HP!`, type: 'healing' });
+	}
+	return { messages, used: true };
+}
+
+function bardInspiringSong(state: GameState): AbilityResult {
+	// Temporary ATK boost via regeneration effect (creative use: we track it externally)
+	// For simplicity, apply a direct ATK boost tracked via status effect
+	applyEffect(state.player, 'regeneration', 5, 1);
+	state.player.attack += 3;
+	return {
+		messages: [
+			{ text: 'You play an inspiring melody!', type: 'discovery' },
+			{ text: '+3 ATK for 5 turns! Regeneration for 5 turns.', type: 'level_up' },
+		],
+		used: true
+	};
+}
+
 export function useAbility(state: GameState): AbilityResult {
 	if (state.abilityCooldown > 0) {
 		const def = ABILITY_DEFS[state.characterConfig.characterClass];
@@ -134,6 +266,16 @@ export function useAbility(state: GameState): AbilityResult {
 			return mageTeleport(state);
 		case 'rogue':
 			return rogueSmokeBomb(state);
+		case 'ranger':
+			return rangerRainOfArrows(state);
+		case 'cleric':
+			return clericDivineShield(state);
+		case 'paladin':
+			return paladinHolySmite(state);
+		case 'necromancer':
+			return necromancerDrainLife(state);
+		case 'bard':
+			return bardInspiringSong(state);
 	}
 }
 

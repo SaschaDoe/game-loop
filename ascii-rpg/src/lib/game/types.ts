@@ -5,7 +5,7 @@ export interface Position {
 	y: number;
 }
 
-export type CharacterClass = 'warrior' | 'mage' | 'rogue';
+export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' | 'paladin' | 'necromancer' | 'bard';
 
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'permadeath';
 
@@ -159,6 +159,15 @@ export interface StatusEffect {
 	potency: number;
 }
 
+export type AlertState = 'unaware' | 'suspicious' | 'alert' | 'combat';
+
+export interface EnemyAwareness {
+	alertState: AlertState;
+	detectionMeter: number;
+	lastKnownPlayerPos: Position | null;
+	suspicionTurns: number;
+}
+
 export interface Entity {
 	pos: Position;
 	char: string;
@@ -168,6 +177,7 @@ export interface Entity {
 	maxHp: number;
 	attack: number;
 	statusEffects: StatusEffect[];
+	awareness?: EnemyAwareness;
 }
 
 export type TrapType = 'spike' | 'poison_dart' | 'alarm' | 'teleport';
@@ -245,6 +255,10 @@ export interface GameStats {
 	damageDealt: number;
 	damageTaken: number;
 	maxDungeonLevel: number;
+	stealthKills: number;
+	backstabs: number;
+	questsCompleted: number;
+	questsFailed: number;
 }
 
 export type LocationMode = 'overworld' | 'location';
@@ -314,6 +328,10 @@ export interface GameState {
 	inventoryCursor: number;  // which slot is selected (0-11 for inventory, 12-19 for equipment, 20+ for container)
 	inventoryPanel: 'inventory' | 'equipment' | 'container';  // which panel has focus
 	locationCache: Record<string, CachedLocationState>;  // cached location states keyed by "locationId:level"
+	quests: Quest[];
+	completedQuestIds: string[];
+	failedQuestIds: string[];
+	stealth: StealthState;
 }
 
 export interface BestiaryEntry {
@@ -321,4 +339,56 @@ export interface BestiaryEntry {
 	timesKilled: number;
 	rareEncountered: boolean;
 	rareKilled: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Quest system
+// ---------------------------------------------------------------------------
+
+export type QuestStatus = 'active' | 'completed' | 'failed';
+
+export type QuestObjectiveType = 'kill' | 'collect' | 'talk' | 'explore' | 'escort' | 'deliver';
+
+export interface QuestObjective {
+	id: string;
+	description: string;
+	type: QuestObjectiveType;
+	target?: string;
+	current: number;
+	required: number;
+	completed: boolean;
+}
+
+export interface QuestReward {
+	xp?: number;
+	hp?: number;
+	atk?: number;
+	items?: string[];
+	rumor?: Rumor;
+	story?: Story;
+}
+
+export interface Quest {
+	id: string;
+	title: string;
+	description: string;
+	status: QuestStatus;
+	objectives: QuestObjective[];
+	rewards: QuestReward;
+	giverNpcName?: string;
+	regionId?: string;
+	isMainQuest: boolean;
+	turnAccepted: number;
+	turnLimit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Stealth system
+// ---------------------------------------------------------------------------
+
+export interface StealthState {
+	isHidden: boolean;
+	noiseLevel: number;
+	lastNoisePos: Position | null;
+	backstabReady: boolean;
 }

@@ -32,6 +32,16 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
 	// Social
 	{ id: 'socialite', name: 'Socialite', description: 'Talk to 5 NPCs', category: 'social', hidden: false, condition: (s) => s.npcsSpokenTo >= 5 },
 	{ id: 'survivor', name: 'Survivor', description: 'Take 1000 damage and live to tell the tale', category: 'combat', hidden: true, condition: (s) => s.damageTaken >= 1000 },
+
+	// Stealth
+	{ id: 'shadow_strike', name: 'Shadow Strike', description: 'Perform your first backstab', category: 'combat', hidden: false, condition: (s) => s.backstabs >= 1 },
+	{ id: 'silent_assassin', name: 'Silent Assassin', description: 'Kill 10 enemies from stealth', category: 'combat', hidden: false, condition: (s) => s.stealthKills >= 10 },
+	{ id: 'ghost', name: 'Ghost', description: 'Kill 50 enemies from stealth', category: 'combat', hidden: true, condition: (s) => s.stealthKills >= 50 },
+
+	// Quests
+	{ id: 'questbearer', name: 'Questbearer', description: 'Complete your first quest', category: 'social', hidden: false, condition: (s) => s.questsCompleted >= 1 },
+	{ id: 'adventurer', name: 'Adventurer', description: 'Complete 10 quests', category: 'social', hidden: false, condition: (s) => s.questsCompleted >= 10 },
+	{ id: 'legend', name: 'Legend', description: 'Complete 25 quests', category: 'social', hidden: true, condition: (s) => s.questsCompleted >= 25 },
 ];
 
 export function getAchievement(id: string): AchievementDef | undefined {
@@ -68,6 +78,10 @@ export function createDefaultStats(): GameStats {
 		landmarksExamined: 0,
 		damageDealt: 0,
 		damageTaken: 0,
-		maxDungeonLevel: 0
+		maxDungeonLevel: 0,
+		stealthKills: 0,
+		backstabs: 0,
+		questsCompleted: 0,
+		questsFailed: 0,
 	};
 }

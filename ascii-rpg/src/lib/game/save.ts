@@ -1,4 +1,4 @@
-import type { GameState, Tile, GameStats, LocationMode } from './types';
+import type { GameState, Tile, GameStats, LocationMode, Quest, StealthState } from './types';
 import type { Item, Equipment, WorldContainer } from './items';
 import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
@@ -66,6 +66,10 @@ interface SerializedState {
 	inventoryCursor: number;
 	inventoryPanel: 'inventory' | 'equipment' | 'container';
 	locationCache: Record<string, SerializedCachedLocation>;
+	quests?: GameState['quests'];
+	completedQuestIds?: string[];
+	failedQuestIds?: string[];
+	stealth?: GameState['stealth'];
 }
 
 interface SerializedCachedLocation {
@@ -188,6 +192,10 @@ export function serializeState(state: GameState): string {
 			inventoryCursor: state.inventoryCursor,
 			inventoryPanel: state.inventoryPanel,
 			locationCache: serializeLocationCache(state.locationCache),
+			quests: state.quests,
+			completedQuestIds: state.completedQuestIds,
+			failedQuestIds: state.failedQuestIds,
+			stealth: state.stealth,
 		}
 	};
 	return JSON.stringify(data);
@@ -253,6 +261,10 @@ export function deserializeState(json: string): GameState {
 		inventoryCursor: s.inventoryCursor ?? 0,
 		inventoryPanel: s.inventoryPanel ?? 'inventory',
 		locationCache: deserializeLocationCache(s.locationCache),
+		quests: s.quests ?? [],
+		completedQuestIds: s.completedQuestIds ?? [],
+		failedQuestIds: s.failedQuestIds ?? [],
+		stealth: s.stealth ?? { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

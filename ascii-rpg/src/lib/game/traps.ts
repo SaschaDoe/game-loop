@@ -145,7 +145,12 @@ export function triggerTrap(state: GameState, trap: Trap): TriggerResult {
 export const DISARM_CHANCE: Record<CharacterClass, number> = {
 	rogue: 0.80,
 	warrior: 0.50,
-	mage: 0.40
+	mage: 0.40,
+	ranger: 0.70,
+	cleric: 0.35,
+	paladin: 0.45,
+	necromancer: 0.30,
+	bard: 0.45,
 };
 
 export interface DisarmResult {
