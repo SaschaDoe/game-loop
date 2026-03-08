@@ -727,7 +727,7 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 	luminara_ruins: [
 		{ char: 'S', color: '#ec8', name: 'Arcanist Veyla', dialogue: ['Five hundred thousand scrolls. The greatest library the world has ever known. Burned because a fool could not bear to be corrected.', 'We Arcanists trace our lineage to the scholars who survived. We preserved what fragments we could. It was not enough.', 'Many of my order pray to Lexis for the wisdom we lost. I find I cannot bring myself to pray. I don\'t know why.'], gives: { hp: 2 }, mood: 'neutral' },
 		{ char: 'T', color: '#da6', name: 'Temporal Guide Essra', dialogue: ['The time pockets are beautiful and terrible. You step through and for a moment you are in the golden age — the gardens, the music, the light. Then it tears you back.', 'Do not linger in the frozen moments. Some scholars have been trapped for hours that felt like years. They came back... different.', 'The Frozen Fountain still runs, if you can call it running. The water hangs in the air, mid-splash, and has for two thousand years.'], gives: { hp: 3 }, mood: 'friendly' },
-		{ char: 'M', color: '#ca8', name: 'Ruin-Keeper Daven', dialogue: ['I guard the Inscription Wall. Most visitors read it and walk away confused. A few read it and go very, very quiet.', 'The last king outlawed mathematics. Outlawed it. As a conspiracy. The civilization that invented half the equations the Arcanists use today.', 'Someone tried to chisel the Inscription off the wall last month. Hired hands — professional. I did not ask who sent them.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'M', color: '#ca8', name: 'Ruin-Keeper Daven', dialogue: ['I guard the Inscription Wall. Most visitors read it and walk away confused. A few read it and go very, very quiet.', 'The last king destroyed things that took centuries to build. Not in war. Not by accident. By decree. Read the wall and judge for yourself.', 'Someone tried to chisel the Inscription off the wall last month. Hired hands — professional. I did not ask who sent them.'], gives: { atk: 1 }, mood: 'neutral' },
 	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
@@ -916,7 +916,7 @@ const GRAVE_LORE: Record<string, string> = {
 	korthaven:        'A merchant prince who funded expeditions to every corner of the world. His ledger\'s last entry: "The gods trade in souls. We merely trade in coin. I wonder which currency is more honest."',
 	eldergrove:       'An elven archivist who hid the last pre-Ascension texts beneath the roots. Her final note: "They burned the library at Ashfall. They will come for these next. The trees will not let them take them."',
 	stormcradle:      'A storm warden who mapped the lightning patterns for thirty years. Her final chart note: "The bolts are not striking the ground. They are striking back at the sky."',
-	luminara_ruins:   'A Luminari mathematician buried with her equations. Her epitaph: "The king said numbers were a conspiracy. I said they were the language of truth. We were both proven right."',
+	luminara_ruins:   'A Luminari mathematician buried with her equations. Her epitaph: "The king said my proofs were sedition. I said they were truth. The ruins prove which of us was right."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
