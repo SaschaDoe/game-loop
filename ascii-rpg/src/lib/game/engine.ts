@@ -351,6 +351,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	thornlands: 'Rugged highlands choked with thorny undergrowth. Rusted iron relics dot the ridgeline.',
 	pale_coast: 'Salt spray stings your face. Grey waves crash against pale cliffs. The Hollow Sea stretches to the horizon.',
 	glassfields: 'Shattered prisms catch the light, scattering rainbows across fields of vitrified earth. The air hums with residual magic.',
+	verdant_deep: 'The canopy closes overhead like a living ceiling. Bioluminescent fungi pulse along the trunks. Something ancient watches from the green darkness.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -432,6 +433,7 @@ const REGION_COLORS: Record<string, string> = {
 	thornlands: '#a86',
 	pale_coast: '#8bd',
 	glassfields: '#c8f',
+	verdant_deep: '#2a6',
 	underdepths: '#a4f',
 };
 
@@ -659,6 +661,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'C', color: '#f8f', name: 'Chrono-Warden', dialogue: ['Time flows strangely here. You may have already spoken to me tomorrow.', 'The Temporal Rifts are scars from the Luminari\'s last experiment.', 'Do not touch the fractured prisms. They replay moments that should stay buried.'], gives: { hp: 4 }, mood: 'friendly' },
 		{ char: 'S', color: '#adf', name: 'Shard Collector', dialogue: ['Each crystal fragment holds a frozen memory. Most are mundane — but some...', 'I found one that showed the Ascension itself. Seven mortals, climbing a stair of light. The horror on the faces of those they displaced.', 'The Luminari saw the truth before anyone. That\'s why the gods shattered them.'], gives: { atk: 1 }, mood: 'neutral' },
 	],
+	verdant_deep: [
+		{ char: 'D', color: '#2a6', name: 'Elder Druid', dialogue: ['The Old Magic needs no gods. It was here before them and will outlast them.', 'The Heartwood remembers every footstep taken beneath its canopy — for ten thousand years.', 'The Verdant Reach shelters those who still practice the First Ways.'], gives: { hp: 4 }, mood: 'friendly' },
+		{ char: 'P', color: '#6a4', name: 'Grey Pilgrim', dialogue: ['We walk the paths the gods forbade. Someone must.', 'Primordialists are not heretics. We simply remember what came before the theft.', 'The Ley Lines converge here. Can you feel it? The earth itself hums with power.'], mood: 'neutral' },
+		{ char: 'R', color: '#4a2', name: 'Jungle Tracker', dialogue: ['Watch where you step. The Voidblooms drink more than sunlight.', 'Crystalline Stags still roam the deep paths. They\'re almost extinct now — hunted for their antlers.', 'The River Thal sings at dawn. Not a metaphor. Actual singing.'], gives: { hp: 2 }, mood: 'friendly' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -813,6 +820,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	thornlands:       'Rusted pipes run along the ceiling. Somewhere deep below, gears still grind.',
 	pale_coast:       'Salt crust lines the entrance. The sound of waves echoes from somewhere below.',
 	glassfields:      'Crystal shards crunch underfoot. Prismatic light dances across the walls, revealing and concealing passages in turn.',
+	verdant_deep:     'Vines slither aside as you descend. Bioluminescent moss bathes the tunnels in sickly green light. Roots pulse like veins.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -827,6 +835,7 @@ const GRAVE_LORE: Record<string, string> = {
 	thornlands:       'An Iron Republic founder who swore that gears would outlast gods.',
 	pale_coast:       'A lighthouse keeper who watched the Hollow Sea swallow the old harbor.',
 	glassfields:      'A Luminari chronomancer who froze herself mid-spell, hoping the future would know how to finish it.',
+	verdant_deep:     'A Grey Pilgrim who walked the forbidden Ley Lines until the jungle itself grew over her, preserving her in roots and silence.',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -937,6 +946,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	thornlands:       { combat: ['Wolf', 'Goblin', 'Spider'], nonCombat: ['An Iron Remnant tinker offers to repair your gear.', 'You find a rusted automaton half-buried in thorns — its gears still turn slowly.'] },
 	pale_coast:       { combat: ['Slime', 'Rat', 'Skeleton'], nonCombat: ['A fisherman shares his catch with you. "The sea provides," he says.', 'You find a washed-up chest half-buried in sand. Inside: a crystal that hums faintly.'] },
 	glassfields:      { combat: ['Wraith', 'Skeleton', 'Troll'], nonCombat: ['A fractured prism replays a moment of kindness from centuries ago. You feel restored.', 'A Luminari echo offers cryptic guidance before dissolving into light.'] },
+	verdant_deep:     { combat: ['Spider', 'Troll', 'Slime'], nonCombat: ['A druid offers a poultice brewed from jungle herbs. Your wounds close.', 'A Crystalline Stag watches you from the undergrowth, then vanishes in a flash of prismatic light.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 

@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (9) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields'];
+/** Surface regions (10) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -102,6 +102,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	thornlands:       { name: 'The Thornlands',        language: 'Old Iron',     dangerLevel: 3 },
 	pale_coast:       { name: 'The Pale Coast',        language: 'Tidespeak',    dangerLevel: 4 },
 	glassfields:      { name: 'The Glassfields',       language: 'Prismatic',    dangerLevel: 8 },
+	verdant_deep:     { name: 'The Verdant Deep',      language: 'Greentongue',  dangerLevel: 5 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -169,6 +170,13 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'grass', weight: 10 },
 		{ terrain: 'water', weight: 5 },
 	],
+	verdant_deep: [
+		{ terrain: 'forest', weight: 55 },
+		{ terrain: 'swamp', weight: 15 },
+		{ terrain: 'water', weight: 15 },
+		{ terrain: 'grass', weight: 10 },
+		{ terrain: 'mud', weight: 5 },
+	],
 };
 
 // ── Perlin Noise (simplified 2D value noise) ──
@@ -220,7 +228,7 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 9 region seed points using Poisson-disk-like sampling.
+ * Place 10 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
@@ -577,6 +585,16 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'hot_spring', name: 'Mana Wellspring', hidden: true },
 		{ type: 'ancient_tree', name: 'Vitrified Oak', hidden: false },
 	],
+	verdant_deep: [
+		{ type: 'ancient_tree', name: 'The Heartwood', hidden: false },
+		{ type: 'shrine', name: 'Druid\'s Altar', hidden: false },
+		{ type: 'ruins', name: 'Overgrown Temple', hidden: false },
+		{ type: 'hidden_cave', name: 'Ley Line Grotto', hidden: true },
+		{ type: 'standing_stones', name: 'Primordialist Circle', hidden: false },
+		{ type: 'hot_spring', name: 'Bioluminescent Pool', hidden: true },
+		{ type: 'grave_site', name: 'Grey Pilgrim\'s Rest', hidden: true },
+		{ type: 'obelisk', name: 'Voidbloom Spire', hidden: false },
+	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
@@ -904,6 +922,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	thornlands: { prefixes: ['Iron', 'Thorn', 'Rust', 'Bolt', 'Gear', 'Anvil', 'Brass'], suffixes: ['gate', 'wall', 'ridge', 'fall', 'hold', 'works', 'keep'] },
 	pale_coast: { prefixes: ['Sea', 'Tide', 'Drift', 'Salt', 'Shell', 'Coral', 'Mist'], suffixes: ['port', 'haven', 'cove', 'bay', 'watch', 'reach', 'landing'] },
 	glassfields: { prefixes: ['Prism', 'Shard', 'Crystal', 'Lumen', 'Glass', 'Refract', 'Chroma'], suffixes: ['spire', 'reach', 'fall', 'field', 'hollow', 'ward', 'light'] },
+	verdant_deep: { prefixes: ['Vine', 'Root', 'Fern', 'Bloom', 'Thorn', 'Canopy', 'Moss'], suffixes: ['haven', 'deep', 'heart', 'shade', 'grove', 'fall', 'watch'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -922,6 +941,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	thornlands: ['Collapsed Foundry', 'Iron Citadel Ruins', 'Thornwild Tunnels', 'Underground Forge', 'Gear Works', 'Republican Vault', 'Automaton Crypt'],
 	pale_coast: ['Flooded Caverns', 'Smuggler\'s Cove', 'Sunken Ship Hold', 'Tidal Passage', 'Sea Witch Grotto', 'Coral Labyrinth', 'Drowned Archives'],
 	glassfields: ['Prismatic Vault', 'Shattered Observatory', 'Luminari Crypt', 'Refraction Maze', 'Crystal Depths', 'Temporal Rift', 'Glass Labyrinth'],
+	verdant_deep: ['Vine-Choked Ruins', 'Druid Catacombs', 'Beast Den', 'Ley Line Nexus', 'Living Tunnels', 'Fungal Cathedral', 'Serpent\'s Hollow'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 
