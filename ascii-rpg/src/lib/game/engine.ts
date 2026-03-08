@@ -20,7 +20,7 @@ import { checkAchievements, getAchievement, createDefaultStats } from './achieve
 import { recordSeen, recordKill } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
-import { generateWorld, TERRAIN_DISPLAY, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest } from './overworld';
+import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest } from './overworld';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -243,6 +243,7 @@ export function createGame(config?: CharacterConfig): GameState {
 		worldMap,
 		overworldPos,
 		currentLocationId: startSettlement.id,
+		waypoint: null,
 	};
 
 	// Apply class bonuses
@@ -707,6 +708,137 @@ export function renderOverworldColored(state: GameState): { char: string; color:
 	return grid;
 }
 
+/** Render the zoomed-out world map (200×200 → MAP_W×MAP_H). */
+export function renderWorldMap(state: GameState): { grid: { char: string; color: string }[][]; labels: { text: string; x: number; y: number; color: string }[] } {
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos;
+	const scaleX = WORLD_W / MAP_W;  // 4
+	const scaleY = WORLD_H / MAP_H;  // ~8.33
+
+	const grid: { char: string; color: string }[][] = [];
+	const labels: { text: string; x: number; y: number; color: string }[] = [];
+
+	// Track which regions we've placed labels for
+	const labeledRegions = new Set<string>();
+
+	for (let vy = 0; vy < MAP_H; vy++) {
+		const row: { char: string; color: string }[] = [];
+		const wy = Math.min(Math.floor(vy * scaleY), WORLD_H - 1);
+		for (let vx = 0; vx < MAP_W; vx++) {
+			const wx = Math.min(Math.floor(vx * scaleX), WORLD_W - 1);
+
+			// Player position (check if player falls within this cell)
+			if (pos) {
+				const pvx = Math.floor(pos.x / scaleX);
+				const pvy = Math.floor(pos.y / scaleY);
+				if (vx === pvx && vy === pvy) {
+					row.push({ char: '@', color: '#ff0' });
+					continue;
+				}
+			}
+
+			// Waypoint
+			if (state.waypoint) {
+				const wpvx = Math.floor(state.waypoint.x / scaleX);
+				const wpvy = Math.floor(state.waypoint.y / scaleY);
+				if (vx === wpvx && vy === wpvy) {
+					row.push({ char: 'X', color: '#f0f' });
+					continue;
+				}
+			}
+
+			// Check if any tile in this cell is explored
+			let explored = false;
+			for (let sy = 0; sy < Math.ceil(scaleY) && !explored; sy++) {
+				for (let sx = 0; sx < scaleX && !explored; sx++) {
+					const ey = Math.min(wy + sy, WORLD_H - 1);
+					const ex = Math.min(wx + sx, WORLD_W - 1);
+					if (worldMap.explored[ey]?.[ex]) explored = true;
+				}
+			}
+
+			if (!explored) {
+				row.push({ char: ' ', color: '#000' });
+				continue;
+			}
+
+			const tile = worldMap.tiles[wy][wx];
+
+			// Settlements (check all tiles in this cell)
+			let foundSettlement: Settlement | undefined;
+			let foundDungeon: DungeonEntrance | undefined;
+			let foundPOI: PointOfInterest | undefined;
+			for (let sy = 0; sy < Math.ceil(scaleY) && !foundSettlement; sy++) {
+				for (let sx = 0; sx < scaleX && !foundSettlement; sx++) {
+					const ey = Math.min(wy + sy, WORLD_H - 1);
+					const ex = Math.min(wx + sx, WORLD_W - 1);
+					const ct = worldMap.tiles[ey]?.[ex];
+					if (ct?.locationId) {
+						const s = worldMap.settlements.find(s => s.id === ct.locationId);
+						if (s) { foundSettlement = s; break; }
+						const d = worldMap.dungeonEntrances.find(d => d.id === ct.locationId);
+						if (d) { foundDungeon = d; break; }
+						const p = worldMap.pois.find(p => p.id === ct.locationId && p.discovered);
+						if (p) { foundPOI = p; break; }
+					}
+				}
+			}
+
+			if (foundSettlement) {
+				const char = foundSettlement.type === 'city' ? 'C' : foundSettlement.type === 'town' ? 'T' : 'v';
+				row.push({ char, color: '#ff8' });
+				continue;
+			}
+			if (foundDungeon) {
+				row.push({ char: '>', color: '#f88' });
+				continue;
+			}
+			if (foundPOI) {
+				row.push({ char: '?', color: '#af8' });
+				continue;
+			}
+
+			// Region label placement (first explored cell per region)
+			if (!labeledRegions.has(tile.region)) {
+				labeledRegions.add(tile.region);
+				const region = worldMap.regions.find(r => r.id === tile.region);
+				if (region) {
+					labels.push({ text: region.name, x: vx, y: vy, color: REGION_COLORS[tile.region] ?? '#aaa' });
+				}
+			}
+
+			// Roads
+			if (tile.road) {
+				row.push({ char: tile.road === 'main' ? '=' : '-', color: '#a86' });
+				continue;
+			}
+
+			// Terrain
+			const display = TERRAIN_DISPLAY[tile.terrain];
+			row.push({ char: display.char, color: dimColor(display.color) });
+		}
+		grid.push(row);
+	}
+	return { grid, labels };
+}
+
+/** Get waypoint direction indicator for HUD display. */
+export function getWaypointIndicator(state: GameState): { direction: string; distance: number } | null {
+	if (!state.waypoint || !state.overworldPos) return null;
+	const dx = state.waypoint.x - state.overworldPos.x;
+	const dy = state.waypoint.y - state.overworldPos.y;
+	const dist = Math.abs(dx) + Math.abs(dy);
+	if (dist < 3) return { direction: 'HERE', distance: dist };
+	let dir: string;
+	const adx = Math.abs(dx);
+	const ady = Math.abs(dy);
+	if (ady < adx * 0.4) dir = dx > 0 ? 'E' : 'W';
+	else if (adx < ady * 0.4) dir = dy > 0 ? 'S' : 'N';
+	else if (dx > 0) dir = dy > 0 ? 'SE' : 'NE';
+	else dir = dy > 0 ? 'SW' : 'NW';
+	return { direction: dir, distance: dist };
+}
+
 interface DungeonNPCDef {
 	char: string;
 	color: string;
@@ -849,6 +981,7 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		worldMap: null,
 		overworldPos: null,
 		currentLocationId: null,
+		waypoint: null,
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -1694,6 +1827,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.overworldPos = state.overworldPos;
 		next.locationMode = 'location';
 		next.currentLocationId = state.currentLocationId;
+		next.waypoint = state.waypoint;
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;

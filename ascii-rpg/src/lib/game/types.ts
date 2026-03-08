@@ -286,6 +286,7 @@ export interface GameState {
 	worldMap: unknown | null;      // WorldMap from overworld.ts (typed as unknown to avoid circular deps)
 	overworldPos: Position | null;  // player position on the overworld grid
 	currentLocationId: string | null; // which settlement/dungeon we're inside
+	waypoint: Position | null;     // overworld waypoint set from world map view
 }
 
 export interface BestiaryEntry {

@@ -74,6 +74,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		worldMap: null,
 		overworldPos: null,
 		currentLocationId: null,
+		waypoint: null,
 		...overrides
 	};
 }

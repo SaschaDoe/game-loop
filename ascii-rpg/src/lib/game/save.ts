@@ -52,6 +52,7 @@ interface SerializedState {
 	locationMode: LocationMode;
 	overworldPos: { x: number; y: number } | null;
 	currentLocationId: string | null;
+	waypoint: { x: number; y: number } | null;
 	overworldExplored: boolean[][] | null;
 	discoveredPois: string[];
 }
@@ -101,6 +102,7 @@ export function serializeState(state: GameState): string {
 			locationMode: state.locationMode,
 			overworldPos: state.overworldPos,
 			currentLocationId: state.currentLocationId,
+			waypoint: state.waypoint,
 			overworldExplored: state.worldMap ? (state.worldMap as WorldMap).explored : null,
 			discoveredPois: state.worldMap ? (state.worldMap as WorldMap).pois.filter(p => p.discovered).map(p => p.id) : [],
 		}
@@ -158,6 +160,7 @@ export function deserializeState(json: string): GameState {
 		worldMap: null,
 		overworldPos: s.overworldPos ?? null,
 		currentLocationId: s.currentLocationId ?? null,
+		waypoint: s.waypoint ?? null,
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

@@ -340,10 +340,23 @@ As a player, I want to open a zoomed-out world map showing discovered regions an
 - Can set a waypoint that shows a directional indicator in the HUD
 
 **Acceptance Criteria:**
-- [ ] World map opens with 'M' key
-- [ ] Discovered locations and terrain are shown
-- [ ] Undiscovered areas are hidden
-- [ ] Waypoint system provides navigation aid
+- [x] World map opens with 'M' key
+- [x] Discovered locations and terrain are shown
+- [x] Undiscovered areas are hidden
+- [x] Waypoint system provides navigation aid
+
+**Implementation Notes (completed):**
+- 'M' key toggles world map overlay (only on overworld), mutual-exclusive with journal
+- `renderWorldMap()`: scales 200×200 → 50×24, scans each cell for settlements/dungeons/POIs
+- Player shown as '@' (yellow), waypoint as 'X' (magenta), settlements as C/T/v, dungeons as '>'
+- Undiscovered cells render as black spaces; explored cells show dimmed terrain colors
+- Region labels: first explored cell per region gets a positioned label with region name+color
+- Waypoint: click on world map grid to set, converts viewport coords → world coords
+- `getWaypointIndicator()`: returns compass direction (N/S/E/W/NE/NW/SE/SW) + Manhattan distance
+- HUD shows waypoint arrow when set: "→E (50)" or "★ HERE" when close (<3 tiles)
+- `waypoint` field added to GameState, serialized in save/load, carried through dungeon levels
+- CSS: crosshair cursor on map grid, overlay follows journal pattern (z-index 200)
+- 6 new engine tests: world map grid size, undiscovered hiding, waypoint indicator (null/direction/HERE), waypoint marker
 
 ---
 

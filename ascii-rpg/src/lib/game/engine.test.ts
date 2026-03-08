@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo, renderWorldMap, getWaypointIndicator } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -77,6 +77,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		worldMap: null,
 		overworldPos: null,
 		currentLocationId: null,
+		waypoint: null,
 		...overrides
 	};
 }
@@ -2193,5 +2194,80 @@ describe('overworld integration', () => {
 		if (ex < worldMap.width) {
 			expect(worldMap.explored[ey][ex]).toBe(true);
 		}
+	});
+
+	it('renderWorldMap produces a 50x24 grid with player marker', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-wmap' });
+		const ow = exitToOverworld(state);
+		const result = renderWorldMap(ow);
+		expect(result.grid.length).toBe(24);
+		expect(result.grid[0].length).toBe(50);
+		// Player should be visible as @
+		const hasPlayer = result.grid.some(row => row.some(cell => cell.char === '@'));
+		expect(hasPlayer).toBe(true);
+		// Should have region labels
+		expect(result.labels.length).toBeGreaterThan(0);
+	});
+
+	it('renderWorldMap hides undiscovered areas', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-wmap2' });
+		const ow = exitToOverworld(state);
+		const result = renderWorldMap(ow);
+		// Most of the map should be unexplored (empty/black)
+		let empty = 0;
+		let total = 0;
+		for (const row of result.grid) {
+			for (const cell of row) {
+				total++;
+				if (cell.char === ' ' && cell.color === '#000') empty++;
+			}
+		}
+		// At least 50% should be unexplored (we only revealed a small area around start)
+		expect(empty / total).toBeGreaterThan(0.5);
+	});
+
+	it('getWaypointIndicator returns null without waypoint', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-wp1' });
+		const ow = exitToOverworld(state);
+		expect(getWaypointIndicator(ow)).toBeNull();
+	});
+
+	it('getWaypointIndicator returns direction and distance', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-wp2' });
+		const ow = exitToOverworld(state);
+		ow.waypoint = { x: ow.overworldPos!.x + 50, y: ow.overworldPos!.y };
+		const indicator = getWaypointIndicator(ow);
+		expect(indicator).not.toBeNull();
+		expect(indicator!.direction).toBe('E');
+		expect(indicator!.distance).toBe(50);
+	});
+
+	it('getWaypointIndicator shows HERE when close', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-wp3' });
+		const ow = exitToOverworld(state);
+		ow.waypoint = { x: ow.overworldPos!.x + 1, y: ow.overworldPos!.y };
+		const indicator = getWaypointIndicator(ow);
+		expect(indicator).not.toBeNull();
+		expect(indicator!.direction).toBe('HERE');
+	});
+
+	it('renderWorldMap shows waypoint marker', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-wpmap' });
+		const ow = exitToOverworld(state);
+		ow.waypoint = { x: 100, y: 100 };
+		// Reveal area around waypoint so it's visible
+		const worldMap = ow.worldMap as any;
+		for (let dy = -5; dy <= 5; dy++) {
+			for (let dx = -5; dx <= 5; dx++) {
+				const ey = 100 + dy;
+				const ex = 100 + dx;
+				if (ey >= 0 && ey < worldMap.height && ex >= 0 && ex < worldMap.width) {
+					worldMap.explored[ey][ex] = true;
+				}
+			}
+		}
+		const result = renderWorldMap(ow);
+		const hasWaypoint = result.grid.some(row => row.some(cell => cell.char === 'X' && cell.color === '#f0f'));
+		expect(hasWaypoint).toBe(true);
 	});
 });

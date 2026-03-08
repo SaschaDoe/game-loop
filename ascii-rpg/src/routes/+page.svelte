@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
@@ -40,6 +40,7 @@
 	let nameInput: HTMLInputElement;
 	let logExpanded = $state(false);
 	let journalOpen = $state(false);
+	let worldMapOpen = $state(false);
 	let messagesEl: HTMLDivElement;
 	let dialogueSelection = $state(0);
 	let typewriterText = $state('');
@@ -184,10 +185,17 @@
 			if (key === 'j') {
 				e.preventDefault();
 				journalOpen = !journalOpen;
+				worldMapOpen = false;
 				return;
 			}
-			if (journalOpen) {
-				if (key === 'Escape') journalOpen = false;
+			if (key === 'm' && state.locationMode === 'overworld') {
+				e.preventDefault();
+				worldMapOpen = !worldMapOpen;
+				journalOpen = false;
+				return;
+			}
+			if (journalOpen || worldMapOpen) {
+				if (key === 'Escape') { journalOpen = false; worldMapOpen = false; }
 				return;
 			}
 			if (key === 'l') {
@@ -346,6 +354,10 @@
 				{:else}
 					<span class="level">Overworld</span>
 				{/if}
+				{@const wpInd = getWaypointIndicator(state)}
+				{#if wpInd}
+					<span class="waypoint-indicator" style="color:#f0f">{wpInd.direction === 'HERE' ? '★ HERE' : `→${wpInd.direction} (${wpInd.distance})`}</span>
+				{/if}
 			{:else}
 				<span class="level">{state.level === 0 ? 'Starting Area' : `Dungeon: ${state.level}`}</span>
 			{/if}
@@ -491,6 +503,45 @@
 			</div>
 		</div>
 	{/if}
+	{#if worldMapOpen && state.worldMap}
+		{@const mapData = renderWorldMap(state)}
+		{@const wpIndicator = getWaypointIndicator(state)}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="journal-overlay" onclick={() => worldMapOpen = false}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="worldmap-box" onclick={(e) => e.stopPropagation()}>
+				<div class="journal-header">
+					<span class="journal-title">World Map</span>
+					{#if wpIndicator}
+						<span class="waypoint-hud" style="color:#f0f">Waypoint: {wpIndicator.direction} ({wpIndicator.distance})</span>
+					{/if}
+					<button class="dialogue-close" onclick={() => worldMapOpen = false}>ESC</button>
+				</div>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<pre class="worldmap-grid" onclick={(e) => {
+					const rect = e.currentTarget.getBoundingClientRect();
+					const charW = rect.width / 50;
+					const charH = rect.height / 24;
+					const vx = Math.floor((e.clientX - rect.left) / charW);
+					const vy = Math.floor((e.clientY - rect.top) / charH);
+					const wx = Math.floor(vx * (200 / 50));
+					const wy = Math.floor(vy * (200 / 24));
+					if (wx >= 0 && wy >= 0 && wx < 200 && wy < 200) {
+						state = { ...state, waypoint: { x: wx, y: wy } };
+					}
+				}}>{#each mapData.grid as row, y}{#each row as cell}<span style="color:{cell.color}">{cell.char}</span>{/each}{#if y < mapData.grid.length - 1}
+{/if}{/each}</pre>
+				{#each mapData.labels as label}
+					<div class="worldmap-label" style="left:{label.x * 0.6}em;top:{(label.y + 2.4) * 1.2}em;color:{label.color}">{label.text}</div>
+				{/each}
+				<div class="dialogue-hint">M or ESC to close · Click map to set waypoint</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if journalOpen}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -1411,5 +1462,36 @@
 		.class-card {
 			width: 240px;
 		}
+	}
+	.worldmap-box {
+		background: #0a0a1a;
+		border: 2px solid #444;
+		border-radius: 8px;
+		padding: 12px;
+		position: relative;
+		max-width: 95%;
+	}
+	.worldmap-grid {
+		font-family: 'Courier New', monospace;
+		font-size: 12px;
+		line-height: 1.2;
+		margin: 0;
+		cursor: crosshair;
+		user-select: none;
+	}
+	.worldmap-label {
+		position: absolute;
+		font-size: 9px;
+		font-family: sans-serif;
+		opacity: 0.7;
+		pointer-events: none;
+		white-space: nowrap;
+	}
+	.waypoint-indicator {
+		margin-left: 8px;
+		font-size: 0.85em;
+	}
+	.waypoint-hud {
+		font-size: 0.85em;
 	}
 </style>
