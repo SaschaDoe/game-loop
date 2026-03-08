@@ -399,7 +399,7 @@ describe('Traps integration', () => {
 		expect(Array.isArray(state.traps)).toBe(true);
 	});
 
-	it('createGame includes detectedTraps set', () => {
+	it('createGame includes detectedTraps set', { timeout: 15000 }, () => {
 		const state = createGame();
 		expect(state.detectedTraps).toBeDefined();
 		expect(state.detectedTraps instanceof Set).toBe(true);

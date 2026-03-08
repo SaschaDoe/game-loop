@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (8) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast'];
+/** Surface regions (9) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -101,6 +101,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	sunstone_expanse: { name: 'The Sunstone Expanse',  language: 'Sandscript',   dangerLevel: 7 },
 	thornlands:       { name: 'The Thornlands',        language: 'Old Iron',     dangerLevel: 3 },
 	pale_coast:       { name: 'The Pale Coast',        language: 'Tidespeak',    dangerLevel: 4 },
+	glassfields:      { name: 'The Glassfields',       language: 'Prismatic',    dangerLevel: 8 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -161,6 +162,13 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'grass', weight: 25 },
 		{ terrain: 'rock', weight: 15 },
 	],
+	glassfields: [
+		{ terrain: 'ice', weight: 35 },
+		{ terrain: 'rock', weight: 25 },
+		{ terrain: 'sand', weight: 25 },
+		{ terrain: 'grass', weight: 10 },
+		{ terrain: 'water', weight: 5 },
+	],
 };
 
 // ── Perlin Noise (simplified 2D value noise) ──
@@ -212,7 +220,7 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 8 region seed points using Poisson-disk-like sampling.
+ * Place 9 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
@@ -559,6 +567,16 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'hot_spring', name: 'Saltwater Geyser', hidden: true },
 		{ type: 'ancient_tree', name: 'Bleached Driftwood Giant', hidden: false },
 	],
+	glassfields: [
+		{ type: 'obelisk', name: 'Prismatic Obelisk', hidden: false },
+		{ type: 'ruins', name: 'Crystal Citadel', hidden: false },
+		{ type: 'standing_stones', name: 'Refraction Ring', hidden: false },
+		{ type: 'hidden_cave', name: 'Chromatic Grotto', hidden: true },
+		{ type: 'shrine', name: 'Shrine of Fractured Light', hidden: false },
+		{ type: 'grave_site', name: 'Luminari Cenotaph', hidden: true },
+		{ type: 'hot_spring', name: 'Mana Wellspring', hidden: true },
+		{ type: 'ancient_tree', name: 'Vitrified Oak', hidden: false },
+	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
@@ -885,6 +903,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	sunstone_expanse: { prefixes: ['Sun', 'Star', 'Sand', 'Gold', 'Dust', 'Opal', 'Dawn'], suffixes: ['watch', 'spire', 'haven', 'spring', 'gate', 'well', 'crest'] },
 	thornlands: { prefixes: ['Iron', 'Thorn', 'Rust', 'Bolt', 'Gear', 'Anvil', 'Brass'], suffixes: ['gate', 'wall', 'ridge', 'fall', 'hold', 'works', 'keep'] },
 	pale_coast: { prefixes: ['Sea', 'Tide', 'Drift', 'Salt', 'Shell', 'Coral', 'Mist'], suffixes: ['port', 'haven', 'cove', 'bay', 'watch', 'reach', 'landing'] },
+	glassfields: { prefixes: ['Prism', 'Shard', 'Crystal', 'Lumen', 'Glass', 'Refract', 'Chroma'], suffixes: ['spire', 'reach', 'fall', 'field', 'hollow', 'ward', 'light'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -902,6 +921,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	sunstone_expanse: ['Buried Pyramid', 'Sand Ruins', 'Oasis Grotto', 'Tomb of Kings', 'Sandworm Tunnels', 'Star Chamber', 'Pharaoh\'s Vault'],
 	thornlands: ['Collapsed Foundry', 'Iron Citadel Ruins', 'Thornwild Tunnels', 'Underground Forge', 'Gear Works', 'Republican Vault', 'Automaton Crypt'],
 	pale_coast: ['Flooded Caverns', 'Smuggler\'s Cove', 'Sunken Ship Hold', 'Tidal Passage', 'Sea Witch Grotto', 'Coral Labyrinth', 'Drowned Archives'],
+	glassfields: ['Prismatic Vault', 'Shattered Observatory', 'Luminari Crypt', 'Refraction Maze', 'Crystal Depths', 'Temporal Rift', 'Glass Labyrinth'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 

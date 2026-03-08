@@ -350,6 +350,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	sunstone_expanse: 'Endless dunes ripple under a blazing sun. Sand whispers against stone.',
 	thornlands: 'Rugged highlands choked with thorny undergrowth. Rusted iron relics dot the ridgeline.',
 	pale_coast: 'Salt spray stings your face. Grey waves crash against pale cliffs. The Hollow Sea stretches to the horizon.',
+	glassfields: 'Shattered prisms catch the light, scattering rainbows across fields of vitrified earth. The air hums with residual magic.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -430,6 +431,7 @@ const REGION_COLORS: Record<string, string> = {
 	sunstone_expanse: '#fa4',
 	thornlands: '#a86',
 	pale_coast: '#8bd',
+	glassfields: '#c8f',
 	underdepths: '#a4f',
 };
 
@@ -652,6 +654,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'F', color: '#68a', name: 'Old Fisherman', dialogue: ['Been fishing these waters fifty years. They\'ve changed.', 'Sometimes the water goes clear — perfectly clear — down to the bottom. Miles of nothing. That\'s the Hollow Sea.', 'Dro-Mahk died here, they say. The Principle of Matter itself. That\'s why things feel... thin.'], mood: 'neutral' },
 		{ char: 'D', color: '#4af', name: 'Diver', dialogue: ['I dive for salvage in the shallows. The deeper wrecks are too dangerous.', 'Found a crystal last week that hummed when I held it. Crystalborn make, I reckon.', 'There\'s a sunken city out past the reef. On clear days you can see the spires beneath the waves.'], gives: { atk: 1 }, mood: 'friendly' },
 	],
+	glassfields: [
+		{ char: 'L', color: '#c8f', name: 'Luminari Remnant', dialogue: ['We are echoes of a people who tried to outrun time itself.', 'The Crystal Citadel was our greatest work — and our undoing.', 'Prismatic is not merely language. It is light shaped into meaning.'], mood: 'neutral' },
+		{ char: 'C', color: '#f8f', name: 'Chrono-Warden', dialogue: ['Time flows strangely here. You may have already spoken to me tomorrow.', 'The Temporal Rifts are scars from the Luminari\'s last experiment.', 'Do not touch the fractured prisms. They replay moments that should stay buried.'], gives: { hp: 4 }, mood: 'friendly' },
+		{ char: 'S', color: '#adf', name: 'Shard Collector', dialogue: ['Each crystal fragment holds a frozen memory. Most are mundane — but some...', 'I found one that showed the Ascension itself. Seven mortals, climbing a stair of light. The horror on the faces of those they displaced.', 'The Luminari saw the truth before anyone. That\'s why the gods shattered them.'], gives: { atk: 1 }, mood: 'neutral' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -805,6 +812,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	sunstone_expanse: 'Sand hisses through cracks in the ancient stonework. Hieroglyphs line the walls.',
 	thornlands:       'Rusted pipes run along the ceiling. Somewhere deep below, gears still grind.',
 	pale_coast:       'Salt crust lines the entrance. The sound of waves echoes from somewhere below.',
+	glassfields:      'Crystal shards crunch underfoot. Prismatic light dances across the walls, revealing and concealing passages in turn.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -818,6 +826,7 @@ const GRAVE_LORE: Record<string, string> = {
 	sunstone_expanse: 'A nomadic stargazer who mapped the constellations into the desert stones.',
 	thornlands:       'An Iron Republic founder who swore that gears would outlast gods.',
 	pale_coast:       'A lighthouse keeper who watched the Hollow Sea swallow the old harbor.',
+	glassfields:      'A Luminari chronomancer who froze herself mid-spell, hoping the future would know how to finish it.',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -927,6 +936,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	sunstone_expanse: { combat: ['Skeleton', 'Rat', 'Ogre'], nonCombat: ['A nomadic stargazer reads your fortune.', 'A desert trader sells you water from an oasis.'] },
 	thornlands:       { combat: ['Wolf', 'Goblin', 'Spider'], nonCombat: ['An Iron Remnant tinker offers to repair your gear.', 'You find a rusted automaton half-buried in thorns — its gears still turn slowly.'] },
 	pale_coast:       { combat: ['Slime', 'Rat', 'Skeleton'], nonCombat: ['A fisherman shares his catch with you. "The sea provides," he says.', 'You find a washed-up chest half-buried in sand. Inside: a crystal that hums faintly.'] },
+	glassfields:      { combat: ['Wraith', 'Skeleton', 'Troll'], nonCombat: ['A fractured prism replays a moment of kindness from centuries ago. You feel restored.', 'A Luminari echo offers cryptic guidance before dissolving into light.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 
