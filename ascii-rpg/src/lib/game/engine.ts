@@ -293,6 +293,46 @@ export function getOverworldInfo(state: GameState): { regionName: string; region
 	};
 }
 
+/** Terrain movement cost: 1 = normal, 2 = slow (costs extra turn), 0.5 = fast (road bonus). */
+const TERRAIN_MOVE_COST: Partial<Record<string, number>> = {
+	forest: 2,
+	swamp: 2,
+	snow: 2,
+	mud: 2,
+	ice: 2,
+};
+
+/** Get the movement turn cost for an overworld tile. Roads = 1 but allow double-step. Slow terrain = 2 turns. */
+function getOverworldMoveCost(tile: OverworldTile): number {
+	if (tile.road) return 1; // roads: normal cost but will double-step
+	return TERRAIN_MOVE_COST[tile.terrain] ?? 1;
+}
+
+/** Get compass direction name from dx/dy. */
+function compassDirection(dx: number, dy: number): string {
+	if (dx === 0 && dy < 0) return 'North';
+	if (dx === 0 && dy > 0) return 'South';
+	if (dx > 0 && dy === 0) return 'East';
+	if (dx < 0 && dy === 0) return 'West';
+	if (dx > 0 && dy < 0) return 'NE';
+	if (dx < 0 && dy < 0) return 'NW';
+	if (dx > 0 && dy > 0) return 'SE';
+	return 'SW';
+}
+
+/** Show signpost information: directions and distances to nearest settlements. */
+function showSignpostInfo(state: GameState, worldMap: WorldMap, pos: Position): void {
+	addMessage(state, 'A signpost stands at the crossroads:', 'info');
+	const nearby = worldMap.settlements
+		.map(s => ({ name: s.name, dx: s.pos.x - pos.x, dy: s.pos.y - pos.y, dist: Math.abs(s.pos.x - pos.x) + Math.abs(s.pos.y - pos.y) }))
+		.sort((a, b) => a.dist - b.dist)
+		.slice(0, 4);
+	for (const s of nearby) {
+		const dir = compassDirection(s.dx, s.dy);
+		addMessage(state, `  ${s.name} — ${dir}, ${s.dist} tiles`, 'info');
+	}
+}
+
 const REGION_COLORS: Record<string, string> = {
 	greenweald: '#4a4',
 	ashlands: '#f64',
@@ -355,14 +395,15 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 	const ny = pos.y + dy;
 
 	if (nx < 0 || ny < 0 || nx >= worldMap.width || ny >= worldMap.height) return state;
-	if (!isOverworldPassable(worldMap.tiles[ny][nx])) {
-		addMessage(state, `The ${worldMap.tiles[ny][nx].terrain} blocks your path.`, 'info');
+	const targetTile = worldMap.tiles[ny][nx];
+	if (!isOverworldPassable(targetTile)) {
+		addMessage(state, `The ${targetTile.terrain} blocks your path.`, 'info');
 		return { ...state };
 	}
 
 	// Detect region transition before moving
 	const prevRegion = worldMap.tiles[pos.y][pos.x].region;
-	const nextRegion = worldMap.tiles[ny][nx].region;
+	const nextRegion = targetTile.region;
 
 	// Move on overworld
 	state.overworldPos = { x: nx, y: ny };
@@ -378,7 +419,44 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 		}
 	}
 
-	// Tick survival on overworld movement
+	// Terrain movement cost
+	const moveCost = getOverworldMoveCost(targetTile);
+	if (moveCost > 1) {
+		const terrainName = targetTile.terrain === 'mud' ? 'mud' : targetTile.terrain === 'ice' ? 'ice' : targetTile.terrain;
+		addMessage(state, `The ${terrainName} slows your progress.`, 'info');
+	}
+
+	// Road bonus: double-step when on a road moving onto another road tile
+	const currentTile = worldMap.tiles[pos.y]?.[pos.x];
+	if (targetTile.road && currentTile?.road && !targetTile.locationId) {
+		const nx2 = nx + dx;
+		const ny2 = ny + dy;
+		if (nx2 >= 0 && ny2 >= 0 && nx2 < worldMap.width && ny2 < worldMap.height) {
+			const secondTile = worldMap.tiles[ny2][nx2];
+			if (isOverworldPassable(secondTile) && secondTile.road) {
+				// Check region transition for second step too
+				const secondRegion = secondTile.region;
+				state.overworldPos = { x: nx2, y: ny2 };
+				revealOverworldArea(worldMap, state.overworldPos, OVERWORLD_SIGHT_RADIUS);
+				if (secondRegion !== nextRegion) {
+					const regionDef = worldMap.regions.find(r => r.id === secondRegion);
+					if (regionDef) {
+						addMessage(state, `— You enter ${regionDef.name} —`, 'discovery');
+						const flavorMsg = REGION_FLAVOR[secondRegion];
+						if (flavorMsg) addMessage(state, flavorMsg, 'info');
+					}
+				}
+			}
+		}
+	}
+
+	// Signpost interaction: show nearby settlement directions
+	const finalTile = worldMap.tiles[state.overworldPos.y]?.[state.overworldPos.x];
+	if (finalTile?.signpost) {
+		showSignpostInfo(state, worldMap, state.overworldPos);
+	}
+
+	// Tick survival on overworld movement (extra tick for slow terrain)
 	if (state.survivalEnabled) {
 		const survivalResult = tickSurvival(state);
 		for (const msg of survivalResult.messages) {
@@ -386,7 +464,7 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 		}
 	}
 
-	state.turnCount++;
+	state.turnCount += moveCost;
 
 	// Check for location entry
 	const location = getOverworldLocation(worldMap, state.overworldPos);

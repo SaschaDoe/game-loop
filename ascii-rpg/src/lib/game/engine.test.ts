@@ -2031,4 +2031,77 @@ describe('overworld integration', () => {
 		const hasPlayer = grid.some(row => row.some(cell => cell.char === '@'));
 		expect(hasPlayer).toBe(true);
 	});
+
+	it('slow terrain costs extra turns', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-slow' });
+		const ow = exitToOverworld(state);
+		const worldMap = ow.worldMap as any;
+		const pos = ow.overworldPos!;
+		const prevTurn = ow.turnCount;
+		// Place forest tile adjacent to player
+		worldMap.tiles[pos.y][pos.x + 1].terrain = 'forest';
+		worldMap.tiles[pos.y][pos.x + 1].road = undefined;
+		worldMap.tiles[pos.y][pos.x + 1].locationId = undefined;
+		const after = handleInput(ow, 'd');
+		// Forest costs 2 turns
+		expect(after.turnCount).toBe(prevTurn + 2);
+		// Should get a slow message
+		expect(after.messages.some((m: any) => m.text.includes('slows your progress'))).toBe(true);
+	});
+
+	it('road movement allows double-step', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-road' });
+		const ow = exitToOverworld(state);
+		const worldMap = ow.worldMap as any;
+		const pos = { ...ow.overworldPos! };
+		const prevTurn = ow.turnCount;
+		// Set up three road tiles in a row
+		worldMap.tiles[pos.y][pos.x].road = 'main';
+		worldMap.tiles[pos.y][pos.x + 1].terrain = 'grass';
+		worldMap.tiles[pos.y][pos.x + 1].road = 'main';
+		worldMap.tiles[pos.y][pos.x + 1].locationId = undefined;
+		worldMap.tiles[pos.y][pos.x + 2].terrain = 'grass';
+		worldMap.tiles[pos.y][pos.x + 2].road = 'main';
+		worldMap.tiles[pos.y][pos.x + 2].locationId = undefined;
+		worldMap.explored[pos.y][pos.x + 1] = true;
+		worldMap.explored[pos.y][pos.x + 2] = true;
+		const after = handleInput(ow, 'd');
+		// Should have moved 2 tiles east
+		expect(after.overworldPos!.x).toBe(pos.x + 2);
+		// Road movement still costs 1 turn
+		expect(after.turnCount).toBe(prevTurn + 1);
+	});
+
+	it('signpost shows nearby settlement directions', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-sign' });
+		const ow = exitToOverworld(state);
+		const worldMap = ow.worldMap as any;
+		const pos = ow.overworldPos!;
+		// Place a signpost adjacent to player
+		worldMap.tiles[pos.y][pos.x + 1].signpost = true;
+		worldMap.tiles[pos.y][pos.x + 1].terrain = 'grass';
+		worldMap.tiles[pos.y][pos.x + 1].road = 'main';
+		worldMap.tiles[pos.y][pos.x + 1].locationId = undefined;
+		// Also put road on current tile so double-step doesn't skip past signpost
+		worldMap.tiles[pos.y][pos.x].road = undefined;
+		const after = handleInput(ow, 'd');
+		// Should see signpost message
+		expect(after.messages.some((m: any) => m.text.includes('signpost'))).toBe(true);
+		// Should see at least one settlement direction
+		expect(after.messages.some((m: any) => m.text.includes('tiles'))).toBe(true);
+	});
+
+	it('normal terrain costs 1 turn', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-norm' });
+		const ow = exitToOverworld(state);
+		const worldMap = ow.worldMap as any;
+		const pos = ow.overworldPos!;
+		const prevTurn = ow.turnCount;
+		// Ensure adjacent tile is normal grass, no road, no location
+		worldMap.tiles[pos.y][pos.x + 1].terrain = 'grass';
+		worldMap.tiles[pos.y][pos.x + 1].road = undefined;
+		worldMap.tiles[pos.y][pos.x + 1].locationId = undefined;
+		const after = handleInput(ow, 'd');
+		expect(after.turnCount).toBe(prevTurn + 1);
+	});
 });

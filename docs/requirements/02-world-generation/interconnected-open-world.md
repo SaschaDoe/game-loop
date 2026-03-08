@@ -169,10 +169,21 @@ As a player, I want roads connecting major settlements so that I can navigate th
 - Roads are procedurally generated using minimum spanning tree + extra loops
 
 **Acceptance Criteria:**
-- [ ] Roads visibly connect settlements on the overworld
-- [ ] Movement speed varies by terrain
-- [ ] Signposts provide navigation information
-- [ ] Off-road penalties apply correctly
+- [x] Roads visibly connect settlements on the overworld
+- [x] Movement speed varies by terrain
+- [x] Signposts provide navigation information
+- [x] Off-road penalties apply correctly
+
+**Implementation Notes (completed):**
+- Roads generated via Kruskal's MST + A* pathfinding in `overworld.ts`
+- Main roads ('=') connect cities/towns/fortresses, dirt paths ('-') connect villages/camps
+- Road double-step: moving along roads lets player travel 2 tiles per turn (if both tiles are road)
+- `TERRAIN_MOVE_COST`: forest/swamp/snow/mud/ice cost 2 turns per step, other terrain costs 1
+- Slow terrain message: "The {terrain} slows your progress."
+- Signposts placed at road intersections (3+ cardinal road neighbors)
+- `showSignpostInfo()`: displays 4 nearest settlements with compass direction and Manhattan distance
+- `compassDirection()`: converts dx/dy to N/S/E/W/NE/NW/SE/SW labels
+- 4 new engine tests: slow terrain cost, road double-step, signpost info, normal terrain cost
 
 ---
 
