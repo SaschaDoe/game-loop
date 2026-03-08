@@ -872,6 +872,125 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`    Report filed. Unanswered.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 12. The Seven Trees — Primordialist oral teaching / allegory
+	// -----------------------------------------------------------------------
+	book_seven_trees: {
+		id: 'book_seven_trees',
+		name: 'The Seven Trees',
+		char: 'B',
+		color: '#558844',
+		type: 'book',
+		description:
+			'A scroll of birch bark, hand-painted with berry ink. The illustrations are crude but careful — the work of someone who valued meaning over artistry.',
+		pages: [
+			`A TEACHING OF THE ROOT SINGERS\n` +
+				`(Told at the lighting of the winter fire)\n\n` +
+				`Before the gods there were seven\n` +
+				`trees. Do not ask me their names.\n` +
+				`Names are for things that can be\n` +
+				`held, and these were too vast\n` +
+				`for holding.\n\n` +
+				`Each tree carried a piece of what\n` +
+				`the world needed. The first held\n` +
+				`order — the pattern of snowflakes,\n` +
+				`the turning of seasons, the promise\n` +
+				`that morning follows night. The\n` +
+				`second held change — the rot that\n` +
+				`feeds new growth, the river that\n` +
+				`carves new stone. The third held\n` +
+				`time. The fourth held distance.\n` +
+				`The fifth held the weight of every\n` +
+				`stone. The sixth held the fire in\n` +
+				`every star.\n\n` +
+				`The seventh held something harder\n` +
+				`to name. Call it awareness. Call it\n` +
+				`the knowing that you exist. Every\n` +
+				`soul that has ever opened its eyes\n` +
+				`and thought "I am here" — that was\n` +
+				`the seventh tree's gift.`,
+
+			`The trees gave everything.\n\n` +
+				`Not because they were asked. Not\n` +
+				`because they were forced. Because\n` +
+				`the world was new and fragile and\n` +
+				`needed roots more than it needed\n` +
+				`branches. So they poured themselves\n` +
+				`into the earth — their roots became\n` +
+				`the veins of the world, their sap\n` +
+				`became the rivers, their leaves\n` +
+				`became the souls of every living\n` +
+				`thing.\n\n` +
+				`The trees are gone now. But the old\n` +
+				`ones say that if you press your ear\n` +
+				`to the ground in a deep forest, at\n` +
+				`the hour when the light is neither\n` +
+				`day nor night, you can hear them\n` +
+				`still — not as trees, but as\n` +
+				`something beneath. A pulse. A\n` +
+				`patience. A vast, slow, beautiful\n` +
+				`sadness that has no name because\n` +
+				`it is too large for language.\n\n` +
+				`They did not die. They became\n` +
+				`what holds us.`,
+
+			`Seven stumps remained.\n\n` +
+				`And one day, seven birds came.\n` +
+				`They were bright and loud and\n` +
+				`hungry. They had flown a long way\n` +
+				`and they were tired of flying and\n` +
+				`the stumps looked like thrones.\n\n` +
+				`So they landed. And they opened\n` +
+				`their beaks. And they sang the\n` +
+				`trees' songs.\n\n` +
+				`But the notes were wrong.\n\n` +
+				`The forest knew. The rivers knew.\n` +
+				`The roots beneath the earth — the\n` +
+				`roots that were the trees — knew.\n` +
+				`These birds had not grown here.\n` +
+				`They had not given anything. They\n` +
+				`had simply arrived, and sat down,\n` +
+				`and begun to sing as if the songs\n` +
+				`had always been theirs.\n\n` +
+				`And because the birds were\n` +
+				`beautiful, and their songs were\n` +
+				`almost right, the smaller creatures\n` +
+				`of the forest listened. And slowly,\n` +
+				`slowly, they forgot there had ever\n` +
+				`been trees at all.`,
+
+			`But the roots remember.\n\n` +
+				`Beneath every forest, beneath every\n` +
+				`field, beneath the mountains and the\n` +
+				`deserts and the quiet places where\n` +
+				`no one walks — the roots are still\n` +
+				`there. Still holding the world\n` +
+				`together. Still carrying the pulse\n` +
+				`of what was given freely by seven\n` +
+				`vast and patient things that loved\n` +
+				`the world enough to become it.\n\n` +
+				`The birds still sing. Their songs\n` +
+				`are loud. But if you are quiet —\n` +
+				`truly quiet — you will hear\n` +
+				`something beneath the singing.\n` +
+				`Not a sound. A feeling. The feeling\n` +
+				`of being held by something that has\n` +
+				`never stopped caring, even though\n` +
+				`it was forgotten, even though\n` +
+				`strangers sit on its stumps and\n` +
+				`call themselves the forest.\n\n` +
+				`This is what we teach our children,\n` +
+				`at the lighting of the winter fire.\n` +
+				`This is what we pass from mouth to\n` +
+				`ear, because some truths are too\n` +
+				`important for paper and too\n` +
+				`dangerous for temples.\n\n` +
+				`The birds will sing until they are\n` +
+				`hoarse. But the roots will outlast\n` +
+				`them. The roots always do.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
