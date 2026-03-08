@@ -356,6 +356,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	silence_peaks: 'The wind dies. Your footsteps make no sound. Snow falls in perfect silence, and the mountains swallow every echo. Something fundamental is broken here.',
 	timeless_wastes: 'The sky flickers between noon and dusk. Your shadow moves before you do. The landscape repeats — or did you walk this path already? Time is wounded here.',
 	hollow_sea: 'The water stretches beyond sight, impossibly clear. Far below, drowned spires shimmer like a mirage. Where Dro-Mahk was torn, matter itself grew thin.',
+	grey_wastes: 'The trees stand like bones, grey and leafless. The ground is ashen and silent. Somewhere beneath your feet, a dead Ley Line lies like a severed nerve — and the land has never stopped grieving.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -442,6 +443,7 @@ const REGION_COLORS: Record<string, string> = {
 	silence_peaks: '#bbc',
 	timeless_wastes: '#da8',
 	hollow_sea: '#48a',
+	grey_wastes: '#898',
 	underdepths: '#a4f',
 };
 
@@ -694,6 +696,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'L', color: '#fa8', name: 'Loop-Trapped Wanderer', dialogue: ['I have been walking this path for... I don\'t know. Years? Centuries? The sun rises and sets in the wrong order.', 'There is a day that doesn\'t exist. Once a year I slip into it — burning libraries, screaming, shadows of a golden age dying.', 'If you find the Moment Tombs, don\'t touch the frozen people. They\'re not dead. They\'re caught between seconds.'], gives: { hp: 4 }, mood: 'friendly' },
 		{ char: 'C', color: '#ca8', name: 'Chronoscript Cartographer', dialogue: ['Chronoscript reads backwards and forwards simultaneously. The meaning changes depending on which direction you read.', 'I\'m mapping the temporal anomalies. Some zones loop. Some skip. Some run backwards. None are stable.', 'The Fractured Hours stones predate everything. They\'re markers for where time broke — and where it might break again.'], gives: { atk: 1 }, mood: 'neutral' },
 	],
+	grey_wastes: [
+		{ char: 'E', color: '#898', name: 'Elder Thorn', dialogue: ['We\'ve sung to the Ley Line for three centuries. It doesn\'t sing back anymore. But the stones still listen.', 'Seven monoliths stand at Grief\'s Circle — one for each of the Original gods. The Ascended want them torn down. We refuse.', 'Old Primal is the language of the land itself. You don\'t learn it. You remember it.'], gives: { hp: 4 }, mood: 'friendly' },
+		{ char: 'V', color: '#686', name: 'Scar-Walker', dialogue: ['The grey gets in your bones. Changes you. Some call it corruption. I call it the land\'s grief made physical.', 'I found a journal in the Veiled Hand outpost. Someone ordered the Ley Line killed. Deliberately. The signature was burned away.', 'The scavengers strip what they can. The Pilgrims heal what they can. Nobody asks who killed it in the first place.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'C', color: '#7a7', name: 'Cairn-Keeper Moss', dialogue: ['The Pilgrims heal. The scavengers take. The Veiled Hand watches. And beneath it all, the dead Ley Line dreams of what it was.', 'Can you hear it? That hum beneath the silence? The Ley Line is trying to remember itself. After all these centuries.', 'The Petrified Grove was alive once. Oldest forest in the world. Now it\'s stone and memory and grief.'], gives: { hp: 2 }, mood: 'friendly' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -853,6 +860,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	silence_peaks:    'Your footsteps vanish into nothing. The tunnels swallow sound so completely that your own heartbeat is the loudest thing in the world.',
 	timeless_wastes:  'The entrance flickers — there, then not, then there again. Inside, torchlight illuminates dust that falls upward.',
 	hollow_sea:       'The tunnel slopes down into brackish water. Bioluminescent coral lines the walls, pulsing in rhythms that feel like breathing.',
+	grey_wastes:      'The stone is veined with dull crystal — dead Ley Line fragments. The deeper you go, the more the walls seem to weep grey dust.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -872,6 +880,7 @@ const GRAVE_LORE: Record<string, string> = {
 	silence_peaks:    'A monk who transcribed the Undertone for sixty years. Her final knot-string reads: "The seventh voice is not singing. It is screaming."',
 	timeless_wastes:  'A cartographer who mapped every version of this place. Her final entry: "The map is correct. The land has moved."',
 	hollow_sea:       'A Dominion navigator who surfaced once to warn the land-dwellers. Her final log: "The membrane thins. Pelagathis sinks not into water but into nothing."',
+	grey_wastes:      'A Grey Pilgrim who sang to the dead Ley Line every dawn for forty years. Her final words: "It answered. Once. Then went silent forever."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -987,6 +996,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	silence_peaks:    { combat: ['Wolf', 'Wraith', 'Skeleton'], nonCombat: ['A blind monk presses a knotted string into your hand. You feel vibrations travel through your fingers.', 'You press your ear to the stone and feel a deep, subsonic pulse — the Undertone, still singing.'] },
 	timeless_wastes:  { combat: ['Wraith', 'Skeleton', 'Troll'], nonCombat: ['A traveler walks past you — then walks past you again, wearing different clothes. She doesn\'t notice.', 'You find a campfire still warm with yesterday\'s embers. Your journal says you lit it tomorrow.'] },
 	hollow_sea:       { combat: ['Slime', 'Wraith', 'Troll'], nonCombat: ['The water goes crystal-clear. Far below, you see drowned spires glowing faintly — then the clarity passes, and there is only dark sea.', 'A coral artifact washes ashore at your feet, still warm. It hums a melody in a language you almost understand.'] },
+	grey_wastes:      { combat: ['Wraith', 'Zombie', 'Spider'], nonCombat: ['A Grey Pilgrim kneels beside a dead tree, whispering in Old Primal. For a moment, a single grey leaf unfurls — then crumbles.', 'The ground hums beneath your feet. A faint warmth rises through your boots — the dead Ley Line, dreaming.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 

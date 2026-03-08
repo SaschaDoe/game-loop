@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (14) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea'];
+/** Surface regions (15) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -107,6 +107,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	silence_peaks:    { name: 'The Silence Peaks',     language: 'Knotweave',    dangerLevel: 6 },
 	timeless_wastes:  { name: 'The Timeless Wastes',   language: 'Chronoscript', dangerLevel: 7 },
 	hollow_sea:       { name: 'The Hollow Sea',        language: 'Dominion Aquatic', dangerLevel: 8 },
+	grey_wastes:      { name: 'The Grey Wastes',       language: 'Old Primal',       dangerLevel: 7 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -208,6 +209,13 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'swamp', weight: 10 },
 		{ terrain: 'grass', weight: 5 },
 	],
+	grey_wastes: [
+		{ terrain: 'dead_trees', weight: 30 },
+		{ terrain: 'ash', weight: 25 },
+		{ terrain: 'rock', weight: 20 },
+		{ terrain: 'mud', weight: 15 },
+		{ terrain: 'grass', weight: 10 },
+	],
 };
 
 // ── Perlin Noise (simplified 2D value noise) ──
@@ -259,7 +267,7 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 14 region seed points using Poisson-disk-like sampling.
+ * Place 15 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
@@ -666,6 +674,16 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'hot_spring', name: 'Thermal Vent Pool', hidden: true },
 		{ type: 'ancient_tree', name: 'The Salt-Bleached Sentinel', hidden: false },
 	],
+	grey_wastes: [
+		{ type: 'standing_stones', name: 'Grief\'s Circle', hidden: false },
+		{ type: 'ruins', name: 'Veiled Hand Outpost', hidden: false },
+		{ type: 'obelisk', name: 'The Scar Trench Overlook', hidden: false },
+		{ type: 'hidden_cave', name: 'The Hollow Vein', hidden: true },
+		{ type: 'shrine', name: 'Pilgrim\'s Altar', hidden: false },
+		{ type: 'grave_site', name: 'Ossuary Plain', hidden: false },
+		{ type: 'hot_spring', name: 'Ash-Memory Pool', hidden: true },
+		{ type: 'ancient_tree', name: 'The Petrified Grove Heart', hidden: true },
+	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
@@ -998,6 +1016,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	silence_peaks: { prefixes: ['Still', 'Hush', 'Mute', 'Deaf', 'Calm', 'Void', 'Quiet'], suffixes: ['peak', 'spire', 'ledge', 'pass', 'hold', 'keep', 'aerie'] },
 	timeless_wastes: { prefixes: ['Chrono', 'Loop', 'Drift', 'Fade', 'Hour', 'Epoch', 'Stasis'], suffixes: ['fall', 'reach', 'gate', 'ward', 'point', 'drift', 'hold'] },
 	hollow_sea: { prefixes: ['Coral', 'Tide', 'Abyss', 'Pearl', 'Drift', 'Brine', 'Depth'], suffixes: ['port', 'reach', 'haven', 'cove', 'deep', 'fall', 'watch'] },
+	grey_wastes: { prefixes: ['Grey', 'Ash', 'Scar', 'Cairn', 'Wither', 'Blight', 'Husk'], suffixes: ['rest', 'hollow', 'mark', 'field', 'reach', 'ward', 'moor'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -1021,6 +1040,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	silence_peaks: ['Knotwork Archive', 'Hollow Bell Tower', 'Resonance Chamber', 'Monk\'s Catacombs', 'The Soundless Pit', 'Vibration Vault', 'Undertone Passage'],
 	timeless_wastes: ['Moment Tomb', 'Looping Corridors', 'Chronology Library', 'Stasis Chamber', 'Temporal Maze', 'Ghost-Day Archive', 'The Erased Ruins'],
 	hollow_sea: ['Sunken Dominion Vault', 'Coral Labyrinth', 'Drowned Archives', 'Leviathan\'s Maw', 'Abyssal Rift', 'Pelagathis Approach', 'Matter-Thin Passage'],
+	grey_wastes: ['The Hollow Vein', 'Veiled Laboratory', 'Petrified Grove Depths', 'Ley Line Corpse', 'Pilgrim\'s Catacombs', 'Scar Trench Tunnels', 'Blighted Root Cellar'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 
