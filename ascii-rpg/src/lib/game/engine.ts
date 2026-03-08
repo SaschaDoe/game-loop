@@ -355,6 +355,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	mirrow_wastes: 'Dead trees claw at a grey sky. The river stones are stained rust-red despite centuries of rain. Griefmoths drift through the silence like living lanterns.',
 	silence_peaks: 'The wind dies. Your footsteps make no sound. Snow falls in perfect silence, and the mountains swallow every echo. Something fundamental is broken here.',
 	timeless_wastes: 'The sky flickers between noon and dusk. Your shadow moves before you do. The landscape repeats — or did you walk this path already? Time is wounded here.',
+	hollow_sea: 'The water stretches beyond sight, impossibly clear. Far below, drowned spires shimmer like a mirage. Where Dro-Mahk fell, matter itself grew thin.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -440,6 +441,7 @@ const REGION_COLORS: Record<string, string> = {
 	mirrow_wastes: '#a64',
 	silence_peaks: '#bbc',
 	timeless_wastes: '#da8',
+	hollow_sea: '#48a',
 	underdepths: '#a4f',
 };
 
@@ -682,6 +684,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'A', color: '#99a', name: 'Abbot of Closed Eyes', dialogue: ['Pho-Lumen screamed here. The Principle of Spirit, wounded unto death. And sound itself shattered.', 'We have spent a thousand years transcribing what remains. A seven-voiced dirge beneath the silence.', 'The Ascended filter it. Degrade it. But they cannot silence what was woven into the world itself.'], mood: 'neutral' },
 		{ char: 'P', color: '#aab', name: 'Pilgrim of Stillness', dialogue: ['I came to hear the silence. Instead I heard what hides beneath it.', 'In the deepest caves, if you press your ear to the stone, you can feel them — the Original Seven, still singing.', 'The monks say the melody is a map. Seven streams of magic converging on a point no one has found.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
+	hollow_sea: [
+		{ char: 'S', color: '#48a', name: 'Salvage Captain', dialogue: ['I\'ve pulled Dominion artifacts from the shallows for twenty years. The deep wrecks? Nobody comes back from those.', 'On calm days the water goes glass-clear. You can see the spires of Pelagathis a mile below. They still glow.', 'The Sunken Dominion didn\'t sink. It was swallowed. When Dro-Mahk fell, matter stopped being reliable.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'L', color: '#4af', name: 'Leviathan Whisperer', dialogue: ['The great ones still remember the Dominion. They carry its memories in their songs — frequencies we can barely perceive.', 'Dominion Aquatic is not spoken. It is felt — pressure changes, current shifts, the language of deep water.', 'One of the leviathans showed me Pelagathis as it was. Crystal domes, coral highways, light that came from everywhere. Then the Principle of Matter died and it all became... thin.'], mood: 'neutral' },
+		{ char: 'C', color: '#68d', name: 'Coral Archaeologist', dialogue: ['These coral formations aren\'t natural. They\'re Dominion architecture — buildings that grew rather than were built.', 'I found a crystal that plays back the last moments before the sinking. Screaming. Then silence. Then the sound of water rushing in from everywhere.', 'The Restoration wants what the Dominion knew. Magic without gods. Civilization built on principles, not prayer.'], gives: { atk: 1 }, mood: 'friendly' },
+	],
 	timeless_wastes: [
 		{ char: 'T', color: '#da8', name: 'Temporal Scholar', dialogue: ['I have lived this conversation before. Or I will. The tenses collapse here.', 'Tho-Rienne was wounded — the Principle of Time itself. The wound never healed. It never will. It never has.', 'Orinthas — the god who calls himself lord of Time — once erased an entire day from the calendar. But Time remembers what gods forget.'], mood: 'neutral' },
 		{ char: 'L', color: '#fa8', name: 'Loop-Trapped Wanderer', dialogue: ['I have been walking this path for... I don\'t know. Years? Centuries? The sun rises and sets in the wrong order.', 'There is a day that doesn\'t exist. Once a year I slip into it — burning libraries, screaming, shadows of a golden age dying.', 'If you find the Moment Tombs, don\'t touch the frozen people. They\'re not dead. They\'re caught between seconds.'], gives: { hp: 4 }, mood: 'friendly' },
@@ -845,6 +852,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	mirrow_wastes:    'Bones crunch beneath your feet. The walls are scratched with tally marks — soldiers counting days they never finished.',
 	silence_peaks:    'Your footsteps vanish into nothing. The tunnels swallow sound so completely that your own heartbeat is the loudest thing in the world.',
 	timeless_wastes:  'The entrance flickers — there, then not, then there again. Inside, torchlight illuminates dust that falls upward.',
+	hollow_sea:       'The tunnel slopes down into brackish water. Bioluminescent coral lines the walls, pulsing in rhythms that feel like breathing.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -863,6 +871,7 @@ const GRAVE_LORE: Record<string, string> = {
 	mirrow_wastes:    'A soldier who carried letters from both sides — and realized, too late, that the handwriting in the declarations of war was the same.',
 	silence_peaks:    'A monk who transcribed the Undertone for sixty years. Her final knot-string reads: "The seventh voice is not singing. It is screaming."',
 	timeless_wastes:  'A cartographer who mapped every version of this place. Her final entry: "The map is correct. The land has moved."',
+	hollow_sea:       'A Dominion navigator who surfaced once to warn the land-dwellers. Her final log: "The membrane thins. Pelagathis sinks not into water but into nothing."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -977,6 +986,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	mirrow_wastes:    { combat: ['Wraith', 'Zombie', 'Skeleton'], nonCombat: ['Griefmoths swirl around you, absorbing your weariness. You feel lighter.', 'The wind carries a melody — two melodies, nearly identical, almost harmonizing. The Mirrow wives\' song.'] },
 	silence_peaks:    { combat: ['Wolf', 'Wraith', 'Skeleton'], nonCombat: ['A blind monk presses a knotted string into your hand. You feel vibrations travel through your fingers.', 'You press your ear to the stone and feel a deep, subsonic pulse — the Undertone, still singing.'] },
 	timeless_wastes:  { combat: ['Wraith', 'Skeleton', 'Troll'], nonCombat: ['A traveler walks past you — then walks past you again, wearing different clothes. She doesn\'t notice.', 'You find a campfire still warm with yesterday\'s embers. Your journal says you lit it tomorrow.'] },
+	hollow_sea:       { combat: ['Slime', 'Wraith', 'Troll'], nonCombat: ['The water goes crystal-clear. Far below, you see drowned spires glowing faintly — then the clarity passes, and there is only dark sea.', 'A coral artifact washes ashore at your feet, still warm. It hums a melody in a language you almost understand.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 
@@ -2182,7 +2192,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		if (result.used) {
 			const def = ABILITY_DEFS[state.characterConfig.characterClass];
 			state.abilityCooldown = def.cooldown;
-			// Handle kills from warrior whirlwind
+			// Handle kills from abilities (whirlwind, rain of arrows, holy smite, etc.)
 			const killed = state.enemies.filter((e) => e.hp <= 0);
 			for (const enemy of killed) {
 				tryDropLoot(state, enemy);
@@ -2194,6 +2204,9 @@ export function handleInput(state: GameState, key: string): GameState {
 				state.stats.enemiesKilled++;
 				if (bossKill) state.stats.bossesKilled++;
 				recordKill(state.bestiary, enemy);
+				// Quest progress on ability kills
+				const questMsgs = updateQuestProgress(state, 'kill', enemy.name);
+				for (const qm of questMsgs) addMessage(state, qm, 'discovery');
 				addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
 			}
 			state.enemies = state.enemies.filter((e) => e.hp > 0);
@@ -2555,6 +2568,12 @@ export function handleInput(state: GameState, key: string): GameState {
 			checkLevelUp(state);
 			processAchievements(state);
 		}
+		// Generate combat noise for stealth detection
+		if (state.stealth.isHidden) {
+			const equipBonuses = getEquipmentBonuses(state.equipment);
+			state.stealth.noiseLevel = generateNoise('combat', equipBonuses.noiseReduction ?? 0);
+			state.stealth.lastNoisePos = { ...state.player.pos };
+		}
 		moveEnemies(state);
 		return { ...state };
 	}
@@ -2569,6 +2588,12 @@ export function handleInput(state: GameState, key: string): GameState {
 	}
 
 	state.player.pos = { x: nx, y: ny };
+	// Generate walk noise for stealth detection
+	if (state.stealth.isHidden) {
+		const equipBonuses = getEquipmentBonuses(state.equipment);
+		state.stealth.noiseLevel = generateNoise('walk', equipBonuses.noiseReduction ?? 0);
+		state.stealth.lastNoisePos = { ...state.player.pos };
+	}
 	updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 	detectAdjacentSecrets(state);
 	for (const msg of detectAdjacentTraps(state)) {
@@ -2996,8 +3021,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 				const enemy = state.enemies.find((e) => e.pos.x === x && e.pos.y === y);
 				const npc = state.npcs.find((n) => n.pos.x === x && n.pos.y === y);
 				if (enemy) {
-					const enemyColor = effectColor(enemy) ?? enemy.color;
-					row.push({ char: enemy.char, color: enemyColor });
+					const alertSym = enemy.awareness ? getAlertSymbol(enemy.awareness.alertState) : '';
+					const enemyColor = alertSym ? getAlertColor(enemy.awareness!.alertState) : (effectColor(enemy) ?? enemy.color);
+					row.push({ char: alertSym || enemy.char, color: enemyColor });
 				} else if (npc) {
 					row.push({ char: npc.char, color: npcMoodColor(npc) });
 				} else if (getChestAt(state.chests, x, y)) {
