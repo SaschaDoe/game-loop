@@ -186,12 +186,23 @@ As a developer, I want POIs scattered across the world for discovery rewards.
 - Placed away from settlements and roads (rewarding off-road exploration)
 - Some POIs are visible from a distance (ruins), others require adjacent discovery (hidden caves)
 - POI content is generated from templates with regional flavor
+- 8 POI types: shrine, ruins, standing_stones, hidden_cave, ancient_tree, grave_site, obelisk, hot_spring
+- Each region has 6 themed templates with culturally appropriate names
 
 **Acceptance Criteria:**
-- [ ] POIs are distributed across all regions
-- [ ] POIs are generally off the beaten path
-- [ ] POI content matches regional theme
-- [ ] Discovery is tracked in player state
+- [x] POIs are distributed across all regions
+- [x] POIs are generally off the beaten path
+- [x] POI content matches regional theme
+- [x] Discovery is tracked in player state
+
+**Implementation Notes (completed):**
+- `REGION_POIS`: 6 themed POI templates per region with type, name, and hidden flag
+- `placePOIs()`: 3-5 POIs per region, shuffled templates, placed via `findPassableTile()`
+- Distance constraints: min 12 from settlements, min 5 from roads (Manhattan distance), min 10 from other POIs
+- `hidden` flag: ~half of POIs are hidden (require adjacent discovery), rest visible from distance
+- `discovered: boolean` on each POI for tracking player state
+- `PointOfInterest` and `POIType` exported types; `pois` array on WorldMap
+- Tests verify: distribution, multi-region spread, names/types, settlement distance, road avoidance, hidden/visible mix, undiscovered state, determinism
 
 ---
 

@@ -348,6 +348,78 @@ describe('road network (US-WG-05)', () => {
 	});
 });
 
+describe('points of interest (US-WG-07)', () => {
+	it('has POIs distributed across the world', () => {
+		const world = getTestWorld();
+		expect(world.pois.length).toBeGreaterThan(0);
+	});
+
+	it('POIs are spread across multiple regions', () => {
+		const world = getTestWorld();
+		const regionsWithPois = new Set(world.pois.map(p => p.region));
+		expect(regionsWithPois.size).toBeGreaterThanOrEqual(3);
+	});
+
+	it('POIs have names and types', () => {
+		const world = getTestWorld();
+		for (const poi of world.pois) {
+			expect(poi.name.length).toBeGreaterThan(0);
+			expect(poi.type.length).toBeGreaterThan(0);
+			expect(poi.id.startsWith('poi_')).toBe(true);
+		}
+	});
+
+	it('POIs are away from settlements', () => {
+		const world = getTestWorld();
+		for (const poi of world.pois) {
+			for (const s of world.settlements) {
+				const dist = Math.sqrt((poi.pos.x - s.pos.x) ** 2 + (poi.pos.y - s.pos.y) ** 2);
+				expect(dist).toBeGreaterThanOrEqual(10);
+			}
+		}
+	});
+
+	it('POIs are away from roads (off the beaten path)', () => {
+		const world = getTestWorld();
+		// Build road tile set
+		const roadTiles = new Set<string>();
+		for (let y = 0; y < world.height; y++) {
+			for (let x = 0; x < world.width; x++) {
+				if (world.tiles[y][x].road) roadTiles.add(`${x},${y}`);
+			}
+		}
+		// Check that POIs aren't directly on road tiles
+		for (const poi of world.pois) {
+			expect(roadTiles.has(`${poi.pos.x},${poi.pos.y}`)).toBe(false);
+		}
+	});
+
+	it('some POIs are hidden, some are visible', () => {
+		const world = getTestWorld();
+		const hidden = world.pois.filter(p => p.hidden);
+		const visible = world.pois.filter(p => !p.hidden);
+		expect(hidden.length).toBeGreaterThan(0);
+		expect(visible.length).toBeGreaterThan(0);
+	});
+
+	it('all POIs start undiscovered', () => {
+		const world = getTestWorld();
+		for (const poi of world.pois) {
+			expect(poi.discovered).toBe(false);
+		}
+	});
+
+	it('POI placement is deterministic', () => {
+		const world1 = generateWorld('poi-det', 80, 80);
+		const world2 = generateWorld('poi-det', 80, 80);
+		expect(world1.pois.length).toBe(world2.pois.length);
+		for (let i = 0; i < world1.pois.length; i++) {
+			expect(world1.pois[i].name).toBe(world2.pois[i].name);
+			expect(world1.pois[i].pos).toEqual(world2.pois[i].pos);
+		}
+	});
+});
+
 describe('explored grid', () => {
 	it('starts fully unexplored', () => {
 		const world = getTestWorld();

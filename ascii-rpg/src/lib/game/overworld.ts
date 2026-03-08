@@ -60,6 +60,18 @@ export interface Road {
 	path: Position[];   // ordered tiles from→to
 }
 
+export type POIType = 'shrine' | 'ruins' | 'standing_stones' | 'hidden_cave' | 'ancient_tree' | 'grave_site' | 'obelisk' | 'hot_spring';
+
+export interface PointOfInterest {
+	id: string;
+	name: string;
+	region: RegionId;
+	pos: Position;
+	type: POIType;
+	hidden: boolean;    // true = requires adjacent tile to discover, false = visible from distance
+	discovered: boolean;
+}
+
 export interface WorldMap {
 	width: number;
 	height: number;
@@ -68,6 +80,7 @@ export interface WorldMap {
 	settlements: Settlement[];
 	dungeonEntrances: DungeonEntrance[];
 	roads: Road[];
+	pois: PointOfInterest[];
 	explored: boolean[][];
 }
 
@@ -313,12 +326,15 @@ export function generateWorld(worldSeed: string, width: number = WORLD_W, height
 	// 10. Generate road network connecting settlements
 	const roads = generateRoads(tiles, settlements, width, height, rng);
 
-	// 11. Initialize explored grid (all hidden)
+	// 11. Place points of interest (after roads, so we can avoid them)
+	const pois = placePOIs(tiles, regionSeeds, settlements, width, height, rng);
+
+	// 12. Initialize explored grid (all hidden)
 	const explored: boolean[][] = Array.from({ length: height }, () =>
 		Array.from({ length: width }, () => false)
 	);
 
-	return { width, height, tiles, regions, settlements, dungeonEntrances, roads, explored };
+	return { width, height, tiles, regions, settlements, dungeonEntrances, roads, pois, explored };
 }
 
 // ── Transition Zones ──
@@ -443,6 +459,142 @@ function placeDungeonEntrances(tiles: OverworldTile[][], regionSeeds: Map<Region
 	}
 
 	return entrances;
+}
+
+// ── Points of Interest Placement (US-WG-07) ──
+
+/** Region-themed POI templates: [type, name, hidden] */
+const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boolean }[]> = {
+	greenweald: [
+		{ type: 'ancient_tree', name: 'The Elder Oak', hidden: false },
+		{ type: 'shrine', name: 'Mossy Shrine', hidden: false },
+		{ type: 'standing_stones', name: 'Fey Circle', hidden: false },
+		{ type: 'hidden_cave', name: 'Root Cellar', hidden: true },
+		{ type: 'ruins', name: 'Elven Ruins', hidden: false },
+		{ type: 'hot_spring', name: 'Woodland Spring', hidden: true },
+	],
+	ashlands: [
+		{ type: 'obelisk', name: 'Obsidian Obelisk', hidden: false },
+		{ type: 'ruins', name: 'Charred Fortress', hidden: false },
+		{ type: 'hidden_cave', name: 'Lava Tube', hidden: true },
+		{ type: 'grave_site', name: 'Warlord\'s Cairn', hidden: false },
+		{ type: 'shrine', name: 'Flame Altar', hidden: false },
+		{ type: 'standing_stones', name: 'Basalt Pillars', hidden: true },
+	],
+	hearthlands: [
+		{ type: 'shrine', name: 'Roadside Chapel', hidden: false },
+		{ type: 'ruins', name: 'Old Watchtower', hidden: false },
+		{ type: 'standing_stones', name: 'King\'s Stones', hidden: false },
+		{ type: 'hidden_cave', name: 'Smuggler\'s Den', hidden: true },
+		{ type: 'grave_site', name: 'Hero\'s Tomb', hidden: false },
+		{ type: 'hot_spring', name: 'Healing Well', hidden: true },
+	],
+	frostpeak: [
+		{ type: 'obelisk', name: 'Runestone Pillar', hidden: false },
+		{ type: 'ruins', name: 'Frozen Hall', hidden: false },
+		{ type: 'hidden_cave', name: 'Ice Grotto', hidden: true },
+		{ type: 'shrine', name: 'Dwarven Forge Shrine', hidden: false },
+		{ type: 'standing_stones', name: 'Glacial Stones', hidden: false },
+		{ type: 'grave_site', name: 'Thane\'s Barrow', hidden: true },
+	],
+	drowned_mire: [
+		{ type: 'ruins', name: 'Sunken Altar', hidden: false },
+		{ type: 'standing_stones', name: 'Bog Stones', hidden: false },
+		{ type: 'hidden_cave', name: 'Hag\'s Burrow', hidden: true },
+		{ type: 'grave_site', name: 'Drowned Graveyard', hidden: false },
+		{ type: 'obelisk', name: 'Rotting Totem', hidden: false },
+		{ type: 'shrine', name: 'Weeping Shrine', hidden: true },
+	],
+	sunstone_expanse: [
+		{ type: 'obelisk', name: 'Sandstone Pillar', hidden: false },
+		{ type: 'ruins', name: 'Desert Temple', hidden: false },
+		{ type: 'hidden_cave', name: 'Sand-Buried Vault', hidden: true },
+		{ type: 'shrine', name: 'Oasis Shrine', hidden: false },
+		{ type: 'standing_stones', name: 'Sun Dial Circle', hidden: false },
+		{ type: 'hot_spring', name: 'Desert Oasis Pool', hidden: true },
+	],
+	underdepths: [
+		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
+		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
+		{ type: 'ruins', name: 'Collapsed Cathedral', hidden: false },
+		{ type: 'hidden_cave', name: 'Fungal Hollow', hidden: true },
+	],
+};
+
+const MIN_POI_TO_SETTLEMENT_DIST = 12;
+const MIN_POI_TO_ROAD_DIST = 5;
+const MIN_POI_TO_POI_DIST = 10;
+
+function placePOIs(tiles: OverworldTile[][], regionSeeds: Map<RegionId, Position>, settlements: Settlement[], width: number, height: number, rng: SeededRandom): PointOfInterest[] {
+	const pois: PointOfInterest[] = [];
+	let idCounter = 0;
+
+	// Build a set of road tile positions for distance checking
+	const roadTiles = new Set<string>();
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			if (tiles[y][x].road) roadTiles.add(`${x},${y}`);
+		}
+	}
+
+	function nearRoad(pos: Position): boolean {
+		for (let dy = -MIN_POI_TO_ROAD_DIST; dy <= MIN_POI_TO_ROAD_DIST; dy++) {
+			for (let dx = -MIN_POI_TO_ROAD_DIST; dx <= MIN_POI_TO_ROAD_DIST; dx++) {
+				if (Math.abs(dx) + Math.abs(dy) <= MIN_POI_TO_ROAD_DIST) {
+					if (roadTiles.has(`${pos.x + dx},${pos.y + dy}`)) return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	for (const regionId of SURFACE_REGIONS) {
+		const center = regionSeeds.get(regionId)!;
+		const templates = REGION_POIS[regionId];
+		const count = rng.nextRange(3, 5);
+		const shuffled = [...templates];
+		rng.shuffle(shuffled);
+
+		for (let i = 0; i < count && i < shuffled.length; i++) {
+			const template = shuffled[i];
+			let placed = false;
+
+			for (let attempt = 0; attempt < 60 && !placed; attempt++) {
+				const offset: Position = {
+					x: center.x + rng.nextRange(-55, 55),
+					y: center.y + rng.nextRange(-55, 55),
+				};
+				const clamped: Position = {
+					x: Math.max(3, Math.min(width - 4, offset.x)),
+					y: Math.max(3, Math.min(height - 4, offset.y)),
+				};
+
+				if (tiles[clamped.y]?.[clamped.x]?.region !== regionId) continue;
+
+				const pos = findPassableTile(tiles, clamped, width, height, rng, 8);
+				if (!pos) continue;
+				if (tiles[pos.y][pos.x].region !== regionId) continue;
+				if (tiles[pos.y][pos.x].locationId) continue;
+
+				// Must be away from settlements
+				if (settlements.some(s => distance(s.pos, pos) < MIN_POI_TO_SETTLEMENT_DIST)) continue;
+				// Must be away from other POIs
+				if (pois.some(p => distance(p.pos, pos) < MIN_POI_TO_POI_DIST)) continue;
+				// Should be away from roads (off the beaten path)
+				if (nearRoad(pos)) continue;
+
+				const id = `poi_${idCounter++}`;
+				pois.push({
+					id, name: template.name, region: regionId,
+					pos, type: template.type, hidden: template.hidden, discovered: false,
+				});
+				tiles[pos.y][pos.x].locationId = id;
+				placed = true;
+			}
+		}
+	}
+
+	return pois;
 }
 
 // ── Road Network Generation (US-WG-05) ──
