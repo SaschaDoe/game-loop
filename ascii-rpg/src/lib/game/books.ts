@@ -2354,6 +2354,120 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`unlocked.`,
 		],
 	},
+	book_forbidden_circles: {
+		id: 'book_forbidden_circles',
+		name: 'On the Properties of Circles (Forbidden)',
+		char: 'B',
+		color: '#bbaa99',
+		type: 'book',
+		description: 'Pages of dense notation pulled from inside a wall, brittle and yellow with age.',
+		pages: [
+			`ON THE PROPERTIES OF CIRCLES\n` +
+				`Being a Proof in Three Parts\n` +
+				`by Delara Ohn-Tessik\n` +
+				`Year 17 of the King's Reign\n\n` +
+				`[margin, in different ink:]\n` +
+				`If you are reading this, then\n` +
+				`either mathematics has been\n` +
+				`restored, or you are as guilty\n` +
+				`as I am. Either way: welcome.\n\n` +
+				`PART ONE: That a circle has\n` +
+				`no beginning and no end, and\n` +
+				`that its ratio of width to\n` +
+				`path is constant, and that\n` +
+				`this constant cannot be\n` +
+				`expressed as any fraction the\n` +
+				`king would recognize, being\n` +
+				`infinite in its decimals and\n` +
+				`indifferent to royal decree.\n\n` +
+				`[margin:]\n` +
+				`Torin was taken yesterday.\n` +
+				`His crime: he owned an abacus.\n` +
+				`They found it sewn into his\n` +
+				`mattress like contraband.`,
+			`PART TWO: On the persistence\n` +
+				`of mathematical truth.\n\n` +
+				`A circle drawn in sand is\n` +
+				`still a circle after the\n` +
+				`king's horse walks through\n` +
+				`it. The ratio does not change\n` +
+				`because a man with a crown\n` +
+				`cannot count past twelve. The\n` +
+				`angles of a triangle still\n` +
+				`sum to half a turn whether\n` +
+				`or not the law permits\n` +
+				`triangles.\n\n` +
+				`Truth does not require a\n` +
+				`throne's permission.\n\n` +
+				`[margin:]\n` +
+				`They burned the Library today.\n` +
+				`I watched from the hill. Five\n` +
+				`hundred thousand scrolls. The\n` +
+				`smoke was a color I have no\n` +
+				`word for — the color of\n` +
+				`accumulated thought leaving\n` +
+				`the world.\n\n` +
+				`[margin:]\n` +
+				`He did this because a scholar\n` +
+				`corrected his grammar. In\n` +
+				`front of the court. That is\n` +
+				`the reason. That is the whole\n` +
+				`reason.`,
+			`PART THREE: On the nature of\n` +
+				`the irrational.\n\n` +
+				`The king has declared war on\n` +
+				`the sea for damaging his\n` +
+				`fleet in a storm. Three\n` +
+				`thousand soldiers marched into\n` +
+				`the waves to "punish" them.\n` +
+				`None returned.\n\n` +
+				`He has executed his court\n` +
+				`wizard for failing to make\n` +
+				`the sun rise on the correct\n` +
+				`side. He misread a compass.\n\n` +
+				`I note these events not as\n` +
+				`politics but as mathematics.\n` +
+				`There exists a proof that\n` +
+				`stupidity, given sufficient\n` +
+				`power, is indistinguishable\n` +
+				`from malice. The proof is\n` +
+				`empirical. I am living inside\n` +
+				`it.\n\n` +
+				`[margin:]\n` +
+				`The palace he is building has\n` +
+				`collapsed. Four hundred dead.\n` +
+				`He blames the architect.\n` +
+				`The architect was following\n` +
+				`the king's design exactly.\n` +
+				`That was the problem.`,
+			`POSTSCRIPT:\n\n` +
+				`The king has fled. His people\n` +
+				`finally starved enough to\n` +
+				`stop believing him. The city\n` +
+				`is burning — not the good kind\n` +
+				`of burning, not the Library's\n` +
+				`clean grief, but the slow ugly\n` +
+				`kind that takes homes.\n\n` +
+				`I am putting these pages into\n` +
+				`the wall of my study. If\n` +
+				`someone finds them, know:\n\n` +
+				`We existed. We counted. We\n` +
+				`measured the distance between\n` +
+				`stars and the angles of\n` +
+				`crystals and the curve of\n` +
+				`rivers. We understood things\n` +
+				`about the world that the world\n` +
+				`had not yet told anyone else.\n\n` +
+				`And one man's fear of\n` +
+				`understanding — one single,\n` +
+				`catastrophic fool on a throne\n` +
+				`he did not earn — was not\n` +
+				`enough to make understanding\n` +
+				`stop.\n\n` +
+				`The circles remain. Count\n` +
+				`them.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
