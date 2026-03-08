@@ -374,10 +374,23 @@ As a player, I want regions further from my start to be harder, so that I have a
 - Region difficulty is displayed on the world map (e.g., "Danger: High")
 
 **Acceptance Criteria:**
-- [ ] Enemy levels scale with distance from starting region
-- [ ] Difficulty indicators are visible on the world map
-- [ ] The Underdepths is the hardest region
-- [ ] Players can still enter hard regions (not gated, just difficult)
+- [x] Enemy levels scale with distance from starting region
+- [x] Difficulty indicators are visible on the world map
+- [x] The Underdepths is the hardest region
+- [x] Players can still enter hard regions (not gated, just difficult)
+
+**Implementation Notes (completed):**
+- `enterDungeon()`: dungeon starting level = 1 + (regionDangerLevel - 1), so Greenweald dungeons start at level 1, Ashlands at 4, Underdepths at 10
+- Danger warning on dungeon entry: "The creatures here seem {challenging/dangerous/very dangerous/overwhelming}. (Level N+)"
+- `dangerDisplay()`: converts numeric danger (1-10) to label (Safe/Low/Medium/High/Very High/Extreme) + color
+- `getOverworldInfo()`: now returns `dangerLabel` and `dangerColor` for HUD display
+- HUD shows "Danger: {label}" with color-coded text next to region name
+- World map labels include danger indicator: "The Ashlands [Medium]"
+- Region transition warning: entering regions with danger >= 4 shows orange 'danger' message
+- New 'danger' MessageType with orange bold styling
+- REGION_DEFS danger levels: Greenweald=1, Hearthlands=2, Ashlands=4, Drowned Mire=5, Frostpeak=6, Sunstone Expanse=7, Underdepths=10
+- No movement gating — players can freely enter any region
+- 3 new engine tests: dangerDisplay labels, getOverworldInfo danger fields, world map danger labels
 
 ---
 

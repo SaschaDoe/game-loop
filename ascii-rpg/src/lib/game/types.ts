@@ -219,7 +219,7 @@ export enum Visibility {
 	Visible = 2
 }
 
-export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap' | 'npc';
+export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap' | 'npc' | 'danger';
 
 export interface GameMessage {
 	text: string;

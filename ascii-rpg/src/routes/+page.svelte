@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
@@ -455,6 +455,7 @@
 				{@const owInfo = getOverworldInfo(state)}
 				{#if owInfo}
 					<span class="level" style="color:{owInfo.regionColor}">{owInfo.regionName}</span>
+					<span class="danger-level" style="color:{owInfo.dangerColor}">Danger: {owInfo.dangerLabel}</span>
 				{:else}
 					<span class="level">Overworld</span>
 				{/if}
@@ -1306,6 +1307,10 @@
 		color: #8cf;
 		font-style: italic;
 	}
+	.msg-danger {
+		color: #f84;
+		font-weight: bold;
+	}
 
 	/* ── Dialogue Overlay ── */
 	.dialogue-overlay {
@@ -1758,6 +1763,10 @@
 		opacity: 0.7;
 		pointer-events: none;
 		white-space: nowrap;
+	}
+	.danger-level {
+		margin-left: 8px;
+		font-size: 0.85em;
 	}
 	.waypoint-indicator {
 		margin-left: 8px;

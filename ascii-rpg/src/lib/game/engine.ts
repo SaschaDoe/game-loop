@@ -20,7 +20,7 @@ import { checkAchievements, getAchievement, createDefaultStats } from './achieve
 import { recordSeen, recordKill } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
-import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest } from './overworld';
+import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, REGION_DEFS, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest, type RegionId } from './overworld';
 import { createEmptyInventory, createEmptyEquipment, addToInventory, removeFromInventory, equipItem, unequipItem, addToContainer, removeFromContainer, getEquipmentBonuses, type WorldContainer, type Item, type EquipmentSlot, ITEM_CATALOG } from './items';
 import { BOOK_CATALOG, getAllBookIds } from './books';
 
@@ -312,8 +312,18 @@ const REGION_FLAVOR: Record<string, string> = {
 	sunstone_expanse: 'Endless dunes ripple under a blazing sun. Sand whispers against stone.',
 };
 
+/** Convert numeric danger level to display label and color. */
+export function dangerDisplay(dangerLevel: number): { label: string; color: string } {
+	if (dangerLevel <= 1) return { label: 'Safe', color: '#4a4' };
+	if (dangerLevel <= 2) return { label: 'Low', color: '#aa4' };
+	if (dangerLevel <= 4) return { label: 'Medium', color: '#da4' };
+	if (dangerLevel <= 6) return { label: 'High', color: '#f84' };
+	if (dangerLevel <= 8) return { label: 'Very High', color: '#f44' };
+	return { label: 'Extreme', color: '#f08' };
+}
+
 /** Get current overworld info for HUD display. */
-export function getOverworldInfo(state: GameState): { regionName: string; regionColor: string; dangerLevel: number } | null {
+export function getOverworldInfo(state: GameState): { regionName: string; regionColor: string; dangerLevel: number; dangerLabel: string; dangerColor: string } | null {
 	if (state.locationMode !== 'overworld' || !state.worldMap || !state.overworldPos) return null;
 	const worldMap = state.worldMap as WorldMap;
 	const pos = state.overworldPos;
@@ -321,10 +331,13 @@ export function getOverworldInfo(state: GameState): { regionName: string; region
 	if (!tile) return null;
 	const region = worldMap.regions.find(r => r.id === tile.region);
 	if (!region) return null;
+	const danger = dangerDisplay(region.dangerLevel);
 	return {
 		regionName: region.name,
 		regionColor: REGION_COLORS[tile.region] ?? '#aaa',
 		dangerLevel: region.dangerLevel,
+		dangerLabel: danger.label,
+		dangerColor: danger.color,
 	};
 }
 
@@ -472,6 +485,11 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 			addMessage(state, `— You enter ${regionDef.name} —`, 'discovery');
 			const flavorMsg = REGION_FLAVOR[nextRegion];
 			if (flavorMsg) addMessage(state, flavorMsg, 'info');
+			// Danger warning for high-danger regions
+			if (regionDef.dangerLevel >= 4) {
+				const danger = dangerDisplay(regionDef.dangerLevel);
+				addMessage(state, `Warning: Danger level ${danger.label}. Creatures here are level ${regionDef.dangerLevel}+.`, 'danger');
+			}
 		}
 	}
 
@@ -564,7 +582,11 @@ function enterSettlement(state: GameState, settlement: Settlement): void {
 
 /** Enter a dungeon from the overworld. */
 function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
-	const next = newLevel(1, state.characterConfig.difficulty, state.characterConfig.worldSeed);
+	// Region danger level offsets the starting dungeon level
+	const regionDef = REGION_DEFS[dungeon.region as RegionId];
+	const dangerOffset = regionDef ? Math.max(0, regionDef.dangerLevel - 1) : 0;
+	const startLevel = 1 + dangerOffset;
+	const next = newLevel(startLevel, state.characterConfig.difficulty, state.characterConfig.worldSeed);
 	// Carry over player state
 	next.player.hp = state.player.hp;
 	next.player.maxHp = Math.max(state.player.maxHp, next.player.maxHp);
@@ -597,9 +619,14 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	next.inventory = [...state.inventory];
 	next.equipment = { ...state.equipment };
 	next.containers = [...state.containers];
+	next.waypoint = state.waypoint;
 	// Copy into state (mutate in place since we're inside handleOverworldInput)
 	Object.assign(state, next);
 	addMessage(state, `You descend into ${dungeon.name}...`, 'discovery');
+	if (dangerOffset > 0) {
+		const dangerLabel = dangerOffset >= 8 ? 'overwhelming' : dangerOffset >= 5 ? 'very dangerous' : dangerOffset >= 3 ? 'dangerous' : 'challenging';
+		addMessage(state, `The creatures here seem ${dangerLabel}. (Level ${startLevel}+)`, 'danger');
+	}
 }
 
 /** Discover a POI on the overworld. */
@@ -818,7 +845,8 @@ export function renderWorldMap(state: GameState): { grid: { char: string; color:
 				labeledRegions.add(tile.region);
 				const region = worldMap.regions.find(r => r.id === tile.region);
 				if (region) {
-					labels.push({ text: region.name, x: vx, y: vy, color: REGION_COLORS[tile.region] ?? '#aaa' });
+					const danger = dangerDisplay(region.dangerLevel);
+					labels.push({ text: `${region.name} [${danger.label}]`, x: vx, y: vy, color: REGION_COLORS[tile.region] ?? '#aaa' });
 				}
 			}
 

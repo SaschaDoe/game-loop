@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo, renderWorldMap, getWaypointIndicator } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -2277,5 +2277,34 @@ describe('overworld integration', () => {
 		const result = renderWorldMap(ow);
 		const hasWaypoint = result.grid.some(row => row.some(cell => cell.char === 'X' && cell.color === '#f0f'));
 		expect(hasWaypoint).toBe(true);
+	});
+
+	it('dangerDisplay returns correct labels for danger levels', () => {
+		expect(dangerDisplay(1).label).toBe('Safe');
+		expect(dangerDisplay(2).label).toBe('Low');
+		expect(dangerDisplay(4).label).toBe('Medium');
+		expect(dangerDisplay(6).label).toBe('High');
+		expect(dangerDisplay(8).label).toBe('Very High');
+		expect(dangerDisplay(10).label).toBe('Extreme');
+	});
+
+	it('getOverworldInfo includes danger label and color', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-danger' });
+		const ow = exitToOverworld(state);
+		const info = getOverworldInfo(ow);
+		expect(info).not.toBeNull();
+		expect(info!.dangerLabel).toBeDefined();
+		expect(info!.dangerColor).toBeDefined();
+		// Starting in Greenweald (village) which is danger level 1 = Safe
+		expect(info!.dangerLabel).toBe('Safe');
+	});
+
+	it('world map labels include danger level', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-maplbl' });
+		const ow = exitToOverworld(state);
+		const result = renderWorldMap(ow);
+		// At least one label should contain a danger indicator in brackets
+		const hasDangerLabel = result.labels.some(l => /\[.+\]/.test(l.text));
+		expect(hasDangerLabel).toBe(true);
 	});
 });
