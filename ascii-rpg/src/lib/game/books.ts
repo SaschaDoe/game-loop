@@ -2468,6 +2468,413 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`them.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// A Merchant's Chronicle of Korthaven
+	// -----------------------------------------------------------------------
+	book_merchants_chronicle: {
+		id: 'book_merchants_chronicle',
+		name: 'A Merchant\'s Chronicle of Korthaven',
+		char: 'B',
+		color: '#da4',
+		type: 'book',
+		description: 'A leather-bound ledger with gold-leaf edges. The pages smell of ink and cinnamon.',
+		pages: [
+			`A MERCHANT'S CHRONICLE OF\n` +
+				`KORTHAVEN: THE CROWN OF TRADE\n\n` +
+				`Being an account of the great\n` +
+				`city and its customs, written by\n` +
+				`Merchant Prince Aldric Voss\n` +
+				`in the Year of the Gilded Sun.\n\n` +
+				`Korthaven sits where the world\n` +
+				`meets itself. Three great roads\n` +
+				`converge here — from the green\n` +
+				`Hearthlands to the north, the\n` +
+				`salt-crusted Pale Coast to the\n` +
+				`west, and the burning Sunstone\n` +
+				`Expanse to the east.\n\n` +
+				`All goods flow through Korthaven.\n` +
+				`Hearthlands grain, Pale Coast\n` +
+				`salt fish, Sunstone spices,\n` +
+				`Thornlands iron, Greenweald\n` +
+				`timber — if it can be bought or\n` +
+				`sold, it passes through our\n` +
+				`Grand Market.\n\n` +
+				`The city was a single tavern\n` +
+				`sixty years ago. A crossroads\n` +
+				`inn where traders rested. Duke\n` +
+				`Arandel's grandfather built the\n` +
+				`first walls. His father built the\n` +
+				`palace. Arandel himself built the\n` +
+				`arena and the docks.`,
+
+			`ON THE CRUCIBLE\n\n` +
+				`The fighting arena known as the\n` +
+				`Crucible draws challengers from\n` +
+				`every region. Arena Master\n` +
+				`Gorath built it over old ruins —\n` +
+				`stone foundations that predate\n` +
+				`the city by centuries.\n\n` +
+				`The current champion, a fighter\n` +
+				`called Kael the Unbroken, has\n` +
+				`won thirty-seven consecutive\n` +
+				`bouts. His fighting style is\n` +
+				`ancient — movements from\n` +
+				`military traditions long\n` +
+				`extinct.\n\n` +
+				`Beneath the arena floor lies a\n` +
+				`sealed chamber bearing the\n` +
+				`sigil of Khorvan, the god of\n` +
+				`war. Brother Aldric at the\n` +
+				`temple examined it once and\n` +
+				`ordered it sealed. He said\n` +
+				`only: "The god of war was no\n` +
+				`warrior." He refused to\n` +
+				`elaborate.\n\n` +
+				`I find this troubling. What\n` +
+				`manner of god inspires an\n` +
+				`arena dedicated to courage,\n` +
+				`yet hides a shameful secret\n` +
+				`beneath it?`,
+
+			`ON THE SHADOW COURT\n\n` +
+				`Every great city has its mirror.\n` +
+				`Korthaven's is the Shadow Court\n` +
+				`— a thieves' guild led by a\n` +
+				`woman known as Guildmaster Nyx.\n\n` +
+				`The Shadow Court controls the\n` +
+				`city's underworld with efficiency\n` +
+				`that would shame the Duke's own\n` +
+				`administrators. They manage\n` +
+				`smuggling, intelligence, fencing\n` +
+				`of stolen goods, and protection\n` +
+				`rackets.\n\n` +
+				`Nyx has one rule: no killing.\n` +
+				`This is not mercy — it is\n` +
+				`pragmatism. Dead customers buy\n` +
+				`nothing. Dead witnesses create\n` +
+				`investigations. Dead rivals\n` +
+				`create vacuums that invite\n` +
+				`chaos.\n\n` +
+				`The recent murders have\n` +
+				`therefore unsettled Nyx as\n` +
+				`much as the Duke. Someone is\n` +
+				`operating outside her rules,\n` +
+				`and she does not tolerate\n` +
+				`competition.\n\n` +
+				`The golden masks placed upon\n` +
+				`the dead are not random\n` +
+				`trophies. They are symbols\n` +
+				`from an age before recorded\n` +
+				`history — the age when seven\n` +
+				`mortals stole the thrones of\n` +
+				`gods and called themselves\n` +
+				`divine.`,
+		],
+	},
+	// -----------------------------------------------------------------------
+	// 19. Songs of the Silver Canopy — Eldergrove elven poetry
+	// -----------------------------------------------------------------------
+	book_silver_canopy: {
+		id: 'book_silver_canopy',
+		name: 'Songs of the Silver Canopy',
+		char: 'B',
+		color: '#8fc',
+		type: 'book',
+		description: 'A slim volume bound in living bark that still feels warm. The pages are pressed leaves, the text woven in silver thread.',
+		pages: [
+			`SONG OF THE ROOTMOTHERS\n\n` +
+				`Before the thrones were stolen,\n` +
+				`before the liars wore their crowns,\n` +
+				`we sang to the roots and the roots\n` +
+				`sang back.\n\n` +
+				`Seven streams flowed through the earth\n` +
+				`and we drank from them freely —\n` +
+				`Order, Change, Time, Space,\n` +
+				`Matter, Energy, Spirit —\n` +
+				`each a voice in the great chorus.\n\n` +
+				`Now the streams are dammed.\n` +
+				`Filtered through stolen mouths.\n` +
+				`The water still flows but it\n` +
+				`tastes of lies.\n\n` +
+				`We remember. The trees remember.\n` +
+				`And one day the dams will break.`,
+
+			`LAMENT FOR THE VERDANT BASIN\n\n` +
+				`Sister forest, gone to grey.\n` +
+				`Sister river, turned to ash.\n` +
+				`She who calls herself our mother\n` +
+				`held the poison in her hands\n` +
+				`and called it mercy.\n\n` +
+				`Three million starved.\n` +
+				`The Ley Line screamed and died.\n` +
+				`And the woman who killed it\n` +
+				`sits upon a throne and tends\n` +
+				`gardens that mock the grave\n` +
+				`she dug for the world.\n\n` +
+				`We do not forget.\n` +
+				`The Eldergrove does not forget.\n` +
+				`When the last leaf falls from\n` +
+				`the Grey Wastes, the truth\n` +
+				`will grow from the silence.`,
+
+			`THE WARDEN'S OATH\n\n` +
+				`I shall walk the silver paths\n` +
+				`where root meets sky.\n` +
+				`I shall speak the old tongue\n` +
+				`that needs no god's permission.\n` +
+				`I shall guard the Eldest Trees\n` +
+				`against axe and fire and\n` +
+				`the slow poison of forgetting.\n\n` +
+				`For the forest is older than\n` +
+				`prayer. The canopy sheltered us\n` +
+				`when we had no names for god\n` +
+				`and needed none.\n\n` +
+				`Let the temples preach.\n` +
+				`Let the thrones decree.\n` +
+				`The roots drink deeper\n` +
+				`than any crown can reach.`,
+		],
+	},
+
+	// -----------------------------------------------------------------------
+	// 20. A Ranger's Field Guide to the Eldergrove
+	// -----------------------------------------------------------------------
+	book_ranger_field_guide: {
+		id: 'book_ranger_field_guide',
+		name: "A Ranger's Field Guide to the Eldergrove",
+		char: 'B',
+		color: '#4a6',
+		type: 'book',
+		description: 'A well-worn leather journal filled with hand-drawn maps, pressed leaves, and careful observations in a neat, slanting hand.',
+		pages: [
+			`NOTABLE SETTLEMENTS\n\n` +
+				`SILVERSPIRE — The great city in the\n` +
+				`canopy. Three thousand elves live among\n` +
+				`platforms of living wood connected by\n` +
+				`vine bridges. The Moonlit Archives sit\n` +
+				`at its heart — a library the Veiled\n` +
+				`Hand believes it burned two centuries\n` +
+				`ago. It was merely moved.\n\n` +
+				`ROOTHOLLOW — A trading post where the\n` +
+				`forest meets the Hearthlands road.\n` +
+				`Humans, elves, and halflings barter\n` +
+				`under a truce as old as the trees.\n\n` +
+				`THE THORNVEIL — A fortified camp at\n` +
+				`the forest's southern edge where the\n` +
+				`Rangers maintain watch against the\n` +
+				`Briarwood Gang and worse things\n` +
+				`that creep from the deep wood.`,
+
+			`DANGERS OF THE DEEP FOREST\n\n` +
+				`BRIARWOOD GANG — Bandits led by a\n` +
+				`scarred human called "The Thorn King."\n` +
+				`He claims noble blood and styles\n` +
+				`himself a rightful lord. His gang\n` +
+				`numbers forty, fortified in root\n` +
+				`hollows. Dangerous and well-armed.\n\n` +
+				`CANOPY STALKERS — Great cats that\n` +
+				`hunt from the upper branches. Silent.\n` +
+				`You hear them only when they choose.\n\n` +
+				`FOREST TROLLS — Rare but territorial.\n` +
+				`Regenerate from wounds. Fire works.\n\n` +
+				`GIANT SPIDERS — Nest in the eastern\n` +
+				`groves. Webs strong as rope. Venom\n` +
+				`causes paralysis, not death — they\n` +
+				`prefer live prey.\n\n` +
+				`THE THORNVEIL BEAST — Something\n` +
+				`ancient prowls the deep paths.\n` +
+				`Tracks larger than a bear's. No\n` +
+				`Ranger has seen it clearly and\n` +
+				`returned.`,
+
+			`FLORA OF NOTE\n\n` +
+				`MOONPETAL — Blooms only under\n` +
+				`starlight. Potent healing herb.\n` +
+				`The elves cultivate it in canopy\n` +
+				`gardens open to the sky.\n\n` +
+				`SILVERWOOD — The great trees that\n` +
+				`define the Eldergrove. Bark like\n` +
+				`polished silver, leaves that chime\n` +
+				`in the wind. Some are over ten\n` +
+				`thousand years old. The eldest are\n` +
+				`said to remember the Age of Silence.\n\n` +
+				`WHISPERING MOSS — Grows on north-\n` +
+				`facing trunks. Absorbs sound. The\n` +
+				`elves use it to soundproof their\n` +
+				`archives. Some scholars claim it\n` +
+				`stores what it absorbs — that the\n` +
+				`right ritual could make it speak.\n\n` +
+				`VOIDBLOOMS — Found near the\n` +
+				`Worldseed Tree. Flowers that\n` +
+				`shouldn't exist. They drink\n` +
+				`something other than sunlight.\n` +
+				`A sign the cage is weakening.`,
+		],
+	},
+
+	// -----------------------------------------------------------------------
+	// 21. The Exile's Confession — a bandit's journal
+	// -----------------------------------------------------------------------
+	book_exiles_confession: {
+		id: 'book_exiles_confession',
+		name: "The Exile's Confession",
+		char: 'B',
+		color: '#a86',
+		type: 'book',
+		description: 'A rain-damaged journal found in a bandit camp. The ink has run in places, but the words remain legible — barely.',
+		pages: [
+			`I was a lord once. That fact sounds\n` +
+				`absurd now, crouched in a root\n` +
+				`hollow with forty thieves who call\n` +
+				`me king. But it's true.\n\n` +
+				`Lord Aldren Voss of Hearthshire.\n` +
+				`Third son. Educated. Civilized.\n` +
+				`Dispossessed.\n\n` +
+				`They took my lands on a legal\n` +
+				`technicality — something about\n` +
+				`an ancestor's debt to the Church.\n` +
+				`The Solaris priests smiled as they\n` +
+				`read the decree. Eight hundred\n` +
+				`years of family history, erased\n` +
+				`with a seal and a prayer.\n\n` +
+				`So I came to the forest. The elves\n` +
+				`didn't want me. The trees didn't\n` +
+				`care. The road offered opportunity\n` +
+				`to those willing to take it.`,
+
+			`My men think I'm cruel. Perhaps\n` +
+				`I am. But I learned cruelty from\n` +
+				`the civilized — from priests who\n` +
+				`steal with documents instead of\n` +
+				`swords, from lords who starve\n` +
+				`tenants with taxes blessed by\n` +
+				`divine decree.\n\n` +
+				`At least I look my victims in\n` +
+				`the eye.\n\n` +
+				`The elves watch us from the\n` +
+				`canopy. They could end us in a\n` +
+				`day if they wished. But they\n` +
+				`don't. Sometimes I wonder if\n` +
+				`they find us amusing. Or if they\n` +
+				`see in us something familiar —\n` +
+				`outcasts fighting an empire that\n` +
+				`pretends to be holy.\n\n` +
+				`I found something in the ruins\n` +
+				`last month. A stone tablet with\n` +
+				`writing older than Elvish. The\n` +
+				`Archivist would pay well for it.\n` +
+				`But I can't read it, and the\n` +
+				`symbols make my head ache in a\n` +
+				`way that feels like remembering\n` +
+				`something I never knew.`,
+		],
+	},
+	book_remedies_sightless: {
+		id: 'book_remedies_sightless',
+		name: 'Remedies for the Sightless',
+		char: 'B',
+		color: '#aabbaa',
+		type: 'book',
+		description: 'A book written in raised bumps instead of ink. Someone has added flat-text translations between the lines.',
+		pages: [
+			`REMEDIES FOR THE SIGHTLESS\n` +
+				`Being a Healer's Manual\n` +
+				`by Brother Caelum of the\n` +
+				`Monastery of Still Waters\n\n` +
+				`I was not always blind.\n\n` +
+				`I was made so by a woman with\n` +
+				`steady hands in a stone room.\n` +
+				`She was precise. She was calm.\n` +
+				`She catalogued my responses\n` +
+				`the way a scholar catalogues\n` +
+				`moths — with interest but\n` +
+				`without feeling.\n\n` +
+				`There were eighty-six of us.\n` +
+				`Monks. Healers. Gardeners. We\n` +
+				`had taken vows of compassion.\n` +
+				`We had nothing to confess, so\n` +
+				`she took our eyes instead.\n\n` +
+				`She released us into the wild\n` +
+				`afterward. I believe she\n` +
+				`expected us to die. Eleven\n` +
+				`of us did not.`,
+			`REMEDY THE FIRST: Diagnosis\n` +
+				`by touch.\n\n` +
+				`Place your palms flat against\n` +
+				`the patient's back. Feel for\n` +
+				`heat where there should be\n` +
+				`none. Feel for cold where\n` +
+				`warmth should live.\n\n` +
+				`I learned this in the stone\n` +
+				`room. She pressed instruments\n` +
+				`to my skin — hot and cold,\n` +
+				`sharp and dull — and asked me\n` +
+				`to describe what I felt. She\n` +
+				`wrote everything down. She\n` +
+				`was building a map of pain.\n\n` +
+				`I use her map now. I reversed\n` +
+				`it. Where she charted how to\n` +
+				`hurt, I chart how to heal.\n` +
+				`Every nerve she catalogued is\n` +
+				`a nerve I can soothe. Every\n` +
+				`threshold she recorded is a\n` +
+				`threshold I can ease a patient\n` +
+				`back from.\n\n` +
+				`She gave me the alphabet of\n` +
+				`suffering and I am writing\n` +
+				`different words with it.`,
+			`REMEDY THE SECOND: Hearing\n` +
+				`illness.\n\n` +
+				`Listen to the patient's\n` +
+				`breathing. Not the words —\n` +
+				`the spaces between them. Pain\n` +
+				`has a grammar. Fear shortens\n` +
+				`the exhale. Grief deepens\n` +
+				`the inhale. Shame makes the\n` +
+				`breath shallow, as if the body\n` +
+				`is trying to take up less\n` +
+				`room in the world.\n\n` +
+				`I carry a library of eighty-\n` +
+				`five voices in my memory —\n` +
+				`my brothers and sisters in\n` +
+				`that room, each crying out\n` +
+				`in their own particular way.\n` +
+				`I compare a patient's breath\n` +
+				`to that library and I know\n` +
+				`exactly what is wrong.\n\n` +
+				`She thought she was breaking\n` +
+				`us. She was teaching us a\n` +
+				`language no sighted healer\n` +
+				`will ever learn.`,
+			`A FINAL NOTE:\n\n` +
+				`I have heard there is a\n` +
+				`goddess now who heals. They\n` +
+				`say her touch is warm and\n` +
+				`her mercy is endless. They\n` +
+				`say she weeps for every\n` +
+				`wound she mends.\n\n` +
+				`Her healing reached me once,\n` +
+				`in a fever dream. Hands on\n` +
+				`my forehead. Gentle. Precise.\n\n` +
+				`I recognized the hands.\n\n` +
+				`They were steadier than I\n` +
+				`remembered. Kinder. But the\n` +
+				`same hands. The same clinical\n` +
+				`certainty in the fingertips.\n` +
+				`The same way of finding the\n` +
+				`exact point where pressure\n` +
+				`becomes something else.\n\n` +
+				`I said nothing. The fever\n` +
+				`passed. I lived.\n\n` +
+				`If she has learned to heal\n` +
+				`what she once studied how\n` +
+				`to break, then perhaps there\n` +
+				`is mercy in the world after\n` +
+				`all. Not hers. Mine.\n\n` +
+				`I choose not to say her name.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
