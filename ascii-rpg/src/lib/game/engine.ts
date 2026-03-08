@@ -21,6 +21,8 @@ import { recordSeen, recordKill } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
 import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest } from './overworld';
+import { createEmptyInventory, createEmptyEquipment, type WorldContainer, ITEM_CATALOG } from './items';
+import { BOOK_CATALOG, getAllBookIds } from './books';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -244,6 +246,14 @@ export function createGame(config?: CharacterConfig): GameState {
 		overworldPos,
 		currentLocationId: startSettlement.id,
 		waypoint: null,
+		inventory: createEmptyInventory(),
+		equipment: createEmptyEquipment(),
+		containers: [],
+		activeBookReading: null,
+		inventoryOpen: false,
+		activeContainer: null,
+		inventoryCursor: 0,
+		inventoryPanel: 'inventory' as const,
 	};
 
 	// Apply class bonuses
@@ -582,6 +592,10 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	next.overworldPos = state.overworldPos;
 	next.locationMode = 'location';
 	next.currentLocationId = dungeon.id;
+	// Carry inventory state into dungeon
+	next.inventory = [...state.inventory];
+	next.equipment = { ...state.equipment };
+	next.containers = [...state.containers];
 	// Copy into state (mutate in place since we're inside handleOverworldInput)
 	Object.assign(state, next);
 	addMessage(state, `You descend into ${dungeon.name}...`, 'discovery');
@@ -932,6 +946,89 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 	const npcs = spawnDungeonNPCs(map, level, occupiedPositions, rng);
 	for (const n of npcs) occupiedPositions.add(`${n.pos.x},${n.pos.y}`);
 	const landmarks = placeLandmarks(map, level, occupiedPositions, rng);
+	for (const lm of landmarks) occupiedPositions.add(`${lm.pos.x},${lm.pos.y}`);
+
+	// Place containers in dungeon levels
+	const containers: WorldContainer[] = [];
+	if (level >= 1) {
+		const containerCount = Math.floor(rng.next() * 3); // 0-2 containers
+		for (let ci = 0; ci < containerCount; ci++) {
+			// Find a free floor tile
+			let placed = false;
+			for (let attempt = 0; attempt < 50 && !placed; attempt++) {
+				const cx = Math.floor(rng.next() * map.width);
+				const cy = Math.floor(rng.next() * map.height);
+				const ckey = `${cx},${cy}`;
+				if (map.tiles[cy][cx] === '.' && !occupiedPositions.has(ckey)) {
+					let containerChar: string;
+					let containerColor: string;
+					let containerName: string;
+					let containerSize: 'small' | 'medium' = 'small';
+
+					if (level >= 5 && rng.next() < 0.3) {
+						// Bookshelf
+						containerChar = '#';
+						containerColor = '#886644';
+						containerName = 'Bookshelf';
+						containerSize = 'medium';
+					} else if (level >= 3) {
+						containerChar = 'O';
+						containerColor = '#aa8844';
+						containerName = 'Wooden Chest';
+						containerSize = 'medium';
+					} else {
+						containerChar = 'o';
+						containerColor = '#aa8844';
+						containerName = 'Small Box';
+						containerSize = 'small';
+					}
+
+					const containerItems: import('./items').Item[] = [];
+
+					// 30% chance of a consumable
+					if (rng.next() < 0.30) {
+						const consumables = ['health_potion', 'bread', 'water_flask'];
+						const pick = consumables[Math.floor(rng.next() * consumables.length)];
+						const item = ITEM_CATALOG[pick];
+						if (item) containerItems.push({ ...item });
+					}
+
+					// 20% chance of equipment (scale with level)
+					if (rng.next() < 0.20) {
+						const equipKeys = Object.keys(ITEM_CATALOG).filter(k => ITEM_CATALOG[k].type === 'equipment');
+						if (equipKeys.length > 0) {
+							const eqPick = equipKeys[Math.floor(rng.next() * equipKeys.length)];
+							const item = ITEM_CATALOG[eqPick];
+							if (item) containerItems.push({ ...item });
+						}
+					}
+
+					// 15% chance of a book
+					if (rng.next() < 0.15) {
+						const bookIds = getAllBookIds();
+						if (bookIds.length > 0) {
+							const bookPick = bookIds[Math.floor(rng.next() * bookIds.length)];
+							const book = BOOK_CATALOG[bookPick];
+							if (book) containerItems.push({ ...book });
+						}
+					}
+
+					const container: WorldContainer = {
+						id: `container_${level}_${ci}`,
+						pos: { x: cx, y: cy },
+						size: containerSize,
+						items: containerItems,
+						char: containerChar,
+						color: containerColor,
+						name: containerName,
+					};
+					containers.push(container);
+					occupiedPositions.add(ckey);
+					placed = true;
+				}
+			}
+		}
+	}
 
 	const state: GameState = {
 		player: {
@@ -982,6 +1079,14 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		overworldPos: null,
 		currentLocationId: null,
 		waypoint: null,
+		inventory: createEmptyInventory(),
+		equipment: createEmptyEquipment(),
+		containers,
+		activeBookReading: null,
+		inventoryOpen: false,
+		activeContainer: null,
+		inventoryCursor: 0,
+		inventoryPanel: 'inventory' as const,
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -1828,6 +1933,10 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.locationMode = 'location';
 		next.currentLocationId = state.currentLocationId;
 		next.waypoint = state.waypoint;
+		// Carry inventory state through dungeon levels
+		next.inventory = [...state.inventory];
+		next.equipment = { ...state.equipment };
+		next.containers = [...state.containers];
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;
@@ -2122,6 +2231,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 				} else if (getLootAt(state.lootDrops, x, y)) {
 					const ld = getLootAt(state.lootDrops, x, y)!;
 					row.push({ char: lootChar(ld.type), color: lootColor(ld.type) });
+				} else if (state.containers.find(c => c.pos.x === x && c.pos.y === y)) {
+					const ct = state.containers.find(c => c.pos.x === x && c.pos.y === y)!;
+					row.push({ char: ct.char, color: ct.color });
 				} else if (getLandmarkAt(state.landmarks, x, y)) {
 					const lm = getLandmarkAt(state.landmarks, x, y)!;
 					const lmColor = lm.examined ? dimColor(landmarkColor(lm.type)) : landmarkColor(lm.type);
@@ -2147,6 +2259,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 				const lootDrop = getLootAt(state.lootDrops, x, y);
 				if (lootDrop) {
 					row.push({ char: lootChar(lootDrop.type), color: dimColor(lootColor(lootDrop.type)) });
+				} else if (state.containers.find(c => c.pos.x === x && c.pos.y === y)) {
+					const ct = state.containers.find(c => c.pos.x === x && c.pos.y === y)!;
+					row.push({ char: ct.char, color: dimColor(ct.color) });
 				} else if (getLandmarkAt(state.landmarks, x, y)) {
 					const lm = getLandmarkAt(state.landmarks, x, y)!;
 					row.push({ char: landmarkChar(lm.type), color: dimColor(landmarkColor(lm.type)) });

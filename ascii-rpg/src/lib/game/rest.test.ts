@@ -75,6 +75,14 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		overworldPos: null,
 		currentLocationId: null,
 		waypoint: null,
+		inventory: Array.from({ length: 12 }, () => null),
+		equipment: { head: null, body: null, trouser: null, leftHand: null, rightHand: null, back: null, leftFoot: null, rightFoot: null },
+		containers: [],
+		activeBookReading: null,
+		inventoryOpen: false,
+		activeContainer: null,
+		inventoryCursor: 0,
+		inventoryPanel: 'inventory' as const,
 		...overrides
 	};
 }

@@ -1,3 +1,5 @@
+import type { Item, Equipment, WorldContainer } from './items';
+
 export interface Position {
 	x: number;
 	y: number;
@@ -287,6 +289,14 @@ export interface GameState {
 	overworldPos: Position | null;  // player position on the overworld grid
 	currentLocationId: string | null; // which settlement/dungeon we're inside
 	waypoint: Position | null;     // overworld waypoint set from world map view
+	inventory: (Item | null)[];
+	equipment: Equipment;
+	containers: WorldContainer[];
+	activeBookReading: { bookId: string; currentPage: number } | null;
+	inventoryOpen: boolean;
+	activeContainer: string | null;  // container id when interacting
+	inventoryCursor: number;  // which slot is selected (0-11 for inventory, 12-19 for equipment, 20+ for container)
+	inventoryPanel: 'inventory' | 'equipment' | 'container';  // which panel has focus
 }
 
 export interface BestiaryEntry {

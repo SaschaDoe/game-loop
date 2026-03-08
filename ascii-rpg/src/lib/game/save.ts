@@ -1,8 +1,10 @@
 import type { GameState, Tile, GameStats, LocationMode } from './types';
+import type { Item, Equipment, WorldContainer } from './items';
+import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -55,6 +57,14 @@ interface SerializedState {
 	waypoint: { x: number; y: number } | null;
 	overworldExplored: boolean[][] | null;
 	discoveredPois: string[];
+	inventory: (Item | null)[];
+	equipment: Equipment;
+	containers: WorldContainer[];
+	activeBookReading: { bookId: string; currentPage: number } | null;
+	inventoryOpen: boolean;
+	activeContainer: string | null;
+	inventoryCursor: number;
+	inventoryPanel: 'inventory' | 'equipment' | 'container';
 }
 
 export function serializeState(state: GameState): string {
@@ -105,6 +115,14 @@ export function serializeState(state: GameState): string {
 			waypoint: state.waypoint,
 			overworldExplored: state.worldMap ? (state.worldMap as WorldMap).explored : null,
 			discoveredPois: state.worldMap ? (state.worldMap as WorldMap).pois.filter(p => p.discovered).map(p => p.id) : [],
+			inventory: state.inventory,
+			equipment: state.equipment,
+			containers: state.containers,
+			activeBookReading: state.activeBookReading,
+			inventoryOpen: state.inventoryOpen,
+			activeContainer: state.activeContainer,
+			inventoryCursor: state.inventoryCursor,
+			inventoryPanel: state.inventoryPanel,
 		}
 	};
 	return JSON.stringify(data);
@@ -161,6 +179,14 @@ export function deserializeState(json: string): GameState {
 		overworldPos: s.overworldPos ?? null,
 		currentLocationId: s.currentLocationId ?? null,
 		waypoint: s.waypoint ?? null,
+		inventory: s.inventory ?? createEmptyInventory(),
+		equipment: s.equipment ?? createEmptyEquipment(),
+		containers: s.containers ?? [],
+		activeBookReading: s.activeBookReading ?? null,
+		inventoryOpen: s.inventoryOpen ?? false,
+		activeContainer: s.activeContainer ?? null,
+		inventoryCursor: s.inventoryCursor ?? 0,
+		inventoryPanel: s.inventoryPanel ?? 'inventory',
 	};
 
 	// Regenerate world from seed and restore explored/discovered state
