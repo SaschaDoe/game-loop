@@ -2248,6 +2248,112 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`that is always worse.`,
 		],
 	},
+	book_things_doorstep: {
+		id: 'book_things_doorstep',
+		name: 'Things Left on the Doorstep',
+		char: 'B',
+		color: '#ddaa77',
+		type: 'book',
+		description: 'A small diary bound with twine, smelling of sawdust and varnish.',
+		pages: [
+			`THINGS LEFT ON THE DOORSTEP\n` +
+				`The diary of Hadden Cobb,\n` +
+				`toymaker, Ashveil Settlement\n\n` +
+				`Spring, year unclear —\n\n` +
+				`Found a child's shoe on the\n` +
+				`step this morning. Left foot.\n` +
+				`Scuffed, sole worn through.\n` +
+				`No child in the settlement\n` +
+				`claims it. I mended the sole\n` +
+				`and stitched the leather and\n` +
+				`left it on the step at dusk.\n` +
+				`Gone by morning.\n\n` +
+				`A week later, a wooden doll\n` +
+				`with a cracked face. Good\n` +
+				`craftsmanship — not mine. Old.\n` +
+				`Very old. I glued the crack\n` +
+				`and repainted the smile. Left\n` +
+				`it on the step. Gone by dawn.\n\n` +
+				`Then a ribbon, frayed at both\n` +
+				`ends. Blue once, faded to grey.\n` +
+				`I tied fresh knots and left it\n` +
+				`out. Gone.\n\n` +
+				`Three things. I thought nothing\n` +
+				`of it then.`,
+			`Five years now.\n\n` +
+				`The pattern is always the same.\n` +
+				`Always children's things. Always\n` +
+				`in threes — three buttons, three\n` +
+				`ribbons, three smooth stones\n` +
+				`placed in a row on my workbench.\n` +
+				`(The workbench unsettles me. I\n` +
+				`lock the workshop. The stones\n` +
+				`still appear.)\n\n` +
+				`I have begun leaving things in\n` +
+				`return. Small toys — a spinning\n` +
+				`top, a carved horse, a cloth\n` +
+				`cat with button eyes. I leave\n` +
+				`three, always three. They are\n` +
+				`always taken.\n\n` +
+				`Whoever they are, they are\n` +
+				`polite. They never take what\n` +
+				`is not offered. They never\n` +
+				`break anything. They leave\n` +
+				`their broken things like\n` +
+				`questions and accept my\n` +
+				`repairs like answers.\n\n` +
+				`I do not have children. I\n` +
+				`think perhaps they know this.`,
+			`Midwinter —\n\n` +
+				`Woke to a sound that was not\n` +
+				`a sound. More like the memory\n` +
+				`of laughter, pressed into the\n` +
+				`air the way a flower is pressed\n` +
+				`into a book.\n\n` +
+				`I went to the workshop. Three\n` +
+				`sets of small footprints in\n` +
+				`the sawdust. They circled my\n` +
+				`workbench, paused at the shelf\n` +
+				`where I keep my finest pieces,\n` +
+				`and stopped.\n\n` +
+				`Three toys missing from the\n` +
+				`shelf — the ones I made last\n` +
+				`month: a dancer, a bird, a\n` +
+				`tiny ship. My best work.\n\n` +
+				`In their place: three flowers.\n` +
+				`White, with gold centers, stems\n` +
+				`still wet. I showed them to old\n` +
+				`Maren who knows every plant in\n` +
+				`the Ashlands. She went pale.\n` +
+				`"Those haven't grown here in a\n` +
+				`thousand years," she said.\n` +
+				`"Not since before the ash."`,
+			`I asked Maren about ghost\n` +
+				`children. She would not look\n` +
+				`at me.\n\n` +
+				`"Don't tend to them, Hadden.\n` +
+				`They wander the Ashlands\n` +
+				`looking for their mother. If\n` +
+				`you're kind they'll think\n` +
+				`you're her and they'll never\n` +
+				`leave."\n\n` +
+				`"Who was their mother?"\n\n` +
+				`"Someone who didn't deserve\n` +
+				`them."\n\n` +
+				`I sat with this for three\n` +
+				`days. Then I carved three new\n` +
+				`toys — a bear, a fox, and a\n` +
+				`small wooden heart — and set\n` +
+				`them on the step.\n\n` +
+				`If they are looking for\n` +
+				`someone who will mend what\n` +
+				`is broken and return what is\n` +
+				`lost, then let them find one.\n\n` +
+				`I am not their mother.\n` +
+				`But I will leave the door\n` +
+				`unlocked.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
