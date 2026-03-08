@@ -144,6 +144,14 @@ The most important artifacts in existence. When the seven mortals ascended, the 
 **Power:** The crown remembers. Anyone who wears it experiences Orinthas's reign from his perspective — his confidence, his certainty, his absolute inability to see the consequences of his actions. It is a terrifying experience because the wearer feels how *easy* it was for a fool to destroy everything. They feel the seductive certainty of stupidity.
 **Location:** In the Temporal Ruins of Luminara, preserved by the same time anomalies that keep the Last Inscription legible. The crown sits on a throne in a frozen throne room, surrounded by temporal distortion.
 
+### The Mortal Shadows
+**Type:** Shadow-fragments — flat, dark, weightless, cold to the touch
+**Official Story:** "Sacred relics of uncertain origin — do not touch, do not question"
+**Real Origin:** When the seven mortals ascended, the divine transformation was not total. The parts of their mortal selves that the divine power could not fully absorb were ejected as shadow-fragments — flat silhouettes that retain the posture and emotional imprint of the mortal at the moment of transformation. Each shadow shows what the god *was*, frozen in the instant before divinity consumed them.
+**Appearance:** Each shadow depicts its god's mortal self in a revealing posture. Khorvan's shows a man cowering. Verath's shows a man hiding documents. Mireya's shows a woman with blood on her hands, examining them with clinical detachment. The shadows are pinned to walls or sealed in containers within the innermost chambers of their respective god's primary temple.
+**Significance:** The shadows are physical proof of the Ascended's mortal nature, visible to anyone who looks. A shadow shown publicly would raise devastating questions about the god it belongs to.
+**Location:** One shadow per major temple — the Temple of Ferrum (Khorvan, stolen by the Unmaskers, see [16-lesser-tales-ii.md](16-lesser-tales-ii.md)), and the remaining six in their respective temples under Veiled Hand guard. Most temple staff who encounter the shadows believe them to be minor sacred relics. Only the highest-ranking Veiled Hand operatives know their true significance.
+
 ---
 
 ## Lost Treasures
