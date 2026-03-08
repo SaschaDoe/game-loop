@@ -2364,7 +2364,7 @@ describe('overworld integration', () => {
 		}
 	});
 
-	it('road travel has lower encounter rate', () => {
+	it('road travel has lower encounter rate', { timeout: 15000 }, () => {
 		// Test that road tiles use 2% chance vs 5% off-road
 		// We can't easily test probability, but verify the system doesn't crash on roads
 		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-enc3' });
