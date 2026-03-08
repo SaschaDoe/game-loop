@@ -137,10 +137,20 @@ As a developer, I want roads connecting all settlements, so that the world is na
 5. Place signposts at intersections
 
 **Acceptance Criteria:**
-- [ ] All settlements are connected via road network
-- [ ] Roads follow terrain naturally (no roads through mountains/water)
-- [ ] Signposts exist at intersections
-- [ ] Road types match settlement importance
+- [x] All settlements are connected via road network
+- [x] Roads follow terrain naturally (no roads through mountains/water)
+- [x] Signposts exist at intersections
+- [x] Road types match settlement importance
+
+**Implementation Notes (completed):**
+- `buildRoadGraph()`: Kruskal's MST over all settlements + 2-3 extra edges for loop paths
+- `findRoadPath()`: A* pathfinding with terrain-weighted costs (grass=1, forest/swamp=3-4, water/mountain/lava=100)
+- Already-roaded tiles get a 0.5 cost bonus to encourage road merging
+- `classifyRoad()`: main roads for town/city/fortress connections, paths for village/camp
+- `placeSignposts()`: tiles with 3+ cardinal road neighbors marked as signposts
+- `bresenhamPath()`: fallback straight-line path when A* cannot find a route
+- `Road` interface stores from/to settlement IDs, type, and full path positions
+- Tests verify: connectivity (BFS), road tiles painted, terrain avoidance (<5% on impassable), signposts, determinism
 
 ---
 

@@ -2,6 +2,7 @@
  * Overworld generation: 7 regions on a large grid with biome-specific terrain.
  * US-WG-02: Region placement via Voronoi partitioning
  * US-WG-03: Terrain generation per region
+ * US-WG-05: Road network connecting settlements
  */
 import type { Position, StartingLocation } from './types';
 import { SeededRandom, hashSeed, createRng } from './seeded-random';
@@ -23,6 +24,7 @@ export interface OverworldTile {
 	terrain: TerrainType;
 	region: RegionId;
 	road?: RoadType;
+	signpost?: boolean;
 	locationId?: string;
 }
 
@@ -51,6 +53,13 @@ export interface DungeonEntrance {
 	maxDepth: number;
 }
 
+export interface Road {
+	from: string;       // settlement id
+	to: string;         // settlement id
+	type: RoadType;
+	path: Position[];   // ordered tiles from→to
+}
+
 export interface WorldMap {
 	width: number;
 	height: number;
@@ -58,6 +67,7 @@ export interface WorldMap {
 	regions: Region[];
 	settlements: Settlement[];
 	dungeonEntrances: DungeonEntrance[];
+	roads: Road[];
 	explored: boolean[][];
 }
 
@@ -300,12 +310,15 @@ export function generateWorld(worldSeed: string, width: number = WORLD_W, height
 	// 9. Place dungeon entrances
 	const dungeonEntrances = placeDungeonEntrances(tiles, regionSeeds, settlements, width, height, rng);
 
-	// 10. Initialize explored grid (all hidden)
+	// 10. Generate road network connecting settlements
+	const roads = generateRoads(tiles, settlements, width, height, rng);
+
+	// 11. Initialize explored grid (all hidden)
 	const explored: boolean[][] = Array.from({ length: height }, () =>
 		Array.from({ length: width }, () => false)
 	);
 
-	return { width, height, tiles, regions, settlements, dungeonEntrances, explored };
+	return { width, height, tiles, regions, settlements, dungeonEntrances, roads, explored };
 }
 
 // ── Transition Zones ──
@@ -430,6 +443,216 @@ function placeDungeonEntrances(tiles: OverworldTile[][], regionSeeds: Map<Region
 	}
 
 	return entrances;
+}
+
+// ── Road Network Generation (US-WG-05) ──
+
+/** Movement cost for A* pathfinding through terrain. Higher = roads avoid it. */
+const TERRAIN_ROAD_COST: Record<TerrainType, number> = {
+	grass: 1, farmland: 1, sand: 2, ash: 2, scorched: 2,
+	mud: 3, snow: 3, rock: 4, ice: 4, dead_trees: 3,
+	forest: 3, swamp: 4, oasis: 2,
+	water: 100, mountain: 100, lava: 100,
+};
+
+/** Determine road type based on the two connected settlements. */
+function classifyRoad(a: Settlement, b: Settlement): RoadType {
+	const major = new Set<SettlementType>(['town', 'city', 'fortress']);
+	if (major.has(a.type) || major.has(b.type)) return 'main';
+	return 'path';
+}
+
+/** Kruskal's MST over settlements, then add extra loop edges. */
+function buildRoadGraph(settlements: Settlement[], rng: SeededRandom): { from: number; to: number }[] {
+	if (settlements.length < 2) return [];
+
+	// All edges sorted by distance
+	const edges: { from: number; to: number; dist: number }[] = [];
+	for (let i = 0; i < settlements.length; i++) {
+		for (let j = i + 1; j < settlements.length; j++) {
+			edges.push({ from: i, to: j, dist: distance(settlements[i].pos, settlements[j].pos) });
+		}
+	}
+	edges.sort((a, b) => a.dist - b.dist);
+
+	// Union-Find
+	const parent = settlements.map((_, i) => i);
+	function find(x: number): number {
+		while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+		return x;
+	}
+	function union(a: number, b: number): boolean {
+		const ra = find(a), rb = find(b);
+		if (ra === rb) return false;
+		parent[ra] = rb;
+		return true;
+	}
+
+	// MST
+	const mstEdges: { from: number; to: number }[] = [];
+	const inMst = new Set<string>();
+	for (const e of edges) {
+		if (union(e.from, e.to)) {
+			mstEdges.push({ from: e.from, to: e.to });
+			inMst.add(`${e.from},${e.to}`);
+		}
+		if (mstEdges.length === settlements.length - 1) break;
+	}
+
+	// Add 2-3 extra short edges for loops
+	const extraCount = rng.nextRange(2, 3);
+	let added = 0;
+	for (const e of edges) {
+		if (added >= extraCount) break;
+		const key = `${e.from},${e.to}`;
+		if (!inMst.has(key)) {
+			mstEdges.push({ from: e.from, to: e.to });
+			inMst.add(key);
+			added++;
+		}
+	}
+
+	return mstEdges;
+}
+
+/** A* pathfinding between two positions, weighted by terrain cost. */
+function findRoadPath(tiles: OverworldTile[][], width: number, height: number, start: Position, end: Position): Position[] {
+	const key = (p: Position) => p.y * width + p.x;
+	const heuristic = (p: Position) => Math.abs(p.x - end.x) + Math.abs(p.y - end.y);
+
+	const gScore = new Map<number, number>();
+	const fScore = new Map<number, number>();
+	const cameFrom = new Map<number, number>();
+
+	const startKey = key(start);
+	gScore.set(startKey, 0);
+	fScore.set(startKey, heuristic(start));
+
+	// Simple priority queue (array sorted by fScore — fine for overworld-scale paths)
+	const open: Position[] = [start];
+	const inOpen = new Set<number>([startKey]);
+	const closed = new Set<number>();
+
+	while (open.length > 0) {
+		// Pick lowest fScore
+		let bestIdx = 0;
+		let bestF = fScore.get(key(open[0]))!;
+		for (let i = 1; i < open.length; i++) {
+			const f = fScore.get(key(open[i]))!;
+			if (f < bestF) { bestF = f; bestIdx = i; }
+		}
+		const current = open[bestIdx];
+		const ck = key(current);
+
+		if (current.x === end.x && current.y === end.y) {
+			// Reconstruct path
+			const path: Position[] = [];
+			let k = ck;
+			while (k !== undefined) {
+				const y = Math.floor(k / width);
+				const x = k % width;
+				path.push({ x, y });
+				k = cameFrom.get(k)!;
+			}
+			return path.reverse();
+		}
+
+		open.splice(bestIdx, 1);
+		inOpen.delete(ck);
+		closed.add(ck);
+
+		const cg = gScore.get(ck)!;
+
+		for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+			const nx = current.x + dx;
+			const ny = current.y + dy;
+			if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+			const nk = ny * width + nx;
+			if (closed.has(nk)) continue;
+
+			const terrain = tiles[ny][nx].terrain;
+			const cost = TERRAIN_ROAD_COST[terrain];
+			// Already-roaded tiles are cheaper to share
+			const roadBonus = tiles[ny][nx].road ? 0.5 : 0;
+			const tentG = cg + cost - roadBonus;
+
+			if (tentG < (gScore.get(nk) ?? Infinity)) {
+				cameFrom.set(nk, ck);
+				gScore.set(nk, tentG);
+				fScore.set(nk, tentG + heuristic({ x: nx, y: ny }));
+				if (!inOpen.has(nk)) {
+					open.push({ x: nx, y: ny });
+					inOpen.add(nk);
+				}
+			}
+		}
+	}
+
+	// No path found — return direct bresenham-like fallback
+	return bresenhamPath(start, end);
+}
+
+/** Fallback straight-line path when A* fails. */
+function bresenhamPath(start: Position, end: Position): Position[] {
+	const path: Position[] = [];
+	let x = start.x, y = start.y;
+	const dx = Math.abs(end.x - x), dy = Math.abs(end.y - y);
+	const sx = x < end.x ? 1 : -1, sy = y < end.y ? 1 : -1;
+	let err = dx - dy;
+	while (true) {
+		path.push({ x, y });
+		if (x === end.x && y === end.y) break;
+		const e2 = 2 * err;
+		if (e2 > -dy) { err -= dy; x += sx; }
+		if (e2 < dx) { err += dx; y += sy; }
+	}
+	return path;
+}
+
+/** Generate all roads, paint them on tiles, and place signposts. */
+function generateRoads(tiles: OverworldTile[][], settlements: Settlement[], width: number, height: number, rng: SeededRandom): Road[] {
+	const graphEdges = buildRoadGraph(settlements, rng);
+	const roads: Road[] = [];
+
+	for (const edge of graphEdges) {
+		const a = settlements[edge.from];
+		const b = settlements[edge.to];
+		const roadType = classifyRoad(a, b);
+		const path = findRoadPath(tiles, width, height, a.pos, b.pos);
+
+		// Paint road tiles (skip start/end which are settlements)
+		for (let i = 1; i < path.length - 1; i++) {
+			const p = path[i];
+			const tile = tiles[p.y][p.x];
+			// Don't downgrade a main road to a path
+			if (!tile.road || (roadType === 'main' && tile.road === 'path')) {
+				tile.road = roadType;
+			}
+		}
+
+		roads.push({ from: a.id, to: b.id, type: roadType, path });
+	}
+
+	// Place signposts at intersections (tiles with 3+ adjacent road tiles)
+	placeSignposts(tiles, width, height);
+
+	return roads;
+}
+
+/** Mark tiles as signposts where 3+ cardinal neighbors are road tiles. */
+function placeSignposts(tiles: OverworldTile[][], width: number, height: number): void {
+	for (let y = 1; y < height - 1; y++) {
+		for (let x = 1; x < width - 1; x++) {
+			if (!tiles[y][x].road) continue;
+			let roadNeighbors = 0;
+			for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+				if (tiles[y + dy]?.[x + dx]?.road) roadNeighbors++;
+			}
+			if (roadNeighbors >= 3) {
+				tiles[y][x].signpost = true;
+			}
+		}
+	}
 }
 
 // ── Helpers ──

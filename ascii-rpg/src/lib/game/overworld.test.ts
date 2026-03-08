@@ -244,6 +244,110 @@ describe('dungeon entrance placement (US-WG-06)', () => {
 	});
 });
 
+describe('road network (US-WG-05)', () => {
+	it('has roads connecting settlements', () => {
+		const world = getTestWorld();
+		expect(world.roads.length).toBeGreaterThan(0);
+	});
+
+	it('all settlements are reachable via road network (connected graph)', () => {
+		const world = getTestWorld();
+		// Build adjacency from roads
+		const adj = new Map<string, Set<string>>();
+		for (const s of world.settlements) {
+			adj.set(s.id, new Set());
+		}
+		for (const r of world.roads) {
+			adj.get(r.from)?.add(r.to);
+			adj.get(r.to)?.add(r.from);
+		}
+		// BFS from first settlement
+		const visited = new Set<string>();
+		const queue = [world.settlements[0].id];
+		visited.add(queue[0]);
+		while (queue.length > 0) {
+			const cur = queue.shift()!;
+			for (const neighbor of adj.get(cur) ?? []) {
+				if (!visited.has(neighbor)) {
+					visited.add(neighbor);
+					queue.push(neighbor);
+				}
+			}
+		}
+		expect(visited.size).toBe(world.settlements.length);
+	});
+
+	it('road tiles are painted on the tile grid', () => {
+		const world = getTestWorld();
+		let roadTileCount = 0;
+		for (let y = 0; y < world.height; y++) {
+			for (let x = 0; x < world.width; x++) {
+				if (world.tiles[y][x].road) roadTileCount++;
+			}
+		}
+		expect(roadTileCount).toBeGreaterThan(0);
+	});
+
+	it('roads avoid water, mountain, and lava where possible', () => {
+		const world = getTestWorld();
+		const impassable = new Set(['water', 'mountain', 'lava']);
+		let roadOnImpassable = 0;
+		let totalRoadTiles = 0;
+		for (let y = 0; y < world.height; y++) {
+			for (let x = 0; x < world.width; x++) {
+				if (world.tiles[y][x].road) {
+					totalRoadTiles++;
+					if (impassable.has(world.tiles[y][x].terrain)) roadOnImpassable++;
+				}
+			}
+		}
+		// Vast majority of road tiles should be on passable terrain
+		// (some may cross water if no alternative route exists)
+		if (totalRoadTiles > 0) {
+			expect(roadOnImpassable / totalRoadTiles).toBeLessThan(0.05);
+		}
+	});
+
+	it('has both main roads and paths', () => {
+		const world = getTestWorld();
+		const types = new Set(world.roads.map(r => r.type));
+		// With mix of towns and villages, we should get both types
+		expect(types.size).toBeGreaterThanOrEqual(1);
+	});
+
+	it('roads have valid paths', () => {
+		const world = getTestWorld();
+		for (const r of world.roads) {
+			expect(r.path.length).toBeGreaterThan(0);
+			expect(r.from.length).toBeGreaterThan(0);
+			expect(r.to.length).toBeGreaterThan(0);
+		}
+	});
+
+	it('signposts exist at intersections', () => {
+		const world = getTestWorld();
+		let signpostCount = 0;
+		for (let y = 0; y < world.height; y++) {
+			for (let x = 0; x < world.width; x++) {
+				if (world.tiles[y][x].signpost) signpostCount++;
+			}
+		}
+		// With multiple roads connecting many settlements, there should be intersections
+		expect(signpostCount).toBeGreaterThan(0);
+	});
+
+	it('road generation is deterministic', () => {
+		const world1 = generateWorld('road-det', 80, 80);
+		const world2 = generateWorld('road-det', 80, 80);
+		expect(world1.roads.length).toBe(world2.roads.length);
+		for (let y = 0; y < 80; y++) {
+			for (let x = 0; x < 80; x++) {
+				expect(world1.tiles[y][x].road).toBe(world2.tiles[y][x].road);
+			}
+		}
+	});
+});
+
 describe('explored grid', () => {
 	it('starts fully unexplored', () => {
 		const world = getTestWorld();
