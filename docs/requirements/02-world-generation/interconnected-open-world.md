@@ -141,10 +141,20 @@ As a player, I want clear transitions between regions, so that I know when I'm e
 - Some region borders have natural barriers (mountain ranges, rivers, chasms) requiring specific routes or items
 
 **Acceptance Criteria:**
-- [ ] Transitions between regions are visually gradual
-- [ ] Region entry announcement displays
-- [ ] HUD shows current region name
+- [x] Transitions between regions are visually gradual
+- [x] Region entry announcement displays
+- [x] HUD shows current region name
 - [ ] Natural barriers enforce meaningful route planning
+
+**Implementation Notes (partial):**
+- Region transitions already blend via `applyTransitionZones()` (grass at borders)
+- `handleOverworldInput()` detects region changes by comparing previous vs next tile region
+- Banner message "— You enter {Region Name} —" + flavor text on region transition
+- `REGION_FLAVOR`: atmospheric description per region (Greenweald, Ashlands, etc.)
+- `getOverworldInfo()`: returns region name, color, danger level for HUD display
+- `REGION_COLORS`: color per region for HUD text
+- HUD in `+page.svelte` shows colored region name when `locationMode === 'overworld'`
+- Natural barriers NOT yet enforced (mountains/water block movement, but no special route gates)
 
 ---
 

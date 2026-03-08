@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -2004,5 +2004,31 @@ describe('overworld integration', () => {
 		const pos = state.overworldPos!;
 		// Starting position and nearby should be explored
 		expect(worldMap.explored[pos.y][pos.x]).toBe(true);
+	});
+
+	it('getOverworldInfo returns region name when in overworld mode', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-info' });
+		// Start in location mode, so getOverworldInfo returns null
+		const info1 = getOverworldInfo(state);
+		expect(info1).toBeNull();
+
+		// Switch to overworld
+		const ow = exitToOverworld(state);
+		const info2 = getOverworldInfo(ow);
+		expect(info2).not.toBeNull();
+		expect(info2!.regionName.length).toBeGreaterThan(0);
+		expect(info2!.regionColor.startsWith('#')).toBe(true);
+		expect(info2!.dangerLevel).toBeGreaterThanOrEqual(1);
+	});
+
+	it('renderColored works in overworld mode', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-render' });
+		const ow = exitToOverworld(state);
+		const grid = renderColored(ow);
+		expect(grid.length).toBe(24); // viewport height
+		expect(grid[0].length).toBe(50); // viewport width
+		// Player should be visible as @
+		const hasPlayer = grid.some(row => row.some(cell => cell.char === '@'));
+		expect(hasPlayer).toBe(true);
 	});
 });

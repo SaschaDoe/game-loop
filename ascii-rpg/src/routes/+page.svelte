@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
@@ -339,7 +339,16 @@
 		<div class="hud">
 			<span class="hp">HP: {state.player.hp}/{state.player.maxHp}</span>
 			<span class="atk">ATK: {state.player.attack}</span>
-			<span class="level">{state.level === 0 ? 'Starting Area' : `Dungeon: ${state.level}`}</span>
+			{#if state.locationMode === 'overworld'}
+				{@const owInfo = getOverworldInfo(state)}
+				{#if owInfo}
+					<span class="level" style="color:{owInfo.regionColor}">{owInfo.regionName}</span>
+				{:else}
+					<span class="level">Overworld</span>
+				{/if}
+			{:else}
+				<span class="level">{state.level === 0 ? 'Starting Area' : `Dungeon: ${state.level}`}</span>
+			{/if}
 			<span class="char-level">Lv {state.characterLevel} {state.player.name}</span>
 			{#if state.characterConfig.difficulty !== 'normal'}
 				<span class="difficulty difficulty-{state.characterConfig.difficulty}">{DIFFICULTY_DEFS[state.characterConfig.difficulty].label}</span>

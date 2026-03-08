@@ -267,6 +267,42 @@ const OVERWORLD_VIEWPORT_H = MAP_H;
 
 // ── Overworld Helpers ──
 
+/** Flavor text shown when entering a new region. */
+const REGION_FLAVOR: Record<string, string> = {
+	greenweald: 'Ancient trees tower overhead, their canopy filtering emerald light.',
+	ashlands: 'The air shimmers with heat. Ash drifts like grey snow.',
+	hearthlands: 'Golden fields stretch to the horizon, dotted with farmsteads and church spires.',
+	frostpeak: 'A biting wind howls through ice-crusted peaks. Your breath crystallizes.',
+	drowned_mire: 'The ground squelches underfoot. A sour mist clings to the dead trees.',
+	sunstone_expanse: 'Endless dunes ripple under a blazing sun. Sand whispers against stone.',
+};
+
+/** Get current overworld info for HUD display. */
+export function getOverworldInfo(state: GameState): { regionName: string; regionColor: string; dangerLevel: number } | null {
+	if (state.locationMode !== 'overworld' || !state.worldMap || !state.overworldPos) return null;
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos;
+	const tile = worldMap.tiles[pos.y]?.[pos.x];
+	if (!tile) return null;
+	const region = worldMap.regions.find(r => r.id === tile.region);
+	if (!region) return null;
+	return {
+		regionName: region.name,
+		regionColor: REGION_COLORS[tile.region] ?? '#aaa',
+		dangerLevel: region.dangerLevel,
+	};
+}
+
+const REGION_COLORS: Record<string, string> = {
+	greenweald: '#4a4',
+	ashlands: '#f64',
+	hearthlands: '#da4',
+	frostpeak: '#8df',
+	drowned_mire: '#6a6',
+	sunstone_expanse: '#fa4',
+	underdepths: '#a4f',
+};
+
 /** Reveal tiles in a radius around a position on the overworld explored grid. */
 function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: number): void {
 	for (let dy = -radius; dy <= radius; dy++) {
@@ -324,9 +360,23 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 		return { ...state };
 	}
 
+	// Detect region transition before moving
+	const prevRegion = worldMap.tiles[pos.y][pos.x].region;
+	const nextRegion = worldMap.tiles[ny][nx].region;
+
 	// Move on overworld
 	state.overworldPos = { x: nx, y: ny };
 	revealOverworldArea(worldMap, state.overworldPos, OVERWORLD_SIGHT_RADIUS);
+
+	// Region transition announcement
+	if (nextRegion !== prevRegion) {
+		const regionDef = worldMap.regions.find(r => r.id === nextRegion);
+		if (regionDef) {
+			addMessage(state, `— You enter ${regionDef.name} —`, 'discovery');
+			const flavorMsg = REGION_FLAVOR[nextRegion];
+			if (flavorMsg) addMessage(state, flavorMsg, 'info');
+		}
+	}
 
 	// Tick survival on overworld movement
 	if (state.survivalEnabled) {
@@ -347,13 +397,6 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 			enterDungeon(state, location.data);
 		} else if (location.type === 'poi') {
 			discoverPOI(state, location.data);
-		}
-	} else {
-		// Show terrain info
-		const tile = worldMap.tiles[ny][nx];
-		const regionDef = worldMap.regions.find(r => r.id === tile.region);
-		if (tile.road) {
-			addMessage(state, `You travel along the ${tile.road === 'main' ? 'road' : 'path'} through ${regionDef?.name ?? tile.region}.`, 'info');
 		}
 	}
 
