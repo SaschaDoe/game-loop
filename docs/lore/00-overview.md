@@ -30,6 +30,7 @@ Every temple hymn is a lie. Every holy scripture hides a crime. Every prayer rea
 | [14-prophecies-and-endtimes.md](14-prophecies-and-endtimes.md) | What is foretold — and what the gods fear |
 | [15-lesser-tales.md](15-lesser-tales.md) | Smaller stories — local legends, mysteries, and tavern tales |
 | [16-lesser-tales-ii.md](16-lesser-tales-ii.md) | More smaller stories — royal conflicts, lost art, divine penance |
+| [17-lesser-tales-iii.md](17-lesser-tales-iii.md) | Even more stories — clockwork, nursery rhymes, inquisitors, child prophets |
 
 ## Connection to Existing Game Systems
 
