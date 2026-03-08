@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
 	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
 	import { DIFFICULTY_DEFS, DIFFICULTIES, isPermadeath } from '$lib/game/difficulty';
 	import { deleteSave } from '$lib/game/save';
+	import { SLOT_DISPLAY, INVENTORY_SIZE, type EquipmentSlot } from '$lib/game/items';
 
 	declare const __APP_VERSION__: string;
 	declare const __BUILD_NUMBER__: string;
@@ -48,6 +49,21 @@
 	let typewriterNodeId = $state('');
 	let typewriterRaf = 0;
 	let typewriterIdx = 0;
+
+	const EQUIP_SLOTS: EquipmentSlot[] = ['head', 'body', 'trouser', 'leftHand', 'rightHand', 'back', 'leftFoot', 'rightFoot'];
+	let selectedInventoryItem = $derived.by(() => {
+		if (!state.inventoryOpen) return null;
+		if (state.inventoryPanel === 'inventory') return state.inventory[state.inventoryCursor] ?? null;
+		if (state.inventoryPanel === 'equipment') {
+			const slot = EQUIP_SLOTS[state.inventoryCursor];
+			return slot ? (state.equipment[slot] ?? null) : null;
+		}
+		if (state.inventoryPanel === 'container' && state.activeContainer) {
+			const ct = state.containers.find(c => c.id === state.activeContainer);
+			return ct?.items[state.inventoryCursor] ?? null;
+		}
+		return null;
+	});
 
 	function startTypewriter(text: string, nodeId: string) {
 		if (typewriterNodeId === nodeId) return;
@@ -145,6 +161,86 @@
 				else if (e.key === '3') selectedClass = 'rogue';
 			}
 		} else if (phase === 'playing') {
+			// Book reader input
+			if (state.activeBookReading) {
+				e.preventDefault();
+				const key = e.key;
+				if (key === 'Escape') {
+					state = closeBook(state);
+				} else if (key === 'a' || key === 'ArrowLeft') {
+					state = flipBookPage(state, -1);
+				} else if (key === 'd' || key === 'ArrowRight') {
+					state = flipBookPage(state, 1);
+				}
+				return;
+			}
+
+			// Inventory/container input
+			if (state.inventoryOpen) {
+				e.preventDefault();
+				const key = e.key;
+				if (key === 'Escape' || key === 'i') {
+					state = closeInventory(state);
+				} else if (key === 'w' || key === 'ArrowUp') {
+					state.inventoryCursor = Math.max(0, state.inventoryCursor - 1);
+					state = { ...state };
+				} else if (key === 's' || key === 'ArrowDown') {
+					if (state.inventoryPanel === 'inventory') {
+						state.inventoryCursor = Math.min(INVENTORY_SIZE - 1, state.inventoryCursor + 1);
+					} else if (state.inventoryPanel === 'equipment') {
+						const slots: EquipmentSlot[] = ['head', 'body', 'trouser', 'leftHand', 'rightHand', 'back', 'leftFoot', 'rightFoot'];
+						state.inventoryCursor = Math.min(slots.length - 1, state.inventoryCursor + 1);
+					} else if (state.inventoryPanel === 'container' && state.activeContainer) {
+						const ct = state.containers.find(c => c.id === state.activeContainer);
+						if (ct) state.inventoryCursor = Math.min(ct.items.length - 1, state.inventoryCursor + 1);
+					}
+					state = { ...state };
+				} else if (key === 'Tab' || key === 'a' || key === 'ArrowLeft' || key === 'd' || key === 'ArrowRight') {
+					// Switch panels
+					if (state.activeContainer) {
+						// Three panels: inventory, equipment, container
+						const panels = ['inventory', 'equipment', 'container'] as const;
+						const curIdx = panels.indexOf(state.inventoryPanel);
+						const dir = (key === 'a' || key === 'ArrowLeft') ? -1 : 1;
+						const nextIdx = (curIdx + dir + panels.length) % panels.length;
+						state.inventoryPanel = panels[nextIdx];
+					} else {
+						// Two panels: inventory, equipment
+						state.inventoryPanel = state.inventoryPanel === 'inventory' ? 'equipment' : 'inventory';
+					}
+					state.inventoryCursor = 0;
+					state = { ...state };
+				} else if (key === 'Enter' || key === ' ') {
+					// Action on selected item
+					if (state.inventoryPanel === 'inventory') {
+						const item = state.inventory[state.inventoryCursor];
+						if (item) {
+							if (state.activeContainer) {
+								// In container mode: store item
+								state = storeInContainer(state, state.inventoryCursor);
+							} else {
+								// Normal inventory: use/equip/read
+								state = useInventoryItem(state, state.inventoryCursor);
+							}
+						}
+					} else if (state.inventoryPanel === 'equipment') {
+						const slots: EquipmentSlot[] = ['head', 'body', 'trouser', 'leftHand', 'rightHand', 'back', 'leftFoot', 'rightFoot'];
+						const slot = slots[state.inventoryCursor];
+						if (slot && state.equipment[slot]) {
+							state = unequipToInventory(state, slot);
+						}
+					} else if (state.inventoryPanel === 'container' && state.activeContainer) {
+						state = takeFromContainer(state, state.inventoryCursor);
+					}
+				} else if (key === 'x') {
+					// Drop item
+					if (state.inventoryPanel === 'inventory') {
+						state = dropInventoryItem(state, state.inventoryCursor);
+					}
+				}
+				return;
+			}
+
 			// Dialogue mode input
 			if (state.activeDialogue) {
 				e.preventDefault();
@@ -196,6 +292,14 @@
 			}
 			if (journalOpen || worldMapOpen) {
 				if (key === 'Escape') { journalOpen = false; worldMapOpen = false; }
+				return;
+			}
+			if (key === 'i') {
+				e.preventDefault();
+				state = openInventory(state);
+				return;
+			}
+			if (state.inventoryOpen || state.activeBookReading) {
 				return;
 			}
 			if (key === 'l') {
@@ -388,6 +492,9 @@
 			<span class="log-title">Combat Log</span>
 			<button class="log-toggle" onclick={() => journalOpen = !journalOpen}>
 				Journal ({state.rumors.length + state.heardStories.length}) (J)
+			</button>
+			<button class="log-toggle" onclick={() => state = openInventory(state)}>
+				Inventory ({state.inventory.filter(i => i !== null).length}/{INVENTORY_SIZE}) (I)
 			</button>
 			<button class="log-toggle" onclick={() => logExpanded = !logExpanded}>
 				{logExpanded ? '▼ Collapse' : '▲ Expand'} (L)
@@ -592,6 +699,171 @@
 					</div>
 				{/if}
 				<div class="dialogue-hint">ESC or click outside to close</div>
+			</div>
+		</div>
+	{/if}
+	{#if state.activeBookReading}
+		{@const book = getActiveBook(state)}
+		{@const page = state.activeBookReading.currentPage}
+		{@const totalPages = book?.pages?.length ?? 0}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="book-overlay" onclick={() => state = closeBook(state)}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="book-box" onclick={(e) => e.stopPropagation()}>
+				{#if book}
+					<div class="book-header">
+						<span class="book-title" style="color:{book.color}">{book.name}</span>
+						<button class="dialogue-close" onclick={() => state = closeBook(state)}>ESC</button>
+					</div>
+					<div class="book-page">
+						<pre class="book-text">{book.pages?.[page] ?? ''}</pre>
+					</div>
+					<div class="book-nav">
+						<button class="book-nav-btn" disabled={page <= 0} onclick={() => state = flipBookPage(state, -1)}>&lt; Prev</button>
+						<span class="book-page-num">Page {page + 1} of {totalPages}</span>
+						<button class="book-nav-btn" disabled={page >= totalPages - 1} onclick={() => state = flipBookPage(state, 1)}>Next &gt;</button>
+					</div>
+					<div class="dialogue-hint">A/D or arrows to flip pages · ESC to close</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
+	{#if state.inventoryOpen}
+		{@const activeContainer = state.activeContainer ? state.containers.find(c => c.id === state.activeContainer) : null}
+		{@const equipSlots = EQUIP_SLOTS}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="inv-overlay" onclick={() => state = closeInventory(state)}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="inv-box" onclick={(e) => e.stopPropagation()}>
+				<div class="inv-header">
+					<span class="journal-title">{activeContainer ? activeContainer.name : 'Inventory'}</span>
+					<button class="dialogue-close" onclick={() => state = closeInventory(state)}>ESC</button>
+				</div>
+				<div class="inv-panels">
+					<!-- Inventory Panel -->
+					<div class="inv-panel" class:inv-panel-active={state.inventoryPanel === 'inventory'}>
+						<div class="inv-panel-title">Backpack ({state.inventory.filter(i => i !== null).length}/{INVENTORY_SIZE})</div>
+						{#each state.inventory as item, i}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<div
+								class="inv-slot"
+								class:inv-slot-selected={state.inventoryPanel === 'inventory' && state.inventoryCursor === i}
+								onclick={() => {
+									state.inventoryPanel = 'inventory';
+									state.inventoryCursor = i;
+									state = { ...state };
+								}}
+								ondblclick={() => {
+									if (item) {
+										if (activeContainer) {
+											state = storeInContainer(state, i);
+										} else {
+											state = useInventoryItem(state, i);
+										}
+									}
+								}}
+							>
+								{#if item}
+									<span class="inv-item-char" style="color:{item.color}">{item.char}</span>
+									<span class="inv-item-name">{item.name}</span>
+									{#if item.type === 'equipment' && item.stats}
+										<span class="inv-item-stats">
+											{#if item.stats.atk}<span style="color:#fa0">+{item.stats.atk}ATK</span>{/if}
+											{#if item.stats.hp}<span style="color:#f44">+{item.stats.hp}HP</span>{/if}
+											{#if item.stats.sight}<span style="color:#4af">{item.stats.sight > 0 ? '+' : ''}{item.stats.sight}Sight</span>{/if}
+										</span>
+									{/if}
+								{:else}
+									<span class="inv-empty">—</span>
+								{/if}
+							</div>
+						{/each}
+					</div>
+
+					<!-- Equipment Panel -->
+					<div class="inv-panel" class:inv-panel-active={state.inventoryPanel === 'equipment'}>
+						<div class="inv-panel-title">Equipment</div>
+						{#each equipSlots as slot, i}
+							{@const equipped = state.equipment[slot]}
+							{@const display = SLOT_DISPLAY[slot]}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<div
+								class="inv-slot"
+								class:inv-slot-selected={state.inventoryPanel === 'equipment' && state.inventoryCursor === i}
+								onclick={() => {
+									state.inventoryPanel = 'equipment';
+									state.inventoryCursor = i;
+									state = { ...state };
+								}}
+								ondblclick={() => {
+									if (equipped) state = unequipToInventory(state, slot);
+								}}
+							>
+								<span class="inv-slot-label">{display.icon} {display.label}:</span>
+								{#if equipped}
+									<span class="inv-item-char" style="color:{equipped.color}">{equipped.char}</span>
+									<span class="inv-item-name">{equipped.name}</span>
+								{:else}
+									<span class="inv-empty">empty</span>
+								{/if}
+							</div>
+						{/each}
+					</div>
+
+					<!-- Container Panel (only when interacting with a container) -->
+					{#if activeContainer}
+						<div class="inv-panel" class:inv-panel-active={state.inventoryPanel === 'container'}>
+							<div class="inv-panel-title">{activeContainer.name} ({activeContainer.items.length})</div>
+							{#each activeContainer.items as item, i}
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div
+									class="inv-slot"
+									class:inv-slot-selected={state.inventoryPanel === 'container' && state.inventoryCursor === i}
+									onclick={() => {
+										state.inventoryPanel = 'container';
+										state.inventoryCursor = i;
+										state = { ...state };
+									}}
+									ondblclick={() => {
+										state = takeFromContainer(state, i);
+									}}
+								>
+									<span class="inv-item-char" style="color:{item.color}">{item.char}</span>
+									<span class="inv-item-name">{item.name}</span>
+								</div>
+							{/each}
+							{#if activeContainer.items.length === 0}
+								<div class="inv-empty" style="padding:8px">Empty</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
+
+				<!-- Item description -->
+				{#if selectedInventoryItem}
+					<div class="inv-desc">
+						<span class="inv-desc-name" style="color:{selectedInventoryItem.color}">{selectedInventoryItem.name}</span>
+						<span class="inv-desc-text">{selectedInventoryItem.description}</span>
+						{#if selectedInventoryItem.type === 'equipment' && selectedInventoryItem.slot}
+							<span class="inv-desc-slot">Slot: {SLOT_DISPLAY[selectedInventoryItem.slot].label}</span>
+						{/if}
+					</div>
+				{/if}
+
+				<div class="dialogue-hint">
+					{#if activeContainer}
+						W/S navigate · A/D switch panel · ENTER to take/store · X drop · ESC close
+					{:else}
+						W/S navigate · A/D switch panel · ENTER to use/equip/read · X drop · ESC close
+					{/if}
+				</div>
 			</div>
 		</div>
 	{/if}
@@ -1493,5 +1765,207 @@
 	}
 	.waypoint-hud {
 		font-size: 0.85em;
+	}
+
+	/* ── Book Reader ── */
+	.book-overlay {
+		position: fixed;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0, 0, 0, 0.9);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 300;
+	}
+	.book-box {
+		background: #1a1812;
+		border: 2px solid #886644;
+		border-radius: 4px;
+		padding: 20px;
+		max-width: 550px;
+		width: 90%;
+		max-height: 80vh;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+	.book-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-bottom: 1px solid #443322;
+		padding-bottom: 8px;
+	}
+	.book-title {
+		font-size: 16px;
+		font-weight: bold;
+		letter-spacing: 2px;
+	}
+	.book-page {
+		min-height: 200px;
+		max-height: 50vh;
+		overflow-y: auto;
+	}
+	.book-text {
+		font-size: 13px;
+		line-height: 1.5;
+		color: #ddc;
+		white-space: pre-wrap;
+		margin: 0;
+		font-family: 'Courier New', monospace;
+	}
+	.book-nav {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-top: 1px solid #443322;
+		padding-top: 8px;
+	}
+	.book-nav-btn {
+		background: #2a2218;
+		border: 1px solid #665544;
+		color: #cc9;
+		font-family: 'Courier New', monospace;
+		font-size: 12px;
+		padding: 4px 12px;
+		cursor: pointer;
+	}
+	.book-nav-btn:hover:not(:disabled) {
+		background: #443322;
+		color: #ffc;
+	}
+	.book-nav-btn:disabled {
+		opacity: 0.3;
+		cursor: default;
+	}
+	.book-page-num {
+		color: #886644;
+		font-size: 12px;
+	}
+
+	/* ── Inventory ── */
+	.inv-overlay {
+		position: fixed;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0, 0, 0, 0.85);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 250;
+	}
+	.inv-box {
+		background: #1a1a22;
+		border: 2px solid #555;
+		border-radius: 4px;
+		padding: 16px;
+		max-width: 700px;
+		width: 95%;
+		max-height: 85vh;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.inv-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-bottom: 1px solid #444;
+		padding-bottom: 8px;
+	}
+	.inv-panels {
+		display: flex;
+		gap: 12px;
+	}
+	.inv-panel {
+		flex: 1;
+		border: 1px solid #333;
+		border-radius: 4px;
+		padding: 8px;
+		min-width: 0;
+		opacity: 0.6;
+	}
+	.inv-panel-active {
+		border-color: #c84;
+		opacity: 1;
+	}
+	.inv-panel-title {
+		font-size: 11px;
+		color: #888;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin-bottom: 6px;
+		border-bottom: 1px solid #333;
+		padding-bottom: 4px;
+	}
+	.inv-slot {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 6px;
+		border: 1px solid transparent;
+		border-radius: 2px;
+		cursor: pointer;
+		font-size: 12px;
+		min-height: 20px;
+	}
+	.inv-slot:hover {
+		background: #252530;
+	}
+	.inv-slot-selected {
+		border-color: #c84;
+		background: #221a10;
+	}
+	.inv-item-char {
+		font-size: 14px;
+		font-weight: bold;
+		width: 16px;
+		text-align: center;
+	}
+	.inv-item-name {
+		color: #ccc;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.inv-item-stats {
+		display: flex;
+		gap: 4px;
+		font-size: 10px;
+	}
+	.inv-slot-label {
+		color: #888;
+		font-size: 11px;
+		min-width: 60px;
+	}
+	.inv-empty {
+		color: #444;
+		font-size: 11px;
+	}
+	.inv-desc {
+		border-top: 1px solid #333;
+		padding-top: 8px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.inv-desc-name {
+		font-weight: bold;
+		font-size: 13px;
+	}
+	.inv-desc-text {
+		color: #999;
+		font-size: 11px;
+		line-height: 1.4;
+	}
+	.inv-desc-slot {
+		color: #888;
+		font-size: 11px;
+	}
+	@media (max-width: 640px) {
+		.inv-panels {
+			flex-direction: column;
+		}
 	}
 </style>

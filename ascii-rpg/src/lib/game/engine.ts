@@ -21,7 +21,7 @@ import { recordSeen, recordKill } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
 import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, type WorldMap, type OverworldTile, type Settlement, type DungeonEntrance, type PointOfInterest } from './overworld';
-import { createEmptyInventory, createEmptyEquipment, type WorldContainer, ITEM_CATALOG } from './items';
+import { createEmptyInventory, createEmptyEquipment, addToInventory, removeFromInventory, equipItem, unequipItem, addToContainer, removeFromContainer, getEquipmentBonuses, type WorldContainer, type Item, type EquipmentSlot, ITEM_CATALOG } from './items';
 import { BOOK_CATALOG, getAllBookIds } from './books';
 
 const MAP_W = 50;
@@ -122,7 +122,8 @@ function applyXpMultiplier(baseXp: number, state: GameState): number {
 export function effectiveSightRadius(state: GameState): number {
 	const bonuses = getSkillBonuses(state.unlockedSkills);
 	const timeModifier = sightModifier(getTimePhase(state.turnCount));
-	return Math.max(2, state.sightRadius + (bonuses.sightRadius ?? 0) + timeModifier);
+	const equipBonuses = getEquipmentBonuses(state.equipment);
+	return Math.max(2, state.sightRadius + (bonuses.sightRadius ?? 0) + timeModifier + (equipBonuses.sight ?? 0));
 }
 
 function checkLevelUp(state: GameState): void {
@@ -1447,6 +1448,154 @@ export function attemptFlee(state: GameState): FleeResult {
 	return { moved: dest, messages };
 }
 
+/** Get adjacent container (within 1 tile of player) */
+export function getAdjacentContainer(state: GameState): WorldContainer | null {
+	const { x, y } = state.player.pos;
+	const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+	for (const [dx, dy] of dirs) {
+		const ct = state.containers.find(c => c.pos.x === x + dx && c.pos.y === y + dy);
+		if (ct) return ct;
+	}
+	// Also check current tile
+	const ct = state.containers.find(c => c.pos.x === x && c.pos.y === y);
+	return ct ?? null;
+}
+
+/** Open inventory screen */
+export function openInventory(state: GameState): GameState {
+	state.inventoryOpen = true;
+	state.inventoryCursor = 0;
+	state.inventoryPanel = 'inventory';
+	state.activeContainer = null;
+	return { ...state };
+}
+
+/** Close inventory/container screen */
+export function closeInventory(state: GameState): GameState {
+	state.inventoryOpen = false;
+	state.activeContainer = null;
+	state.activeBookReading = null;
+	return { ...state };
+}
+
+/** Open a container (split view) */
+export function openContainer(state: GameState, containerId: string): GameState {
+	state.inventoryOpen = true;
+	state.activeContainer = containerId;
+	state.inventoryCursor = 0;
+	state.inventoryPanel = 'inventory';
+	return { ...state };
+}
+
+/** Use/interact with the selected inventory item */
+export function useInventoryItem(state: GameState, index: number): GameState {
+	const item = state.inventory[index];
+	if (!item) return state;
+
+	if (item.type === 'book' && item.pages) {
+		state.activeBookReading = { bookId: item.id, currentPage: 0 };
+		return { ...state };
+	}
+
+	if (item.type === 'consumable' && item.consumeEffect) {
+		if (item.consumeEffect.hp) {
+			state.player.hp = Math.min(state.player.maxHp, state.player.hp + item.consumeEffect.hp);
+			addMessage(state, `Used ${item.name}. +${item.consumeEffect.hp} HP.`, 'healing');
+		}
+		if (item.consumeEffect.hunger) {
+			state.hunger = Math.min(100, state.hunger + item.consumeEffect.hunger);
+			addMessage(state, `Ate ${item.name}. Hunger restored.`, 'info');
+		}
+		if (item.consumeEffect.thirst) {
+			state.thirst = Math.min(100, state.thirst + item.consumeEffect.thirst);
+			addMessage(state, `Drank ${item.name}. Thirst restored.`, 'info');
+		}
+		state.inventory[index] = null;
+		return { ...state };
+	}
+
+	if (item.type === 'equipment') {
+		const result = equipItem(state.inventory, state.equipment, index);
+		addMessage(state, result.message, result.success ? 'info' : 'damage_taken');
+		return { ...state };
+	}
+
+	addMessage(state, `You can't use ${item.name}.`, 'info');
+	return { ...state };
+}
+
+/** Drop an inventory item on the ground */
+export function dropInventoryItem(state: GameState, index: number): GameState {
+	const item = removeFromInventory(state.inventory, index);
+	if (!item) return state;
+	// Item is simply removed (for now, no ground items)
+	addMessage(state, `Dropped ${item.name}.`, 'info');
+	return { ...state };
+}
+
+/** Unequip an item from equipment to inventory */
+export function unequipToInventory(state: GameState, slot: EquipmentSlot): GameState {
+	const result = unequipItem(state.inventory, state.equipment, slot);
+	addMessage(state, result.message, result.success ? 'info' : 'damage_taken');
+	return { ...state };
+}
+
+/** Take an item from the active container into inventory */
+export function takeFromContainer(state: GameState, containerIndex: number): GameState {
+	const container = state.containers.find(c => c.id === state.activeContainer);
+	if (!container) return state;
+	const item = container.items[containerIndex];
+	if (!item) return state;
+	if (!addToInventory(state.inventory, item)) {
+		addMessage(state, 'Inventory is full!', 'damage_taken');
+		return { ...state };
+	}
+	removeFromContainer(container, containerIndex);
+	addMessage(state, `Took ${item.name}.`, 'info');
+	return { ...state };
+}
+
+/** Store an inventory item into the active container */
+export function storeInContainer(state: GameState, inventoryIndex: number): GameState {
+	const container = state.containers.find(c => c.id === state.activeContainer);
+	if (!container) return state;
+	const item = state.inventory[inventoryIndex];
+	if (!item) return state;
+	if (!addToContainer(container, item)) {
+		addMessage(state, `${container.name} is full!`, 'damage_taken');
+		return { ...state };
+	}
+	state.inventory[inventoryIndex] = null;
+	addMessage(state, `Stored ${item.name}.`, 'info');
+	return { ...state };
+}
+
+/** Flip book page */
+export function flipBookPage(state: GameState, direction: number): GameState {
+	if (!state.activeBookReading) return state;
+	const book = Object.values(ITEM_CATALOG).find(i => i.id === state.activeBookReading!.bookId)
+		?? Object.values(BOOK_CATALOG).find(i => i.id === state.activeBookReading!.bookId);
+	if (!book?.pages) return state;
+	const newPage = state.activeBookReading.currentPage + direction;
+	if (newPage < 0 || newPage >= book.pages.length) return state;
+	state.activeBookReading = { ...state.activeBookReading, currentPage: newPage };
+	return { ...state };
+}
+
+/** Close book reader */
+export function closeBook(state: GameState): GameState {
+	state.activeBookReading = null;
+	return { ...state };
+}
+
+/** Get the current book being read */
+export function getActiveBook(state: GameState): Item | null {
+	if (!state.activeBookReading) return null;
+	return Object.values(ITEM_CATALOG).find(i => i.id === state.activeBookReading!.bookId)
+		?? Object.values(BOOK_CATALOG).find(i => i.id === state.activeBookReading!.bookId)
+		?? null;
+}
+
 export function handleInput(state: GameState, key: string): GameState {
 	// Overworld mode: delegate to overworld handler
 	if (state.locationMode === 'overworld') {
@@ -1564,7 +1713,13 @@ export function handleInput(state: GameState, key: string): GameState {
 			addMessage(state, `[${def?.name ?? 'Landmark'}] ${text}`, 'discovery');
 		}
 
-		if (found.length === 0 && nearbyLandmarks.length === 0) {
+		// Check for adjacent containers
+		const adjacentContainer = getAdjacentContainer(state);
+		if (adjacentContainer) {
+			return openContainer(state, adjacentContainer.id);
+		}
+
+		if (found.length === 0 && nearbyLandmarks.length === 0 && !adjacentContainer) {
 			addMessage(state, 'You search the area but find nothing.', 'info');
 		}
 		moveEnemies(state);

@@ -1,21 +1,58 @@
 # Inventory Management
 
-As a player, I want an organized inventory system with weight limits, so that I must make meaningful choices about what to carry.
+As a player, I want an inventory system with equipment slots and item storage, so that I can collect, equip, and manage items throughout my adventure.
 
-## Details
+## Inventory Slots
 
-- Grid or list-based inventory display
-- Weight limit based on Strength stat
-- Item categories: weapons, armor, consumables, quest items, materials, valuables
-- Quick-access slots for frequently used items (number keys 1-5)
-- Sort and filter options
-- Compare equipped items with inventory items (stat diff highlighting)
-- Drop items on the ground (persist on the map until the area reloads)
-- Stash/storage chest in player's home or at inns
+- 12 general-purpose inventory slots (no weight system)
+- Items picked up go to first empty slot; if full, show "Inventory full" message
+- Items can be dropped back into the world
+
+## Equipment Slots (8, separate from inventory)
+
+| Slot | Key | Examples |
+|------|-----|----------|
+| head | head | Helmet, Crown, Hood |
+| body | body | Chainmail, Robe, Leather Armor |
+| trouser | trouser | Leggings, Greaves |
+| leftHand | leftHand | Sword, Staff, Shield |
+| rightHand | rightHand | Dagger, Torch |
+| back | back | Cape, Quiver, Backpack |
+| leftFoot | leftFoot | Boot, Sandal |
+| rightFoot | rightFoot | Boot, Sandal |
+
+## Item Types
+
+- **Equipment** — equippable to a slot, provides stat bonuses (HP, ATK, sight, etc.)
+- **Book** — readable item with page-by-page content
+- **Consumable** — single-use items (potions, food)
+- **Misc** — quest items, junk, treasures
+
+## Containers
+
+World-placed storage with persistent contents (saved with game state):
+
+| Size | Slots | Examples |
+|------|-------|---------|
+| small | 1 | Small box |
+| medium | 8 | Chest, wardrobe (Schrank) |
+| big | 100 | Vault, storage room |
+
+## UI
+
+- Press `i` to open inventory screen
+- Left panel: 12 inventory slots in grid; Right panel: paper-doll equipment slots
+- Navigate with WASD/arrows, Enter to select item
+- Context actions: Equip, Unequip, Read (books), Use (consumables), Drop
+- Press `e` near a container: split view (player inventory left, container right)
+- Tab to switch panels, Enter to Take/Store items, ESC to close
 
 ## Acceptance Criteria
 
-- [ ] Inventory displays all carried items
-- [ ] Weight limit prevents over-encumbrance
-- [ ] Quick-access slots work during gameplay
-- [ ] Item comparison highlights stat differences
+- [ ] Inventory displays all carried items (max 12)
+- [ ] Equipment slots display equipped items separately
+- [ ] Equip/unequip moves items between inventory and equipment slots
+- [ ] Items can be dropped on the ground
+- [ ] Containers persist contents across save/load
+- [ ] Container interaction shows split view UI
+- [ ] Context menu shows appropriate actions per item type
