@@ -784,11 +784,29 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	// Copy into state (mutate in place since we're inside handleOverworldInput)
 	Object.assign(state, next);
 	addMessage(state, `You descend into ${dungeon.name}...`, 'discovery');
+	// Region-specific dungeon atmosphere
+	const dungeonFlavor = DUNGEON_ENTRANCE_FLAVOR[dungeon.region];
+	if (dungeonFlavor) {
+		addMessage(state, dungeonFlavor, 'info');
+	}
 	if (dangerOffset > 0) {
 		const dangerLabel = dangerOffset >= 8 ? 'overwhelming' : dangerOffset >= 5 ? 'very dangerous' : dangerOffset >= 3 ? 'dangerous' : 'challenging';
 		addMessage(state, `The creatures here seem ${dangerLabel}. (Level ${startLevel}+)`, 'danger');
 	}
 }
+
+/** Region-specific atmospheric text when entering a dungeon. */
+const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
+	greenweald:       'Roots claw through crumbling stone. The air smells of damp earth and old magic.',
+	ashlands:         'Heat rises from below. The walls glow faintly orange, and the air tastes of sulfur.',
+	hearthlands:      'Cobblestones give way to rough-hewn passages. Rats scatter before your torchlight.',
+	frostpeak:        'Ice coats the walls in crystalline sheets. Your breath hangs in frozen clouds.',
+	drowned_mire:     'Water seeps through the ceiling in a steady drip. The walls are slick with algae.',
+	sunstone_expanse: 'Sand hisses through cracks in the ancient stonework. Hieroglyphs line the walls.',
+	thornlands:       'Rusted pipes run along the ceiling. Somewhere deep below, gears still grind.',
+	pale_coast:       'Salt crust lines the entrance. The sound of waves echoes from somewhere below.',
+	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
+};
 
 /** POI-type-specific reward text for grave sites. */
 const GRAVE_LORE: Record<string, string> = {

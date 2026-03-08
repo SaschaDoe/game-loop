@@ -18,7 +18,7 @@ export type TerrainType =
 
 export type RoadType = 'main' | 'path';
 
-export type SettlementType = 'village' | 'town' | 'city' | 'camp' | 'fortress' | 'temple';
+export type SettlementType = 'village' | 'town' | 'city' | 'camp' | 'fortress' | 'temple' | 'harbor';
 
 export interface OverworldTile {
 	terrain: TerrainType;
@@ -426,7 +426,7 @@ function placeSettlements(tiles: OverworldTile[][], regionSeeds: Map<RegionId, P
 
 			const id = `settlement_${idCounter++}`;
 			const name = generateSettlementName(regionId, rng);
-			const type = rng.pick<SettlementType>(['village', 'town', 'city', 'camp', 'fortress', 'temple']);
+			const type = rng.pick<SettlementType>(['village', 'town', 'city', 'camp', 'fortress', 'temple', 'harbor']);
 			settlements.push({ id, name, region: regionId, pos, type });
 			tiles[pos.y][pos.x].locationId = id;
 		}
@@ -486,6 +486,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'hidden_cave', name: 'Root Cellar', hidden: true },
 		{ type: 'ruins', name: 'Elven Ruins', hidden: false },
 		{ type: 'hot_spring', name: 'Woodland Spring', hidden: true },
+		{ type: 'grave_site', name: 'Ranger\'s Rest', hidden: true },
+		{ type: 'obelisk', name: 'Prismatic Spire', hidden: false },
 	],
 	ashlands: [
 		{ type: 'obelisk', name: 'Obsidian Obelisk', hidden: false },
@@ -494,6 +496,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'grave_site', name: 'Warlord\'s Cairn', hidden: false },
 		{ type: 'shrine', name: 'Flame Altar', hidden: false },
 		{ type: 'standing_stones', name: 'Basalt Pillars', hidden: true },
+		{ type: 'hot_spring', name: 'Sulfur Vents', hidden: true },
+		{ type: 'ancient_tree', name: 'Petrified Ashbloom', hidden: false },
 	],
 	hearthlands: [
 		{ type: 'shrine', name: 'Roadside Chapel', hidden: false },
@@ -502,6 +506,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'hidden_cave', name: 'Smuggler\'s Den', hidden: true },
 		{ type: 'grave_site', name: 'Hero\'s Tomb', hidden: false },
 		{ type: 'hot_spring', name: 'Healing Well', hidden: true },
+		{ type: 'obelisk', name: 'Crossroads Marker', hidden: false },
+		{ type: 'ruins', name: 'Burned Manor', hidden: true },
 	],
 	frostpeak: [
 		{ type: 'obelisk', name: 'Runestone Pillar', hidden: false },
@@ -510,6 +516,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'shrine', name: 'Dwarven Forge Shrine', hidden: false },
 		{ type: 'standing_stones', name: 'Glacial Stones', hidden: false },
 		{ type: 'grave_site', name: 'Thane\'s Barrow', hidden: true },
+		{ type: 'hot_spring', name: 'Thermal Vent', hidden: true },
+		{ type: 'ancient_tree', name: 'Frozen Pine', hidden: false },
 	],
 	drowned_mire: [
 		{ type: 'ruins', name: 'Sunken Altar', hidden: false },
@@ -518,6 +526,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'grave_site', name: 'Drowned Graveyard', hidden: false },
 		{ type: 'obelisk', name: 'Rotting Totem', hidden: false },
 		{ type: 'shrine', name: 'Weeping Shrine', hidden: true },
+		{ type: 'ancient_tree', name: 'Hangman\'s Willow', hidden: false },
+		{ type: 'hot_spring', name: 'Bubbling Mud Pool', hidden: true },
 	],
 	sunstone_expanse: [
 		{ type: 'obelisk', name: 'Sandstone Pillar', hidden: false },
@@ -526,6 +536,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'shrine', name: 'Oasis Shrine', hidden: false },
 		{ type: 'standing_stones', name: 'Sun Dial Circle', hidden: false },
 		{ type: 'hot_spring', name: 'Desert Oasis Pool', hidden: true },
+		{ type: 'grave_site', name: 'Sand King\'s Tomb', hidden: true },
+		{ type: 'ruins', name: 'Collapsed Minaret', hidden: false },
 	],
 	thornlands: [
 		{ type: 'ruins', name: 'Rusted Aqueduct', hidden: false },
@@ -534,6 +546,8 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'standing_stones', name: 'Iron Circle', hidden: false },
 		{ type: 'grave_site', name: 'Founder\'s Cairn', hidden: false },
 		{ type: 'shrine', name: 'Shrine of the Gears', hidden: true },
+		{ type: 'ruins', name: 'Broken Automaton', hidden: false },
+		{ type: 'hot_spring', name: 'Steam Vent', hidden: true },
 	],
 	pale_coast: [
 		{ type: 'ruins', name: 'Lighthouse Ruins', hidden: false },
@@ -542,12 +556,18 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'standing_stones', name: 'Driftwood Circle', hidden: false },
 		{ type: 'shrine', name: 'Tidal Shrine', hidden: false },
 		{ type: 'grave_site', name: 'Sailor\'s Memorial', hidden: true },
+		{ type: 'hot_spring', name: 'Saltwater Geyser', hidden: true },
+		{ type: 'ancient_tree', name: 'Bleached Driftwood Giant', hidden: false },
 	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
 		{ type: 'ruins', name: 'Collapsed Cathedral', hidden: false },
 		{ type: 'hidden_cave', name: 'Fungal Hollow', hidden: true },
+		{ type: 'standing_stones', name: 'Whispering Stalactites', hidden: false },
+		{ type: 'grave_site', name: 'Forgotten Ossuary', hidden: true },
+		{ type: 'hot_spring', name: 'Glowmoss Pool', hidden: true },
+		{ type: 'ancient_tree', name: 'Rootvein Pillar', hidden: false },
 	],
 };
 
@@ -639,7 +659,7 @@ const TERRAIN_ROAD_COST: Record<TerrainType, number> = {
 
 /** Determine road type based on the two connected settlements. */
 function classifyRoad(a: Settlement, b: Settlement): RoadType {
-	const major = new Set<SettlementType>(['town', 'city', 'fortress']);
+	const major = new Set<SettlementType>(['town', 'city', 'fortress', 'harbor']);
 	if (major.has(a.type) || major.has(b.type)) return 'main';
 	return 'path';
 }
@@ -874,15 +894,15 @@ function generateSettlementName(regionId: RegionId, rng: SeededRandom): string {
 }
 
 const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
-	greenweald: ['Overgrown Ruins', 'Root Tunnels', 'Fey Hollow', 'Ancient Grove'],
-	ashlands: ['Volcanic Cavern', 'Goblin Warren', 'Obsidian Vault', 'Firepits'],
-	hearthlands: ['Castle Basement', 'Bandit Hideout', 'Old Sewers', 'Abandoned Mine'],
-	frostpeak: ['Ice Cave', 'Collapsed Mine', 'Frozen Tomb', 'Crystal Cavern'],
-	drowned_mire: ['Sunken Temple', 'Flooded Crypt', 'Hag Lair', 'Bone Grotto'],
-	sunstone_expanse: ['Buried Pyramid', 'Sand Ruins', 'Oasis Grotto', 'Tomb of Kings'],
-	thornlands: ['Collapsed Foundry', 'Iron Citadel Ruins', 'Thornwild Tunnels', 'Underground Forge'],
-	pale_coast: ['Flooded Caverns', 'Smuggler\'s Cove', 'Sunken Ship Hold', 'Tidal Passage'],
-	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault'],
+	greenweald: ['Overgrown Ruins', 'Root Tunnels', 'Fey Hollow', 'Ancient Grove', 'Spider Nest', 'Druid Catacombs', 'Mosscrypt'],
+	ashlands: ['Volcanic Cavern', 'Goblin Warren', 'Obsidian Vault', 'Firepits', 'Charred Depths', 'Warlord\'s Tomb', 'Magma Rift'],
+	hearthlands: ['Castle Basement', 'Bandit Hideout', 'Old Sewers', 'Abandoned Mine', 'Thieves\' Tunnels', 'Crypt of Kings', 'Smuggler\'s Cellar'],
+	frostpeak: ['Ice Cave', 'Collapsed Mine', 'Frozen Tomb', 'Crystal Cavern', 'Glacial Rift', 'Thane\'s Barrow', 'Runebound Vault'],
+	drowned_mire: ['Sunken Temple', 'Flooded Crypt', 'Hag Lair', 'Bone Grotto', 'Plague Pit', 'Drowned Cellars', 'Spirit Hollow'],
+	sunstone_expanse: ['Buried Pyramid', 'Sand Ruins', 'Oasis Grotto', 'Tomb of Kings', 'Sandworm Tunnels', 'Star Chamber', 'Pharaoh\'s Vault'],
+	thornlands: ['Collapsed Foundry', 'Iron Citadel Ruins', 'Thornwild Tunnels', 'Underground Forge', 'Gear Works', 'Republican Vault', 'Automaton Crypt'],
+	pale_coast: ['Flooded Caverns', 'Smuggler\'s Cove', 'Sunken Ship Hold', 'Tidal Passage', 'Sea Witch Grotto', 'Coral Labyrinth', 'Drowned Archives'],
+	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 
 function generateDungeonName(regionId: RegionId, rng: SeededRandom): string {

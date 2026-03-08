@@ -597,6 +597,87 @@ function generateCity(width: number, height: number): LocationResult {
 	};
 }
 
+function generateHarbor(width: number, height: number): LocationResult {
+	const tiles = makeWallGrid(width, height);
+
+	// Open harbor area
+	fillRect(tiles, 1, 1, width - 2, height - 2, '.');
+
+	// Dock piers extending south (water at bottom)
+	fillRect(tiles, 1, height - 3, width - 2, 2, '#'); // water wall
+	fillRect(tiles, 5, height - 6, 2, 4, '.'); // pier 1
+	fillRect(tiles, 15, height - 6, 2, 4, '.'); // pier 2
+	fillRect(tiles, 25, height - 6, 2, 4, '.'); // pier 3
+	fillRect(tiles, 35, height - 6, 2, 4, '.'); // pier 4
+
+	// Warehouse (west)
+	drawBuilding(tiles, 2, 2, 12, 6, 'south');
+	tiles[4][6] = '*'; // cargo
+	tiles[4][10] = '*'; // supplies
+
+	// Harbormaster's office (east)
+	drawBuilding(tiles, 30, 2, 12, 6, 'south');
+
+	// Tavern (center-north)
+	drawBuilding(tiles, 16, 2, 10, 5, 'south');
+
+	// Fish market stalls
+	fillRect(tiles, 10, 10, 3, 2, '#');
+	fillRect(tiles, 18, 10, 3, 2, '#');
+	fillRect(tiles, 26, 10, 3, 2, '#');
+
+	// Rope coils and crates on the dock
+	tiles[14][8] = '#';
+	tiles[14][38] = '#';
+
+	// Dungeon entrance (smuggler tunnels below docks)
+	tiles[height - 4][width - 5] = '>';
+
+	const playerPos = { x: 20, y: 12 };
+
+	const npcs: NPC[] = [
+		makeNPC(34, 4, 'H', '#8bd', 'Harbormaster Kael', [
+			'Every ship that docks pays the harbor tax. No exceptions.',
+			'The Hollow Sea has been rough lately. Three ships lost this season.',
+			'Smugglers use the tunnels beneath the docks. I look the other way — for a price.',
+			'If you\'re heading south, book passage on the morning tide.'
+		], { hp: 3 }),
+		makeNPC(20, 4, 'B', '#fa8', 'Dockside Barkeep', [
+			'Sailors drink here before and after every voyage. Sometimes during.',
+			'The old captain in the corner claims he sailed to the edge of the Hollow Sea.',
+			'He says the water turns to glass out there. You can see straight to the bottom.',
+			'Whatever you do, don\'t drink the grog. Stick to ale.'
+		], { hp: 2 }),
+		makeNPC(12, 10, 'F', '#4af', 'Fish Monger', [
+			'Fresh catch! Straight from the shallows! Only slightly haunted!',
+			'The fish have been strange lately. Some glow. Some have extra eyes.',
+			'It\'s the Hollow Sea. Dro-Mahk\'s death changed the water itself.',
+			'Still tastes fine though. Probably.'
+		]),
+		makeNPC(40, 14, 'C', '#aaf', 'Old Captain', [
+			'I\'ve sailed every coast and harbor in this world.',
+			'Out past the reef, the water changes. It gets... thin. Like reality is stretched.',
+			'I saw a city beneath the waves once. Spires of crystal reaching up. Then the fog rolled in.',
+			'The Sunken Dominion, they call it. Pelagathis. A civilization swallowed whole.',
+			'Don\'t go looking for it. The sea doesn\'t give back what it takes.'
+		]),
+		makeNPC(6, 4, 'W', '#886', 'Warehouse Clerk', [
+			'We store cargo from every region. Thornlands iron, Greenweald timber, Sunstone spices.',
+			'Some crates arrive sealed with warnings in Tidespeak. We don\'t open those.',
+			'A shipment of Crystalborn artifacts went missing last month. The Veiled Hand, I reckon.'
+		], { atk: 1 })
+	];
+
+	return {
+		map: { width, height, tiles, secretWalls: new Set() },
+		playerPos,
+		npcs,
+		enemies: [],
+		initialHpFactor: 1.0,
+		welcomeMessage: 'A bustling harbor. Salt-crusted docks stretch into grey water. Seabirds cry overhead.'
+	};
+}
+
 export function generateStartingLocation(location: StartingLocation, width: number, height: number): LocationResult {
 	switch (location) {
 		case 'village': return generateVillage(width, height);
@@ -614,6 +695,7 @@ export function generateSettlementByType(type: SettlementType, width: number, he
 		case 'camp': return generateCamp(width, height);
 		case 'fortress': return generateFortress(width, height);
 		case 'temple': return generateTemple(width, height);
+		case 'harbor': return generateHarbor(width, height);
 		default: return generateVillage(width, height);
 	}
 }
