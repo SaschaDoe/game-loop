@@ -1116,6 +1116,134 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`nothing to give.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 14. A Grandmother's Cures — Blood Singers / anti-divine magic
+	// -----------------------------------------------------------------------
+	book_grandmothers_cures: {
+		id: 'book_grandmothers_cures',
+		name: "A Grandmother's Cures",
+		char: 'B',
+		color: '#aa6644',
+		type: 'book',
+		description:
+			"A stained recipe book with a cracked spine. It smells of rosemary and iron.",
+		pages: [
+			`FOR MY GRANDDAUGHTER\n` +
+				`when she is old enough to understand\n\n` +
+				`FEVER TEA\n` +
+				`Boil moonpetal and silverroot in\n` +
+				`clean water until the steam smells\n` +
+				`sweet. Let it cool until you can\n` +
+				`hold the cup without flinching.\n` +
+				`Before you give it to the child,\n` +
+				`prick your thumb and let three drops\n` +
+				`fall into the tea. Press your hand\n` +
+				`to the cup and think of warmth.\n` +
+				`The tea will do the rest.\n\n` +
+				`WOUND PASTE\n` +
+				`Crush thornberry and witchgrass\n` +
+				`into a paste with river clay. Spread\n` +
+				`it thick on the cut. Then press your\n` +
+				`palm flat against it and hold still.\n` +
+				`You will feel a pull — a small\n` +
+				`tiredness, as if you had walked a\n` +
+				`long way. That is the healing. It\n` +
+				`comes from you. Do not be afraid of\n` +
+				`it. It is yours to give.\n\n` +
+				`BONE-MEND BROTH\n` +
+				`Simmer marrow bones with ashbloom\n` +
+				`petal and salt. When the child drinks,\n` +
+				`hold their broken limb and hum. Any\n` +
+				`tune. The song does not matter. What\n` +
+				`matters is your breath and your blood\n` +
+				`moving together, carrying your intent\n` +
+				`into them. You will be tired after.\n` +
+				`Eat well. Sleep long. You have given\n` +
+				`something of yourself.`,
+
+			`You will notice, child, that none of\n` +
+				`these remedies ask you to pray.\n\n` +
+				`This is not an accident.\n\n` +
+				`The warmth you feel leaving you and\n` +
+				`entering the sick — that is life.\n` +
+				`Your life, freely given, passed to\n` +
+				`another. It is the oldest medicine\n` +
+				`there is. Older than temples. Older\n` +
+				`than hymns. Older than the gods\n` +
+				`themselves, though they would rather\n` +
+				`you did not know that.\n\n` +
+				`Your blood knew how to heal before\n` +
+				`any god taught any priest to pray.\n` +
+				`The body remembers what the temples\n` +
+				`have forgotten — that you carry a\n` +
+				`river inside you, and that river\n` +
+				`connects to every river in every\n` +
+				`living thing, and no one owns the\n` +
+				`current. No one grants it. No one\n` +
+				`can take it away.\n\n` +
+				`The priests will tell you healing\n` +
+				`must come from above. They are not\n` +
+				`lying — they believe it. But they\n` +
+				`are wrong. Healing comes from\n` +
+				`beside. From one living thing\n` +
+				`reaching toward another and saying:\n` +
+				`here. Take what you need. I have\n` +
+				`enough.`,
+
+			`SNAKEBITE CURE\n` +
+				`(for when the temple healers have\n` +
+				` failed or are too far away)\n\n` +
+				`Cut the wound open. Press your mouth\n` +
+				`to it. Draw the venom with your\n` +
+				`breath — but do not swallow. Spit\n` +
+				`it into the fire. Then cut your own\n` +
+				`palm and press it to the wound, blood\n` +
+				`to blood, and push.\n\n` +
+				`This will cost you. More than the\n` +
+				`fever tea. More than the wound paste.\n` +
+				`You will be dizzy afterward. You may\n` +
+				`faint. Your hair may grey at the\n` +
+				`temples. You are giving months of\n` +
+				`your life to buy back theirs.\n\n` +
+				`I have done this eleven times. I am\n` +
+				`fifty-three and I look seventy. My\n` +
+				`hands shake. My joints ache in the\n` +
+				`cold. Every morning I feel the weight\n` +
+				`of the years I gave away.\n\n` +
+				`But every tremor is a child who\n` +
+				`breathed when they should not have.\n` +
+				`I do not regret a single drop.`,
+
+			`They will come for you.\n\n` +
+				`The ones in white robes with golden\n` +
+				`suns on their chests. They will call\n` +
+				`you witch. Heretic. Demon-touched.\n` +
+				`They will say your healing is an\n` +
+				`abomination because it does not flow\n` +
+				`through the proper channels — their\n` +
+				`channels, their gods, their hands.\n\n` +
+				`Remember this: they cannot do what\n` +
+				`you do. Their prayers go up and\n` +
+				`sometimes an answer comes down, and\n` +
+				`sometimes it doesn't. Your healing\n` +
+				`goes from your heart to theirs, and\n` +
+				`it always works, because it is yours\n` +
+				`to give.\n\n` +
+				`No god stands between your blood and\n` +
+				`their need. That is why they fear\n` +
+				`you. Not because you are dangerous —\n` +
+				`but because you do not need them.\n` +
+				`And nothing frightens a throne more\n` +
+				`than being unnecessary.\n\n` +
+				`Now go. Heal quietly. Charge nothing.\n` +
+				`And when they ask how you did it,\n` +
+				`smile and say it was prayer.\n` +
+				`Let them have their pride.\n` +
+				`We have our children, alive and\n` +
+				`breathing, and that is enough.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
