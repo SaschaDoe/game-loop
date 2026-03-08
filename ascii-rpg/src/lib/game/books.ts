@@ -2141,6 +2141,113 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`he knows will eventually open.`,
 		],
 	},
+	book_perfumers_guide: {
+		id: 'book_perfumers_guide',
+		name: "A Perfumer's Guide to the Grey Wastes",
+		char: 'B',
+		color: '#99aa88',
+		type: 'book',
+		description: 'A slim journal that smells faintly of lavender and something else entirely.',
+		pages: [
+			`A PERFUMER'S GUIDE\n` +
+				`TO THE GREY WASTES\n` +
+				`by Lessa Vane, Nose Royal\n\n` +
+				`Every apprentice asks the same\n` +
+				`question: why would a perfumer\n` +
+				`travel to the deadest place in\n` +
+				`the world?\n\n` +
+				`Because nothing is a smell.\n\n` +
+				`Not the absence of smell. A\n` +
+				`smell unto itself — clean and\n` +
+				`total and absolute, like silence\n` +
+				`is a sound if you listen hard\n` +
+				`enough. We call it null essence.\n` +
+				`One drop added to any perfume\n` +
+				`strips it to its purest note.\n` +
+				`Ladies of the court pay a small\n` +
+				`fortune for it.\n\n` +
+				`I have visited the Wastes nine\n` +
+				`times. I am the only perfumer\n` +
+				`alive who still goes. The others\n` +
+				`say the place is wrong. They\n` +
+				`are correct. But wrong has a\n` +
+				`bouquet, and I am in the\n` +
+				`business of bouquets.`,
+			`At the border, ghost-scents.\n` +
+				`Flowers that have been dead for\n` +
+				`a thousand years still perfume\n` +
+				`the air where the grey meets\n` +
+				`the green — as if the memory\n` +
+				`of them lingers longer than\n` +
+				`the roots did.\n\n` +
+				`Deeper in, everything flattens.\n` +
+				`Dust smells of dust. Stone\n` +
+				`smells of nothing. The null\n` +
+				`essence thickens until you can\n` +
+				`taste it — the flavor of a\n` +
+				`world with its tongue cut out.\n\n` +
+				`But on my seventh visit, at the\n` +
+				`dead center where even the Grey\n` +
+				`Pilgrims will not walk, my nose\n` +
+				`caught something new.\n\n` +
+				`Chemical. Layered. Complex.\n\n` +
+				`Not dead. Never alive. Something\n` +
+				`made, not grown. I followed it\n` +
+				`the way a hound follows blood.`,
+			`A building. Low, stone, sealed.\n` +
+				`Preserved perfectly — nothing\n` +
+				`decays where nothing lives. The\n` +
+				`door had cracked with age and\n` +
+				`through the gap, a treasury\n` +
+				`of scent.\n\n` +
+				`Metal salts — sharp, bright,\n` +
+				`like copper kissing vinegar.\n` +
+				`Acid compounds — the clean burn\n` +
+				`of something designed to\n` +
+				`dissolve. Sulfur. Charcoal.\n` +
+				`And beneath it all, a base note\n` +
+				`I have never encountered in\n` +
+				`thirty years of practice.\n\n` +
+				`Through the crack I saw shelves.\n` +
+				`Vials, sealed and labeled in\n` +
+				`neat script. A desk covered in\n` +
+				`diagrams — river systems, root\n` +
+				`networks, water tables. Like\n` +
+				`recipes, I thought.\n\n` +
+				`Then I looked closer and saw\n` +
+				`that every diagram had the\n` +
+				`same word at the bottom,\n` +
+				`underlined twice.\n\n` +
+				`I cannot read Old Aetherian.\n` +
+				`But I recognized the glyph\n` +
+				`for "deny."`,
+			`I did not enter. Some doors\n` +
+				`are cracked for a reason and\n` +
+				`that reason is not invitation.\n\n` +
+				`But I took one scent home with\n` +
+				`me. It clung to my clothes for\n` +
+				`days — a grey powder that had\n` +
+				`drifted through the crack and\n` +
+				`settled on my sleeve. I held\n` +
+				`it to my nose in my workshop\n` +
+				`surrounded by ten thousand\n` +
+				`beautiful things and it smelled\n` +
+				`of endings.\n\n` +
+				`Not death. Death has a smell\n` +
+				`and it is honest. This was\n` +
+				`something worse. This was the\n` +
+				`smell of life being *refused*.\n\n` +
+				`Whoever worked in that lab was\n` +
+				`precise. Methodical. Patient.\n` +
+				`The vials were labeled in a\n` +
+				`hand as steady as a surgeon's.\n` +
+				`The diagrams were beautiful.\n\n` +
+				`This was not hatred. This was\n` +
+				`craft. And I have been in the\n` +
+				`trade long enough to know:\n` +
+				`that is always worse.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
