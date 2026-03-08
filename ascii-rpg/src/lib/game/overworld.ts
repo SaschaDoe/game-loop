@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -18,7 +18,7 @@ export type TerrainType =
 
 export type RoadType = 'main' | 'path';
 
-export type SettlementType = 'village' | 'town' | 'city' | 'camp' | 'fortress';
+export type SettlementType = 'village' | 'town' | 'city' | 'camp' | 'fortress' | 'temple';
 
 export interface OverworldTile {
 	terrain: TerrainType;
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (6) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse'];
+/** Surface regions (7) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -99,6 +99,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	drowned_mire:     { name: 'The Drowned Mire',      language: 'Whispertongue', dangerLevel: 5 },
 	frostpeak:        { name: 'Frostpeak Reach',       language: 'Runic',        dangerLevel: 6 },
 	sunstone_expanse: { name: 'The Sunstone Expanse',  language: 'Sandscript',   dangerLevel: 7 },
+	thornlands:       { name: 'The Thornlands',        language: 'Old Iron',     dangerLevel: 3 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -146,6 +147,12 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'rock', weight: 10 },
 		{ terrain: 'oasis', weight: 5 },
 		{ terrain: 'sand', weight: 5 }, // extra sand
+	],
+	thornlands: [
+		{ terrain: 'grass', weight: 35 },
+		{ terrain: 'rock', weight: 25 },
+		{ terrain: 'forest', weight: 25 },
+		{ terrain: 'mountain', weight: 15 },
 	],
 };
 
@@ -198,7 +205,7 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 6 region seed points using Poisson-disk-like sampling.
+ * Place 7 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
@@ -412,7 +419,7 @@ function placeSettlements(tiles: OverworldTile[][], regionSeeds: Map<RegionId, P
 
 			const id = `settlement_${idCounter++}`;
 			const name = generateSettlementName(regionId, rng);
-			const type = rng.pick<SettlementType>(['village', 'town', 'camp']);
+			const type = rng.pick<SettlementType>(['village', 'town', 'camp', 'fortress', 'temple']);
 			settlements.push({ id, name, region: regionId, pos, type });
 			tiles[pos.y][pos.x].locationId = id;
 		}
@@ -512,6 +519,14 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'shrine', name: 'Oasis Shrine', hidden: false },
 		{ type: 'standing_stones', name: 'Sun Dial Circle', hidden: false },
 		{ type: 'hot_spring', name: 'Desert Oasis Pool', hidden: true },
+	],
+	thornlands: [
+		{ type: 'ruins', name: 'Rusted Aqueduct', hidden: false },
+		{ type: 'obelisk', name: 'Republican Monument', hidden: false },
+		{ type: 'hidden_cave', name: 'Smuggler\'s Tunnel', hidden: true },
+		{ type: 'standing_stones', name: 'Iron Circle', hidden: false },
+		{ type: 'grave_site', name: 'Founder\'s Cairn', hidden: false },
+		{ type: 'shrine', name: 'Shrine of the Gears', hidden: true },
 	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
@@ -833,6 +848,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	frostpeak: { prefixes: ['Frost', 'Ice', 'Grim', 'Iron', 'Stone', 'Rune', 'Deep'], suffixes: ['helm', 'hold', 'forge', 'mine', 'hall', 'peak', 'barrow'] },
 	drowned_mire: { prefixes: ['Bog', 'Mist', 'Rot', 'Shade', 'Murk', 'Gloom', 'Wither'], suffixes: ['fen', 'marsh', 'moor', 'pool', 'shade', 'hollow', 'reach'] },
 	sunstone_expanse: { prefixes: ['Sun', 'Star', 'Sand', 'Gold', 'Dust', 'Opal', 'Dawn'], suffixes: ['watch', 'spire', 'haven', 'spring', 'gate', 'well', 'crest'] },
+	thornlands: { prefixes: ['Iron', 'Thorn', 'Rust', 'Bolt', 'Gear', 'Anvil', 'Brass'], suffixes: ['gate', 'wall', 'ridge', 'fall', 'hold', 'works', 'keep'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -848,6 +864,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	frostpeak: ['Ice Cave', 'Collapsed Mine', 'Frozen Tomb', 'Crystal Cavern'],
 	drowned_mire: ['Sunken Temple', 'Flooded Crypt', 'Hag Lair', 'Bone Grotto'],
 	sunstone_expanse: ['Buried Pyramid', 'Sand Ruins', 'Oasis Grotto', 'Tomb of Kings'],
+	thornlands: ['Collapsed Foundry', 'Iron Citadel Ruins', 'Thornwild Tunnels', 'Underground Forge'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault'],
 };
 

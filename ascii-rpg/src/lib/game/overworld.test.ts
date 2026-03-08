@@ -69,9 +69,9 @@ describe('generateWorld', () => {
 });
 
 describe('region placement (US-WG-02)', () => {
-	it('has 7 regions including Underdepths', () => {
+	it('has 8 regions including Underdepths', () => {
 		const world = getTestWorld();
-		expect(world.regions.length).toBe(7);
+		expect(world.regions.length).toBe(8);
 		const ids = world.regions.map(r => r.id);
 		expect(ids).toContain('greenweald');
 		expect(ids).toContain('ashlands');
@@ -79,13 +79,14 @@ describe('region placement (US-WG-02)', () => {
 		expect(ids).toContain('frostpeak');
 		expect(ids).toContain('drowned_mire');
 		expect(ids).toContain('sunstone_expanse');
+		expect(ids).toContain('thornlands');
 		expect(ids).toContain('underdepths');
 	});
 
-	it('6 surface regions are present on the tile grid', () => {
+	it('7 surface regions are present on the tile grid', () => {
 		const world = getTestWorld();
 		const counts = getRegionTileCounts(world);
-		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse'];
+		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands'];
 		for (const id of surfaceRegions) {
 			expect(counts[id]).toBeGreaterThan(0);
 		}
@@ -94,7 +95,7 @@ describe('region placement (US-WG-02)', () => {
 	it('no surface region is too small (minimum ~400 tiles)', () => {
 		const world = getTestWorld();
 		const counts = getRegionTileCounts(world);
-		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse'];
+		const surfaceRegions: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands'];
 		for (const id of surfaceRegions) {
 			expect(counts[id]).toBeGreaterThan(400);
 		}

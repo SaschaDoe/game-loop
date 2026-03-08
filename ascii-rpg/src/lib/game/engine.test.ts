@@ -2651,7 +2651,7 @@ describe('Regional NPCs in settlements (US-OW-02)', () => {
 	});
 
 	it('each region has at least 2 NPC definitions', () => {
-		const regions = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'underdepths'];
+		const regions = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'underdepths'];
 		for (const region of regions) {
 			const state = createGame({ name: 'Tester', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: `npc-count-${region}` });
 			// We can't directly enter non-starting settlements in test, so just verify the REGIONAL_NPCS table

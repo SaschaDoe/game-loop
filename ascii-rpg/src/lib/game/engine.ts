@@ -10,7 +10,7 @@ import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, applyHazardToEntity, hazardChar, hazardColor } from './hazards';
 import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './difficulty';
 import { placeChests, getChestAt, openChest, chestChar, chestColor } from './chests';
-import { generateStartingLocation } from './locations';
+import { generateStartingLocation, generateSettlementByType } from './locations';
 import { NPC_DIALOGUE_TREES } from './dialogue';
 import { rollLootDrop, getLootAt, pickupLoot, lootChar, lootColor } from './loot';
 import { getSkillBonuses } from './skills';
@@ -311,6 +311,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	frostpeak: 'A biting wind howls through ice-crusted peaks. Your breath crystallizes.',
 	drowned_mire: 'The ground squelches underfoot. A sour mist clings to the dead trees.',
 	sunstone_expanse: 'Endless dunes ripple under a blazing sun. Sand whispers against stone.',
+	thornlands: 'Rugged highlands choked with thorny undergrowth. Rusted iron relics dot the ridgeline.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -389,6 +390,7 @@ const REGION_COLORS: Record<string, string> = {
 	frostpeak: '#8df',
 	drowned_mire: '#6a6',
 	sunstone_expanse: '#fa4',
+	thornlands: '#a86',
 	underdepths: '#a4f',
 };
 
@@ -597,6 +599,10 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'N', color: '#fa4', name: 'Nomad Guide', dialogue: ['The desert tests all who cross it.', 'Follow the stars — they never lie, unlike the sands.', 'The buried temples hold treasures of forgotten kings.'], mood: 'friendly' },
 		{ char: 'S', color: '#ff8', name: 'Stargazer', dialogue: ['The constellations shifted last night. A bad omen.', 'Sandscript cannot be learned from books alone.', 'The oasis shrines were built by the Sand Mages long ago.'], gives: { hp: 2 }, mood: 'neutral' },
 	],
+	thornlands: [
+		{ char: 'E', color: '#a86', name: 'Iron Remnant Engineer', dialogue: ['The Republic fell, but its principles endure.', 'These machines once powered an entire civilization. Now they rust.', 'Magic is a crutch. Gears and steel — that\'s real power.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'S', color: '#da8', name: 'Thorn Ranger', dialogue: ['The undergrowth here is alive — and not friendly.', 'The old Iron roads are still the safest path through these highlands.', 'I\'ve seen foundry smoke rising from ruins that should be dead. Unsettling.'], gives: { hp: 2 }, mood: 'friendly' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -653,11 +659,10 @@ function enterSettlement(state: GameState, settlement: Settlement): void {
 		return;
 	}
 
-	// Generate fresh
-	const locResult = generateStartingLocation(
-		settlement.isStartingLocation ?? 'village',
-		MAP_W, MAP_H
-	);
+	// Generate fresh — use starting location generator for starting settlements, type-based for others
+	const locResult = settlement.isStartingLocation
+		? generateStartingLocation(settlement.isStartingLocation, MAP_W, MAP_H)
+		: generateSettlementByType(settlement.type, MAP_W, MAP_H);
 	state.map = locResult.map;
 	state.player.pos = locResult.playerPos;
 	state.enemies = locResult.enemies;
@@ -744,6 +749,7 @@ const GRAVE_LORE: Record<string, string> = {
 	frostpeak:        'A dwarven runesmith whose final creation was never completed.',
 	drowned_mire:     'A swamp witch who sacrificed herself to seal a plague beneath the waters.',
 	sunstone_expanse: 'A nomadic stargazer who mapped the constellations into the desert stones.',
+	thornlands:       'An Iron Republic founder who swore that gears would outlast gods.',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -851,6 +857,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	frostpeak:        { combat: ['Wolf', 'Skeleton', 'Troll'], nonCombat: ['A dwarven prospector shares warmth by a campfire.', 'You discover a frozen shrine and warm your hands.'] },
 	drowned_mire:     { combat: ['Slime', 'Spider', 'Zombie'], nonCombat: ['A swamp witch offers a bitter tonic that restores health.', 'You find dry ground and an abandoned camp with supplies.'] },
 	sunstone_expanse: { combat: ['Skeleton', 'Rat', 'Ogre'], nonCombat: ['A nomadic stargazer reads your fortune.', 'A desert trader sells you water from an oasis.'] },
+	thornlands:       { combat: ['Wolf', 'Goblin', 'Spider'], nonCombat: ['An Iron Remnant tinker offers to repair your gear.', 'You find a rusted automaton half-buried in thorns — its gears still turn slowly.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 
