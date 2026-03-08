@@ -2986,6 +2986,114 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`Someone has to.`,
 		],
 	},
+	book_missing_days: {
+		id: 'book_missing_days',
+		name: 'The Diary of Missing Days',
+		char: 'B',
+		color: '#aa99bb',
+		type: 'book',
+		description: 'A diary with dates scratched into the cover. Some pages are blank in a way that feels deliberate.',
+		pages: [
+			`THE DIARY OF MISSING DAYS\n\n` +
+				`Starday —\n` +
+				`My last entry says Moonday.\n` +
+				`Today is Starday. That is\n` +
+				`five days I cannot account\n` +
+				`for. The pages between are\n` +
+				`not torn — they are written,\n` +
+				`but the ink has faded to\n` +
+				`nothing. I can feel the\n` +
+				`grooves where I pressed the\n` +
+				`pen. I wrote something. I\n` +
+				`cannot read what.\n\n` +
+				`Hella at the bakery mentioned\n` +
+				`an archaeologist who came\n` +
+				`through last week with\n` +
+				`something from the old ruins.\n` +
+				`She could not remember what\n` +
+				`he found. Neither could the\n` +
+				`butcher. Neither could the\n` +
+				`mayor.\n\n` +
+				`There was a storm on Moonday\n` +
+				`night. I remember the wind\n` +
+				`changing. Then I remember\n` +
+				`today.`,
+			`I have started scratching\n` +
+				`tally marks behind the\n` +
+				`wardrobe. One mark each\n` +
+				`morning. If days go missing\n` +
+				`the count will not match.\n\n` +
+				`It does not match.\n\n` +
+				`I have twenty-three marks.\n` +
+				`My diary shows fifteen days.\n` +
+				`Eight days are gone. The\n` +
+				`pages for those days are\n` +
+				`blank — the same faded-ink\n` +
+				`blankness as before.\n\n` +
+				`Behind the mirror I found\n` +
+				`a note in my own hand that\n` +
+				`I do not remember writing:\n\n` +
+				`"They send the weather to\n` +
+				`make you forget. Do not go\n` +
+				`outside when the wind\n` +
+				`changes direction three\n` +
+				`times in an hour. Stay\n` +
+				`inside. Seal the windows.\n` +
+				`The storm is not a storm."\n\n` +
+				`I do not remember writing\n` +
+				`this. But I believe myself.`,
+			`I asked old Maret about the\n` +
+				`missing days. She laughed.\n\n` +
+				`"The forgetting weather.\n` +
+				`Yes, it comes and goes.\n` +
+				`Always has. My grandmother\n` +
+				`called it the grey wind.\n` +
+				`You wake up and a week is\n` +
+				`gone and the bread is stale\n` +
+				`and the cat is angry."\n\n` +
+				`She said this the way you\n` +
+				`would mention rain.\n\n` +
+				`I asked if she thought it\n` +
+				`was strange. She looked at\n` +
+				`me as if I had asked whether\n` +
+				`she thought breathing was\n` +
+				`strange. "It is weather,\n` +
+				`dear. You do not question\n` +
+				`weather."\n\n` +
+				`But I notice: the forgetting\n` +
+				`storms come after the ruins\n` +
+				`are disturbed. After someone\n` +
+				`digs. After someone finds.\n\n` +
+				`Weather does not have\n` +
+				`opinions about archaeology.`,
+			`If you are reading this and\n` +
+				`the next pages are blank,\n` +
+				`then it has happened again\n` +
+				`and I have forgotten what\n` +
+				`I learned.\n\n` +
+				`I am going to the ruins\n` +
+				`today. Whatever I find, I\n` +
+				`will carve it into the old\n` +
+				`wall behind the chapel.\n` +
+				`Stone does not forget the\n` +
+				`way ink does. Stone does\n` +
+				`not fade when the wind\n` +
+				`changes.\n\n` +
+				`The wind changed twice\n` +
+				`this morning.\n\n` +
+				`I think it will change a\n` +
+				`third time before dark.\n\n` +
+				`I am writing this quickly.\n` +
+				`If I do not come back — if\n` +
+				`the next version of me does\n` +
+				`not remember going — check\n` +
+				`the wall. I will have\n` +
+				`written the truth there,\n` +
+				`in a language the weather\n` +
+				`cannot erase.\n\n` +
+				`The wind is changing.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
