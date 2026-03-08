@@ -1368,6 +1368,125 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`    — E.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 16. Shaft Twelve: A Record — The Architects / dormant living mountains
+	// -----------------------------------------------------------------------
+	book_shaft_twelve: {
+		id: 'book_shaft_twelve',
+		name: 'Shaft Twelve: A Record',
+		char: 'B',
+		color: '#887766',
+		type: 'book',
+		description:
+			'A water-stained logbook with mining company stamps on the cover. The final pages are blank, as if the writers simply stopped coming.',
+		pages: [
+			`SHAFT TWELVE — COMPANY RECORD\n` +
+				`Aetherton Mining Concern\n\n` +
+				`Day 1. Standard excavation. Granite\n` +
+				`with quartz veining. Good progress,\n` +
+				`four yards.\n\n` +
+				`Day 4. Hit a hollow behind the rock\n` +
+				`face. Not a cave — the walls are too\n` +
+				`smooth, too regular. Natural formation\n` +
+				`doesn't make right angles. Broke\n` +
+				`through into a chamber roughly thirty\n` +
+				`paces across. Walls are warm to the\n` +
+				`touch.\n` +
+				`    — Henryk, lead pick\n\n` +
+				`Day 6. The chamber connects to others.\n` +
+				`Passages curve away in both directions,\n` +
+				`smooth-walled, gently sloping downward.\n` +
+				`The cross-section is oval, not round.\n` +
+				`Torchlight reflects strangely — the\n` +
+				`stone has a grain to it. Like wood.\n` +
+				`Like muscle.\n\n` +
+				`Day 8. Torben says the walls feel like\n` +
+				`they're humming. Nobody else can feel\n` +
+				`it. We told him to drink less. He\n` +
+				`wasn't drinking.`,
+
+			`Day 12. Found a structure at the\n` +
+				`junction of two passages. I lack the\n` +
+				`vocabulary. It is taller than a\n` +
+				`chapel. It is made of stone but shaped\n` +
+				`like no masonry I have seen. There are\n` +
+				`openings that resemble valves — great\n` +
+				`stone flaps that hang closed but could,\n` +
+				`I think, open. And channels running\n` +
+				`from it in every direction, vanishing\n` +
+				`into the walls.\n\n` +
+				`Maren says it looks like a pump. I\n` +
+				`asked her: a pump for what? She\n` +
+				`didn't answer. She just put her hand\n` +
+				`on it and stood there a long time.\n` +
+				`Then she said: "It's not broken.\n` +
+				`It's sleeping."\n\n` +
+				`Day 14. The passages go deeper than\n` +
+				`we can map. We've walked for hours\n` +
+				`and found no end. The walls grow\n` +
+				`warmer the further we descend. The\n` +
+				`air smells of something old — not\n` +
+				`decay, not dust. Something alive that\n` +
+				`has been still for a very long time.\n` +
+				`    — Foreman Aldric, shift lead`,
+
+			`Day 18. The walls move.\n\n` +
+				`I need to be precise. Once every few\n` +
+				`hours, the passage narrows by a\n` +
+				`hand's width, then widens again.\n` +
+				`Slowly. Over the course of thirty or\n` +
+				`forty heartbeats. If you are not\n` +
+				`watching, you would miss it. If you\n` +
+				`are watching, you wish you had not.\n\n` +
+				`Day 20. Henryk went deeper than the\n` +
+				`rest of us. Alone. He came back pale\n` +
+				`and quiet and would not speak for an\n` +
+				`hour. Then he said: "There's a\n` +
+				`chamber. Bigger than anything. The\n` +
+				`walls pulse. Like a heartbeat. The\n` +
+				`whole mountain has a heartbeat."\n\n` +
+				`I ordered Shaft Twelve sealed.\n\n` +
+				`Day 21. Official reason for closure:\n` +
+				`structural instability. Actual reason:\n` +
+				`the mountain moved. Not a quake — I\n` +
+				`have felt quakes. This was deliberate.\n` +
+				`The stone shifted around us the way a\n` +
+				`sleeping animal adjusts its weight.\n` +
+				`Slowly. Carefully. As if trying not\n` +
+				`to wake itself.\n` +
+				`    — Foreman Aldric`,
+
+			`Day 23. (Unauthorized entry.)\n\n` +
+				`I went back. Alone. At night. I know\n` +
+				`I should not have. But I could not\n` +
+				`stop thinking about the heartbeat.\n\n` +
+				`I found the chamber Henryk described.\n` +
+				`It is vast. The ceiling is beyond\n` +
+				`torchlight. The walls pulse — slow,\n` +
+				`steady, ancient. I pressed my hand\n` +
+				`to the stone and it was warm and\n` +
+				`alive and I felt it notice me. Not\n` +
+				`hostile. Not afraid. Curious. The\n` +
+				`way a sleeping creature notices a\n` +
+				`sound — barely, distantly, from\n` +
+				`very far inside a dream.\n\n` +
+				`This mountain is not a mountain. I\n` +
+				`do not know what it is. But it is\n` +
+				`dreaming, and it has been dreaming\n` +
+				`for longer than I have words to\n` +
+				`describe, and whatever it dreams of,\n` +
+				`it dreams patiently, the way only\n` +
+				`something truly vast can be patient.\n\n` +
+				`I sealed the entrance behind me.\n` +
+				`Some doors should stay closed. Not\n` +
+				`because what's behind them is\n` +
+				`dangerous — but because some things\n` +
+				`deserve to sleep undisturbed.\n\n` +
+				`    — Henryk\n` +
+				`    (no further entries)`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
