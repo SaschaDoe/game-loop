@@ -2875,6 +2875,117 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`I choose not to say her name.`,
 		],
 	},
+	book_bookbinders_regret: {
+		id: 'book_bookbinders_regret',
+		name: "The Bookbinder's Regret",
+		char: 'B',
+		color: '#998877',
+		type: 'book',
+		description: 'A thin pamphlet stitched with extraordinary care. The binding is flawless.',
+		pages: [
+			`THE BOOKBINDER'S REGRET\n\n` +
+				`I have bound eleven thousand\n` +
+				`books in forty years. I know\n` +
+				`leather by touch, thread by\n` +
+				`weight, glue by smell. I can\n` +
+				`tell you the age of a binding\n` +
+				`within a decade by the way\n` +
+				`the spine cracks.\n\n` +
+				`A man came to my shop in the\n` +
+				`year before the war. Quiet.\n` +
+				`Well-dressed. Hands like a\n` +
+				`surgeon's. He brought seven\n` +
+				`manuscripts — ancient texts,\n` +
+				`he said, recovered from a\n` +
+				`sealed archive. He needed\n` +
+				`them bound for presentation\n` +
+				`to the Royal Academy.\n\n` +
+				`The parchment looked old.\n` +
+				`The ink looked old. But the\n` +
+				`margins were too clean. Old\n` +
+				`manuscripts bleed at the\n` +
+				`edges. These were crisp.\n\n` +
+				`I said nothing. He paid\n` +
+				`triple my fee.`,
+			`The texts went to scholars.\n` +
+				`I read about it in the\n` +
+				`broadsheets — ancient proof\n` +
+				`of a forgotten blood feud\n` +
+				`between Vestraad and Korinn.\n` +
+				`The scholars called it the\n` +
+				`discovery of the century.\n` +
+				`Authentic, they said.\n` +
+				`Irrefutable.\n\n` +
+				`Within a year the two kingdoms\n` +
+				`were at war. Allies for three\n` +
+				`hundred years, killing each\n` +
+				`other over texts I had bound\n` +
+				`with my own hands.\n\n` +
+				`I watched soldiers march past\n` +
+				`my shop. Boys who had been\n` +
+				`trading partners the year\n` +
+				`before, now carrying swords.\n` +
+				`I thought: the margins were\n` +
+				`too clean. I knew. Some part\n` +
+				`of me knew.\n\n` +
+				`Four hundred thousand dead\n` +
+				`in six years. I bound the\n` +
+				`memorial book afterward.\n` +
+				`The names filled nine hundred\n` +
+				`pages.`,
+			`They found his workshop after\n` +
+				`he fled. A room full of inks,\n` +
+				`pens, seals, and half-finished\n` +
+				`forgeries. His notes were\n` +
+				`casual — descriptions of how\n` +
+				`he had manipulated two nations\n` +
+				`into mutual destruction,\n` +
+				`written with the detachment\n` +
+				`of a craftsman discussing\n` +
+				`materials.\n\n` +
+				`I recognized his binding\n` +
+				`technique in the evidence\n` +
+				`drawings. My stitching. My\n` +
+				`glue. My craft, used to make\n` +
+				`lies feel like history.\n\n` +
+				`A forger can fake parchment.\n` +
+				`He can fake ink. He can fake\n` +
+				`handwriting so well that\n` +
+				`experts weep with admiration.\n` +
+				`But he cannot fake a binding.\n` +
+				`Bindings are muscle memory.\n` +
+				`They carry the bookbinder's\n` +
+				`hand the way a signature\n` +
+				`carries a name.`,
+			`I check every old text that\n` +
+				`comes through my shop now.\n` +
+				`I look for the signs: margins\n` +
+				`too clean, thread too even,\n` +
+				`glue that smells of this\n` +
+				`century pretending to smell\n` +
+				`of the last.\n\n` +
+				`I find them. More than you\n` +
+				`would believe. Forgeries\n` +
+				`woven into the foundations\n` +
+				`of what we call history.\n` +
+				`Small lies, mostly. Harmless.\n` +
+				`But the stitching is always\n` +
+				`the same — too perfect, too\n` +
+				`confident, the work of a man\n` +
+				`who knows exactly what he is\n` +
+				`doing.\n\n` +
+				`There is someone — or some-\n` +
+				`thing more than someone — who\n` +
+				`has been writing the world's\n` +
+				`history for it. And the\n` +
+				`world reads his books and\n` +
+				`calls them true.\n\n` +
+				`I am old. My hands shake.\n` +
+				`But I still check the\n` +
+				`bindings.\n\n` +
+				`Someone has to.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
