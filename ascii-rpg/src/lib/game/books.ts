@@ -1938,6 +1938,109 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`And they were there.`,
 		],
 	},
+	book_blind_sculptor: {
+		id: 'book_blind_sculptor',
+		name: 'The Blind Sculptor of Ferrum',
+		char: 'B',
+		color: '#aa8866',
+		type: 'book',
+		description: 'A slim volume bound in tooled leather, smelling faintly of stone dust.',
+		pages: [
+			`THE BLIND SCULPTOR OF FERRUM\n\n` +
+				`They sent for me in autumn. A\n` +
+				`commission from the Temple —\n` +
+				`a great honor, they said, for a\n` +
+				`woman who carves without eyes.\n\n` +
+				`I was to make a statue of the\n` +
+				`Valiant One. Eight feet tall.\n` +
+				`Marble. For the eastern nave.\n\n` +
+				`They gave me a sealed room in\n` +
+				`the temple basement. Good stone.\n` +
+				`Good tools. A cot in the corner\n` +
+				`and meals brought twice daily.\n` +
+				`The door locked from outside —\n` +
+				`for the stone's protection, the\n` +
+				`head priest said. Sacred space.\n\n` +
+				`I did not mind. I have never\n` +
+				`needed light to work. My hands\n` +
+				`know what stone wants to become.\n` +
+				`I press my palms to the block\n` +
+				`and listen until it tells me\n` +
+				`what is hiding inside.`,
+			`The stone would not give me\n` +
+				`a hero.\n\n` +
+				`I tried. For three days I cut\n` +
+				`the broad strokes — shoulders\n` +
+				`thrown back, chin raised, the\n` +
+				`stance of a man who has never\n` +
+				`run from anything.\n\n` +
+				`But my hands kept drifting. The\n` +
+				`shoulders wanted to curl inward.\n` +
+				`The chin tucked down. The arms\n` +
+				`crossed over the chest — not in\n` +
+				`strength, but the way a child\n` +
+				`holds itself during a storm.\n\n` +
+				`Something in that room was\n` +
+				`shaping the stone through me.\n` +
+				`Not the marble — marble has no\n` +
+				`opinion. Something on the wall\n` +
+				`behind me. I could feel it the\n` +
+				`way you feel someone watching\n` +
+				`you sleep. Flat. Cold. Patient.\n\n` +
+				`I pressed my hand to the wall\n` +
+				`once and found it — thin as\n` +
+				`paper, cold as grief, pinned\n` +
+				`there like a moth in a case.\n` +
+				`It was the shape of a man.\n` +
+				`The man was making himself\n` +
+				`small.`,
+			`The priests came on the seventh\n` +
+				`day to inspect my progress.\n\n` +
+				`I heard the head priest stop\n` +
+				`breathing. Then a sound like\n` +
+				`someone sitting down very hard.\n` +
+				`Then shouting. Then more priests,\n` +
+				`running. Someone grabbed my arm\n` +
+				`and pulled me from the room.\n\n` +
+				`They would not let me back in.\n\n` +
+				`I heard hammers that night. My\n` +
+				`statue — my beautiful, honest\n` +
+				`statue — broken back to rubble.\n` +
+				`I wept. Not for the work. For\n` +
+				`the figure inside the stone who\n` +
+				`had finally been seen and was\n` +
+				`now being unremembered.\n\n` +
+				`They paid me triple the agreed\n` +
+				`fee. They made me swear an oath\n` +
+				`of silence. The head priest's\n` +
+				`voice shook when he spoke to me\n` +
+				`and I realized: he was afraid.\n` +
+				`Not of me. Of what my hands\n` +
+				`had understood.`,
+			`That was eleven years ago.\n\n` +
+				`Last month a traveler told me\n` +
+				`something was stolen from the\n` +
+				`Temple of Ferrum. A sealed room\n` +
+				`in the basement, broken into.\n` +
+				`Guards killed. Whatever was\n` +
+				`taken, the temple will not say.\n\n` +
+				`I think of it sometimes. The\n` +
+				`thing on the wall. The shape\n` +
+				`my hands found in the marble\n` +
+				`before the priests took my\n` +
+				`chisel and my silence.\n\n` +
+				`I am old now. My fingers ache.\n` +
+				`But they remember the truth of\n` +
+				`that stone — the only statue I\n` +
+				`ever carved that the stone\n` +
+				`wanted to become.\n\n` +
+				`Not a hero. Not a warrior.\n\n` +
+				`A man with his knees drawn up\n` +
+				`and his face hidden in his\n` +
+				`hands, trying to make himself\n` +
+				`small enough to disappear.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
