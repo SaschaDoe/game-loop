@@ -355,7 +355,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	mirrow_wastes: 'Dead trees claw at a grey sky. The river stones are stained rust-red despite centuries of rain. Griefmoths drift through the silence like living lanterns.',
 	silence_peaks: 'The wind dies. Your footsteps make no sound. Snow falls in perfect silence, and the mountains swallow every echo. Something fundamental is broken here.',
 	timeless_wastes: 'The sky flickers between noon and dusk. Your shadow moves before you do. The landscape repeats — or did you walk this path already? Time is wounded here.',
-	hollow_sea: 'The water stretches beyond sight, impossibly clear. Far below, drowned spires shimmer like a mirage. Where Dro-Mahk fell, matter itself grew thin.',
+	hollow_sea: 'The water stretches beyond sight, impossibly clear. Far below, drowned spires shimmer like a mirage. Where Dro-Mahk was torn, matter itself grew thin.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -685,7 +685,7 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'P', color: '#aab', name: 'Pilgrim of Stillness', dialogue: ['I came to hear the silence. Instead I heard what hides beneath it.', 'In the deepest caves, if you press your ear to the stone, you can feel them — the Original Seven, still singing.', 'The monks say the melody is a map. Seven streams of magic converging on a point no one has found.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
 	hollow_sea: [
-		{ char: 'S', color: '#48a', name: 'Salvage Captain', dialogue: ['I\'ve pulled Dominion artifacts from the shallows for twenty years. The deep wrecks? Nobody comes back from those.', 'On calm days the water goes glass-clear. You can see the spires of Pelagathis a mile below. They still glow.', 'The Sunken Dominion didn\'t sink. It was swallowed. When Dro-Mahk fell, matter stopped being reliable.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'S', color: '#48a', name: 'Salvage Captain', dialogue: ['I\'ve pulled Dominion artifacts from the shallows for twenty years. The deep wrecks? Nobody comes back from those.', 'On calm days the water goes glass-clear. You can see the spires of Pelagathis a mile below. They still glow.', 'The Sunken Dominion didn\'t sink. It was swallowed. When Dro-Mahk was wounded here, matter stopped being reliable.'], gives: { hp: 3 }, mood: 'friendly' },
 		{ char: 'L', color: '#4af', name: 'Leviathan Whisperer', dialogue: ['The great ones still remember the Dominion. They carry its memories in their songs — frequencies we can barely perceive.', 'Dominion Aquatic is not spoken. It is felt — pressure changes, current shifts, the language of deep water.', 'One of the leviathans showed me Pelagathis as it was. Crystal domes, coral highways, light that came from everywhere. Then the Principle of Matter died and it all became... thin.'], mood: 'neutral' },
 		{ char: 'C', color: '#68d', name: 'Coral Archaeologist', dialogue: ['These coral formations aren\'t natural. They\'re Dominion architecture — buildings that grew rather than were built.', 'I found a crystal that plays back the last moments before the sinking. Screaming. Then silence. Then the sound of water rushing in from everywhere.', 'The Restoration wants what the Dominion knew. Magic without gods. Civilization built on principles, not prayer.'], gives: { atk: 1 }, mood: 'friendly' },
 	],
