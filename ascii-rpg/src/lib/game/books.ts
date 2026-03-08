@@ -991,6 +991,131 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`them. The roots always do.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 13. Nights at the Silver Oak — Dreamweavers / Aelith's flood
+	// -----------------------------------------------------------------------
+	book_silver_oak: {
+		id: 'book_silver_oak',
+		name: 'Nights at the Silver Oak',
+		char: 'B',
+		color: '#99aacc',
+		type: 'book',
+		description:
+			'A small notebook with a dried leaf pressed into the cover. Several pages have been torn out.',
+		pages: [
+			`I keep these notes because the dreams\n` +
+				`are getting strange and I want to know\n` +
+				`if I am losing my mind.\n\n` +
+				`I am a shepherd. I graze my flock on\n` +
+				`the hill above Mirren's Cross where an\n` +
+				`old oak stands alone. The bark is\n` +
+				`silver-white and the leaves catch light\n` +
+				`in ways that make no sense — green in\n` +
+				`sunshine, gold in shadow. It is a good\n` +
+				`tree for shade and I have slept beneath\n` +
+				`it many times.\n\n` +
+				`Three weeks ago the dreams began. At\n` +
+				`first: colors without shape. The feeling\n` +
+				`of being watched by something patient.\n` +
+				`I would wake rested but with the sense\n` +
+				`that I had been somewhere very far away.\n\n` +
+				`Then the colors became images. A vast\n` +
+				`dark space. Threads of faint light\n` +
+				`stretching in every direction, fine as\n` +
+				`spider silk, each one trembling with\n` +
+				`the pulse of a sleeping mind. Something\n` +
+				`moved among the threads. Something\n` +
+				`careful. Something that was making\n` +
+				`something beautiful.`,
+
+			`The thing in the dark is not a ghost.\n` +
+				`It is not a god. I have prayed to the\n` +
+				`gods and this is nothing like praying.\n` +
+				`Praying feels like shouting up. This\n` +
+				`feels like sinking down — into a quiet\n` +
+				`place beneath everything, where the\n` +
+				`world hums in its sleep.\n\n` +
+				`It does not speak. It shows.\n\n` +
+				`Last night it showed me what it was.\n` +
+				`I saw hundreds of them, moving through\n` +
+				`the dark like fish through deep water,\n` +
+				`each one trailing light from their\n` +
+				`fingers. They were weaving. Every\n` +
+				`thread was a dreamer's mind, and the\n` +
+				`weavers connected them — this sleeper's\n` +
+				`hope to that sleeper's memory, this\n` +
+				`child's nightmare gently unknotted and\n` +
+				`rewoven into something kinder.\n\n` +
+				`They tended the world's sleep the way\n` +
+				`I tend my flock. With patience. With\n` +
+				`attention. With a gentleness I\n` +
+				`recognized because it is the same\n` +
+				`gentleness I use when a lamb won't\n` +
+				`settle.\n\n` +
+				`They were beautiful. I woke with tears\n` +
+				`on my face and did not know why.`,
+
+			`It showed me what happened to them.\n\n` +
+				`A flood. Not water — something worse.\n` +
+				`Something sweet. A vast wave of warmth\n` +
+				`that crashed through the dreaming dark\n` +
+				`like honey poured into a clear stream.\n` +
+				`It was love — or what called itself\n` +
+				`love — but too much, too loud, too\n` +
+				`bright. It drowned the delicate threads.\n` +
+				`It dissolved the weavers like salt in\n` +
+				`hot water.\n\n` +
+				`Hundreds of them. Gone in a single\n` +
+				`terrible moment of sweetness.\n\n` +
+				`A few survived. They fled downward,\n` +
+				`into the deepest layers of sleep,\n` +
+				`where even the flood could not reach.\n` +
+				`They have been there ever since.\n` +
+				`Alone. Weaving in the dark with no\n` +
+				`threads to weave. Going through the\n` +
+				`motions of tending a world that can\n` +
+				`no longer feel their hands.\n\n` +
+				`The one beneath my oak is the last,\n` +
+				`I think. It reached up through the\n` +
+				`roots because it felt me sleeping\n` +
+				`above it and it remembered — dimly,\n` +
+				`the way you remember a word in a\n` +
+				`language you spoke as a child — what\n` +
+				`it was like to tend a dreamer's mind.`,
+
+			`I went back one last time.\n\n` +
+				`I lay beneath the silver oak and I\n` +
+				`did not fight the dream. I let it\n` +
+				`take me down, past the colors, past\n` +
+				`the dark, to the place where the\n` +
+				`last weaver works.\n\n` +
+				`It showed me the world as it was when\n` +
+				`the tapestry was whole. Every sleeping\n` +
+				`mind connected. Every dream a thread\n` +
+				`in a web so vast and so delicate that\n` +
+				`seeing it was like hearing music made\n` +
+				`of starlight. I am a shepherd who has\n` +
+				`seen ten thousand sunrises and I tell\n` +
+				`you none of them came close.\n\n` +
+				`Then it was gone. And I was awake.\n` +
+				`And the oak was warm against my back,\n` +
+				`and its leaves glowed faintly, and\n` +
+				`I knew that something small had been\n` +
+				`repaired by the seeing of it.\n\n` +
+				`I think it needed to be seen. Not\n` +
+				`understood — just seen. The way a\n` +
+				`candle needs a window. Not to light\n` +
+				`the whole dark, but to prove the\n` +
+				`dark isn't everything.\n\n` +
+				`I am a shepherd. I know nothing of\n` +
+				`gods or magic or old things in the\n` +
+				`deep. But I know what it looks like\n` +
+				`when something has been alone too\n` +
+				`long. And I know what it costs\n` +
+				`nothing to give.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
