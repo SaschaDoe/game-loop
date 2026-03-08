@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'luminara_ruins' | 'duskhollow' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'luminara_ruins' | 'duskhollow' | 'irongate' | 'arcane_conservatory' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (20) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle', 'luminara_ruins', 'duskhollow'];
+/** Surface regions (21) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle', 'luminara_ruins', 'duskhollow', 'irongate', 'arcane_conservatory'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -113,6 +113,8 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	stormcradle:      { name: 'The Stormcradle',       language: 'Storm Cant',       dangerLevel: 6 },
 	luminara_ruins:   { name: 'The Luminara Ruins',    language: 'Luminari Script',  dangerLevel: 7 },
 	duskhollow:       { name: 'Duskhollow',            language: 'Twilight Cant',    dangerLevel: 6 },
+	irongate:              { name: 'Irongate',              language: 'Old Iron',         dangerLevel: 8 },
+	arcane_conservatory:   { name: 'The Arcane Conservatory', language: 'Arcane Script',    dangerLevel: 4 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -256,6 +258,20 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'water', weight: 15 },
 		{ terrain: 'mud', weight: 10 },
 	],
+	irongate: [
+		{ terrain: 'rock', weight: 40 },
+		{ terrain: 'lava', weight: 15 },
+		{ terrain: 'scorched', weight: 15 },
+		{ terrain: 'mountain', weight: 15 },
+		{ terrain: 'ash', weight: 15 },
+	],
+	arcane_conservatory: [
+		{ terrain: 'grass', weight: 40 },
+		{ terrain: 'rock', weight: 25 },
+		{ terrain: 'water', weight: 15 },
+		{ terrain: 'forest', weight: 10 },
+		{ terrain: 'mountain', weight: 10 },
+	],
 };
 
 // ── Perlin Noise (simplified 2D value noise) ──
@@ -307,7 +323,7 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 20 region seed points using Poisson-disk-like sampling.
+ * Place 21 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
@@ -793,6 +809,34 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'grave_site', name: 'Twilight Elder\'s Barrow', hidden: true },
 		{ type: 'ancient_tree', name: 'The Half-Visible Oak', hidden: false },
 	],
+	irongate: [
+		{ type: 'ruins', name: 'The Great Forge', hidden: false },
+		{ type: 'standing_stones', name: 'Republican Columns', hidden: false },
+		{ type: 'shrine', name: 'Centurion\'s Memorial', hidden: false },
+		{ type: 'obelisk', name: 'The Broken Chain Monument', hidden: false },
+		{ type: 'hidden_cave', name: 'The Collapsed Tunnel', hidden: true },
+		{ type: 'hot_spring', name: 'Forge Vent Pool', hidden: true },
+		{ type: 'grave_site', name: 'The Soldiers\' Cairn', hidden: true },
+		{ type: 'ancient_tree', name: 'The Iron-Root Oak', hidden: false },
+	],
+	arcane_conservatory: [
+		{ type: 'ruins', name: 'The Old Lecture Hall', hidden: false },
+		{ type: 'standing_stones', name: 'The Founder\'s Circle', hidden: false },
+		{ type: 'shrine', name: 'Shrine of the First Flame', hidden: false },
+		{ type: 'obelisk', name: 'The Curriculum Stone', hidden: false },
+		{ type: 'hidden_cave', name: 'The Headmaster\'s Secret Vault', hidden: true },
+		{ type: 'hot_spring', name: 'The Reflecting Pool', hidden: true },
+		{ type: 'grave_site', name: 'Memorial to Fallen Scholars', hidden: true },
+		{ type: 'ancient_tree', name: 'The Wisdom Oak', hidden: false },
+		{ type: 'ruins', name: 'Collapsed Alchemy Wing', hidden: false },
+		{ type: 'shrine', name: 'Divination Terrace', hidden: false },
+		{ type: 'standing_stones', name: 'The Warding Stones', hidden: false },
+		{ type: 'hidden_cave', name: 'Catacombs Entrance', hidden: true },
+		{ type: 'hot_spring', name: 'Enchanted Fountain', hidden: true },
+		{ type: 'obelisk', name: 'The Astral Observatory', hidden: false },
+		{ type: 'ruins', name: 'The Forbidden Library Annex', hidden: true },
+		{ type: 'grave_site', name: 'The Expelled Students\' Marker', hidden: true },
+	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
@@ -1131,6 +1175,8 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	stormcradle: { prefixes: ['Thunder', 'Bolt', 'Gale', 'Fulgar', 'Tempest', 'Strike', 'Flash'], suffixes: ['crest', 'ridge', 'fall', 'hold', 'peak', 'watch', 'break'] },
 	luminara_ruins: { prefixes: ['Lumen', 'Ash', 'Golden', 'Scroll', 'Ruin', 'Frost', 'Echo'], suffixes: ['arch', 'court', 'spire', 'vault', 'hall', 'rest', 'mark'] },
 	duskhollow: { prefixes: ['Dusk', 'Shade', 'Veil', 'Glimmer', 'Wane', 'Haze', 'Mist'], suffixes: ['hollow', 'ford', 'mere', 'shade', 'crossing', 'watch', 'fall'] },
+	irongate: { prefixes: ['Iron', 'Anvil', 'Forge', 'Steel', 'Gear', 'Chain', 'Hammer'], suffixes: ['gate', 'hold', 'works', 'keep', 'wall', 'yard', 'march'] },
+	arcane_conservatory: { prefixes: ['Spell', 'Rune', 'Arcane', 'Sigil', 'Glyph', 'Lumen', 'Mana', 'Ward'], suffixes: ['hall', 'tower', 'court', 'ward', 'spire', 'gate', 'arch', 'keep'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -1160,6 +1206,8 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	stormcradle: ['Lightning-Split Cavern', 'Ancient Vein Tunnel', 'Storm Warden\'s Crypt', 'Fulgurite Mines', 'Thunderbird Nest', 'Shattered Observatory', 'Electrified Ruins'],
 	luminara_ruins: ['Collapsed Library Vaults', 'Frozen Throne Room', 'Scholar\'s Catacombs', 'Temporal Labyrinth', 'Ash-Choked Archives', 'The Erased Gallery', 'Philosopher\'s Crypts'],
 	duskhollow: ['Flickering Catacombs', 'Spirit Bridge Ruins', 'The Half-World Cellar', 'Ghostbloom Cavern', 'Twilight Archive', 'Hollow One\'s Nest', 'The Membrane Breach'],
+	irongate: ['Buried Senate Chamber', 'Forge Undercroft', 'Centurion\'s Crypt', 'Clockwork Vault', 'Collapsed Armory', 'The Betrayer\'s Tunnel', 'Siege Engine Graveyard'],
+	arcane_conservatory: ['The Practice Vaults', 'Enchantment Laboratory Sublevel', 'The Forbidden Archive', 'Alchemy Cellar', 'Summoning Chamber Ruins', 'Divination Crypt', 'The Headmaster\'s Undercroft', 'Collapsed Dormitory Wing', 'Warding Stone Tunnels', 'The Mana Reservoir', 'Expelled Students\' Hideout', 'Crystal Growth Caves', 'The Final Exam Dungeon'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 

@@ -362,6 +362,8 @@ const REGION_FLAVOR: Record<string, string> = {
 	stormcradle: 'Lightning splits the sky every few heartbeats. The highlands are scoured bare — only scrub grass and blackened stone survive. Between the thunder, you hear something deeper: a hum from beneath the rock, as if the earth itself remembers the blow that cracked the sky.',
 	luminara_ruins: 'Golden spires rise from the dust, half-collapsed and half-frozen in amber light. The air smells of old parchment and ash. In places the ruins shimmer — time pooling like water in the broken streets, preserving moments of beauty a heartbeat before their destruction.',
 	duskhollow: 'The trees are wrong. Half-visible, their trunks flickering between solid wood and translucent grey. Mist clings to everything. Buildings appear and vanish at the corner of your eye — there, then not, then there again. The air tastes of two worlds, and neither one is entirely real.',
+	irongate: 'Iron and stone rise from the scorched earth — massive walls half-buried under landslide rubble. The air smells of rust and old forge smoke. Somewhere beneath the mountain, gears still turn. The ruins of the Iron Republics\' last free city, buried but not forgotten.',
+	arcane_conservatory: 'Towers of pale stone rise from manicured grounds, connected by covered walkways and floating bridges. The air hums with residual enchantment. Students in blue robes cross courtyards where fountain water flows upward. Somewhere a bell tolls — not with sound, but with a pulse of warm light that passes through walls.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -454,6 +456,8 @@ const REGION_COLORS: Record<string, string> = {
 	stormcradle: '#99f',
 	luminara_ruins: '#ec8',
 	duskhollow: '#97a',
+	irongate: '#a86',
+	arcane_conservatory: '#a8f',
 	underdepths: '#a4f',
 };
 
@@ -646,7 +650,7 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 	ashlands: [
 		{ char: 'O', color: '#f84', name: 'Orc Blacksmith', dialogue: ['You want weapon? I forge best steel in Ashlands.', 'The goblin clans grow restless. War comes.', 'Respect the fire, outsider, and it will not burn you.'], gives: { atk: 1 }, mood: 'neutral' },
 		{ char: 'G', color: '#a64', name: 'Goblin Trader', dialogue: ['Cheap goods! Good goods! Only slightly stolen!', 'The Charred Fortress has treasures... and death.', 'Boss not happy lately. Bad sign for everyone.'], mood: 'friendly' },
-		{ char: 'W', color: '#f44', name: 'War Shaman', dialogue: ['Ira-Sethi burned here long ago. The land still remembers.', 'The Ashblooms grow only where divine fire once touched the earth.', 'Khorvan calls himself god of war. But before him, there was only Energy — pure and purposeless.'], mood: 'neutral' },
+		{ char: 'W', color: '#f44', name: 'War Shaman', dialogue: ['Ira-Sethi burned here long ago. The land still remembers.', 'The Ashblooms grow only where divine fire once touched the earth.', 'The god of war came after — a mortal thing wearing a throne it did not earn. The Ashlands knew fire before he ever claimed it.'], mood: 'neutral' },
 	],
 	hearthlands: [
 		{ char: 'M', color: '#da4', name: 'Merchant', dialogue: ['Trade is the lifeblood of the Hearthlands.', 'The roads have become dangerous — bandits everywhere.', 'I hear the King\'s Stones hold ancient magic.'], mood: 'friendly' },
@@ -735,6 +739,18 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'E', color: '#a8b', name: 'Elder Miravel', dialogue: ['We could see both worlds once. The living and the dead, walking the same streets. Now the veil thickens year by year, and we lose a little more of ourselves each time.', 'My grandmother spoke to ancestors as easily as I speak to you. My children cannot see them at all. Something is being taken from us — slowly, deliberately.', 'The Dusk Markets traded goods between worlds. Spirit-silk, dreamglass, bottled memory. Now the stalls stand empty, flickering.'], gives: { hp: 3 }, mood: 'neutral' },
 		{ char: 'W', color: '#8ac', name: 'Spirit-Walker Thessyn', dialogue: ['I can still cross, but barely. The passage grows narrower each year. Like squeezing through a closing door.', 'The ghosts on the other side remember things. Old things. They try to tell me, but the veil muffles their voices. I catch fragments — names, warnings, apologies.', 'Do not trust the exorcists who come in official robes. The ones they banish are always the oldest — the ones who remember before. I do not know why. I only know they do not leave by choice.'], gives: { atk: 1 }, mood: 'friendly' },
 		{ char: 'V', color: '#667', name: 'Watcher Coravel', dialogue: ['I am here to ensure the boundary remains stable. Nothing more.', 'The Division of Silence monitors thin-spots for public safety. The spirit world is dangerous to the untrained.', 'The twilight folk are a dying culture. Unfortunate, but the veil exists for a reason. Some doors should stay closed.'], mood: 'hostile' },
+	],
+	irongate: [
+		{ char: 'R', color: '#a86', name: 'Remnant Engineer Tova', dialogue: ['The Great Forge still works. Eight hundred years buried under a mountain and the gears still turn. Iron Republic engineering — no magic, just precision.', 'The Republics proved you don\'t need gods to build a civilization. Elected senate, term limits, public debate. We had it all. Then one coward destroyed it in a single night.', 'The broken chain is our symbol. We were free once. We will be again.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'C', color: '#ca8', name: 'Artificer Brennik', dialogue: ['The rune system predates the Ascended. The most basic inscriptions correspond to older patterns — older than any god currently sitting on a throne. The Clockwork Creed has known this for centuries.', 'The device was destroyed before it was ever tested. They say it was sabotage — internal. But the Creed\'s records, what survive, suggest the sabotage came from outside. Someone did not want that device to exist.', 'Iron Republic engineering manuals are worth more than gold. Each one is a proof that mortals can build without prayer.'], gives: { hp: 2 }, mood: 'friendly' },
+		{ char: 'S', color: '#886', name: 'Soldier Harsk', dialogue: ['I hear him sometimes. In the deep tunnels, where the collapsed gate still stands. A voice reciting names. Eight thousand names.', 'The soldiers who died here followed a general they trusted. He fled through a hidden tunnel while they fought and died. No monument. No accounting. Just the machine, still running, as if it didn\'t notice.', 'Someone buried this entire city under a mountain. That takes power beyond any mortal means. Ask yourself: who had that kind of power, and what were they trying to hide?'], gives: { hp: 3 }, mood: 'neutral' },
+	],
+	arcane_conservatory: [
+		{ char: 'I', color: '#f84', name: 'Professor Ignis Valdren', dialogue: ['The first lesson of elemental magic is this: fire does not obey you. You negotiate with it. My hands are proof of what happens when negotiations fail.', 'Lightning is energy seeking ground. Ice is heat being stolen. Fire is matter remembering what it was before the world cooled. Understand the principle and the spell follows.', 'The Conservatory teaches three streams of elemental magic. The fourth — void manipulation — is forbidden. Officially because it is dangerous. Unofficially... I have my suspicions about who decided that.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'S', color: '#a8f', name: 'Professor Seraphina Ashveil', dialogue: ['Enchantment is not flashy. There are no explosions, no dramatic gestures. You weave a ward correctly and nothing happens. That is the point — nothing happens to you.', 'The Conservatory wards are layered fourteen deep. I maintain them personally. The outermost was set by the first Archmage. The innermost... the innermost I did not set. It was already here when the school was built.', 'I have noticed certain topics missing from our curriculum. Certain books removed from shelves. I say nothing. Paranoia is unbecoming of a professor. But I notice.'], gives: { hp: 2 }, mood: 'neutral' },
+		{ char: 'B', color: '#8a4', name: 'Professor Bramwell Thornwick', dialogue: ['Welcome to the greenhouse! Mind the Screaming Mandrakes — they are teething. And the Venomous Ivy. And the... actually, touch nothing. Just stand there and absorb knowledge through proximity.', 'Alchemy is the most practical school. Ignis can throw fire, yes, very impressive. But can fire cure snakebite? Can lightning mend a broken bone? My potions can.', 'The rarest ingredient I have ever worked with was Phoenix Ash. Genuine Phoenix Ash. I brewed a single draught from it and the patient recovered from wounds that should have been fatal. I have been trying to source more ever since.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'M', color: '#ff8', name: 'Professor Mirael Dawnwhisper', dialogue: ['You have questions. I know what they are. I will not answer them yet — not because I am being mysterious, but because you are not ready to hear the answers without going quite mad.', 'Divination is not seeing the future. The future does not exist yet. Divination is seeing the patterns that make certain futures more likely than others. The distinction matters.', 'I looked through the Astral Observatory last night and saw something I have not seen in thirty years of scrying. Seven shadows where there should be none, seated on thrones that do not belong to them. I wrote it in my journal and the ink vanished.'], mood: 'neutral' },
+		{ char: 'A', color: '#ec8', name: 'Archmage Aldric Voss', dialogue: ['The Conservatory has stood for four centuries. In that time we have produced some of the finest minds in the known world. Our curriculum is carefully designed — every subject balanced against every other.', 'Cross-stream mastery is a romantic idea but impractical. No mind can hold more than two or three magical disciplines without risking catastrophic instability. This is settled science.', 'I trust you are finding your studies satisfying? Good, good. Remember: the Conservatory exists to serve the greater good. And the greater good is best served by following the established curriculum.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
@@ -901,7 +917,9 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	stormcradle:      'The tunnel walls are fused glass — lightning-bored through solid rock. Static raises every hair on your body. The deeper you go, the louder the hum.',
 	luminara_ruins:   'The stairs descend through layers of history — gilded mosaic gives way to charred stone gives way to something older. Time stutters here. Your torch flame freezes, then leaps forward.',
 	duskhollow:       'The tunnel entrance flickers — solid stone one moment, translucent the next. Inside, you can see through the walls to a second tunnel overlaid on the first, like two drawings on the same page.',
-	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
+	irongate:              'Iron rivets line the passage walls. The air is hot and dry — forge heat, centuries old, still radiating from the stone. Gears click in the darkness ahead. Something mechanical is still running.',
+	arcane_conservatory:   'The stairs descend beneath the campus into older stone. Sigils glow along the walls — ward-work, still active after centuries. The air hums with latent enchantment, and somewhere below, something is practicing spells unsupervised.',
+	underdepths:           'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
 /** POI-type-specific reward text for grave sites. */
@@ -926,7 +944,9 @@ const GRAVE_LORE: Record<string, string> = {
 	stormcradle:      'A storm warden who mapped the lightning patterns for thirty years. Her final chart note: "The bolts are not striking the ground. They are striking back at the sky."',
 	luminara_ruins:   'A Luminari mathematician buried with her equations. Her epitaph: "The king said my proofs were sedition. I said they were truth. The ruins prove which of us was right."',
 	duskhollow:       'A twilight midwife who delivered children in both worlds. Her epitaph: "Born in flesh and spirit both. Now neither world will claim her."',
-	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
+	irongate:              'A Republic centurion buried standing upright, shield on arm. His epitaph is a single word scratched into the iron: "REMEMBER."',
+	arcane_conservatory:   'A student who attempted to master all four schools simultaneously. Her tombstone reads: "She reached for everything and grasped the infinite. It did not let go."',
+	underdepths:           'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
 /** Discover a POI on the overworld — gives type-specific rewards. */
@@ -1047,6 +1067,8 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	stormcradle:      { combat: ['Wolf', 'Troll', 'Ogre'], nonCombat: ['Lightning strikes a boulder twenty paces ahead. When the afterimage fades, a fulgurite sculpture stands where the rock was — shaped like a hand reaching upward.', 'A storm warden signals you from a ridge, pointing toward a safe path between the strike zones. She vanishes before you can shout thanks.'] },
 	luminara_ruins:   { combat: ['Wraith', 'Skeleton', 'Golem'], nonCombat: ['The air shimmers and for a heartbeat you see the street as it was — golden, alive, filled with scholars in white robes. Then ash.', 'A charred scroll fragment tumbles past your feet. The visible text reads: "...and the king decreed that henceforth all books shall..." The rest is burned away.'] },
 	duskhollow:       { combat: ['Wraith', 'Spider', 'Wolf'], nonCombat: ['A figure walks beside you for several paces — translucent, grey, mouthing words you cannot hear. It reaches toward you, then the veil thickens and it is gone.', 'A building appears between two trees, solid and warm with candlelight. You blink and it is a ruin, dark and overgrown. You blink again and the candles return, briefly.'] },
+	irongate:              { combat: ['Golem', 'Troll', 'Skeleton'], nonCombat: ['A gear the size of a wagon wheel grinds slowly in the wall beside you, driven by some mechanism deep underground. Oil drips from its teeth — fresh oil, recently applied by someone.', 'You find a Republic-era coin half-buried in ash. One side shows a broken chain. The other side has been scratched blank — deliberately, methodically, as if someone wanted a face erased from history.'] },
+	arcane_conservatory:   { combat: ['Skeleton', 'Slime', 'Spider'], nonCombat: ['A student rushes past muttering about a failed transmutation exam. Sparks trail from her fingers.', 'An enchanted broom sweeps the path ahead of you, then pauses, seems to regard you, and sweeps off in the opposite direction.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 

@@ -703,4 +703,140 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		stats: { atk: 2 },
 		rarity: 'uncommon',
 	},
+
+	// --- Arcane Conservatory: Reagents ---
+	fire_crystal: {
+		id: 'fire_crystal', name: 'Fire Crystal', char: '*', color: '#f84',
+		type: 'misc', description: 'A shard of crystallized flame. Warm to the touch and faintly luminous. Essential for elemental spellwork.',
+	},
+	frost_essence: {
+		id: 'frost_essence', name: 'Frost Essence', char: '*', color: '#8df',
+		type: 'misc', description: 'A vial of liquid cold that never warms. Condenses from the air in places where ice magic lingers.',
+	},
+	lightning_shard: {
+		id: 'lightning_shard', name: 'Lightning Shard', char: '*', color: '#ff4',
+		type: 'misc', description: 'A fulgurite fragment still crackling with static. Handle with dry hands.',
+	},
+	arcane_dust: {
+		id: 'arcane_dust', name: 'Arcane Dust', char: '*', color: '#a8f',
+		type: 'misc', description: 'Fine iridescent powder that shimmers between colors. The base reagent for most enchantment work.',
+	},
+	moonwater_vial: {
+		id: 'moonwater_vial', name: 'Moonwater Vial', char: '!', color: '#ccf',
+		type: 'misc', description: 'Water collected under a full moon and sealed in glass. Amplifies divination and healing recipes.',
+	},
+	starfern: {
+		id: 'starfern', name: 'Starfern', char: '"', color: '#8fa',
+		type: 'misc', description: 'A luminous fern that grows only in places touched by starlight. Its leaves are used in healing draughts.',
+	},
+	shadowroot: {
+		id: 'shadowroot', name: 'Shadowroot', char: '"', color: '#668',
+		type: 'misc', description: 'A dark, gnarled root that grows in lightless caves. Absorbs and stores magical energy.',
+	},
+	phoenix_ash: {
+		id: 'phoenix_ash', name: 'Phoenix Ash', char: '*', color: '#fa4',
+		type: 'misc', description: 'Ash from the nest of a firebird. Contains trace amounts of regenerative magic. Extremely rare.',
+	},
+	void_salt: {
+		id: 'void_salt', name: 'Void Salt', char: '*', color: '#88a',
+		type: 'misc', description: 'Black crystalline salt harvested from places where the world is thin. Tastes of nothing. Literally nothing.',
+	},
+	mandrake_root: {
+		id: 'mandrake_root', name: 'Mandrake Root', char: '"', color: '#a84',
+		type: 'misc', description: 'A gnarled root with an unsettling resemblance to a screaming face. Foundation of many alchemical brews.',
+	},
+	dreamleaf: {
+		id: 'dreamleaf', name: 'Dreamleaf', char: '"', color: '#c8f',
+		type: 'misc', description: 'Translucent leaves that curl into spirals when touched. Used in divination and dream-walking elixirs.',
+	},
+
+	// --- Arcane Conservatory: Potions & Elixirs ---
+	mana_potion: {
+		id: 'mana_potion', name: 'Mana Potion', char: '!', color: '#88f',
+		type: 'consumable', description: 'A shimmering blue draught that restores arcane energy.',
+		consumeEffect: { hp: 8 },
+	},
+	strength_elixir: {
+		id: 'strength_elixir', name: 'Elixir of Strength', char: '!', color: '#f88',
+		type: 'consumable', description: 'A crimson elixir that surges through the muscles. Temporary but potent.',
+		consumeEffect: { hp: 5 },
+	},
+	fire_resistance_potion: {
+		id: 'fire_resistance_potion', name: 'Fire Resistance Draught', char: '!', color: '#f64',
+		type: 'consumable', description: 'Coats the insides with a cooling film. Fire damage is halved for a time.',
+		consumeEffect: { hp: 10 },
+	},
+	frost_ward_potion: {
+		id: 'frost_ward_potion', name: 'Frost Ward Tonic', char: '!', color: '#4af',
+		type: 'consumable', description: 'Warms the blood from within. Grants resistance to cold damage.',
+		consumeEffect: { hp: 10 },
+	},
+	invisibility_draught: {
+		id: 'invisibility_draught', name: 'Invisibility Draught', char: '!', color: '#ddd',
+		type: 'consumable', description: 'A clear, odorless liquid that bends light around the drinker.',
+		consumeEffect: { hp: 3 },
+	},
+	truth_serum: {
+		id: 'truth_serum', name: 'Truth Serum', char: '!', color: '#ff8',
+		type: 'consumable', description: 'A golden draught that loosens the tongue. Banned in most civilized courts.',
+		consumeEffect: { hp: 2 },
+	},
+	dreamwalker_elixir: {
+		id: 'dreamwalker_elixir', name: 'Dreamwalker Elixir', char: '!', color: '#c8f',
+		type: 'consumable', description: 'The world goes soft at the edges. Perception sharpens beyond the physical.',
+		consumeEffect: { hp: 15 },
+	},
+	transmutation_philter: {
+		id: 'transmutation_philter', name: 'Transmutation Philter', char: '!', color: '#fa8',
+		type: 'consumable', description: 'Volatile. The label says DO NOT SHAKE. Someone has underlined it three times.',
+		consumeEffect: { hp: 8 },
+	},
+	philosophers_draught: {
+		id: 'philosophers_draught', name: "Philosopher's Draught", char: '!', color: '#ff4',
+		type: 'consumable', description: 'The pinnacle of alchemical achievement. Every wound heals. Every doubt clears.',
+		consumeEffect: { hp: 30 },
+		rarity: 'legendary',
+	},
+	fortification_elixir: {
+		id: 'fortification_elixir', name: 'Fortification Elixir', char: '!', color: '#a86',
+		type: 'consumable', description: 'The skin hardens momentarily. Not comfortable, but effective.',
+		consumeEffect: { hp: 12 },
+	},
+
+	// --- Arcane Conservatory: Equipment ---
+	apprentice_robes: {
+		id: 'apprentice_robes', name: 'Apprentice Robes', char: 'T', color: '#88f',
+		type: 'equipment', description: 'Standard-issue Conservatory robes. The embroidered sigils provide minor magical protection.',
+		slot: 'body', stats: { hp: 2, sight: 1 }, rarity: 'uncommon',
+	},
+	scholar_hat: {
+		id: 'scholar_hat', name: "Scholar's Hat", char: '^', color: '#a8f',
+		type: 'equipment', description: 'A pointed hat favored by Conservatory academics. The brim is enchanted to keep rain off manuscripts.',
+		slot: 'head', stats: { sight: 1, hp: 1 }, rarity: 'uncommon',
+	},
+	enchanted_wand: {
+		id: 'enchanted_wand', name: 'Enchanted Wand', char: '/', color: '#c8f',
+		type: 'equipment', description: 'A wand of white oak inlaid with arcane silver. Focuses magical energy with precision.',
+		slot: 'rightHand', stats: { atk: 2, sight: 1 }, rarity: 'rare',
+	},
+	archmage_staff: {
+		id: 'archmage_staff', name: "Archmage's Staff", char: '|', color: '#fa8',
+		type: 'equipment', description: 'The staff of the Conservatory Archmage. Seven gemstones orbit the headpiece, each a different color.',
+		slot: 'leftHand', stats: { atk: 4, sight: 2, hp: 3 }, rarity: 'epic',
+	},
+	conservatory_cloak: {
+		id: 'conservatory_cloak', name: 'Conservatory Cloak', char: '}', color: '#88f',
+		type: 'equipment', description: 'Deep blue with silver thread. The sigil of the Conservatory glows faintly on the clasp.',
+		slot: 'back', stats: { hp: 2, stealthBonus: 5 }, rarity: 'uncommon',
+	},
+	diviner_lens: {
+		id: 'diviner_lens', name: "Diviner's Lens", char: 'o', color: '#ccf',
+		type: 'equipment', description: 'A crystal monocle that reveals hidden things. Professor Dawnwhisper wears one just like it.',
+		slot: 'head', stats: { sight: 3 }, rarity: 'rare',
+	},
+	alchemist_boots: {
+		id: 'alchemist_boots', name: "Alchemist's Boots", char: 'L', color: '#a84',
+		type: 'equipment', description: 'Acid-resistant leather with reinforced soles. Essential in Professor Thornwick\'s laboratory.',
+		slot: 'leftFoot', stats: { hp: 1, noiseReduction: 5 }, rarity: 'uncommon',
+	},
 };
