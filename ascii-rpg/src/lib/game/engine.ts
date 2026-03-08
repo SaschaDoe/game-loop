@@ -353,6 +353,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	glassfields: 'Shattered prisms catch the light, scattering rainbows across fields of vitrified earth. The air hums with residual magic.',
 	verdant_deep: 'The canopy closes overhead like a living ceiling. Bioluminescent fungi pulse along the trunks. Something ancient watches from the green darkness.',
 	mirrow_wastes: 'Dead trees claw at a grey sky. The river stones are stained rust-red despite centuries of rain. Griefmoths drift through the silence like living lanterns.',
+	silence_peaks: 'The wind dies. Your footsteps make no sound. Snow falls in perfect silence, and the mountains swallow every echo. Something fundamental is broken here.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -436,6 +437,7 @@ const REGION_COLORS: Record<string, string> = {
 	glassfields: '#c8f',
 	verdant_deep: '#2a6',
 	mirrow_wastes: '#a64',
+	silence_peaks: '#bbc',
 	underdepths: '#a4f',
 };
 
@@ -673,6 +675,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'G', color: '#88a', name: 'Ghost Whisperer', dialogue: ['The soldiers still fight here. They don\'t know the war was a lie.', 'Vestraad and Korinn were allies for three centuries. Then one man\'s forgeries turned them to slaughter.', 'The griefmoths gather thickest at Mirrow Ford. Four hundred thousand dead will do that.'], gives: { hp: 3 }, mood: 'friendly' },
 		{ char: 'A', color: '#864', name: 'Ashen Circle Scholar', dialogue: ['We keep the forbidden records. The forgery workshop. The proof that the God of Truth built his throne on lies.', 'Theron Ash-Velk manufactured the entire Brother War. Fake documents, planted evidence, disguised mercenaries.', 'The complete Mirrow Widows\' song is in our library. Every verse — including the ones that name the god.'], gives: { atk: 1 }, mood: 'neutral' },
 	],
+	silence_peaks: [
+		{ char: 'M', color: '#bbc', name: 'Blind Monk', dialogue: ['We burned our eyes to see what matters. The knotted strings hold a melody older than the gods.', 'The Undertone grows fainter each year. Seven voices singing themselves into the world\'s foundation — the Original Seven.', 'Knotweave is not language. It is vibration given form. You read it with your fingertips.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'A', color: '#99a', name: 'Abbot of Closed Eyes', dialogue: ['Pho-Lumen screamed here. The Principle of Spirit, wounded unto death. And sound itself shattered.', 'We have spent a thousand years transcribing what remains. A seven-voiced dirge beneath the silence.', 'The Ascended filter it. Degrade it. But they cannot silence what was woven into the world itself.'], mood: 'neutral' },
+		{ char: 'P', color: '#aab', name: 'Pilgrim of Stillness', dialogue: ['I came to hear the silence. Instead I heard what hides beneath it.', 'In the deepest caves, if you press your ear to the stone, you can feel them — the Original Seven, still singing.', 'The monks say the melody is a map. Seven streams of magic converging on a point no one has found.'], gives: { hp: 2 }, mood: 'friendly' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -829,6 +836,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	glassfields:      'Crystal shards crunch underfoot. Prismatic light dances across the walls, revealing and concealing passages in turn.',
 	verdant_deep:     'Vines slither aside as you descend. Bioluminescent moss bathes the tunnels in sickly green light. Roots pulse like veins.',
 	mirrow_wastes:    'Bones crunch beneath your feet. The walls are scratched with tally marks — soldiers counting days they never finished.',
+	silence_peaks:    'Your footsteps vanish into nothing. The tunnels swallow sound so completely that your own heartbeat is the loudest thing in the world.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -845,6 +853,7 @@ const GRAVE_LORE: Record<string, string> = {
 	glassfields:      'A Luminari chronomancer who froze herself mid-spell, hoping the future would know how to finish it.',
 	verdant_deep:     'A Grey Pilgrim who walked the forbidden Ley Lines until the jungle itself grew over her, preserving her in roots and silence.',
 	mirrow_wastes:    'A soldier who carried letters from both sides — and realized, too late, that the handwriting in the declarations of war was the same.',
+	silence_peaks:    'A monk who transcribed the Undertone for sixty years. Her final knot-string reads: "The seventh voice is not singing. It is screaming."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -957,6 +966,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	glassfields:      { combat: ['Wraith', 'Skeleton', 'Troll'], nonCombat: ['A fractured prism replays a moment of kindness from centuries ago. You feel restored.', 'A Luminari echo offers cryptic guidance before dissolving into light.'] },
 	verdant_deep:     { combat: ['Spider', 'Troll', 'Slime'], nonCombat: ['A druid offers a poultice brewed from jungle herbs. Your wounds close.', 'A Crystalline Stag watches you from the undergrowth, then vanishes in a flash of prismatic light.'] },
 	mirrow_wastes:    { combat: ['Wraith', 'Zombie', 'Skeleton'], nonCombat: ['Griefmoths swirl around you, absorbing your weariness. You feel lighter.', 'The wind carries a melody — two melodies, nearly identical, almost harmonizing. The Mirrow wives\' song.'] },
+	silence_peaks:    { combat: ['Wolf', 'Wraith', 'Skeleton'], nonCombat: ['A blind monk presses a knotted string into your hand. You feel vibrations travel through your fingers.', 'You press your ear to the stone and feel a deep, subsonic pulse — the Undertone, still singing.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 
