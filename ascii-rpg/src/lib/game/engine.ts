@@ -2120,6 +2120,17 @@ export function handleInput(state: GameState, key: string): GameState {
 			lm.examined = true;
 			state.stats.landmarksExamined++;
 			addMessage(state, `[${def?.name ?? 'Landmark'}] ${text}`, 'discovery');
+
+			// Reward landmarks grant gameplay bonuses
+			if (lm.type === 'riddle_inscription') {
+				const xpGain = 8 + state.characterLevel * 3;
+				state.xp += xpGain;
+				addMessage(state, `The riddle's wisdom grants you +${xpGain} XP.`, 'level_up');
+				checkLevelUp(state);
+			} else if (lm.type === 'ancient_mechanism') {
+				state.player.attack += 1;
+				addMessage(state, 'You salvage a weapon component. (+1 ATK)', 'discovery');
+			}
 		}
 
 		// Check for adjacent containers

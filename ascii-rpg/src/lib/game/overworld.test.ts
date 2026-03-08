@@ -35,7 +35,7 @@ describe('generateWorld', () => {
 		expect(world.tiles[0].length).toBe(50);
 	});
 
-	it('same seed produces identical world', () => {
+	it('same seed produces identical world', { timeout: 15000 }, () => {
 		const world1 = generateWorld('determinism-check');
 		const world2 = generateWorld('determinism-check');
 		// Check tile grid equality

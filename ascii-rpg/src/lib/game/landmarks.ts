@@ -98,6 +98,36 @@ export const LANDMARK_DEFS: LandmarkDef[] = [
 		minLevel: 3,
 		weight: 1,
 	},
+	{
+		type: 'riddle_inscription',
+		char: '?',
+		color: '#adf',
+		name: 'Riddle Inscription',
+		flavorTexts: [
+			'"I have cities but no houses, forests but no trees, water but no fish. What am I?" Below, someone scratched: "A map." You feel wiser for pondering it.',
+			'"Seven sat on stolen seats, and called their crimes divine." The rest is worn away, but the words linger in your mind.',
+			'"What weighs nothing yet crushes the wicked?" The answer etched below reads: "Guilt." A chill runs through you.',
+			'"I speak without a mouth and hear without ears. I have no body, but come alive with wind." The answer: "An echo." Knowledge stirs within you.',
+			'"The more you take, the more you leave behind." Footprints. The riddle-maker knew these tunnels well.',
+			'"Before the Seven, there were Seven. Before the thrones, there were principles." The inscription hums faintly with Ley energy.',
+		],
+		minLevel: 2,
+		weight: 2,
+	},
+	{
+		type: 'ancient_mechanism',
+		char: '*',
+		color: '#da8',
+		name: 'Ancient Mechanism',
+		flavorTexts: [
+			'A clockwork device embedded in the wall, gears still turning after centuries. You pry loose a finely crafted component.',
+			'An Iron Republic automaton slumped against the wall. Its core still pulses with faint energy. You salvage a reinforced blade.',
+			'A rusted contraption with interlocking brass wheels. As you examine it, a hidden compartment springs open.',
+			'A mechanical arm frozen mid-swing, guarding a small alcove. With effort, you bypass it and claim the prize within.',
+		],
+		minLevel: 4,
+		weight: 1,
+	},
 ];
 
 const LANDMARK_BY_TYPE = new Map(LANDMARK_DEFS.map((d) => [d.type, d]));

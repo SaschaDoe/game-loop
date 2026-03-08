@@ -419,7 +419,7 @@ function placeSettlements(tiles: OverworldTile[][], regionSeeds: Map<RegionId, P
 
 			const id = `settlement_${idCounter++}`;
 			const name = generateSettlementName(regionId, rng);
-			const type = rng.pick<SettlementType>(['village', 'town', 'camp', 'fortress', 'temple']);
+			const type = rng.pick<SettlementType>(['village', 'town', 'city', 'camp', 'fortress', 'temple']);
 			settlements.push({ id, name, region: regionId, pos, type });
 			tiles[pos.y][pos.x].locationId = id;
 		}

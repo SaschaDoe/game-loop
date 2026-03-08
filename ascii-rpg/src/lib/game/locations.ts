@@ -493,6 +493,110 @@ function generateCamp(width: number, height: number): LocationResult {
 	};
 }
 
+function generateCity(width: number, height: number): LocationResult {
+	const tiles = makeWallGrid(width, height);
+
+	// City streets (open areas forming a cross pattern)
+	fillRect(tiles, 1, 1, width - 2, height - 2, '.');
+
+	// Castle keep (north-center, dominant structure)
+	drawBuilding(tiles, 16, 1, 18, 7, 'south');
+	// Throne room inside
+	tiles[4][25] = '#'; // throne
+
+	// Guild hall (west)
+	drawBuilding(tiles, 2, 2, 12, 6, 'east');
+
+	// Chapel (east)
+	drawBuilding(tiles, 36, 2, 12, 6, 'west');
+	tiles[4][42] = '#'; // altar
+
+	// Market stalls (center row)
+	fillRect(tiles, 10, 10, 3, 2, '#');
+	fillRect(tiles, 16, 10, 3, 2, '#');
+	fillRect(tiles, 22, 10, 3, 2, '#');
+	fillRect(tiles, 28, 10, 3, 2, '#');
+	fillRect(tiles, 34, 10, 3, 2, '#');
+
+	// Tavern (south-west)
+	drawBuilding(tiles, 2, 14, 10, 6, 'north');
+
+	// Barracks (south-east)
+	drawBuilding(tiles, 38, 14, 10, 6, 'north');
+
+	// Fountain/well in center
+	tiles[13][25] = '#';
+
+	// Houses along south wall
+	drawBuilding(tiles, 14, 16, 8, 5, 'north');
+	drawBuilding(tiles, 26, 16, 8, 5, 'north');
+
+	// Potions
+	tiles[4][20] = '*';
+	tiles[16][4] = '*';
+	tiles[13][30] = '*';
+
+	// Dungeon entrance (catacombs below the castle)
+	tiles[height - 2][width - 3] = '>';
+
+	const playerPos = { x: 25, y: 13 };
+
+	const npcs: NPC[] = [
+		makeNPC(25, 3, 'K', '#ff4', 'King Aldren', [
+			'Welcome to my court, adventurer. These are troubled times.',
+			'The Thornlands grow wild, and the old Iron Republic stirs beneath the earth.',
+			'My spies report that the Church of the Radiant Sun hides something. But what?',
+			'Serve the crown well, and you shall be rewarded.',
+			'There are seven gods, yet I am told there were once seven before them. Curious, no?'
+		], { hp: 5 }),
+		makeNPC(5, 4, 'G', '#8af', 'Guildmaster Petra', [
+			'The Adventurers\' Guild welcomes all who seek fortune and glory.',
+			'We\'ve posted bounties on the creatures infesting the catacombs below.',
+			'Our best scouts have mapped passages connecting to every region.',
+			'Take this emblem. It marks you as one of ours.'
+		], { atk: 1 }),
+		makeNPC(42, 4, 'F', '#ffa', 'Father Cassian', [
+			'The Radiant Sun watches over us all, child.',
+			'Pray here and receive the blessing of Verath, god of justice.',
+			'Some say the gods were once mortal. Heresy, of course. Pure heresy.',
+			'...But sometimes I wonder why the old texts are locked away.'
+		], { hp: 6 }),
+		makeNPC(16, 10, 'V', '#da4', 'Master Trader', [
+			'Finest goods from all eight regions! What catches your eye?',
+			'The Thornlands traders bring mechanical curiosities. Fascinating, if dangerous.',
+			'I once traded with a nomad from the Sunstone Expanse. He paid in starlight. Literally.',
+			'The deep roads connect the undercities, if you dare travel them.'
+		]),
+		makeNPC(4, 16, 'B', '#f88', 'Barkeep', [
+			'The city\'s finest ale, right here at The Golden Flagon.',
+			'The soldiers in the barracks talk of strange lights in the catacombs.',
+			'A hooded figure was asking about Ley Lines last week. Gave me the creeps.',
+			'Have a drink. You look like you\'ve seen things.'
+		], { hp: 3 }),
+		makeNPC(42, 16, 'C', '#88f', 'Captain of the Guard', [
+			'Keep order within the walls and we\'ll have no trouble.',
+			'The catacombs beneath the castle have been sealed for years. Something broke through.',
+			'I\'ve lost three patrols in the past month. Whatever\'s down there is getting stronger.',
+			'If you\'re heading below, take this blade. It\'s served me well.'
+		], { atk: 2 }),
+		makeNPC(30, 13, 'S', '#a8f', 'Hooded Scholar', [
+			'I study the gaps between what the Church teaches and what the ruins reveal.',
+			'The Original Seven were not gods. They were principles — Order, Spirit, Energy, Change, Space, Matter, Time.',
+			'The Ascended took their thrones. But who were the Ascended before they ascended?',
+			'Find the Crystalborn archives. The truth is there, if the Veiled Hand hasn\'t destroyed it.'
+		])
+	];
+
+	return {
+		map: { width, height, tiles, secretWalls: new Set() },
+		playerPos,
+		npcs,
+		enemies: [],
+		initialHpFactor: 1.0,
+		welcomeMessage: 'A walled city thrums with life. Castle spires rise above market stalls and temple domes.'
+	};
+}
+
 export function generateStartingLocation(location: StartingLocation, width: number, height: number): LocationResult {
 	switch (location) {
 		case 'village': return generateVillage(width, height);
@@ -506,7 +610,7 @@ export function generateSettlementByType(type: SettlementType, width: number, he
 	switch (type) {
 		case 'village': return generateVillage(width, height);
 		case 'town': return generateMarketTown(width, height);
-		case 'city': return generateMarketTown(width, height);
+		case 'city': return generateCity(width, height);
 		case 'camp': return generateCamp(width, height);
 		case 'fortress': return generateFortress(width, height);
 		case 'temple': return generateTemple(width, height);

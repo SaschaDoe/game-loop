@@ -203,7 +203,7 @@ export interface LootDrop {
 	value: number;
 }
 
-export type LandmarkType = 'graffiti' | 'campsite' | 'statue' | 'bones' | 'bloodstain' | 'shrine';
+export type LandmarkType = 'graffiti' | 'campsite' | 'statue' | 'bones' | 'bloodstain' | 'shrine' | 'riddle_inscription' | 'ancient_mechanism';
 
 export interface Landmark {
 	pos: Position;
