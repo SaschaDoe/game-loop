@@ -21,11 +21,16 @@
 		'"Before you descend, adventurer...\ntell me \u2014 who are you?"'
 	];
 
-	const CLASSES: CharacterClass[] = ['warrior', 'mage', 'rogue'];
+	const CLASSES: CharacterClass[] = ['warrior', 'mage', 'rogue', 'ranger', 'cleric', 'paladin', 'necromancer', 'bard'];
 	const CLASS_LABELS: Record<CharacterClass, string> = {
 		warrior: 'WARRIOR',
 		mage: 'MAGE',
-		rogue: 'ROGUE'
+		rogue: 'ROGUE',
+		ranger: 'RANGER',
+		cleric: 'CLERIC',
+		paladin: 'PALADIN',
+		necromancer: 'NECROMANCER',
+		bard: 'BARD'
 	};
 	const LOCATIONS: StartingLocation[] = ['village', 'tavern', 'cave'];
 

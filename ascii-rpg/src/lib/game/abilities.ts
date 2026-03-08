@@ -237,10 +237,10 @@ function necromancerDrainLife(state: GameState): AbilityResult {
 }
 
 function bardInspiringSong(state: GameState): AbilityResult {
-	// Temporary ATK boost via regeneration effect (creative use: we track it externally)
-	// For simplicity, apply a direct ATK boost tracked via status effect
-	applyEffect(state.player, 'regeneration', 5, 1);
+	// Temporary ATK boost tracked as 'inspire' status effect; reverted when it expires
+	applyEffect(state.player, 'inspire', 5, 3);
 	state.player.attack += 3;
+	applyEffect(state.player, 'regeneration', 5, 1);
 	return {
 		messages: [
 			{ text: 'You play an inspiring melody!', type: 'discovery' },

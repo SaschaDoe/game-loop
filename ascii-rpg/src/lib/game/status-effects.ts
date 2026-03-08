@@ -46,11 +46,22 @@ export function tickEffects(entity: Entity): { damage: number; healing: number; 
 			case 'curse':
 				messages.push(`${entity.name} is cursed! (-${effect.potency} ATK)`);
 				break;
+			case 'inspire':
+				// Inspire ticks down; ATK reverted when it expires (handled below)
+				break;
 			case 'sleep':
 				// Sleep doesn't tick — it's removed externally when woken
 				break;
 		}
 		if (effect.type !== 'sleep') effect.duration--;
+	}
+
+	// Revert ATK boost from expiring inspire effects before filtering
+	for (const effect of entity.statusEffects) {
+		if (effect.type === 'inspire' && effect.duration <= 0) {
+			entity.attack = Math.max(0, entity.attack - effect.potency);
+			messages.push(`${entity.name}'s inspiration fades. (-${effect.potency} ATK)`);
+		}
 	}
 
 	entity.statusEffects = entity.statusEffects.filter((e) => e.duration > 0);

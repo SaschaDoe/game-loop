@@ -104,7 +104,7 @@ export const SKILL_DEFS: SkillDef[] = [
 	{ id: 'n_death_2', name: 'Wither', characterClass: 'necromancer', branch: 'Death Magic', tier: 2, prerequisite: 'n_death_1', description: '+4 ATK', bonus: { attack: 4 } },
 	{ id: 'n_death_3', name: 'Reaper', characterClass: 'necromancer', branch: 'Death Magic', tier: 3, prerequisite: 'n_death_2', description: '+6 ATK', bonus: { attack: 6 } },
 	// Necromancer — Dark Pact
-	{ id: 'n_pact_1', name: 'Blood Bargain', characterClass: 'necromancer', branch: 'Dark Pact', tier: 1, prerequisite: null, description: '+2 ATK, -3 HP', bonus: { attack: 2 } },
+	{ id: 'n_pact_1', name: 'Blood Bargain', characterClass: 'necromancer', branch: 'Dark Pact', tier: 1, prerequisite: null, description: '+2 ATK, -3 HP', bonus: { attack: 2, maxHp: -3 } },
 	{ id: 'n_pact_2', name: 'Corpse Shield', characterClass: 'necromancer', branch: 'Dark Pact', tier: 2, prerequisite: 'n_pact_1', description: '+5 HP, +5% Dodge', bonus: { maxHp: 5, dodgeChance: 0.05 } },
 	{ id: 'n_pact_3', name: 'Lich Form', characterClass: 'necromancer', branch: 'Dark Pact', tier: 3, prerequisite: 'n_pact_2', description: '+10 HP, +3 ATK', bonus: { maxHp: 10, attack: 3 } },
 	// Necromancer — Undeath

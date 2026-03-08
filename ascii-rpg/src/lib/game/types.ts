@@ -151,7 +151,7 @@ export interface NPC {
 	moodTurns: number;
 }
 
-export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse';
+export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse' | 'inspire';
 
 export interface StatusEffect {
 	type: StatusEffectType;

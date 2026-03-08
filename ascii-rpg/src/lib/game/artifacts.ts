@@ -572,9 +572,9 @@ export interface WeaponEffectResult {
  * Resolve a weapon effect during combat. Returns the final damage,
  * whether the special effect procced, and a descriptive message.
  */
-export function applyWeaponEffect(effect: WeaponEffect, baseDamage: number): WeaponEffectResult {
+export function applyWeaponEffect(effect: WeaponEffect, baseDamage: number, rng?: () => number): WeaponEffectResult {
 	const def = WEAPON_EFFECT_DEFS[effect];
-	const roll = Math.random();
+	const roll = (rng ?? Math.random)();
 	const procced = roll < def.procChance;
 
 	if (!procced) {

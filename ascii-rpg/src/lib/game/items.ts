@@ -170,13 +170,16 @@ export function unequipItem(
 }
 
 export function getEquipmentBonuses(equipment: Equipment): ItemStats {
-	const totals: ItemStats = { hp: 0, atk: 0, sight: 0 };
+	const totals: ItemStats = { hp: 0, atk: 0, sight: 0, dodgeChance: 0, stealthBonus: 0, noiseReduction: 0 };
 
 	for (const slot of Object.values(equipment)) {
 		if (slot && slot.stats) {
 			totals.hp! += slot.stats.hp ?? 0;
 			totals.atk! += slot.stats.atk ?? 0;
 			totals.sight! += slot.stats.sight ?? 0;
+			totals.dodgeChance! += slot.stats.dodgeChance ?? 0;
+			totals.stealthBonus! += slot.stats.stealthBonus ?? 0;
+			totals.noiseReduction! += slot.stats.noiseReduction ?? 0;
 		}
 	}
 
