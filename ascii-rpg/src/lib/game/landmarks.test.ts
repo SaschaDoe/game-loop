@@ -22,8 +22,8 @@ function makeMap(width = 10, height = 10): GameMap {
 }
 
 describe('LANDMARK_DEFS', () => {
-	it('defines 6 landmark types', () => {
-		expect(LANDMARK_DEFS).toHaveLength(6);
+	it('defines 8 landmark types', () => {
+		expect(LANDMARK_DEFS).toHaveLength(8);
 	});
 
 	it('all types are unique', () => {

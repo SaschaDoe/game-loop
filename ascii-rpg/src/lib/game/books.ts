@@ -1244,6 +1244,130 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`breathing, and that is enough.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 15. A Letter Never Sent — Twilight Courts / Spirit Membrane
+	// -----------------------------------------------------------------------
+	book_letter_never_sent: {
+		id: 'book_letter_never_sent',
+		name: 'A Letter Never Sent',
+		char: 'B',
+		color: '#9977aa',
+		type: 'book',
+		description:
+			'A letter written on paper that shimmers between opaque and translucent. The ink appears and disappears as you tilt the page.',
+		pages: [
+			`My love,\n\n` +
+				`You are sitting by the fire as I\n` +
+				`write this, except you are not\n` +
+				`reading it, because I cannot send\n` +
+				`it. I am standing in the doorway\n` +
+				`watching you, except you cannot\n` +
+				`see me, because I am no longer\n` +
+				`solid enough to be seen.\n\n` +
+				`Our people called it the dimming.\n` +
+				`It began years ago — a thinning\n` +
+				`at the edges, like fog burning off\n` +
+				`at dawn. Some mornings I wake and\n` +
+				`I am here, fully, and I can touch\n` +
+				`things and be heard and cast a\n` +
+				`shadow. Other mornings my hand\n` +
+				`passes through the cup I reach\n` +
+				`for, and my voice does not carry,\n` +
+				`and I stand in the kitchen saying\n` +
+				`good morning to someone who does\n` +
+				`not know I am there.\n\n` +
+				`Our city is disappearing. The\n` +
+				`buildings flicker — stone one\n` +
+				`moment, starlight the next.\n` +
+				`Children cry because they cannot\n` +
+				`hold their mothers' hands.`,
+
+			`We lived in two worlds once. That\n` +
+				`was the beauty of us — one foot\n` +
+				`in your world of bread and iron,\n` +
+				`one foot in the quiet world\n` +
+				`beneath, where the dead walk softly\n` +
+				`and the old memories drift like\n` +
+				`leaves on still water.\n\n` +
+				`We built our homes on the seam\n` +
+				`between. A door in our house\n` +
+				`might open onto your market square\n` +
+				`or onto a garden that exists only\n` +
+				`in the hush. We walked both roads.\n` +
+				`We spoke to the living and the\n` +
+				`gone and we kept the peace between\n` +
+				`them.\n\n` +
+				`Then something changed. Something\n` +
+				`pressed down on the veil between\n` +
+				`the worlds — slowly, steadily,\n` +
+				`the way a hand presses a pillow\n` +
+				`over a sleeping face. The seam\n` +
+				`grew thick. The doors grew heavy.\n` +
+				`The quiet world pulled away from\n` +
+				`yours like a tide retreating, and\n` +
+				`we were caught between — too real\n` +
+				`for one world, too faint for the\n` +
+				`other.\n\n` +
+				`Whoever did this did not do it\n` +
+				`to hurt us. I am sure of that.\n` +
+				`We were not the target. We were\n` +
+				`simply in the way.`,
+
+			`I have been watching you for\n` +
+				`months now. You do not know.\n\n` +
+				`I watch you cook. I watch you\n` +
+				`read the book of poems I gave\n` +
+				`you when I was still solid enough\n` +
+				`to give. You smile at the line\n` +
+				`I marked — the one about the\n` +
+				`river and the stone — and I try\n` +
+				`to say I marked it for you,\n` +
+				`and my voice is smoke, and you\n` +
+				`turn the page.\n\n` +
+				`I try to touch your hair. My\n` +
+				`fingers pass through like wind.\n` +
+				`You shiver and pull your shawl\n` +
+				`tighter and say to yourself,\n` +
+				`"The draft again," and I am\n` +
+				`standing right beside you with\n` +
+				`my hand where your cheek was\n` +
+				`and I cannot tell you that\n` +
+				`there is no draft.\n\n` +
+				`I am not dying. That would be\n` +
+				`simpler. I am dimming. I am still\n` +
+				`here. I can still see you. I\n` +
+				`can still hear your voice. I\n` +
+				`just cannot answer.`,
+
+			`I will leave this letter on the\n` +
+				`table. Perhaps your hand will\n` +
+				`pass through it. Perhaps mine\n` +
+				`will pass through the table.\n` +
+				`Perhaps, for one moment, the\n` +
+				`veil will thin and you will feel\n` +
+				`the weight of a page written by\n` +
+				`someone who stood beside you\n` +
+				`every day and could not be seen.\n\n` +
+				`If you feel a chill at your\n` +
+				`shoulder sometimes, on evenings\n` +
+				`when the light is neither day\n` +
+				`nor night — that is me. Still\n` +
+				`standing in the doorway. Still\n` +
+				`watching. Still trying to say\n` +
+				`good morning.\n\n` +
+				`I love you. I have always loved\n` +
+				`you. And I am still here, even\n` +
+				`if here has become a place you\n` +
+				`cannot reach.\n\n` +
+				`What else is love, if not the\n` +
+				`things we do knowing they may\n` +
+				`never be received?\n\n` +
+				`Yours, from the flickering side\n` +
+				`of the world,\n\n` +
+				`    — E.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
