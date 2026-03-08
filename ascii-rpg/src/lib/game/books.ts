@@ -1835,6 +1835,109 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`afraid of what the letters mean.`,
 		],
 	},
+	book_day_silence_came: {
+		id: 'book_day_silence_came',
+		name: 'The Day the Silence Came',
+		char: 'B',
+		color: '#ccaa55',
+		type: 'book',
+		description: 'A well-worn prayer booklet, thumbed soft by decades of reading.',
+		pages: [
+			`THE DAY THE SILENCE CAME\n` +
+				`A Testament of Brother Aldous\n` +
+				`of the Chapel of Grateful Dawn\n\n` +
+				`I was seven when the whispers\n` +
+				`started.\n\n` +
+				`At first we thought it was wind\n` +
+				`in the chimney. My father checked\n` +
+				`the flue three times that first\n` +
+				`night. By morning the wind had\n` +
+				`words, and the words were wrong.\n\n` +
+				`Within a week, the sky stopped\n` +
+				`being the right color. Not a\n` +
+				`different color — the wrong one.\n` +
+				`I lack the language. Imagine a\n` +
+				`blue that your stomach knows is\n` +
+				`lying.\n\n` +
+				`My father went to close the\n` +
+				`shutters on the third week. He\n` +
+				`opened them instead and walked\n` +
+				`into the street and did not come\n` +
+				`back. Many fathers did not come\n` +
+				`back. The whispers called them\n` +
+				`by name.`,
+			`For five years the world was\n` +
+				`not the world.\n\n` +
+				`I will not describe what I saw.\n` +
+				`Other accounts exist, written by\n` +
+				`braver souls than me, and I have\n` +
+				`read them and they are all wrong.\n` +
+				`Words were not built for what\n` +
+				`happened. Language assumes that\n` +
+				`reality is stable enough to be\n` +
+				`described. It was not.\n\n` +
+				`I will say only this: my mother\n` +
+				`kept us alive by singing. Not\n` +
+				`magic — just a lullaby, the same\n` +
+				`one, for five years. When the\n` +
+				`walls bent she sang. When time\n` +
+				`stuttered she sang. When my\n` +
+				`brother forgot his own name for\n` +
+				`three days she sang it back to\n` +
+				`him.\n\n` +
+				`Then one morning I woke and\n` +
+				`the whispers were gone.\n\n` +
+				`Just — gone. Like a hand\n` +
+				`releasing a throat.`,
+			`The silence was the loudest\n` +
+				`thing I have ever heard.\n\n` +
+				`I remember lying on the floor,\n` +
+				`pressing my ear to the boards,\n` +
+				`listening to nothing. Ordinary,\n` +
+				`beautiful nothing. The creak of\n` +
+				`wood. A dog barking three streets\n` +
+				`away. Rain on the roof that was\n` +
+				`just rain.\n\n` +
+				`My mother stopped singing. She\n` +
+				`sat in the chair by the cold\n` +
+				`hearth and wept for six hours.\n` +
+				`I did not understand then. I\n` +
+				`understand now. She had been\n` +
+				`holding us together with a\n` +
+				`lullaby for five years and the\n` +
+				`effort of stopping nearly\n` +
+				`killed her.\n\n` +
+				`I have been a priest for forty\n` +
+				`years. I took my vows because\n` +
+				`something saved us. I do not\n` +
+				`need to understand it. I was\n` +
+				`drowning and then I was not.`,
+			`I have heard the rumors. Every\n` +
+				`priest has. Whispers about the\n` +
+				`Ascended — that they are not\n` +
+				`what they claim. That they did\n` +
+				`not create the world. That they\n` +
+				`were mortal once, and flawed.\n\n` +
+				`I will tell you what I know.\n\n` +
+				`I know that something stopped\n` +
+				`the screaming. I know that\n` +
+				`whatever sat upon those thrones\n` +
+				`pulled the world back from an\n` +
+				`edge it was already falling\n` +
+				`over. I know my mother's lullaby\n` +
+				`was not going to be enough for\n` +
+				`a sixth year.\n\n` +
+				`If the gods were once mortal,\n` +
+				`then a mortal saved my brother's\n` +
+				`name. If they were flawed, then\n` +
+				`a flawed thing gave my mother\n` +
+				`permission to stop singing.\n\n` +
+				`I do not need my savior to be\n` +
+				`perfect. I need my savior to\n` +
+				`have been there.\n\n` +
+				`And they were there.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
