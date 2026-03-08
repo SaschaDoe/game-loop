@@ -3204,6 +3204,599 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`can read the rings.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// Arcane Conservatory — magic school region
+	// -----------------------------------------------------------------------
+	book_elemental_principles: {
+		id: 'book_elemental_principles',
+		name: 'Principles of Elemental Manipulation',
+		char: 'B',
+		color: '#f84',
+		type: 'book',
+		description: 'A heavy textbook with scorch marks on the cover. The spine reads: "Required Reading — First Years."',
+		pages: [
+			`PRINCIPLES OF ELEMENTAL MANIPULATION\n` +
+				`by Professor Ignis Valdren\n\n` +
+				`CHAPTER I: INTRODUCTION\n\n` +
+				`The first error every student makes\n` +
+				`is believing they create the element.\n` +
+				`You do not. Elements are not created.\n` +
+				`They are channeled.\n\n` +
+				`Fire is excited matter — you agitate\n` +
+				`what already exists. Ice is the\n` +
+				`absence of thermal energy — you\n` +
+				`withdraw heat, you do not conjure\n` +
+				`cold. Lightning is imbalanced charge\n` +
+				`— you create a differential and\n` +
+				`nature corrects it violently.\n\n` +
+				`The fundamental principle of all\n` +
+				`elemental work: you do not create\n` +
+				`energy. You redirect it. The sooner\n` +
+				`you accept this, the fewer eyebrows\n` +
+				`you will lose.`,
+
+			`CHAPTER II: SAFETY AND CONTROL\n\n` +
+				`Let us discuss the Firebolt Incident\n` +
+				`of Year 203.\n\n` +
+				`A second-year student attempted to\n` +
+				`channel a sustained fire stream\n` +
+				`without establishing a containment\n` +
+				`ward. The resulting explosion removed\n` +
+				`the eastern wall of Practice Room 6\n` +
+				`and set the Dean's robes alight from\n` +
+				`forty paces.\n\n` +
+				`This is why wards exist in every\n` +
+				`practice room. This is why you will\n` +
+				`learn them before you channel so much\n` +
+				`as a spark.\n\n` +
+				`The Three Rules of Elemental\n` +
+				`Containment:\n` +
+				`1. Always ward before you channel.\n` +
+				`2. Never channel more than you can\n` +
+				`   absorb if the spell collapses.\n` +
+				`3. If you feel the element resisting,\n` +
+				`   stop. It is not resisting you. It\n` +
+				`   is warning you.`,
+
+			`CHAPTER III: ADVANCED THEORY\n\n` +
+				`Certain elements resist combination.\n` +
+				`Fire and ice are not opposites — they\n` +
+				`are the same stream viewed from\n` +
+				`different angles. A skilled channeler\n` +
+				`can transition between them smoothly.\n\n` +
+				`Lightning, however, resists merger\n` +
+				`with either. The charge differential\n` +
+				`destabilizes thermal manipulation in\n` +
+				`ways we do not fully understand.\n` +
+				`Research continues.\n\n` +
+				`[A footnote in smaller text:]\n\n` +
+				`I am compelled to note that the\n` +
+				`curriculum once included a fourth\n` +
+				`stream: void manipulation. This\n` +
+				`discipline was struck from the\n` +
+				`syllabus by order of the Archmage's\n` +
+				`office, with no academic\n` +
+				`justification provided. I have\n` +
+				`requested an explanation three times.\n` +
+				`I have received three silences.`,
+		],
+	},
+	book_enchanters_handbook: {
+		id: 'book_enchanters_handbook',
+		name: "The Enchanter's Handbook",
+		char: 'B',
+		color: '#a8f',
+		type: 'book',
+		description: 'A pristine volume with geometric diagrams embossed in silver on its cover. It hums faintly when touched.',
+		pages: [
+			`THE ENCHANTER'S HANDBOOK\n` +
+				`by Professor Seraphina Ashveil\n\n` +
+				`CHAPTER I: WHAT IS A WARD?\n\n` +
+				`A ward is structured intent made\n` +
+				`permanent.\n\n` +
+				`Consider a thought: fleeting,\n` +
+				`formless, gone in an instant. Now\n` +
+				`consider a wall: rigid, enduring,\n` +
+				`shaped by design. A ward is the\n` +
+				`marriage of the two — thought given\n` +
+				`the permanence of stone.\n\n` +
+				`The mathematics are precise. Energy\n` +
+				`must be bound to geometry — circles\n` +
+				`for containment, triangles for\n` +
+				`direction, hexagons for distribution.\n` +
+				`Each shape determines how the magic\n` +
+				`flows, pools, and holds.\n\n` +
+				`An imprecise ward is not a weak ward.\n` +
+				`It is a door left open.`,
+
+			`CHAPTER II: LAYERED PROTECTIONS\n\n` +
+				`The Arcane Conservatory is protected\n` +
+				`by fourteen layers of wards, each\n` +
+				`serving a distinct purpose:\n\n` +
+				`Layers 1-3: Structural integrity.\n` +
+				`Layers 4-5: Fire suppression.\n` +
+				`Layer 6: Sound dampening between\n` +
+				`   practice rooms.\n` +
+				`Layer 7: Containment of summoned\n` +
+				`   entities.\n` +
+				`Layers 8-9: Anti-scrying shields.\n` +
+				`Layer 10: Weather regulation.\n` +
+				`Layers 11-12: Intrusion detection.\n` +
+				`Layer 13: Emergency lockdown.\n\n` +
+				`Layer 14 is... unusual. It predates\n` +
+				`the school itself. We did not set it.\n` +
+				`We do not know who did. It resonates\n` +
+				`at a frequency none of our instruments\n` +
+				`can properly measure. Every attempt\n` +
+				`to study it has been met with polite\n` +
+				`but firm discouragement from the\n` +
+				`Archmage's office.\n\n` +
+				`Nobody knows who set it. I find that\n` +
+				`deeply concerning.`,
+
+			`CHAPTER III: ETHICS OF ENCHANTMENT\n\n` +
+				`There is a line in our craft that\n` +
+				`must not be crossed.\n\n` +
+				`Binding magic to objects is the\n` +
+				`foundation of enchantment — a sword\n` +
+				`that holds an edge, a lantern that\n` +
+				`never dims, a lock that knows its\n` +
+				`owner. The object is passive. It does\n` +
+				`not suffer. It does not choose.\n\n` +
+				`Binding magic to people is another\n` +
+				`matter entirely. A person is not\n` +
+				`passive. A person resists, adapts,\n` +
+				`breaks. The binding must therefore be\n` +
+				`stronger — and stronger bindings\n` +
+				`require deeper anchoring into the\n` +
+				`subject's will.\n\n` +
+				`This is why it is forbidden.\n\n` +
+				`I note, however, that the curriculum\n` +
+				`used to include it. The section was\n` +
+				`removed by administrative decision\n` +
+				`twelve years ago. No academic review.\n` +
+				`No faculty vote. Simply gone, as\n` +
+				`though it had never existed.\n\n` +
+				`One wonders what else has been\n` +
+				`removed so quietly.`,
+		],
+	},
+	book_alchemical_foundations: {
+		id: 'book_alchemical_foundations',
+		name: 'Alchemical Foundations',
+		char: 'B',
+		color: '#8a4',
+		type: 'book',
+		description: 'A well-thumbed textbook with colorful stains on every page. It smells faintly of mint and sulfur.',
+		pages: [
+			`ALCHEMICAL FOUNDATIONS\n` +
+				`by Professor Bramwell Thornwick\n\n` +
+				`WELCOME TO ALCHEMY\n\n` +
+				`If you're reading this,\n` +
+				`congratulations: you've chosen the\n` +
+				`only magical discipline that can also\n` +
+				`make you breakfast.\n\n` +
+				`Alchemy is the art of coaxing magic\n` +
+				`from matter. Every leaf, stone, and\n` +
+				`drop of water holds latent energy.\n` +
+				`Our job is to unlock it — carefully,\n` +
+				`precisely, and ideally without\n` +
+				`setting anything on fire (that's\n` +
+				`Valdren's department).\n\n` +
+				`BASIC INGREDIENT IDENTIFICATION\n\n` +
+				`Starfern: Silver-leafed fern that\n` +
+				`  glows faintly at night. Restorative.\n` +
+				`Moonwater: Water collected under a\n` +
+				`  full moon. Amplifies reactions.\n` +
+				`Mandrake: Screams when harvested.\n` +
+				`  Wear earplugs. Purifying agent.\n` +
+				`Fire Crystal: Crystallized thermal\n` +
+				`  energy. Handle with tongs.\n` +
+				`Dreamleaf: Pale blue herb found near\n` +
+				`  ley line intersections. Rare.`,
+
+			`NOVICE RECIPES\n\n` +
+				`HEALTH POTION\n` +
+				`Ingredients: Starfern (2 sprigs),\n` +
+				`  Moonwater (1 vial)\n` +
+				`Method: Crush starfern in a stone\n` +
+				`  mortar. Add moonwater slowly while\n` +
+				`  stirring clockwise. The mixture\n` +
+				`  will turn pale green. Bottle\n` +
+				`  immediately. Heals minor wounds\n` +
+				`  and restores energy.\n\n` +
+				`ANTIDOTE\n` +
+				`Ingredients: Mandrake root (1 thumb),\n` +
+				`  Starfern (1 sprig)\n` +
+				`Method: Boil mandrake root until the\n` +
+				`  water turns brown. Add starfern\n` +
+				`  and let steep for ten minutes.\n` +
+				`  Strain through cloth. Neutralizes\n` +
+				`  most common poisons.\n\n` +
+				`STRENGTH ELIXIR\n` +
+				`Ingredients: Fire Crystal (1 shard),\n` +
+				`  Mandrake root (1 thumb)\n` +
+				`Method: Dissolve fire crystal in\n` +
+				`  boiling water. Add mandrake and\n` +
+				`  stir counterclockwise until the\n` +
+				`  liquid turns amber. Doubles\n` +
+				`  physical strength for one hour.\n` +
+				`  Side effects: mild heartburn.`,
+
+			`INTERMEDIATE RECIPES\n\n` +
+				`FIRE RESISTANCE DRAUGHT\n` +
+				`Ingredients: Moonwater (2 vials),\n` +
+				`  Fire Crystal (1 shard, powdered),\n` +
+				`  Starfern (3 sprigs)\n` +
+				`Method: Combine moonwater in a glass\n` +
+				`  vessel. Add powdered fire crystal\n` +
+				`  — the mixture will hiss. Fold in\n` +
+				`  starfern leaves one at a time.\n` +
+				`  Let cool to room temperature.\n` +
+				`  Grants resistance to flame.\n\n` +
+				`FROST WARD TONIC\n` +
+				`Ingredients: Moonwater (1 vial),\n` +
+				`  Mandrake root (2 thumbs),\n` +
+				`  Starfern (1 sprig)\n` +
+				`Method: Freeze moonwater, then shave\n` +
+				`  into mandrake tea. The mixture\n` +
+				`  crystallizes. Dissolve crystals\n` +
+				`  over low heat with starfern.\n` +
+				`  Protects against cold exposure.\n\n` +
+				`INVISIBILITY DRAUGHT\n` +
+				`Ingredients: Dreamleaf (2 leaves),\n` +
+				`  Moonwater (1 vial),\n` +
+				`  Mandrake root (1 thumb)\n` +
+				`Method: This one is tricky. Brew\n` +
+				`  mandrake tea. Add dreamleaf while\n` +
+				`  whispering the word "unseen."\n` +
+				`  Add moonwater last. If the liquid\n` +
+				`  turns clear, you've succeeded.\n` +
+				`  If it turns black, start over\n` +
+				`  and open a window.`,
+
+			`THE MASTER'S CHALLENGE\n\n` +
+				`THE PHILOSOPHER'S DRAUGHT\n\n` +
+				`I have brewed it once. The ingredients\n` +
+				`cost more than this building. The\n` +
+				`process took eleven days without\n` +
+				`sleep, and I am told my hair was\n` +
+				`white for a month afterward.\n\n` +
+				`Ingredients:\n` +
+				`  Phoenix Ash (1 pinch)\n` +
+				`  Moonwater (3 vials, triple-blessed)\n` +
+				`  Starfern (7 sprigs, harvested at\n` +
+				`    the intersection of two ley lines)\n` +
+				`  Mandrake root (1 whole root,\n` +
+				`    aged minimum 50 years)\n` +
+				`  Dreamleaf (5 leaves, fresh)\n\n` +
+				`The method I will not record here.\n` +
+				`Some things must be taught hand to\n` +
+				`hand, not read from a page. Find me\n` +
+				`during office hours if you believe\n` +
+				`you are ready.\n\n` +
+				`You are not ready. But come anyway.\n` +
+				`I enjoy the company.`,
+		],
+	},
+	book_divination_third_eye: {
+		id: 'book_divination_third_eye',
+		name: 'Divination and the Third Eye',
+		char: 'B',
+		color: '#ff8',
+		type: 'book',
+		description: 'A slim volume bound in deep blue leather. The pages shimmer as though seen through water.',
+		pages: [
+			`DIVINATION AND THE THIRD EYE\n` +
+				`by Professor Mirael Dawnwhisper\n\n` +
+				`CHAPTER I: WHAT DIVINATION IS NOT\n\n` +
+				`Divination is not fortune-telling.\n` +
+				`It is not reading tea leaves for\n` +
+				`lovesick merchants. It is not gazing\n` +
+				`into crystal balls at village fairs.\n\n` +
+				`Divination is pattern recognition\n` +
+				`across probability spaces.\n\n` +
+				`The future is not a road. It is a\n` +
+				`river delta — a thousand channels\n` +
+				`splitting and merging, each carrying\n` +
+				`the weight of what might be. A\n` +
+				`diviner does not predict. A diviner\n` +
+				`observes which channels are deepest\n` +
+				`and reports accordingly.\n\n` +
+				`SCRYING BASICS\n\n` +
+				`Begin with still water. Clear your\n` +
+				`mind — not of thoughts, but of\n` +
+				`preferences. You must not want an\n` +
+				`answer. Want corrupts the signal.`,
+
+			`CHAPTER II: THE ASTRAL OBSERVATORY\n\n` +
+				`The Conservatory's observatory sits\n` +
+				`at the highest point of the eastern\n` +
+				`tower. From there, the stars are not\n` +
+				`merely visible — they are readable.\n\n` +
+				`Constellations serve as magical\n` +
+				`indicators. The Shepherd's Crook\n` +
+				`marks the season of growth. The\n` +
+				`Broken Crown marks transitions of\n` +
+				`power. The Sleeping Dragon marks\n` +
+				`periods of dormant magical activity.\n\n` +
+				`Each constellation has held its\n` +
+				`position for millennia. They are\n` +
+				`reliable. They are constant.\n\n` +
+				`Which is why the recent anomaly\n` +
+				`troubles me.\n\n` +
+				`Seven new shadows have appeared\n` +
+				`where none should exist — dark points\n` +
+				`in the stellar field that occlude\n` +
+				`light without explanation. They\n` +
+				`correspond to no known constellation.\n` +
+				`They move against the rotation of\n` +
+				`the sky.\n\n` +
+				`I have reported this. I have been\n` +
+				`told it is "atmospheric distortion."\n` +
+				`I have been a diviner for thirty\n` +
+				`years. I know what atmospheric\n` +
+				`distortion looks like.\n\n` +
+				`This is not that.`,
+
+			`CHAPTER III: A WARNING\n\n` +
+				`I include this chapter against the\n` +
+				`advice of the Archmage's office.\n\n` +
+				`Divination students who look too\n` +
+				`deeply often see things they cannot\n` +
+				`unsee. The probability spaces are\n` +
+				`vast, and within them lie patterns\n` +
+				`that the conscious mind was not\n` +
+				`designed to process.\n\n` +
+				`In the past decade, three students\n` +
+				`have been expelled for what the\n` +
+				`administration termed "instability."\n` +
+				`I taught all three. They were not\n` +
+				`unstable. They were frightened.\n\n` +
+				`All three, independently and without\n` +
+				`knowledge of each other's work,\n` +
+				`reported seeing the same thing in\n` +
+				`the deep probability field:\n\n` +
+				`Seven mortals seated on thrones\n` +
+				`that did not belong to them.\n\n` +
+				`I was instructed to strike this\n` +
+				`from my notes. I have chosen not to.\n` +
+				`Draw your own conclusions.`,
+		],
+	},
+	book_students_complaint: {
+		id: 'book_students_complaint',
+		name: "A Student's Complaint",
+		char: 'B',
+		color: '#aaa',
+		type: 'book',
+		description: 'A crumpled sheaf of papers stuffed behind a dormitory bookshelf. The handwriting is messy but enthusiastic.',
+		pages: [
+			`A STUDENT'S COMPLAINT\n` +
+				`(Author anonymous, for obvious\n` +
+				`reasons)\n\n` +
+				`Things that are wrong with this\n` +
+				`school:\n\n` +
+				`1. The enchanted brooms. They clean\n` +
+				`at 3 AM. Every night. Without fail.\n` +
+				`They hit the legs of your bed and\n` +
+				`they do not apologize.\n\n` +
+				`2. The screaming mandrakes in the\n` +
+				`greenhouse. Professor Thornwick says\n` +
+				`"you get used to it." You do not get\n` +
+				`used to it. Nobody gets used to it.\n\n` +
+				`3. Professor Valdren's habit of\n` +
+				`setting things on fire during\n` +
+				`lectures. He calls it "demonstration."\n` +
+				`Last week he demonstrated a fireball\n` +
+				`and singed Petra's notes. He gave her\n` +
+				`full marks "for surviving the\n` +
+				`practical component."\n\n` +
+				`4. The food in the dining hall tastes\n` +
+				`like someone enchanted it to be\n` +
+				`nutritious and forgot to enchant it\n` +
+				`to be edible.`,
+
+			`MORE SERIOUS COMPLAINTS\n` +
+				`(still anonymous)\n\n` +
+				`5. Why can we only study two schools\n` +
+				`of magic? We are told we may choose\n` +
+				`two disciplines and no more. Archmage\n` +
+				`Voss says studying more than two\n` +
+				`causes "catastrophic instability."\n\n` +
+				`I was in the hall when he said it.\n` +
+				`Professor Ashveil was standing behind\n` +
+				`him. She rolled her eyes. I saw her.\n` +
+				`She definitely rolled her eyes.\n\n` +
+				`6. Kael tried to combine divination\n` +
+				`and alchemy. He said he was close to\n` +
+				`something — a way to brew potions\n` +
+				`guided by probability reading. He\n` +
+				`was expelled overnight. Not\n` +
+				`suspended. Expelled. His room was\n` +
+				`cleared by morning.\n\n` +
+				`Nobody talks about Kael anymore.\n\n` +
+				`7. Sometimes I hear sounds from the\n` +
+				`14th ward layer. A hum, like a voice\n` +
+				`pressed flat. Ashveil says it's\n` +
+				`"resonance bleed." But resonance\n` +
+				`bleed doesn't sound like words.\n\n` +
+				`This school is hiding something.\n` +
+				`I just can't figure out what.`,
+		],
+	},
+	book_forbidden_streams: {
+		id: 'book_forbidden_streams',
+		name: 'On the Forbidden Streams',
+		char: 'B',
+		color: '#f44',
+		type: 'book',
+		description: 'A banned text hidden behind a false panel in the restricted section. The pages are unsigned.',
+		pages: [
+			`ON THE FORBIDDEN STREAMS\n` +
+				`[Author unknown]\n\n` +
+				`This text has been banned by order\n` +
+				`of the Archmage's office. If you are\n` +
+				`reading it, you have found it where\n` +
+				`I hid it, and I am likely no longer\n` +
+				`at this institution.\n\n` +
+				`What follows is the truth.\n\n` +
+				`Cross-stream mastery is not\n` +
+				`impossible. It is suppressed. The\n` +
+				`claim that combining more than two\n` +
+				`disciplines causes "catastrophic\n` +
+				`instability" is a convenient lie.\n\n` +
+				`The curriculum was designed — not\n` +
+				`evolved, designed — to prevent\n` +
+				`students from learning complementary\n` +
+				`disciplines. Elemental and enchantment\n` +
+				`students are kept apart. Alchemy and\n` +
+				`divination are scheduled in\n` +
+				`conflicting time blocks. The\n` +
+				`architecture of the school itself\n` +
+				`separates the towers by discipline.\n\n` +
+				`This is not tradition. It is\n` +
+				`containment.`,
+
+			`EVIDENCE OF DELIBERATE SABOTAGE\n\n` +
+				`I have spent three years in the\n` +
+				`restricted archives. What I found:\n\n` +
+				`- Pages torn from older textbooks,\n` +
+				`  always at the chapters describing\n` +
+				`  cross-discipline techniques.\n` +
+				`- Syllabi from 200 years ago that\n` +
+				`  included unified magical theory.\n` +
+				`  This course no longer exists.\n` +
+				`- Examination records showing\n` +
+				`  students who excelled in multiple\n` +
+				`  streams were consistently failed\n` +
+				`  on subjective assessments.\n\n` +
+				`Most damning: a list of twelve\n` +
+				`scholars who achieved cross-stream\n` +
+				`mastery over the past four centuries.\n` +
+				`Every one of them "disappeared" —\n` +
+				`retired, transferred, or simply\n` +
+				`stopped appearing in records.\n\n` +
+				`Twelve masters. Zero survivors.\n\n` +
+				`Whoever controls the curriculum\n` +
+				`controls what magic can do. Ask\n` +
+				`yourself: who decided what you\n` +
+				`cannot learn, and why?`,
+		],
+	},
+	book_approved_questions: {
+		id: 'book_approved_questions',
+		name: 'Approved Questions for the Sacred Scales',
+		char: 'B',
+		color: '#ccbb88',
+		type: 'book',
+		description: 'A temple manual stamped OFFICIAL USE ONLY. Someone has written notes in the margins.',
+		pages: [
+			`APPROVED QUESTIONS FOR THE\n` +
+				`SACRED SCALES OF VERATH\n` +
+				`Temple Authority, 14th Ed.\n\n` +
+				`The Sacred Scales weigh truth\n` +
+				`against falsehood with divine\n` +
+				`certainty. All questions must\n` +
+				`be submitted in writing and\n` +
+				`approved by the Temple\n` +
+				`Authority before utterance.\n\n` +
+				`APPROVED CATEGORIES:\n` +
+				`- Criminal guilt or innocence\n` +
+				`- Authenticity of contracts\n` +
+				`- Verification of testimony\n` +
+				`- Disputed property claims\n` +
+				`- Contested inheritances\n\n` +
+				`[margin, in ink:]\n` +
+				`Thirty years as temple clerk.\n` +
+				`I have processed four thousand\n` +
+				`questions. All mundane. All\n` +
+				`small. Did the man steal the\n` +
+				`horse? Is this deed a forgery?\n\n` +
+				`The Scales answer everything.\n` +
+				`We ask them almost nothing.`,
+			`FORBIDDEN CATEGORIES:\n\n` +
+				`The following question types\n` +
+				`are prohibited under Temple\n` +
+				`Statute 14-C and will result\n` +
+				`in removal and censure:\n\n` +
+				`- The origin of the Ascended\n` +
+				`- Events prior to the Year\n` +
+				`  of Ascension\n` +
+				`- The nature or number of the\n` +
+				`  Divine Thrones\n` +
+				`- Any query beginning with\n` +
+				`  "Were the gods ever..."\n` +
+				`- The existence of prior\n` +
+				`  divine entities\n` +
+				`- The composition or purpose\n` +
+				`  of the Seven Masks\n` +
+				`- Any named mortal in\n` +
+				`  connection with a deity\n\n` +
+				`[margin:]\n` +
+				`I asked Brother Aldous why\n` +
+				`these questions were banned.\n` +
+				`He looked at the Scales. He\n` +
+				`looked at me. He said:\n\n` +
+				`"Because the Scales would\n` +
+				`answer them."\n\n` +
+				`He said nothing more.`,
+			`INCIDENT LOG (selected):\n\n` +
+				`Year 1203 — A scholar asked:\n` +
+				`"Is the Grand Library truly\n` +
+				`lost?" He was removed before\n` +
+				`the Scales could respond.\n` +
+				`Temple guard response time:\n` +
+				`four seconds.\n\n` +
+				`Year 1211 — A child wandered\n` +
+				`past the barrier and asked:\n` +
+				`"Do the gods have mothers?"\n` +
+				`The Scales tipped. Two priests\n` +
+				`threw a cloth over them before\n` +
+				`anyone saw which way.\n\n` +
+				`Year 1215 — A woman in black\n` +
+				`stood at the gallery and\n` +
+				`shouted: "Were they mortal?"\n` +
+				`The Scales began to move. The\n` +
+				`chamber was evacuated. The\n` +
+				`woman was never found.\n\n` +
+				`[margin:]\n` +
+				`The child's question haunts\n` +
+				`me. The priests moved so fast.\n` +
+				`As if they had practiced for\n` +
+				`exactly that moment.`,
+			`PERSONAL ADDENDUM:\n\n` +
+				`I have catalogued the\n` +
+				`forbidden questions. All of\n` +
+				`them, from every edition of\n` +
+				`this manual going back three\n` +
+				`centuries.\n\n` +
+				`There are 847.\n\n` +
+				`Each one a door the temple\n` +
+				`has locked. Each one a thing\n` +
+				`the Scales could answer but\n` +
+				`must not be asked.\n\n` +
+				`A scale that always tells the\n` +
+				`truth is only dangerous if\n` +
+				`the truth is dangerous. A\n` +
+				`question is only forbidden\n` +
+				`if the answer is something\n` +
+				`someone fears.\n\n` +
+				`847 forbidden questions.\n\n` +
+				`They are the most honest\n` +
+				`document in this temple.\n` +
+				`Because the questions we\n` +
+				`dare not ask tell us more\n` +
+				`than any answer ever could.\n\n` +
+				`I am retiring next month.\n` +
+				`I am leaving this manual\n` +
+				`where someone will find it.\n` +
+				`Read the forbidden list.\n` +
+				`It is the truth, written\n` +
+				`in the shape of silence.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
