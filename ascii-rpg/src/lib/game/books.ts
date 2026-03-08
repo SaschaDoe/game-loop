@@ -1607,6 +1607,117 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`no one else will count.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 18. The Hill That Walked — Stone Turtles / Shapers / Ley Lines
+	// -----------------------------------------------------------------------
+	book_hill_walked: {
+		id: 'book_hill_walked',
+		name: 'The Hill That Walked',
+		char: 'B',
+		color: '#77aa77',
+		type: 'book',
+		description:
+			"A traveler's memoir written on miscellaneous paper — receipts, napkins, and one page of fine vellum. The handwriting is cheerful and unsteady.",
+		pages: [
+			`THE HILL THAT WALKED\n` +
+				`Being a True Account by Pol Kettner,\n` +
+				`Tinker, of Something He Cannot Explain\n\n` +
+				`I made camp on a fine flat hilltop\n` +
+				`east of Barren's Crossing. Good grass.\n` +
+				`A few trees. Nice view of the valley.\n` +
+				`I slept well and woke to find the\n` +
+				`view had changed.\n\n` +
+				`Not dramatically. Just — the barn\n` +
+				`that had been to my left was now\n` +
+				`behind me. The river was closer. I\n` +
+				`checked my compass. According to the\n` +
+				`needle, I had moved two hundred yards\n` +
+				`east in the night.\n\n` +
+				`I looked at the hill. The hill looked\n` +
+				`innocent.\n\n` +
+				`I made camp again. In the morning I\n` +
+				`had moved again. Same direction. Same\n` +
+				`distance. I stayed up the third night\n` +
+				`and watched. Nothing seemed to move.\n` +
+				`But at dawn, the landmarks had\n` +
+				`shifted. The hill was walking, and it\n` +
+				`was walking so slowly that watching\n` +
+				`could not catch it.`,
+
+			`On the fourth day I looked more\n` +
+				`carefully. The trees on the hilltop\n` +
+				`had different moss on their north\n` +
+				`sides than the trees on the ground.\n` +
+				`The boulders near the summit had a\n` +
+				`grain to them — curved, layered,\n` +
+				`like the plates of a shell. And\n` +
+				`the dark hollow at the hill's base\n` +
+				`that I had taken for a shallow cave\n` +
+				`was not a cave.\n\n` +
+				`It blinked.\n\n` +
+				`The hill blinked at me.\n\n` +
+				`I should have run. I did not. There\n` +
+				`was something about the way it moved\n` +
+				`— patient, gentle, careful not to\n` +
+				`crush the grass beneath itself more\n` +
+				`than necessary. Whatever this thing\n` +
+				`was, it was not in a hurry. It was\n` +
+				`going somewhere it had been going\n` +
+				`for a very long time, and my little\n` +
+				`camp on its back was of no more\n` +
+				`concern to it than a sparrow on\n` +
+				`a cathedral.`,
+
+			`I walked beside it for a week. I\n` +
+				`am a tinker. I had nowhere pressing\n` +
+				`to be.\n\n` +
+				`It followed a path — an ancient\n` +
+				`track marked by standing stones so\n` +
+				`old they had sunk into the earth\n` +
+				`like teeth into a jaw. The path\n` +
+				`followed something I could feel\n` +
+				`but not see: a warmth in the ground,\n` +
+				`a faint humming, a sense of something\n` +
+				`flowing beneath the way a river\n` +
+				`flows beneath winter ice.\n\n` +
+				`I am no scholar. I could not tell\n` +
+				`you what flows beneath the earth.\n` +
+				`But I can tell you that this hill\n` +
+				`knows where it is going, and it has\n` +
+				`been going there for longer than I\n` +
+				`can imagine, and whatever task it is\n` +
+				`performing, it performs it with the\n` +
+				`steady devotion of a creature that\n` +
+				`has never once considered stopping.`,
+
+			`I parted ways with the hill on the\n` +
+				`seventh day. I left a gift — an\n` +
+				`apple from my pack, placed on the\n` +
+				`mossy shoulder between two stones.\n` +
+				`The hill paused. The trees on its\n` +
+				`back rustled though there was no\n` +
+				`wind. The apple rolled gently into\n` +
+				`a hollow and stayed.\n\n` +
+				`I choose to believe it accepted\n` +
+				`my gift. I have no proof. I am a\n` +
+				`tinker, not a philosopher. But I\n` +
+				`walked beside something older than\n` +
+				`language for seven days, and I will\n` +
+				`tell you this:\n\n` +
+				`The world is held together by things\n` +
+				`we step on without noticing. The\n` +
+				`roots beneath our feet. The rivers\n` +
+				`we cross without thanking. The hills\n` +
+				`that walk when no one is watching,\n` +
+				`tending a world that has forgotten\n` +
+				`them.\n\n` +
+				`We build temples to gods who sit on\n` +
+				`thrones. Perhaps we should build\n` +
+				`them to the things that carry us\n` +
+				`instead.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
