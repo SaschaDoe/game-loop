@@ -45,6 +45,9 @@ export const STORIES: Record<string, Story> = {
 	grikkle_rocks: story('grikkle_rocks', 'The Legend of Se\u00f1or Pebbleston', 'Se\u00f1or Pebbleston was, according to Grikkle, a rock of "extraordinary charisma and business acumen." Grikkle found him on level two and immediately recognized his potential. Se\u00f1or Pebbleston served as Grikkle\'s business partner for three months, during which time Grikkle claims the rock negotiated seventeen favorable trades, intimidated a rival goblin merchant, and once prevented a cave-in through "sheer force of geological personality." Se\u00f1or Pebbleston was tragically lost when Grikkle accidentally sold him to a Skeleton who mistook him for a premium kidney stone. Grikkle mourns daily.', 'Grikkle', 'tall_tale'),
 	grikkle_bones: story('grikkle_bones', 'Mr. Bones and the Customer Service Dispute', 'Grikkle once sold a Skeleton named Mr. Bones a "Premium Reconstitution Kit" which was, in fact, a bag of random bones from the floor. Mr. Bones assembled himself with the new bones and ended up with three arms, two ribcages, and a pelvis where his head should be. He filed a formal complaint. In Morse code. By clacking his jaw. Grikkle offered a full refund (two pebbles) but Mr. Bones demanded "emotional damages." They reached a settlement: Grikkle would not sell bone-based products for one week. Grikkle lasted two days.', 'Grikkle', 'tall_tale'),
 	shade_architects: story('shade_architects', 'The Architects\' Argument', 'The Whispering Shade speaks of the Architects not as builders but as debaters. They disagreed about everything — the length of corridors, the placement of traps, the philosophical implications of treasure chests. The dungeon\'s inconsistent layout is not poor design; it is the physical manifestation of an argument that has been running for millennia. Every dead end is a point conceded. Every loop is a circular argument. The boss rooms are dramatic conclusions to chapters of debate. The thing at the bottom is what they were arguing ABOUT.', 'Whispering Shade', 'lore'),
+
+	// Arcane Conservatory stories
+	bramwell_draught: story('bramwell_draught', 'The Philosopher\'s Draught', 'Three hundred years ago, an alchemist named Elara Brightwell attempted what every alchemist dreams of — the Philosopher\'s Draught, the elixir of perfect transmutation. She gathered ingredients for forty years. Phoenix Ash from the last nesting ground. Moonpetal dew collected during a double eclipse. Root of a mandrake that had grown through a Ley Line convergence. She brewed it in silence for seven days. On the eighth day, she drank it. Her body transmuted — not into gold, as the legends promise, but into living crystal. She could see every element in every object, feel the atomic lattice of stone and steel. She wrote seventeen volumes of alchemical theory in three hours. Then she walked into the earth itself, merging with the bedrock beneath the Conservatory. Her crystalline form is still down there. On quiet nights, if you press your ear to the greenhouse floor, you can hear her humming. She sounds content.', 'Professor Bramwell Thornwick', 'lore'),
 };
 
 // ─── RUMOR CATALOGUE ───
@@ -90,6 +93,12 @@ const RUMORS = {
 	korthaven_arena: rumor('korthaven_arena', 'The Crucible arena in Korthaven has a sealed chamber beneath it. Champions who win three seasons in a row are invited below — none have returned the same.', 'Arena spectator', 'exaggerated'),
 	korthaven_thieves: rumor('korthaven_thieves', 'The Shadow Court runs Korthaven\'s underworld. Their leader, Nyx, is said to have stolen from a god and lived.', 'Morrigan', 'exaggerated'),
 	korthaven_eighth: rumor('korthaven_eighth', 'There were seven gods who ascended. But some whisper of an eighth — one who refused the throne and chose to remain mortal.', 'The Masked Figure', 'true'),
+
+	// Arcane Conservatory rumors
+	ignis_fourth_element: rumor('ignis_fourth_element', 'Professor Ignis whispers about a forbidden 4th element beyond fire, ice, and lightning — an element the gods themselves struck from the curriculum. He calls it "Void-Flame," the fire that burns reality itself.', 'Professor Ignis Valdren', 'true'),
+	seraphina_missing_books: rumor('seraphina_missing_books', 'Entire shelves of the Conservatory library were emptied fifty years ago on the Archmage\'s orders. Professor Ashveil says the missing books contained ward-breaking techniques — methods to unravel protections placed by the gods themselves.', 'Professor Seraphina Ashveil', 'true'),
+	mirael_ascension_stars: rumor('mirael_ascension_stars', 'Professor Dawnwhisper claims she saw the Ascension replayed in the stars — seven mortal figures climbing to seven thrones, and the thrones\' previous occupants being cast down into darkness. She says the stars show it happening again.', 'Professor Mirael Dawnwhisper', 'true'),
+	conservatory_cross_stream: rumor('conservatory_cross_stream', 'The Archmage insists cross-stream mastery is impossible — that no mage can master more than one school. But older texts suggest the Original Seven were masters of all streams before the Ascension.', 'Arcane Conservatory faculty', 'true'),
 } as const;
 
 // ─── VILLAGE: MOTHER ───
@@ -4860,6 +4869,654 @@ export const MASKED_FIGURE_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── ARCANE CONSERVATORY: PROFESSOR IGNIS VALDREN ───
+
+export const IGNIS_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A wiry man with scarred hands and singed eyebrows looks up from a workbench covered in crystalline fragments that pulse with inner light. The air around him shimmers with residual heat.* A new face! Welcome to the School of Elements. I am Professor Ignis Valdren. Mind the crystals — they bite. Not literally. Well... sometimes literally. What brings you to my laboratory?',
+			[
+				opt('What do you teach here?', 'elemental_theory', '#ff4'),
+				opt('Your hands — what happened?', 'scars_story', '#ff4'),
+				opt('Tell me about fire crystals.', 'fire_crystals', '#ff4'),
+				opt('I should go.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Ignis waves you over, barely looking up from a crystal that crackles with miniature lightning.* Back again? Good. Curiosity is the only prerequisite in my class. The entrance exam is just a form that asks "Do you want to know?" If you write yes, you pass. If you write no, you also pass, because clearly you wanted to know what would happen if you wrote no.',
+			[
+				opt('Tell me about elemental theory.', 'elemental_theory', '#ff4'),
+				opt('What about fire crystals?', 'fire_crystals', '#ff4'),
+				opt('Why is void magic forbidden?', 'void_forbidden', '#c8f'),
+				opt('How did you get those scars?', 'scars_story', '#ff4'),
+				opt('What\'s your teaching philosophy?', 'teaching_philosophy', '#ff4'),
+				opt('[Mage] I want to push my elemental mastery further.', 'advanced_elements', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('I need to go.', 'farewell', '#0ff'),
+			]
+		),
+		elemental_theory: node('elemental_theory',
+			'*His eyes light up — literally, tiny sparks dance in his irises.* Three classical elements form the foundation of all combat magic: Fire, Ice, and Lightning. Each is a conversation with energy itself. Fire is enthusiasm — you ask heat to gather and it LEAPS at the chance. Ice is patience — you ask motion to stop and it reluctantly agrees. Lightning is negotiation — you offer a path of least resistance and electricity takes it before you finish the sentence. *He snaps his fingers and a flame dances on his thumb.* Most students think elements are tools. They are not. They are PERSONALITIES. Learn their temperaments and they will work with you. Ignore their nature and... *He gestures at his scarred hands.*',
+			[
+				opt('Three elements? I\'ve heard whispers of a fourth.', 'fourth_element', '#c8f'),
+				opt('Tell me more about fire specifically.', 'fire_crystals', '#ff4'),
+				opt('What about combining elements?', 'combining_elements', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		fire_crystals: node('fire_crystals',
+			'*He carefully lifts a translucent red crystal with tongs.* Fire crystals are condensed elemental fury. They form naturally where Ley Lines intersect — the magical pressure compresses raw elemental energy into crystalline lattices. This one contains enough thermal energy to melt through a castle wall. Or brew a very fast cup of tea. *He sets it down gently.* The Conservatory sits on a minor Ley Line intersection, which is why the school was built here. The crystals grow in the sub-basements like geological weeds. We harvest them for teaching purposes. The Archmage controls access, naturally. Can\'t have students wandering into the crystal gardens unsupervised. *His expression flickers — something between frustration and resignation.* The crystals could teach us so much more than we\'re allowed to study.',
+			[
+				opt('What aren\'t you allowed to study?', 'void_forbidden', '#c8f'),
+				opt('Tell me about Ley Lines and the school\'s location.', 'ley_line_location', '#8cf'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		ley_line_location: node('ley_line_location',
+			'*He lowers his voice.* The Conservatory was founded four centuries ago at the junction of two Ley Lines — Aetheric currents that carry raw magical energy through the earth like rivers of power. The founders chose this site because the intersection amplifies magical study. Spells cast here are ten percent more efficient. Crystals grow faster. Students learn quicker. *He glances toward the door.* But here is the thing they do not teach in orientation: the Ley Lines have been weakening. Slowly, over centuries, someone — or something — has been draining them. The crystals grow smaller each decade. The amplification fades. And the Archmage insists everything is fine. *He flexes his scarred fingers.* Everything is NOT fine.',
+			[
+				opt('Who would drain a Ley Line?', 'fourth_element', '#c8f'),
+				opt('Does the Archmage know?', 'void_forbidden', '#c8f'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		void_forbidden: node('void_forbidden',
+			'*He checks that the laboratory door is closed, then speaks in a near-whisper.* The official curriculum lists three elements. Fire. Ice. Lightning. Clean, safe, controllable. But every elemental scholar who digs deep enough finds references to a fourth. The old texts call it "Void-Flame" — the fire that burns reality itself. Not heat, not cold, not charge. Negation. The element of UN-making. *He holds up a crystal that is perfectly, impossibly black.* I found this in the deep crystal gardens. It does not radiate energy. It ABSORBS it. Everything near it grows cold and quiet. The Archmage ordered me to destroy it. I told him I did. *He turns it in the light — or rather, in the absence of light.* Void-Flame is not forbidden because it is dangerous. Fire is dangerous. Lightning is dangerous. Void-Flame is forbidden because it can UNMAKE things the gods created. And that, apparently, is unforgivable.',
+			[
+				opt('Unmake things the gods created... [Rumor learned]', 'void_deeper', '#c8f', { onSelect: { rumor: RUMORS.ignis_fourth_element, message: 'Professor Ignis reveals the existence of Void-Flame — the forbidden 4th element that can unmake divine creations.' } }),
+				opt('Why would the gods fear an element?', 'void_deeper', '#c8f'),
+				opt('That\'s dangerous territory, Professor.', 'return', '#0ff'),
+			]
+		),
+		void_deeper: node('void_deeper',
+			'*His scarred hands tremble slightly — not from fear, but from excitement.* Consider this: the seven gods Ascended three thousand years ago. Within a generation, the study of Void-Flame was banned across every magical institution in the known world. Simultaneously. As if someone sent a decree to every school at once. *He leans in.* The Ascended gods are beings of CREATION — they shaped the world, built the divine architecture, established the Principles. Void-Flame is the opposite of creation. It is the great eraser. If someone mastered it... they could theoretically unmake the divine architecture itself. Unmake the thrones. Unmake the Ascension. *He stares at the black crystal.* Unmake the gods.',
+			[
+				opt('The gods banned it to protect themselves.', 'return', '#c8f', { onSelect: { message: 'Ignis nods slowly. "And the Conservatory — this place of learning — enforces their ban without question. We teach what we are allowed to teach. Nothing more."' } }),
+				opt('Have you tried to study it yourself?', 'scars_story', '#ff4'),
+			]
+		),
+		fourth_element: node('fourth_element',
+			'*He holds up three fingers.* Fire. Ice. Lightning. The holy trinity of elemental magic. Neat. Orderly. Safe. *He raises a fourth finger.* But nature does not work in threes. Nature works in fours. Four seasons. Four cardinal directions. Four phases of matter. Three elements is an amputation — someone CUT the fourth away and told us the body was always like this. *He lowers his hand.* I have spent twenty years trying to find what was removed. The old texts reference "Nether-Fire," "Void-Flame," "The Unburning." All names for the same thing — an element that does not create energy but negates it. An element that can cancel any spell, dissolve any ward, unmake any enchantment. *His voice drops.* The Archmage told me to stop researching it. He said it was "settled science." In my experience, "settled science" means "questions we were told to stop asking."',
+			[
+				opt('Who told you to stop asking?', 'void_forbidden', '#c8f'),
+				opt('What would the fourth element look like in practice?', 'return', '#ff4', { onSelect: { message: 'Ignis smiles. "Imagine a fire that burns shadows. A cold that freezes time. A lightning bolt that strikes ideas. That is Void-Flame — the element that operates on concepts, not matter. And THAT is why it terrifies the people in charge."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		scars_story: node('scars_story',
+			'*He holds up his hands, turning them so you can see the lattice of burn scars, frostbite marks, and branching lightning figures etched into his skin.* Twenty-three years of teaching. Every scar is a lesson — usually a lesson in what NOT to do. This one — *he points to a spiral burn on his left palm* — was my first attempt at dual-casting fire and ice simultaneously. The spells collided inside the crystal matrix and the resulting explosion removed my eyebrows for six months. *He points to a jagged line across his knuckles.* This one was a student\'s first lightning spell. She was aiming at the target dummy. She hit me. She is now one of the finest battle-mages in the Free Cities. I take full credit and partial disability.',
+			[
+				opt('And the worst scar?', 'worst_scar', '#ff4'),
+				opt('You still teach despite the danger?', 'teaching_philosophy', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		worst_scar: node('worst_scar',
+			'*He slowly rolls up his left sleeve, revealing a patch of skin that is perfectly smooth and faintly translucent — like glass.* This one. The Void-Flame experiment. I channeled energy through the black crystal, trying to create a controlled negation field. For three seconds, it worked. The air inside the field had no temperature, no motion, no properties at all. Pure nothing. Then the field collapsed and the nothing TOUCHED my arm. *He runs a finger over the glassy skin.* It did not burn me. It unburned me. It removed the concept of "skin" from this patch of my arm and replaced it with... this. Whatever this is, it is not flesh. It does not age. It does not scar. It does not feel. The Archmage saw it and nearly expelled me. Instead, he buried the research and made me promise to stop. *A long pause.* I promised.',
+			[
+				opt('But you haven\'t stopped.', 'return', '#c8f', { onSelect: { message: 'Ignis smiles — the smile of a man who knows exactly how much trouble he is in and has decided it is worth it. "A promise made under duress is merely a tactical retreat."' } }),
+				opt('That sounds terrifying. Maybe the ban is justified.', 'teaching_philosophy', '#4f4'),
+			]
+		),
+		teaching_philosophy: node('teaching_philosophy',
+			'*He gestures broadly at the laboratory — the crystals, the scorch marks on the ceiling, the partially melted demonstration dummy.* My philosophy is simple: magic is not a textbook. It is a CONVERSATION. You do not learn fire by reading about combustion. You learn fire by burning something and then asking yourself why it burned. And then burning something else to see if your answer was right. *He grins.* The other professors think I am reckless. Seraphina calls my methods "enthusiastic malpractice." Bramwell once had to regrow my eyebrows with a poultice. Mirael told me I would die in a fire, which I consider both a prediction and a compliment. But my students UNDERSTAND elements. They do not just cast spells — they speak the language of energy. And that matters more than safety goggles.',
+			[
+				opt('What do you think of the other professors?', 'colleagues', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		colleagues: node('colleagues',
+			'*He ticks them off on his scarred fingers.* Seraphina is brilliant and terrifying — her wards could cage a god, and she knows it, which is probably why the Archmage watches her closely. Bramwell is the gentlest soul in the Conservatory and his greenhouse contains plants that could destroy a city. Mirael sees things the rest of us pretend aren\'t there — I avoid eye contact with her because I\'m afraid she\'ll tell me when I die. *He pauses at his fourth finger.* And Voss. The Archmage. *His tone shifts, careful now.* Voss is the most controlled man I have ever met. Every decision calculated. Every curriculum choice deliberate. He has reasons for everything, and the reasons always sound reasonable. Which is exactly what makes me nervous.',
+			[
+				opt('Nervous about Voss? Why?', 'return', '#ff4', { onSelect: { message: 'Ignis shakes his head. "A man who always has the right answer either knows everything or controls the questions. Voss controls the questions."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		combining_elements: node('combining_elements',
+			'*His face lights up with genuine delight.* Ah, now you ask the RIGHT question! Dual-casting — wielding two elements simultaneously — is the true art of elemental magic. Fire and Ice create Steam Lance, a pressurized blast that bypasses physical armor. Ice and Lightning create Shatter Storm, freezing the air and then electrifying the ice crystals into shrapnel. Fire and Lightning create Plasma — *he whispers reverently* — the state of matter that stars are made of. *He hesitates.* The Archmage limits dual-casting instruction to senior students. Cross-STREAM casting — combining elements with, say, enchantment or alchemy — is outright banned. Voss says the magical streams are incompatible. Personally, I think that is nonsense. But I also think my job is worth keeping. Mostly.',
+			[
+				opt('Cross-stream casting is banned? Why?', 'fourth_element', '#c8f'),
+				opt('Teach me about dual-casting.', 'return', '#ff4', { onSelect: { message: 'Ignis grins. "Enroll in my advanced seminar. Bring fireproof gloves. And a sense of humor about property damage."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		advanced_elements: node('advanced_elements',
+			'*He studies you with the appraising eye of a teacher who has seen a thousand students.* You have the spark — I can see it in how you channel. Most mages treat elements as ammunition. You treat them as allies. That is the difference between a spellcaster and an elementalist. *He pulls out a small, multi-faceted crystal.* Take this. A resonance shard. It will attune to your dominant element over time and amplify your connection to it. Consider it a... scholarship. *He winks.* Just don\'t tell the Archmage. He has opinions about giving students tools that help them exceed the curriculum.',
+			[
+				opt('Thank you, Professor. I won\'t waste it.', 'return', '#4f4', { onSelect: { atk: 1, message: 'Professor Ignis gives you a resonance shard. Your elemental affinity sharpens. +1 ATK' } }),
+			]
+		),
+		farewell: node('farewell',
+			'*He waves absently, already turning back to his crystals.* Mind the door — I rigged it with a minor static discharge to keep students from sneaking in after hours. Builds character. Also builds static electricity. Come back anytime — curiosity is always welcome in my lab.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── ARCANE CONSERVATORY: PROFESSOR SERAPHINA ASHVEIL ───
+
+export const SERAPHINA_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A tall woman with silver-streaked hair and impeccable posture sits behind a desk arranged with geometric precision. Every object is equidistant from every other object. She looks up with pale grey eyes that seem to measure you in ways you cannot identify.* You are either lost or curious. In the School of Enchantment, we value the latter and redirect the former. I am Professor Seraphina Ashveil. State your purpose.',
+			[
+				opt('What do you teach?', 'ward_weaving', '#ff4'),
+				opt('This room is... very organized.', 'precision', '#ff4'),
+				opt('I have questions about wards.', 'fourteen_layers', '#ff4'),
+				opt('I\'ll leave you to your work.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Seraphina does not look up immediately. She finishes inscribing a ward-glyph on a small copper plate, sets down her stylus with deliberate care, and then acknowledges you.* Ah. You return. This suggests either persistence or a failure to find answers elsewhere. Both are acceptable motivations.',
+			[
+				opt('Tell me about ward-weaving.', 'ward_weaving', '#ff4'),
+				opt('Explain the 14 layers of wards.', 'fourteen_layers', '#ff4'),
+				opt('What topics are missing from the curriculum?', 'missing_curriculum', '#c8f'),
+				opt('Tell me about the ward that predates the school.', 'ancient_ward', '#c8f'),
+				opt('Is enchantment an art or a science?', 'enchantment_art', '#ff4'),
+				opt('[Mage] I want to study advanced ward techniques.', 'advanced_wards', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('I need to leave.', 'farewell', '#0ff'),
+			]
+		),
+		ward_weaving: node('ward_weaving',
+			'*She lifts the copper plate she was working on. Faint lines of light pulse across its surface in interlocking geometric patterns.* Ward-weaving is the discipline of writing instructions into reality. A ward is not a wall — it is a CONTRACT. You define terms: what may pass, what may not, under what conditions, for how long. Reality reads the contract and enforces it. *She sets the plate down.* The elegance lies in the language. A poorly worded ward is like a poorly worded law — full of loopholes. My students spend their first year learning to think in absolute terms. No ambiguity. No imprecision. Every variable accounted for. It is rigorous, exacting work. Most students hate the first year. By the second year, they understand why I insisted. By the third, they thank me. Usually.',
+			[
+				opt('How many layers can a ward have?', 'fourteen_layers', '#ff4'),
+				opt('What about ward-BREAKING?', 'missing_curriculum', '#c8f'),
+				opt('That sounds more like law than magic.', 'enchantment_art', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		fourteen_layers: node('fourteen_layers',
+			'*She holds up the copper plate and tilts it so the light catches fourteen distinct bands of inscription, each nested within the last like rings of a tree.* Fourteen layers. The theoretical maximum for stable ward construction. Layer one: physical barrier. Layer two: energy filter. Layer three: intent detection. Layers four through seven: elemental resistances. Layer eight: temporal anchoring — prevents the ward from decaying over time. Layers nine through twelve: conditional permissions — who may pass, when, and carrying what. Layer thirteen: self-repair protocols. *She pauses at the outermost ring.* Layer fourteen: the contradiction layer. A logical paradox woven into the ward\'s structure that makes it impossible to unravel by conventional means. You cannot dispel what does not make logical sense. *She almost smiles.* I invented layer fourteen. The Archmage was... displeased.',
+			[
+				opt('Why would the Archmage be displeased by better wards?', 'missing_curriculum', '#c8f'),
+				opt('A ward that can\'t be unraveled — that\'s incredible.', 'enchantment_art', '#ff4'),
+				opt('What about the ancient ward beneath the school?', 'ancient_ward', '#c8f'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		missing_curriculum: node('missing_curriculum',
+			'*Her precise demeanor cracks, just slightly — a tightening around the eyes.* The curriculum teaches ward construction. It does NOT teach ward deconstruction. The official reason is safety — ward-breaking techniques could be misused. The real reason... *She glances at the door.* Fifty years ago, the library\'s entire section on protective dissolution was removed. Not restricted. REMOVED. Three hundred volumes of ward-breaking theory, gone in a single night. I was a student then. I remember the empty shelves. I asked my professor what happened. She said: "The Archmage decided those books were no longer part of settled knowledge." *Her voice is ice.* Knowledge does not become "unsettled." Someone un-settled it. Deliberately.',
+			[
+				opt('Why would anyone remove ward-breaking knowledge? [Rumor learned]', 'missing_books_deeper', '#c8f', { onSelect: { rumor: RUMORS.seraphina_missing_books, message: 'Professor Ashveil reveals that three hundred volumes of ward-breaking theory were removed from the Conservatory library on the Archmage\'s orders.' } }),
+				opt('Can you teach what was in those books?', 'forbidden_research', '#c8f'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		missing_books_deeper: node('missing_books_deeper',
+			'*She lowers her voice to barely a whisper.* Because some wards were not placed by mortals. The divine architecture — the magical framework that underpins reality itself — is, at its core, a ward. The largest, most complex ward ever constructed. Fourteen layers? Try fourteen THOUSAND. Placed by the Original Seven — the true gods, the ones who held the Principles before the Ascension. *Her eyes are hard.* If someone learned to break mortal wards, they might eventually learn to read divine wards. And if they could read them... they might notice something the Ascended gods do not want anyone to see: that the divine wards are not protective. They are not keeping something out. They are keeping something IN. Specifically, they are keeping the truth about the Ascension locked away behind layers of magical obfuscation so dense that even I can barely perceive their edges.',
+			[
+				opt('The wards are hiding the truth about the Ascension.', 'return', '#c8f', { onSelect: { message: 'Seraphina nods curtly. "Every ward tells you what it protects by what it excludes. The divine wards exclude questions. I find that... instructive."' } }),
+				opt('Can you break divine wards?', 'forbidden_research', '#c8f'),
+			]
+		),
+		forbidden_research: node('forbidden_research',
+			'*She stares at you for a long moment, then reaches into a locked drawer and produces a thin journal bound in silver thread.* I have spent thirty years reverse-engineering the missing curriculum from fragments — footnotes in surviving texts, ward patterns that reference dissolved sections, student notes from before the purge. *She opens the journal. The pages are covered in impossibly fine ward-notation.* I cannot break divine wards. Not yet. But I have learned to READ them. And what I have read in the ward beneath this school... *She closes the journal.* The ward predates the Conservatory by three thousand years. It was placed by the Original Seven — the REAL holders of the divine Principles. And it contains a message. A warning. Written in ward-language so ancient that even the Ascended gods apparently cannot read it. Or perhaps they can, and that is why they built a school on top of it — to ensure no one else ever tries.',
+			[
+				opt('What does the warning say?', 'ancient_ward', '#c8f'),
+				opt('You\'re playing a dangerous game, Professor.', 'return', '#0ff', { onSelect: { message: 'Seraphina\'s expression is stone. "The dangerous game was played three thousand years ago. I am merely reading the score."' } }),
+			]
+		),
+		ancient_ward: node('ancient_ward',
+			'*She leads you to the window and points down at the courtyard. The flagstones are arranged in a pattern you had not noticed before — concentric rings, radiating outward from the school\'s central tower.* The entire Conservatory is built on top of it. A ward of staggering complexity, inscribed into the bedrock itself. The founders thought they were building on a Ley Line intersection. They were building on a SEAL. *She traces the pattern on the window glass.* I have deciphered fragments. The ward\'s contract terms include phrases like "bind what was stolen" and "hold until the worthy speak the Verse." The ward is WAITING for something. A specific phrase, spoken by a specific person, at a specific time. When those conditions are met, the ward activates — not as a barrier, but as a key. It UNLOCKS something. *She turns to you.* Something the Ascended gods buried here three thousand years ago and built an entire school to guard without anyone knowing they were guarding it.',
+			[
+				opt('"The Verse" — the Verse of Severance?', 'return', '#c8f', { onSelect: { message: 'Seraphina\'s eyes widen almost imperceptibly. "Where did you hear that name? That phrase does not appear in any surviving text I have found. You know something. Come back when you are ready to share it."' } }),
+				opt('An entire school built as camouflage for a seal. Incredible.', 'return', '#c8f', { onSelect: { message: 'Seraphina nods. "Four centuries of students and faculty, none the wiser. The most effective wards are the ones nobody knows exist. I should find that admirable. Instead, I find it infuriating."' } }),
+			]
+		),
+		enchantment_art: node('enchantment_art',
+			'*For the first time, something like warmth enters her voice.* Both. And neither. Enchantment is POETRY written in the language of absolute truth. Every ward is a poem — structured, metered, precise in its imagery. But like any poem, a ward is more than the sum of its rules. Two ward-weavers can use identical techniques and produce wards of vastly different quality. The difference is not skill. It is VISION. *She holds up the copper plate.* This ward is technically perfect. Every layer is optimized, every variable constrained. But it is also beautiful. The patterns flow. The logic sings. Ward-weaving, at its highest level, is the art of making reality AGREE with you so completely that it enforces your will as if it were natural law. *She sets it down.* Ignis would call that "enthusiasm." Bramwell would call it "harmony." Mirael would call it "inevitability." I call it art. And art, unlike science, has no ceiling.',
+			[
+				opt('You sound like you love this work.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Something softens in Seraphina\'s precise features. "Love is an imprecise word. But... yes. In all its imprecision... yes."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		precision: node('precision',
+			'*She glances around the room as if seeing the arrangement for the first time.* Precision is not a preference. It is a requirement. Enchantment demands absolute specificity. A ward inscribed one millimeter off-center fails. A binding phrase with one incorrect syllable unravels. I arrange my space as I arrange my wards — with zero tolerance for disorder. *She adjusts a quill that was already perfectly aligned.* My students find it intimidating. Good. Reality is intimidating. If a student cannot handle an organized desk, they cannot handle the language of creation.',
+			[
+				opt('What about creativity within precision?', 'enchantment_art', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		advanced_wards: node('advanced_wards',
+			'*She studies you with those measuring grey eyes, and for a long moment says nothing.* You have potential. Raw, undisciplined, but genuine. Most mages treat wards as defensive afterthoughts. You seem to understand they are the foundation of all structured magic. *She produces a small silver disc inscribed with ward-notation so fine it resembles fingerprints.* Take this. A ward-template of my own design — seven layers, self-repairing, with a contradiction core. Wear it and study the patterns. When you can read every layer, come back. I will teach you the eighth.',
+			[
+				opt('Thank you, Professor. I\'ll study it carefully.', 'return', '#4f4', { onSelect: { hp: 2, message: 'Professor Ashveil gives you a ward-template disc. Its protective enchantment settles over you like a second skin. +2 HP' } }),
+			]
+		),
+		farewell: node('farewell',
+			'*She returns to her inscription work before you have finished turning away. Her stylus moves with mechanical precision, each line exactly where it needs to be.* Close the door on your way out. Precisely.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── ARCANE CONSERVATORY: PROFESSOR BRAMWELL THORNWICK ───
+
+export const BRAMWELL_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A round, cheerful man with soil under his fingernails and a living vine wrapped affectionately around his left arm beams at you from behind a workbench covered in bubbling flasks, dried herbs, and a potted plant that appears to be purring.* Hello, hello! Welcome to the School of Alchemy! Mind the Creeping Jenny — she\'s friendly but she has boundary issues. I\'m Professor Bramwell Thornwick. Would you like some tea? It\'s chamomile. Partly. The other part is a mild cognitive enhancer I\'ve been perfecting. Side effects include clarity of thought and an inexplicable fondness for ferns.',
+			[
+				opt('What do you teach here?', 'alchemy_intro', '#ff4'),
+				opt('Tell me about the greenhouse.', 'greenhouse', '#ff4'),
+				opt('That plant is purring.', 'purring_plant', '#ff4'),
+				opt('I should go.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Bramwell looks up from a bubbling cauldron with a smudge of something luminescent on his nose.* Ah, you\'re back! Wonderful! I was just telling Creeping Jenny about you — she\'s a good listener, mostly because she\'s a plant, but I like to think she\'s genuinely interested. Tea? It\'s a new blend. The previous batch gave three students temporary photosynthesis. They turned green for a week. Said they felt fantastic, though. Very well-rested.',
+			[
+				opt('Tell me about alchemy.', 'alchemy_intro', '#ff4'),
+				opt('Show me the greenhouse.', 'greenhouse', '#ff4'),
+				opt('What\'s the story with Phoenix Ash?', 'phoenix_ash', '#c8f'),
+				opt('Tell me about transmutation theory.', 'transmutation', '#ff4'),
+				opt('Where do you source your ingredients?', 'ingredient_sourcing', '#ff4'),
+				opt('How do you handle mandrake root?', 'mandrake_handling', '#ff4'),
+				opt('Tell me a story, Professor.', 'story_draught', '#c8f'),
+				opt('I need to go.', 'farewell', '#0ff'),
+			]
+		),
+		alchemy_intro: node('alchemy_intro',
+			'*He spreads his arms wide, nearly knocking over three flasks.* Alchemy is the art of CONVERSATION with matter! Every substance has properties — weight, color, reactivity, magical resonance. An alchemist learns to speak the language of these properties and then, politely but firmly, asks them to change. *He picks up a grey powder.* This is iron filings. Inert. Boring. Common as dirt. But add Phoenix Ash — *he sprinkles a glowing orange powder* — and the iron REMEMBERS that it was once part of a star. It becomes Stardust Iron, harder than steel and lighter than aluminum. *The mixture glows briefly.* Every substance remembers what it was before. Alchemy is the art of helping matter remember.',
+			[
+				opt('What about Phoenix Ash?', 'phoenix_ash', '#c8f'),
+				opt('Tell me about transmutation.', 'transmutation', '#ff4'),
+				opt('What recipes are you working on?', 'recipes', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		greenhouse: node('greenhouse',
+			'*His face lights up like a child showing off a favorite toy.* The greenhouse is my cathedral! Three stories tall, climate-controlled by ward-panels that Seraphina designed — reluctantly, but she owed me after I cured her migraine with a Willow-Mind tincture. Inside, I maintain seven hundred and forty-three species of magical flora. *He counts on dirty fingers.* Whispering Willows that translate bird songs. Ember Orchids that bloom in fire and die in sunlight. A patch of Null Moss that absorbs all magic within three feet — I use it to neutralize failed experiments. *He lowers his voice conspiratorially.* And in the deepest sub-level, behind three locked doors and a ward that even Seraphina respects, I keep the Forbidden Garden. Plants too dangerous for the main collection. Plants that think. Plants that plan. Plants that — I am fairly certain — have opinions about the Archmage.',
+			[
+				opt('Plants that have opinions?', 'forbidden_garden', '#c8f'),
+				opt('Seven hundred and forty-three species. That\'s dedication.', 'ingredient_sourcing', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		forbidden_garden: node('forbidden_garden',
+			'*He glances around nervously, then leans in with the giddy expression of someone sharing a magnificent secret.* The Dread Lotus. It grows in only one place in the known world — my greenhouse sub-level. It feeds on magical resonance, which means it grows faster near Ley Lines. But here is the remarkable part: it COMMUNICATES. Not in words — in scent. Different chemical combinations that, if you train your nose, form a rudimentary language. *He taps his generous nose.* I have spent fifteen years decoding it. The Lotus speaks of the earth. Of deep currents. Of something it calls "the sleeping architecture" — a vast magical structure beneath the Conservatory that it can feel through its roots. It describes wards, ancient wards, written in the language of bedrock itself. *He pauses.* Seraphina would murder me for this information. Or thank me. With her, it\'s hard to tell.',
+			[
+				opt('The sleeping architecture — the ancient ward beneath the school.', 'return', '#c8f', { onSelect: { message: 'Bramwell nods vigorously. "The Lotus feels it like we feel sunlight. It says the architecture is WAITING. Patiently. For something it calls \'the right voice.\' Plants are surprisingly philosophical when you learn to listen."' } }),
+				opt('You communicate with a plant. Through smell.', 'return', '#ff4', { onSelect: { message: 'Bramwell beams. "She prefers lavender-inflected responses. I\'ve adapted my aftershave accordingly. Seraphina says I smell like a botanist\'s fever dream. I choose to take that as a compliment."' } }),
+			]
+		),
+		phoenix_ash: node('phoenix_ash',
+			'*He reverently opens a fireproof box containing a small vial of luminescent orange powder.* Phoenix Ash. The rarest alchemical reagent in existence. When a phoenix dies and is reborn, it leaves behind ash infused with the essence of transformation itself — matter that has PRACTICED resurrection. A single grain can catalyze reactions that would otherwise require a Ley Line\'s worth of energy. *He holds the vial to the light.* This vial contains the last known supply from the Emberpeak nesting ground. The phoenixes stopped nesting there two centuries ago. No one knows why. *His jovial expression dims.* I have a theory, though. Phoenixes are drawn to places of natural magical intensity — Ley Line convergences, elemental nodes, sites of divine significance. They stopped coming to Emberpeak because the magic there DRIED UP. Something drained it. The same something that has been slowly draining the Ley Lines beneath this school.',
+			[
+				opt('What\'s draining the Ley Lines?', 'transmutation', '#c8f'),
+				opt('Can Phoenix Ash be synthesized?', 'recipes', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		transmutation: node('transmutation',
+			'*He picks up two beakers — one containing water, the other containing mercury — and slowly pours the water into the mercury. Instead of mixing, the water transforms into liquid silver on contact.* Transmutation: the art of convincing one substance to become another. The key is resonance. Every element vibrates at a specific frequency. If you can match that frequency — through heat, pressure, magical catalysis, or sheer alchemical stubbornness — you can shift one element\'s resonance to match another\'s. Lead to gold is the famous example, but that is actually trivial. The INTERESTING transmutation is matter to energy. Or energy to matter. Or — and this is the one that keeps me up at night — matter to INFORMATION. *He sets down the beakers.* The old texts suggest the Original Seven could transmute matter into pure knowledge. They could LEARN a mountain. Absorb a river. Read reality like a book. That ability was lost during the Ascension. Or was it taken?',
+			[
+				opt('Taken? By whom?', 'return', '#c8f', { onSelect: { message: 'Bramwell looks uncomfortable for the first time. "The Ascended gods claim they INHERITED divine knowledge. But inheritance implies a gift. What if it was not a gift? What if they took it? What if every divine ability they wield was stolen from the Original Seven — along with the knowledge of how it was done?"' } }),
+				opt('Matter to information. That\'s incredible.', 'recipes', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		recipes: node('recipes',
+			'*He brightens, pulling out a stained notebook.* Current projects! Starlight Salve — heals wounds using captured moonlight. Nearly perfected, except it only works on Tuesdays. Verdant Draught — temporary plant communication. Works perfectly, but subjects develop an emotional attachment to houseplants that persists for months. *He flips pages.* Ironblood Tonic — triples physical endurance for one hour. Side effect: your sweat smells like a forge. And my magnum opus... *He turns to a page covered in diagrams.* The Philosopher\'s Draught. The ultimate transmutation catalyst. Theoretically transforms the drinker\'s body into a perfect conduit for all forms of matter manipulation. Only successfully brewed once in recorded history.',
+			[
+				opt('Tell me about the successful Philosopher\'s Draught.', 'story_draught', '#c8f'),
+				opt('Could I buy some of those potions?', 'return', '#ff4', { onSelect: { message: 'Bramwell chuckles. "I don\'t sell. I SHARE. With responsible individuals who promise not to drink anything labeled \'Experimental\' without supervision. The last student who ignored that label spent two days as a particularly articulate shrub."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		ingredient_sourcing: node('ingredient_sourcing',
+			'*He gestures at a wall covered in maps, each studded with colored pins.* Sourcing is half the challenge of alchemy! Moonpetal flowers only bloom during thunderstorms. Embercap mushrooms grow exclusively in volcanic soil. Frost Lily pollen must be harvested at precisely minus forty degrees — it evaporates at minus thirty-nine. *He taps a cluster of pins in a remote mountain range.* My best supplier is a hermit alchemist in the Thornlands who sends ingredients via trained ravens. Reliable, except when the ravens eat the Dreamseed Berries and start flying in philosophical circles. *He chuckles.* The rarest ingredients come from places mortals rarely visit — the Grey Wastes, the deep dungeons, the Hollow Sea\'s edge. Places where reality is thin and substances develop... unusual properties. I pay adventurers handsomely for rare specimens. Hint hint.',
+			[
+				opt('I might be able to bring you specimens from my travels.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Bramwell claps his hands with delight. "Wonderful! I\'ll prepare a collection kit for you. Labeled jars, preservation salts, and a pamphlet titled \'Please Don\'t Eat The Specimens.\' I\'ve lost three couriers to curiosity."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		mandrake_handling: node('mandrake_handling',
+			'*His expression becomes uncharacteristically serious.* Mandrake root. The most dangerous ingredient in the standard alchemical repertoire. Not because of its famous scream — that is manageable with proper ear protection. No, mandrake is dangerous because it is AWARE. It is the only non-magical plant that exhibits rudimentary consciousness. It knows when it is being harvested. It knows when it is being processed. And it REMEMBERS. *He shows you a jar containing a gnarled root that seems to be watching you.* There are three rules. One: never harvest mandrake under a full moon — the lunar energy amplifies its awareness to near-sapient levels. Two: always thank the plant before pulling. Ridiculous superstition? Perhaps. But alchemists who skip it have a forty percent higher rate of catastrophic failures. Three: never, EVER use mandrake root in a transmutation involving consciousness or memory. The root contributes its OWN memories to the mixture. And mandrake memories are... disturbing. They remember being underground, in the dark, for decades. Alone. Listening. That kind of patience, that kind of darkness, has a flavor. And it bleeds into whatever you brew.',
+			[
+				opt('A plant with memories. That\'s unsettling.', 'return', '#ff4', { onSelect: { message: 'Bramwell nods gravely. "The most experienced alchemists treat every ingredient as a participant, not a resource. Matter has opinions. Ignore them at your peril."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		story_draught: node('story_draught',
+			'*He settles into a well-worn chair, the vine on his arm curling contentedly.* Three hundred years ago, an alchemist named Elara Brightwell achieved the impossible. She brewed the Philosopher\'s Draught — the only successful attempt in history. The ingredients took her forty years to gather. Phoenix Ash from the last nesting ground. Moonpetal dew collected during a double eclipse. Root of a mandrake that had grown through a Ley Line convergence. She brewed in silence for seven days. On the eighth day, she drank it. *He leans forward.* Her body transmuted — not into gold, as the legends promise, but into living crystal. She could see every element in every object, feel the atomic lattice of stone and steel. She wrote seventeen volumes of alchemical theory in three hours. Then she walked into the earth itself, merging with the bedrock beneath this very building. *He presses his hand to the floor.* Her crystalline form is still down there. On quiet nights, if you press your ear to the greenhouse floor, you can hear her humming. She sounds content.',
+			[
+				opt('She\'s BENEATH the school? Still alive? [Story collected]', 'return', '#4f4', { onSelect: { story: STORIES.bramwell_draught, message: 'You learned the story of Elara Brightwell and the only successful Philosopher\'s Draught. She merged with the bedrock beneath the Conservatory and still hums on quiet nights.' } }),
+			]
+		),
+		purring_plant: node('purring_plant',
+			'*He beams with paternal pride.* That is Duchess Fernsworth the Third. She is a Sympathetic Fern — a species that mirrors the emotional state of the nearest sentient being. If you are calm, she purrs. If you are anxious, she rustles. If you are angry, she develops thorns. *He scratches behind one of the Duchess\'s fronds and the purring intensifies.* The first Duchess Fernsworth was a gift from a student who graduated forty years ago. She lived for thirty-seven years — extraordinary for a fern. The second Duchess was grown from the first\'s spore and lasted twenty years. This is the third generation. She has her grandmother\'s temperament and her mother\'s fondness for compliments. *The fern rustles happily.* I am aware that I am an eccentric. I have made peace with it. The plants do not judge.',
+			[
+				opt('She\'s lovely. What other specimens do you have?', 'greenhouse', '#4f4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		farewell: node('farewell',
+			'*He waves cheerfully, the vine on his arm waving too — a half-second behind, like an echo.* Take care out there! And remember — if you find any unusual botanical specimens in your travels, bring them to me! I accept all donations. Except Corpse Lilies. I have fourteen. I do not need a fifteenth. The smell is becoming political.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── ARCANE CONSERVATORY: PROFESSOR MIRAEL DAWNWHISPER ───
+
+export const MIRAEL_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A slight woman with milky, unfocused eyes sits in a room where every surface is covered in star charts, orbital calculations, and sketches of constellations you do not recognize. She speaks before you announce yourself.* I know you are there. I knew you would come today. I knew what you would ask. The stars told me three things about you this morning, and two of them are none of your business. I am Professor Mirael Dawnwhisper. Sit. The third thing is that you need to hear what I have to say.',
+			[
+				opt('What do you teach?', 'scrying_theory', '#ff4'),
+				opt('You knew I was coming?', 'pattern_reading', '#ff4'),
+				opt('What did the stars tell you about me?', 'cryptic_hint', '#c8f'),
+				opt('I should go.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Mirael does not turn to face you. She is staring at a star chart that appears to be drawing itself — new points of light appearing in real time.* The stars shifted last night. They have been shifting more frequently. Something is approaching — not physically, not through space, but through TIME. An event that casts shadows backward. I can see those shadows. They are shaped like thrones. *She turns.* What do you want?',
+			[
+				opt('Tell me about scrying theory.', 'scrying_theory', '#ff4'),
+				opt('What is astral observation?', 'astral_observation', '#ff4'),
+				opt('Tell me about the 7 shadows you saw.', 'seven_shadows', '#c8f'),
+				opt('How does pattern reading work?', 'pattern_reading', '#ff4'),
+				opt('Why do divination students go mad?', 'madness', '#ff4'),
+				opt('[Arcane Script] I can read the old notation on your charts.', 'arcane_insight', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Arcane Script' } }),
+				opt('I need to leave.', 'farewell', '#0ff'),
+			]
+		),
+		scrying_theory: node('scrying_theory',
+			'*She waves a hand and the candles in the room dim. Points of light appear in the air — a miniature starfield.* Scrying is not seeing the future. The future does not exist yet. Scrying is seeing the WEIGHT of the present — the accumulated momentum of every choice, every action, every cause pressing toward its effect. *She plucks a point of light and it trails threads of connection to a dozen others.* Imagine reality as a web. Every strand is a causal chain. Scrying lets you see the web. A skilled scryer can follow strands forward — not to certainty, but to probability. The further forward you look, the more strands diverge, and the less certain any single outcome becomes. *She releases the light.* This is why divination is the most honest school of magic. We do not promise answers. We promise better questions.',
+			[
+				opt('Can you see my future?', 'cryptic_hint', '#c8f'),
+				opt('What about looking backward?', 'astral_observation', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		astral_observation: node('astral_observation',
+			'*She gestures to a massive orrery in the corner — a mechanical model of celestial bodies, except some of the spheres glow with their own light and move without any visible mechanism.* The astral plane is a mirror of the physical plane, but it reflects MEANING rather than matter. The stars in the astral sky are not balls of burning gas — they are nodes of significance. Events of cosmic importance leave marks in the astral plane, like footprints in snow. *She adjusts one of the orrery\'s arms.* The Ascension left the largest footprint in recorded history. Three thousand years later, I can still see it — seven bright points that appeared simultaneously, burning with stolen light. *She catches herself.* Borrowed light. The official term is "borrowed." *Her milky eyes seem to look through you.* But light that is borrowed implies it was given willingly. These stars BURN. Stolen fire always burns brighter than shared flame.',
+			[
+				opt('"Stolen light" — you believe the Ascension was a theft?', 'seven_shadows', '#c8f'),
+				opt('Can you observe specific events in the astral plane?', 'pattern_reading', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		seven_shadows: node('seven_shadows',
+			'*She pulls you to the orrery and points to seven glowing spheres arranged in a precise heptagonal pattern.* Three years ago, during a deep astral observation, I saw something that changed everything I believed about the gods. I pushed my scrying further back than any living diviner has managed — past the Age of Silence, past the founding of the Free Cities, all the way to the Ascension itself. *Her voice becomes barely audible.* I saw seven figures approach seven thrones. The thrones were already occupied — by the Original Seven, the true Principles. The figures did not bow. They did not petition. They ATTACKED. I watched seven mortals — the worst, most ambitious, most ruthless mortals in history — drag the true gods from their thrones and claim divine power by force. *Her hands are shaking.* The Ascension was not an elevation. It was a COUP.',
+			[
+				opt('You saw the Ascension. The gods are imposters. [Rumor learned]', 'ascension_stars', '#c8f', { onSelect: { rumor: RUMORS.mirael_ascension_stars, message: 'Professor Dawnwhisper reveals she witnessed the Ascension in the astral plane — seven mortals attacking the Original Seven and stealing their divine thrones by force.' } }),
+				opt('Have you told anyone else?', 'ascension_stars', '#ff4'),
+			]
+		),
+		ascension_stars: node('ascension_stars',
+			'*She laughs — a short, bitter sound.* Told anyone? I told the Archmage. I presented my findings with full astral notation, temporal coordinates, and observational methodology. Do you know what he said? *She mimics a calm, measured voice.* "Your methodology was compromised by astral interference. Deep temporal scrying is known to produce hallucinatory artifacts. I recommend you discontinue this line of research." *Her voice returns to normal.* He was not surprised. He was not curious. He was not alarmed. A professor tells him the gods might be frauds and he responds with PROCEDURAL CRITICISM. *She stares at you with those milky eyes.* That is not the reaction of a man hearing something unbelievable. That is the reaction of a man hearing something he already knew.',
+			[
+				opt('Voss already knew. He\'s hiding it.', 'return', '#f44', { onSelect: { message: 'Mirael nods slowly. "The Archmage has an answer for everything. Answers prepared in advance. As if he has been briefed on which truths to suppress and given scripts for each one. By whom, I wonder?"' } }),
+				opt('What happened to the Original Seven after the coup?', 'original_seven', '#c8f'),
+			]
+		),
+		original_seven: node('original_seven',
+			'*She returns to the orrery and points to seven dim, barely visible spheres hidden behind the bright ones.* They are still there. In the astral plane, behind the stolen light, I can see seven fading embers. The Original Seven — Dro-Mahk, Ael-Vena, Thuris, Korrath, Selvain, Mythara, Orenthis — were not destroyed. They were DISPLACED. Pushed out of their own thrones and into a space between divinity and oblivion. *She traces the dim spheres.* They are conscious. They are aware. And they are PATIENT. Three thousand years of patience. I can feel their attention when I scry — like being watched by something vast and sad. They do not blame mortals for worshipping the imposters. How would mortals know? The imposters wear the names, wield the power, sit the thrones. *She pauses.* But the Original Seven remember. And the astral plane remembers. And now... I remember.',
+			[
+				opt('Can they be restored?', 'return', '#c8f', { onSelect: { message: 'Mirael closes her eyes. "The strands converge on a single point. A mortal with the right resonance, the right words, at the right convergence. The Verse of Severance spoken at a place where the veil is thin. The astral plane shows me this possibility like a candle in a hurricane — flickering, fragile, but still burning."' } }),
+				opt('That is the most terrifying thing I have ever heard.', 'return', '#0ff', { onSelect: { message: 'Mirael smiles faintly. "Wait until I tell you why divination students go mad."' } }),
+			]
+		),
+		pattern_reading: node('pattern_reading',
+			'*She picks up a seemingly random collection of objects — a coin, a feather, a cracked stone, a wilted flower — and arranges them on the table.* Pattern reading. The art of seeing connections where others see chaos. Everything is connected — not metaphorically, but CAUSALLY. This coin was minted in Korthaven. This feather fell from a hawk that flew over the Grey Wastes. This stone cracked during the last earthquake. This flower died when the Ley Line beneath the greenhouse weakened. *She steps back.* Four objects. Four unrelated events. But look at the pattern: Korthaven, Grey Wastes, seismic activity, Ley Line decay. All connected to the same underlying cause — the magical infrastructure of the world is failing. Slowly, quietly, but consistently. *She meets your eyes.* Pattern reading is not divination. It is ATTENTION. The universe is always telling you what is happening. Most people simply do not listen.',
+			[
+				opt('What is the pattern telling you now?', 'cryptic_hint', '#c8f'),
+				opt('Can anyone learn pattern reading?', 'return', '#ff4', { onSelect: { message: 'Mirael tilts her head. "Anyone can learn. Not everyone should. Pattern reading changes how you see the world. Once you see the connections, you cannot unsee them. Every coincidence becomes a clue. Every accident becomes a message. Some students find this exhilarating. Others find it unbearable. The ones who find it unbearable are usually the ones who see the most clearly."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		cryptic_hint: node('cryptic_hint',
+			'*Her milky eyes seem to focus on something behind you — not physically behind you, but temporally.* I see seven thrones and seven shadows. The shadows do not match the figures sitting on the thrones. The shadows are OLDER. Angrier. More desperate. The figures on the thrones smile and the shadows scream and nobody looks down. *She blinks.* I see a school built on a secret. I see a man with kind eyes and a locked heart who serves masters he has never met in person. I see a ward older than language waiting for a voice it has not yet heard. *She focuses on you directly.* And I see you. Standing at a crossroads that does not exist yet but is already casting shadows. You will be offered a throne. The question is not whether you are worthy. The question is whether you are wise enough to refuse.',
+			[
+				opt('Refuse a throne? Why would I refuse power?', 'madness', '#ff4'),
+				opt('You see the Ascension. The stolen thrones.', 'seven_shadows', '#c8f'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		madness: node('madness',
+			'*She pulls out a ledger and opens it to a page of names. Some are crossed out. Some have notes beside them.* Twenty-seven students have enrolled in my advanced divination seminar over the past decade. Nine graduated successfully. Four transferred to other schools. Three left the Conservatory entirely. Eleven... *She runs her finger down the list.* Eleven experienced what I clinically refer to as "pattern saturation." They saw too much, too clearly, too fast. The connections overwhelmed them. One student scryed the moment of her own death and could not stop re-watching it. Another saw the causal chains leading to every war in history and concluded that violence was a mathematical certainty — he has not spoken since. A third saw the Ascension and screamed for six hours. *She closes the ledger.* Divination is the only school of magic where the greatest danger is SUCCESS. The more talented you are, the more you see. And the more you see, the harder it becomes to function in a world that insists on looking away.',
+			[
+				opt('How do YOU manage it?', 'mirael_coping', '#ff4'),
+				opt('The student who saw the Ascension — what happened to her?', 'return', '#c8f', { onSelect: { message: 'Mirael\'s expression is unreadable. "She recovered. Mostly. She teaches at a small school in the Pale Coast now. She refuses to scry past noon on any given day. She paints watercolors of flowers and tells everyone she was \'never very good at divination.\' I receive a letter from her every solstice. She always writes the same thing: \'You were right. I wish you hadn\'t been.\'"' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		mirael_coping: node('mirael_coping',
+			'*She is quiet for a long time.* I don\'t. Not well. Every morning I wake up knowing roughly how the day will unfold. Not specifics — generalities. The emotional weather. The probability of important conversations. The weight of approaching decisions. I know when students will fail before they attempt the exam. I know when colleagues are lying before they open their mouths. *She touches her temple.* My eyes clouded ten years ago. Not disease — adaptation. My physical sight dimmed as my astral sight sharpened. The universe decided I was looking at the wrong things and redirected my attention. *A faint smile.* Ignis thinks I am eerie. Seraphina thinks I am fascinating. Bramwell brings me tea and tells me about his plants, which is the kindest response anyone has ever had to my condition. And the Archmage... the Archmage watches me. Carefully. Constantly. As if measuring how much I have seen and calculating how much I might say.',
+			[
+				opt('Voss watches you because you\'re a threat to his secrets.', 'return', '#f44', { onSelect: { message: 'Mirael\'s faint smile does not waver. "Everyone is a threat to a man who keeps secrets from the gods themselves. I am merely a more perceptive threat than most."' } }),
+				opt('I\'m sorry. That sounds lonely.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Something shifts in Mirael\'s expression — surprise, perhaps. "Most people ask me what I see. You are the first in a long time to ask how it FEELS. Thank you. That matters more than you know."' } }),
+			]
+		),
+		arcane_insight: node('arcane_insight',
+			'*She turns sharply, her milky eyes wide.* You can read Arcane Script? *She pulls you to a star chart covered in notation that shimmers and rearranges itself as you watch.* These charts are written in the old notation — the mathematical language the Original Seven used to describe the structure of reality. Most scholars treat it as decorative. But you... you can READ it. *She points to a sequence of symbols.* This passage describes a resonance pattern — the specific frequency at which a mortal soul can interface with a divine throne. It is, essentially, the mathematical description of the Ascension itself. The formula the seven mortals used to steal divine power. *She grabs your arm.* If you can read this, then you can understand HOW they did it. And if you understand how they did it... you can understand how to UNDO it.',
+			[
+				opt('The formula for the Ascension. In mathematical notation.', 'return', '#c8f', { onSelect: { message: 'Mirael releases your arm. "Guard this knowledge. The Veiled Hand has killed for less. The Archmage has buried for less. And the gods themselves... well. They have done worse than either for the crime of understanding."' } }),
+			]
+		),
+		farewell: node('farewell',
+			'*She turns back to her star charts, already seeming to forget your presence — or perhaps simply seeing past it, to whatever comes next.* The stars will be in a new configuration tomorrow. They are always in a new configuration. That is either terrifying or beautiful, depending on whether you trust the universe. *A pause.* I do not. But I listen to it anyway.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── ARCANE CONSERVATORY: ARCHMAGE ALDRIC VOSS ───
+
+export const ARCHMAGE_VOSS_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A distinguished man with silver temples and kind, intelligent eyes rises from behind a mahogany desk. His office is immaculate — bookshelves organized by subject, astronomical instruments gleaming, and a large portrait of the Conservatory\'s founders hanging behind him. He radiates warmth and competence in equal measure.* Welcome to the Arcane Conservatory. I am Archmage Aldric Voss, headmaster and humble steward of this institution. It is always a pleasure to meet someone with the spark of curiosity. How may I help you?',
+			[
+				opt('Tell me about the school\'s history.', 'school_history', '#ff4'),
+				opt('How is the curriculum designed?', 'curriculum', '#ff4'),
+				opt('You seem like a well-traveled man.', 'travels', '#ff4'),
+				opt('Just visiting. Nice school.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Voss looks up with that practiced, warm smile.* Ah, you return. The Conservatory has that effect — knowledge draws people back like gravity draws water downhill. Inevitable and, I like to think, beneficial. What questions have you brought me this time?',
+			[
+				opt('Tell me about the school\'s history.', 'school_history', '#ff4'),
+				opt('Explain the curriculum to me.', 'curriculum', '#ff4'),
+				opt('Why can\'t students study multiple streams?', 'cross_stream', '#ff4'),
+				opt('Tell me about your travels.', 'travels', '#ff4'),
+				opt('What is the political situation at the school?', 'school_politics', '#ff4'),
+				opt('Professor Dawnwhisper says she saw the Ascension in the stars.', 'mirael_claim', '#c8f', { showIf: { hasRumor: 'mirael_ascension_stars' } }),
+				opt('I know about the Veiled Hand.', 'veiled_hand_confront', '#f44', { showIf: { hasRumor: 'conservatory_cross_stream' } }),
+				opt('I should go.', 'farewell', '#0ff'),
+			]
+		),
+		school_history: node('school_history',
+			'*He walks to the portrait of the founders — seven robed figures standing before an empty field.* Four centuries ago, seven scholars discovered this site — a natural Ley Line intersection of remarkable potency. They envisioned a place where all streams of magic could be studied under one roof, free from political interference. A noble dream. *He touches the frame.* The founders built the Conservatory on principles of open inquiry and free exchange of knowledge. Those principles have guided us ever since, though the application has... evolved with the times. We now teach four streams — Elements, Enchantment, Alchemy, and Divination — each in its own school, each with its own methodology. *He turns back.* The streams are kept separate for safety and pedagogical clarity. A student who tries to learn everything at once learns nothing well. Focus produces mastery. That is the foundation of our educational philosophy.',
+			[
+				opt('Why only four streams? Aren\'t there more?', 'curriculum', '#ff4'),
+				opt('Seven founders... like the seven gods?', 'return', '#ff4', { onSelect: { message: 'Voss chuckles smoothly. "A coincidence that students notice every year. Seven is a common number in academic tradition — seven liberal arts, seven virtues, seven days of the week. Not everything that comes in sevens is a divine reference."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		curriculum: lie('curriculum',
+			'*He produces a leather-bound curriculum guide with the Conservatory\'s seal.* The curriculum is designed around a principle I call "stream integrity." Each school of magic operates on fundamentally different theoretical foundations. Elements is about energy manipulation. Enchantment is about structural inscription. Alchemy is about material transformation. Divination is about informational analysis. *He sets down the guide.* These foundations are, by their nature, incompatible. A mind trained to think in elemental terms cannot simultaneously process enchantment logic — the cognitive architectures conflict. This is not a policy decision. It is a neurological reality. Cross-stream study produces confusion, burnout, and in extreme cases, magical psychosis. *His smile is gentle, reasonable.* I wish it were otherwise. Truly. But we must teach within the boundaries that reality imposes.',
+			[
+				opt('That sounds very... settled. [Suspicious]', 'cross_stream', '#ff4'),
+				opt('[Persuade] Professor Ignis says cross-stream limits are artificial.', 'persuade_cross_stream', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 14, successNode: 'persuade_cross_success', failNode: 'persuade_cross_fail' }, once: true }),
+				opt('What about the missing library books?', 'missing_books', '#c8f', { showIf: { hasRumor: 'seraphina_missing_books' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		cross_stream: lie('cross_stream',
+			'*His expression shifts to one of patient concern — the look of a teacher addressing a common misconception.* I understand the appeal of the idea. "Why not learn everything?" It is the question every ambitious student asks. And the answer is always the same: because the human mind has limits. *He opens a drawer and produces a file.* Case studies. Seventeen documented instances of students who attempted cross-stream mastery. The results range from complete magical burnout to permanent cognitive damage. One student attempted to combine elemental fire with alchemical transmutation and converted her own blood to mercury. She survived, barely. *He closes the file.* I do not restrict cross-stream study out of conservatism. I restrict it because I have buried students who tried it. The streams are separate because REALITY made them separate. My job is merely to ensure students do not die proving that fact.',
+			[
+				opt('[Intimidate] Those case studies are convenient. May I examine them?', 'intimidate_cross_stream', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 16, successNode: 'intimidate_cross_success', failNode: 'intimidate_cross_fail' }, once: true }),
+				opt('[Mage] The old texts say the Original Seven mastered all streams.', 'old_texts_challenge', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('I see your point. Safety first.', 'return', '#4f4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		persuade_cross_success: node('persuade_cross_success',
+			'*For a fraction of a second, something shifts behind Voss\'s eyes — a flicker of calculation, quickly smoothed.* Ignis is... passionate. His enthusiasm sometimes outpaces his prudence. But I will not dismiss his observations entirely — he is a gifted scholar. *He steeples his fingers.* The truth is that cross-stream study is not INHERENTLY impossible. There are historical examples of multi-disciplinary mages. But those examples existed in a different era, with different magical infrastructure. The Ley Lines were stronger then. The ambient magical density supported cognitive loads that would overwhelm a modern practitioner. *He spreads his hands.* Could cross-stream mastery work? Perhaps. Under ideal conditions that no longer exist. I choose to teach what is safe and reliable rather than what is theoretically possible but practically suicidal.',
+			[
+				opt('The conditions "no longer exist" — or were they removed? [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.conservatory_cross_stream, message: 'Voss admits cross-stream mastery is not inherently impossible — only impractical under current conditions. But who changed the conditions?' } }),
+				opt('Thank you for the honest answer.', 'return', '#4f4'),
+			]
+		),
+		persuade_cross_fail: node('persuade_cross_fail',
+			'*Voss\'s warm expression does not change, but his response comes a beat too quickly — rehearsed.* Ignis is a fine elemental theorist. But he lacks the broader perspective that comes with administrative responsibility. I have access to research he has not seen — classified studies conducted by previous Archmages that conclusively demonstrate the dangers of cross-stream interference. I appreciate your curiosity, but on this matter, the science is settled.',
+			[
+				opt('Settled science. Right.', 'return', '#0ff'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		intimidate_cross_success: node('intimidate_cross_success',
+			'*Voss\'s composure cracks — just slightly, just for a moment. He closes the drawer a little too firmly.* The case studies are... confidential. Student medical records are protected under Conservatory charter. You understand. *He meets your gaze, and for the first time, you see something other than warmth in his eyes. Wariness. Calculation.* You ask pointed questions. That is admirable in a scholar and dangerous in a visitor. The curriculum exists for good reasons. Whether you believe those reasons are sufficient is your prerogative. But I would suggest — gently — that questioning the foundations of a four-hundred-year-old institution requires more than suspicion. It requires evidence. And evidence of what you seem to be implying... does not exist.',
+			[
+				opt('You sound like a man who has destroyed evidence before. [Rumor learned]', 'return', '#f44', { onSelect: { rumor: RUMORS.conservatory_cross_stream, message: 'Voss\'s composure breaks when pressed on cross-stream case studies. His careful denial sounds rehearsed — the response of a man protecting a narrative, not defending a truth.' } }),
+				opt('I have what I need. For now.', 'return', '#0ff'),
+			]
+		),
+		intimidate_cross_fail: node('intimidate_cross_fail',
+			'*Voss regards you with an expression of mild disappointment — the look of a man who has faced far more intimidating opponents.* I understand that passion can feel like purpose. But raising your voice in the Archmage\'s office is neither productive nor wise. The wards in this room respond to hostile intent. I would hate for you to experience them firsthand. *His smile returns, warmer than before, which somehow makes it worse.* The curriculum is designed for student safety. That is all. Now — is there something ELSE I can help you with?',
+			[
+				opt('...My apologies.', 'return', '#4f4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		old_texts_challenge: lie('old_texts_challenge',
+			'*A pause — carefully calibrated to suggest thoughtful consideration rather than alarm.* The "old texts" to which you refer are fragmentary, unreliable, and frequently mistranslated. The pre-Ascension era was poorly documented by modern standards. Claims about "multi-stream masters" are the academic equivalent of folk tales — entertaining, culturally significant, and almost entirely fictional. *He adjusts a book on his shelf without looking at it.* The Original Seven — the Principles who held the divine thrones before the Ascension — operated on a fundamentally different plane of existence. Comparing their capabilities to mortal magic is like comparing the ocean to a cup of water. Could THEY master all streams? Perhaps. They were divine. We are not. And conflating divine capability with mortal potential is precisely the kind of thinking that gets students killed.',
+			[
+				opt('Or the kind of thinking that gets gods NERVOUS.', 'return', '#f44', { onSelect: { message: 'Voss\'s smile freezes for exactly one second. When it returns, it is identical. Too identical. "An entertaining hypothesis. I prefer to deal in facts. Facts keep students alive."' } }),
+				opt('Fair point. Perhaps I\'m overreaching.', 'return', '#4f4'),
+			]
+		),
+		missing_books: lie('missing_books',
+			'*He waves a hand dismissively.* Ah, the library reorganization. A common misunderstanding. Fifty years ago, my predecessor conducted a routine audit and identified several hundred volumes that were outdated, contradictory, or actively dangerous. Alchemical texts with incorrect formulae that had caused student injuries. Ward-breaking manuals that could be used to compromise campus security. Theoretical works based on debunked methodology. *He smiles reassuringly.* The books were not "removed." They were archived in a secure collection accessible to senior faculty. Knowledge preservation is a core value. But so is student safety. We would not leave loaded crossbows in the dormitory. Similarly, we do not leave dangerous knowledge on open shelves.',
+			[
+				opt('[Deceive] Oh, of course. That makes perfect sense.', 'deceive_books', '#c4f', { socialCheck: { skill: 'deceive', difficulty: 13, successNode: 'deceive_books_success', failNode: 'deceive_books_fail' }, once: true }),
+				opt('Professor Ashveil says the books were on ward-breaking. Against divine wards.', 'return', '#c8f', { onSelect: { message: 'For the briefest moment, something cold passes behind Voss\'s warm eyes. "Professor Ashveil is a talented enchantress with a tendency toward dramatic interpretation. The books contained ward theory — all forms. Their removal was comprehensive, not targeted."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		deceive_books_success: node('deceive_books_success',
+			'*Voss visibly relaxes — and in that relaxation, you see the performance. The concern was an act. The warmth was a costume. For one unguarded moment, you see the real Voss: a man relieved that someone accepted his story without pressing further. A man who EXPECTS to be believed because he has spent decades calibrating his lies.* Indeed. The Conservatory has always prioritized responsible knowledge management. I am glad you understand. Not everyone does — some of my colleagues are prone to seeing conspiracies in administrative decisions. An occupational hazard of academia, I suppose.',
+			[
+				opt('(He bought it. His relief was genuine — he\'s hiding something significant.)', 'return', '#c8f', { onSelect: { message: 'You file away the observation: Archmage Voss is not merely cautious — he is actively concealing something about the removed books. His performance of concern is rehearsed, his relief at being believed is real.' } }),
+			]
+		),
+		deceive_books_fail: node('deceive_books_fail',
+			'*Voss studies you with sudden, sharp attention — the warmth dropping from his expression like a mask falling.* You are a poor liar. Which means you were testing me rather than genuinely agreeing. Interesting. *The warmth returns, but thinner now. More transparent.* I appreciate directness more than deception. If you have concerns about Conservatory policy, raise them honestly. The door is always open for genuine inquiry.',
+			[
+				opt('Fair enough. I\'ll be direct next time.', 'return', '#0ff'),
+			]
+		),
+		mirael_claim: lie('mirael_claim',
+			'*He sighs — the sigh of a patient administrator dealing with a brilliant but troublesome colleague.* Mirael is an extraordinary diviner. Perhaps the most talented scryer in a generation. But deep temporal scrying — looking back thousands of years — is an unreliable technique. The astral plane degrades over time, like any recording medium. What Mirael observed was almost certainly a distorted echo, amplified by her own expectations and filtered through three millennia of astral decay. *He picks up a paperweight and turns it thoughtfully.* I have the utmost respect for Mirael. I have also seen deep temporal scrying produce visions of events that demonstrably never occurred. It is a known limitation of the technique. I counseled her to discontinue the research not because I feared her findings but because I feared for her wellbeing. Deep scrying takes a toll. Her eyes... *He shakes his head.* I will not lose another faculty member to the abyss of their own talent.',
+			[
+				opt('[Persuade] Then why did you respond with procedural criticism instead of concern?', 'persuade_mirael', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 15, successNode: 'persuade_mirael_success', failNode: 'persuade_mirael_fail' }, once: true }),
+				opt('You seem very calm about a professor claiming the gods are frauds.', 'return', '#ff4', { onSelect: { message: 'Voss smiles. "I have been headmaster for twenty-three years. If I panicked every time a professor proposed a radical theory, I would have had a heart attack in my first semester. Radical theories are the POINT of academia. Most of them are wrong. That is also the point."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		persuade_mirael_success: node('persuade_mirael_success',
+			'*The question lands like an arrow. Voss\'s expression does not change, but his hand tightens on the paperweight — a micro-reaction he immediately corrects, but not before you see it.* I... responded as an administrator. Perhaps that was a mistake. Procedural rigor is my default — it is the language of institutional governance. But you are right that a colleague\'s wellbeing should have taken precedence over methodology critique. *He sets down the paperweight with deliberate care.* I will speak with Mirael again. With more compassion this time. *He meets your eyes, and for a moment the mask slips — not to reveal malice, but something more complex. Fear. Not of you. Of something larger. Something he serves that he cannot control.* Thank you for the perspective.',
+			[
+				opt('(His fear is real. He\'s trapped — serving something he can\'t refuse.)', 'return', '#c8f', { onSelect: { message: 'Behind the Archmage\'s benevolent facade, you glimpsed something unexpected: not the cold calculation of a willing conspirator, but the rigid discipline of a man fulfilling obligations he cannot escape. Voss may be a puppet — but he knows the strings are there.' } }),
+			]
+		),
+		persuade_mirael_fail: node('persuade_mirael_fail',
+			'*Voss\'s expression is one of gentle correction.* I responded as the situation demanded. Mirael presented research with methodological concerns. I addressed those concerns professionally. That IS compassion — protecting a colleague from publishing flawed findings that could damage her reputation. *His smile is impenetrable.* I appreciate your concern for Professor Dawnwhisper. She is valued here. As are all my colleagues.',
+			[
+				opt('Of course, Archmage.', 'return', '#0ff'),
+			]
+		),
+		veiled_hand_confront: node('veiled_hand_confront',
+			'*Voss goes very still. For three heartbeats, the room is silent. When he speaks, his voice is controlled, measured — each word placed like a brick in a wall.* The Veiled Hand is a historical organization referenced in pre-Ascension texts. A secretive order that served as intermediaries between mortal institutions and divine authority. They have not been active for centuries. *He meets your gaze.* If someone has told you otherwise, they are either misinformed or attempting to manipulate you. Both possibilities concern me equally.',
+			[
+				opt('[Intimidate] You didn\'t ask me what I know. You went straight to denial.', 'intimidate_veiled', '#f84', { socialCheck: { skill: 'intimidate', difficulty: 18, successNode: 'intimidate_veiled_success', failNode: 'intimidate_veiled_fail' }, once: true }),
+				opt('The curriculum restrictions. The missing books. The suppressed research. It all points to outside control.', 'voss_deflection', '#f44'),
+				opt('I believe you. I must have been misled.', 'return', '#4f4'),
+			]
+		),
+		intimidate_veiled_success: node('intimidate_veiled_success',
+			'*Something breaks. Not dramatically — Voss is too controlled for that. But the warm mask shifts, and beneath it you see a man who is exhausted. Exhausted by the performance. Exhausted by the secrets. Exhausted by serving masters who will never release him.* *He sits down heavily.* You are... perceptive. More perceptive than I was prepared for. *He does not look at you.* I am going to tell you something, and then I am going to deny I ever said it. *A long pause.* I was recruited when I was twenty-three. A brilliant student, top of my class in every stream. Cross-stream mastery came naturally to me — because cross-stream mastery IS natural. The restrictions are artificial. Imposed. By an organization that has been guiding magical education across every institution in the known world for three thousand years. *He finally looks up.* They told me: "You will lead this school. You will keep the streams separate. You will remove any research that threatens the divine order. And in exchange, you will live a comfortable, respected, important life." I said yes. I was twenty-three. I did not understand what I was agreeing to.',
+			[
+				opt('You\'re a Veiled Hand agent. And you\'re tired of it.', 'voss_confession', '#c8f'),
+				opt('You\'ve been lying to your colleagues for decades.', 'voss_confession', '#f44'),
+			]
+		),
+		intimidate_veiled_fail: node('intimidate_veiled_fail',
+			'*Voss\'s expression hardens — not to anger, but to something more dangerous: absolute composure.* I have been Archmage for twenty-three years. I have faced threats from dungeon surges, political upheavals, and a Ley Line fluctuation that nearly leveled the east wing. Your tone does not concern me. *He straightens a quill that was already straight.* The Veiled Hand is a myth. The curriculum is based on sound research. And this conversation is over — unless you have a constructive question.',
+			[
+				opt('We\'ll see.', 'return', '#0ff'),
+				opt('My apologies, Archmage.', 'return', '#4f4'),
+			]
+		),
+		voss_deflection: lie('voss_deflection',
+			'*His warm smile returns — slightly strained, slightly too wide.* You have assembled a compelling narrative from fragments, rumors, and the frustrations of my faculty. I understand the appeal of conspiracy. It is MORE interesting than the mundane truth, which is that academic institutions are bureaucratic, cautious, and occasionally wrong. *He spreads his hands.* The curriculum restrictions exist because cross-stream study is dangerous. The books were removed because they contained unsafe material. Professor Dawnwhisper\'s research was questioned because deep temporal scrying is unreliable. Each decision has a rational explanation. I am sorry if the rational explanation is less exciting than a shadow conspiracy orchestrated by divine agents.',
+			[
+				opt('Rational explanations. For everything. Always.', 'return', '#ff4', { onSelect: { message: 'Voss nods. "That is what evidence-based administration looks like." But his eyes say something else. His eyes say: please stop asking. Please walk away. For both our sakes.' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		voss_confession: node('voss_confession',
+			'*He stands and walks to the window, looking out over the Conservatory grounds — the students crossing the courtyard, the greenhouse glowing faintly, the tower where Mirael watches stars.* I have lied to brilliant people every day for twenty-three years. Ignis asks why Void-Flame is forbidden and I cite safety. Seraphina asks about the missing books and I cite policy. Mirael tells me she saw the truth and I cite methodology. Bramwell... *He almost smiles.* Bramwell brings me tea and talks about his plants and never asks the dangerous questions. I think he suspects. But he is kind enough not to force me to lie to him directly. *He turns back.* I cannot help you. I WANT to, and that is the cruelest part. But the Veiled Hand does not accept resignations. I am watched. My correspondence is monitored. My curriculum decisions are reviewed quarterly by people whose names I do not know, in a location I have never visited. I am the most powerful mage in this school and I am the least free person in it.',
+			[
+				opt('Then stop obeying them. Help us from the inside.', 'voss_final', '#4f4'),
+				opt('You chose this. Your regret doesn\'t undo the damage.', 'voss_final', '#f44'),
+			]
+		),
+		voss_final: node('voss_final',
+			'*He reaches into his desk and produces a key — old, iron, inscribed with ward-notation that predates the Conservatory.* This opens the sealed archive beneath the library. The REAL archive — not the one I show visiting scholars. Three hundred volumes of suppressed research. Ward-breaking theory. Cross-stream methodology. Historical accounts of the Ascension that the Veiled Hand spent centuries trying to destroy. *He places it on the desk between you.* I cannot be seen giving you this. I cannot acknowledge that this conversation happened. Tomorrow, I will be Archmage Voss again — warm, reasonable, and lying through my teeth. But tonight... *He pushes the key toward you.* Tonight I am the twenty-three-year-old who should have said no.',
+			[
+				opt('I\'ll use this wisely. Thank you, Aldric.', 'return', '#4f4', { onSelect: { message: 'Archmage Voss closes his eyes. For a moment, the weight of twenty-three years of deception seems to lift from his shoulders. Then it settles back, heavier than before. He straightens his robes and his warm smile returns — perfect, practiced, and infinitely sad.' } }),
+			]
+		),
+		travels: node('travels',
+			'*He relaxes into what is clearly a favorite topic.* I spent a decade traveling before accepting the Archmage position. Korthaven\'s markets, where magic is treated as merchandise. The Thornlands, where gearwork and sorcery intertwine in ways that would make Seraphina dizzy. The Pale Coast, where the veil between planes is thin enough to read by astral light. *He pulls a small carved figurine from his pocket.* This is from the Grey Wastes. Carved by the Grey Pilgrims — the order that tends the dead Ley Line territories. They gave it to me and said: "When the lines go quiet, listen harder." I never understood what they meant. *He turns the figurine thoughtfully.* I travel less now. The school needs me here. And some journeys... are better left unfinished.',
+			[
+				opt('The Grey Pilgrims tend dead Ley Lines?', 'return', '#8cf', { onSelect: { message: 'Voss nods. "Where Ley Lines die, the Grey Pilgrims plant gardens. They believe that tending the dead earth is a sacred duty. Most people think they are eccentric. I think they understand something the rest of us have forgotten — that what dies can be mourned, and what is mourned can be remembered, and what is remembered is never truly lost."' } }),
+				opt('What journeys are better left unfinished?', 'return', '#c8f', { onSelect: { message: 'Voss is quiet for a long moment. "The ones that lead to truths you cannot act on. The ones that show you the cage you live in and the key you are too afraid to turn." He blinks. "But that is melancholy for another day."' } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		school_politics: node('school_politics',
+			'*He chuckles — a well-rehearsed sound of academic amusement.* Faculty politics are the same everywhere: brilliant people disagreeing brilliantly about things that matter and things that do not, often simultaneously. Ignis wants more funding for elemental research and less safety oversight. Seraphina wants the library reorganized according to a classification system only she understands. Bramwell wants a budget increase for "botanical emergencies," which is his way of saying he bought another rare plant and needs someone to pay for it. *He sobers.* Mirael wants... independence. To pursue research I cannot, in good conscience, support. Her talent is extraordinary, but extraordinary talent without institutional boundaries becomes extraordinary risk. My job is to balance freedom and safety. It is the least glamorous and most important work in the Conservatory.',
+			[
+				opt('What research of Mirael\'s do you restrict?', 'mirael_claim', '#c8f'),
+				opt('You keep a tight leash. Some would call that controlling.', 'curriculum', '#ff4'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		farewell: node('farewell',
+			'*He rises and offers his hand — the practiced handshake of a man who has welcomed and dismissed thousands of visitors.* The Conservatory\'s doors are always open to seekers of knowledge. I hope your visit has been enlightening. *His grip is warm, firm, and exactly the right duration.* Do come back. There is always more to learn.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -4878,4 +5535,9 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Madame Vesper': MADAME_VESPER_DIALOGUE,
 	'Arena Master Gorath': ARENA_MASTER_GORATH_DIALOGUE,
 	'The Masked Figure': MASKED_FIGURE_DIALOGUE,
+	'Professor Ignis Valdren': IGNIS_DIALOGUE,
+	'Professor Seraphina Ashveil': SERAPHINA_DIALOGUE,
+	'Professor Bramwell Thornwick': BRAMWELL_DIALOGUE,
+	'Professor Mirael Dawnwhisper': MIRAEL_DIALOGUE,
+	'Archmage Aldric Voss': ARCHMAGE_VOSS_DIALOGUE,
 };
