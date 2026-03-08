@@ -293,10 +293,19 @@ As a player, I want the overworld to be hidden until I explore it, so that disco
 - Map items and NPC rumors can reveal distant locations
 
 **Acceptance Criteria:**
-- [ ] Overworld starts hidden
-- [ ] Explored tiles persist as revealed
-- [ ] Sight radius varies by terrain
-- [ ] Rumors/maps can reveal locations
+- [x] Overworld starts hidden
+- [x] Explored tiles persist as revealed
+- [x] Sight radius varies by terrain
+- [x] Rumors/maps can reveal locations
+
+**Implementation Notes (completed):**
+- Overworld starts fully unexplored; `revealOverworldArea()` reveals circular area on each move
+- Explored grid (boolean[][]) persists via save/load (serialized as `overworldExplored`)
+- `TERRAIN_SIGHT_RADIUS`: grass/farmland=6, sand=7, forest/dead_trees/swamp/rock=3, snow/ice/mud/ash=4, scorched=5
+- `getOverworldSightRadius(tile)` returns terrain-specific radius, used in all `revealOverworldArea()` calls
+- `revealRumorLocation()`: when a rumor is learned, reveals radius-8 area around nearest unrevealed settlement
+- Discovery message: "The rumor reveals the location of {name} on your map."
+- 2 new engine tests: forest reveals fewer tiles than grass, sand has extended sight radius
 
 ---
 

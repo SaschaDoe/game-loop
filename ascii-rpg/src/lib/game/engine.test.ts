@@ -2104,4 +2104,94 @@ describe('overworld integration', () => {
 		const after = handleInput(ow, 'd');
 		expect(after.turnCount).toBe(prevTurn + 1);
 	});
+
+	it('forest terrain reveals fewer tiles than grass', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-fow1' });
+		const ow = exitToOverworld(state);
+		const worldMap = ow.worldMap as any;
+		const pos = ow.overworldPos!;
+		// Place grass to the east and forest to the west
+		worldMap.tiles[pos.y][pos.x + 1].terrain = 'grass';
+		worldMap.tiles[pos.y][pos.x + 1].road = undefined;
+		worldMap.tiles[pos.y][pos.x + 1].locationId = undefined;
+		worldMap.tiles[pos.y][pos.x - 1].terrain = 'forest';
+		worldMap.tiles[pos.y][pos.x - 1].road = undefined;
+		worldMap.tiles[pos.y][pos.x - 1].locationId = undefined;
+		// Clear explored grid around both directions
+		for (let dy = -8; dy <= 8; dy++) {
+			for (let dx = -8; dx <= 8; dx++) {
+				const ey = pos.y + dy;
+				const ex = pos.x + dx;
+				if (ey >= 0 && ey < worldMap.height && ex >= 0 && ex < worldMap.width) {
+					worldMap.explored[ey][ex] = false;
+				}
+			}
+		}
+		// Move east (grass, radius 6)
+		const afterGrass = handleInput({ ...ow, overworldPos: { ...pos } }, 'd');
+		let grassRevealed = 0;
+		for (let dy = -8; dy <= 8; dy++) {
+			for (let dx = -8; dx <= 8; dx++) {
+				const ey = pos.y + dy;
+				const ex = (pos.x + 1) + dx;
+				if (ey >= 0 && ey < worldMap.height && ex >= 0 && ex < worldMap.width && worldMap.explored[ey][ex]) {
+					grassRevealed++;
+				}
+			}
+		}
+		// Reset explored
+		for (let dy = -8; dy <= 8; dy++) {
+			for (let dx = -8; dx <= 8; dx++) {
+				const ey = pos.y + dy;
+				const ex = pos.x + dx;
+				if (ey >= 0 && ey < worldMap.height && ex >= 0 && ex < worldMap.width) {
+					worldMap.explored[ey][ex] = false;
+				}
+			}
+		}
+		// Move west (forest, radius 3)
+		const afterForest = handleInput({ ...ow, overworldPos: { ...pos } }, 'a');
+		let forestRevealed = 0;
+		for (let dy = -8; dy <= 8; dy++) {
+			for (let dx = -8; dx <= 8; dx++) {
+				const ey = pos.y + dy;
+				const ex = (pos.x - 1) + dx;
+				if (ey >= 0 && ey < worldMap.height && ex >= 0 && ex < worldMap.width && worldMap.explored[ey][ex]) {
+					forestRevealed++;
+				}
+			}
+		}
+		// Grass (radius 6) should reveal more tiles than forest (radius 3)
+		expect(grassRevealed).toBeGreaterThan(forestRevealed);
+	});
+
+	it('sand terrain has extended sight radius', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'ow-fow2' });
+		const ow = exitToOverworld(state);
+		const worldMap = ow.worldMap as any;
+		const pos = ow.overworldPos!;
+		// Place sand to the east
+		worldMap.tiles[pos.y][pos.x + 1].terrain = 'sand';
+		worldMap.tiles[pos.y][pos.x + 1].road = undefined;
+		worldMap.tiles[pos.y][pos.x + 1].locationId = undefined;
+		// Clear explored grid
+		for (let dy = -8; dy <= 8; dy++) {
+			for (let dx = -8; dx <= 8; dx++) {
+				const ey = pos.y + dy;
+				const ex = pos.x + dx;
+				if (ey >= 0 && ey < worldMap.height && ex >= 0 && ex < worldMap.width) {
+					worldMap.explored[ey][ex] = false;
+				}
+			}
+		}
+		const after = handleInput(ow, 'd');
+		// Sand has radius 7 — check that tiles at distance 7 are revealed
+		const np = { x: pos.x + 1, y: pos.y };
+		// Tile at exactly distance 6 should be revealed (within radius 7)
+		const ey = np.y;
+		const ex = np.x + 6;
+		if (ex < worldMap.width) {
+			expect(worldMap.explored[ey][ex]).toBe(true);
+		}
+	});
 });

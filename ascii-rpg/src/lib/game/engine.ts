@@ -186,8 +186,9 @@ export function createGame(config?: CharacterConfig): GameState {
 		?? worldMap.settlements[0];
 	const overworldPos = { ...startSettlement.pos };
 
-	// Reveal tiles around starting position
-	revealOverworldArea(worldMap, overworldPos, OVERWORLD_SIGHT_RADIUS);
+	// Reveal tiles around starting position (terrain-based sight radius)
+	const startTile = worldMap.tiles[overworldPos.y][overworldPos.x];
+	revealOverworldArea(worldMap, overworldPos, getOverworldSightRadius(startTile));
 
 	// Generate starting location interior
 	const locResult = generateStartingLocation(cfg.startingLocation, MAP_W, MAP_H);
@@ -261,9 +262,31 @@ export function createGame(config?: CharacterConfig): GameState {
 }
 
 const DEFAULT_SIGHT_RADIUS = 8;
-const OVERWORLD_SIGHT_RADIUS = 5;
+const OVERWORLD_SIGHT_RADIUS = 5; // default/plains
 const OVERWORLD_VIEWPORT_W = MAP_W;
 const OVERWORLD_VIEWPORT_H = MAP_H;
+
+/** Terrain-based overworld sight radius: open terrain = 6, forest/swamp = 3, mountain-adjacent/snow = 2. */
+const TERRAIN_SIGHT_RADIUS: Partial<Record<string, number>> = {
+	grass: 6,
+	farmland: 6,
+	sand: 7, // flat desert, good visibility
+	oasis: 6,
+	forest: 3,
+	dead_trees: 3,
+	swamp: 3,
+	mud: 4,
+	snow: 4,
+	ice: 4,
+	ash: 4,
+	scorched: 5,
+	rock: 3,
+};
+
+/** Get overworld sight radius based on the terrain the player is standing on. */
+function getOverworldSightRadius(tile: OverworldTile): number {
+	return TERRAIN_SIGHT_RADIUS[tile.terrain] ?? OVERWORLD_SIGHT_RADIUS;
+}
 
 // ── Overworld Helpers ──
 
@@ -357,6 +380,27 @@ function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: number):
 	}
 }
 
+/** Reveal a random undiscovered settlement on the overworld when a rumor is learned. */
+function revealRumorLocation(state: GameState): void {
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos;
+	// Find settlements not yet revealed (center tile unexplored)
+	const unrevealed = worldMap.settlements.filter(s => !worldMap.explored[s.pos.y]?.[s.pos.x]);
+	if (unrevealed.length === 0) return;
+	// Pick the nearest unrevealed settlement (rumors tend to be about nearby places)
+	let target = unrevealed[0];
+	if (pos) {
+		let bestDist = Infinity;
+		for (const s of unrevealed) {
+			const dist = Math.abs(s.pos.x - pos.x) + Math.abs(s.pos.y - pos.y);
+			if (dist < bestDist) { bestDist = dist; target = s; }
+		}
+	}
+	// Reveal area around the settlement
+	revealOverworldArea(worldMap, target.pos, 8);
+	addMessage(state, `The rumor reveals the location of ${target.name} on your map.`, 'discovery');
+}
+
 /** Check if overworld terrain is passable for walking. */
 function isOverworldPassable(tile: OverworldTile): boolean {
 	return tile.terrain !== 'water' && tile.terrain !== 'mountain' && tile.terrain !== 'lava';
@@ -407,7 +451,7 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 
 	// Move on overworld
 	state.overworldPos = { x: nx, y: ny };
-	revealOverworldArea(worldMap, state.overworldPos, OVERWORLD_SIGHT_RADIUS);
+	revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(targetTile));
 
 	// Region transition announcement
 	if (nextRegion !== prevRegion) {
@@ -437,7 +481,7 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 				// Check region transition for second step too
 				const secondRegion = secondTile.region;
 				state.overworldPos = { x: nx2, y: ny2 };
-				revealOverworldArea(worldMap, state.overworldPos, OVERWORLD_SIGHT_RADIUS);
+				revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(secondTile));
 				if (secondRegion !== nextRegion) {
 					const regionDef = worldMap.regions.find(r => r.id === secondRegion);
 					if (regionDef) {
@@ -1721,6 +1765,10 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 		if (option.onSelect.rumor && !state.rumors.some(r => r.id === option.onSelect!.rumor!.id)) {
 			state.rumors = [...state.rumors, option.onSelect.rumor];
 			addMessage(state, `Rumor learned: "${option.onSelect.rumor.text}"`, 'discovery');
+			// Rumors reveal a distant location on the overworld map
+			if (state.worldMap) {
+				revealRumorLocation(state);
+			}
 		}
 		// Learn languages
 		if (option.onSelect.learnLanguage && !state.knownLanguages.includes(option.onSelect.learnLanguage)) {
