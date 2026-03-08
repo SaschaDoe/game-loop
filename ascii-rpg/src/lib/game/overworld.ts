@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (16) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove'];
+/** Surface regions (18) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -110,6 +110,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	grey_wastes:      { name: 'The Grey Wastes',       language: 'Old Primal',       dangerLevel: 7 },
 	korthaven:        { name: 'Korthaven',             language: 'Trade Common',     dangerLevel: 3 },
 	eldergrove:       { name: 'The Eldergrove',        language: 'Sylvan',           dangerLevel: 5 },
+	stormcradle:      { name: 'The Stormcradle',       language: 'Storm Cant',       dangerLevel: 6 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -226,11 +227,18 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'forest', weight: 10 },
 	],
 	eldergrove: [
-		{ terrain: 'forest', weight: 65 },
-		{ terrain: 'grass', weight: 15 },
+		{ terrain: 'forest', weight: 78 },
+		{ terrain: 'grass', weight: 8 },
+		{ terrain: 'water', weight: 7 },
+		{ terrain: 'mountain', weight: 4 },
+		{ terrain: 'swamp', weight: 3 },
+	],
+	stormcradle: [
+		{ terrain: 'rock', weight: 35 },
+		{ terrain: 'mountain', weight: 25 },
+		{ terrain: 'grass', weight: 20 },
 		{ terrain: 'water', weight: 10 },
-		{ terrain: 'mountain', weight: 5 },
-		{ terrain: 'swamp', weight: 5 },
+		{ terrain: 'sand', weight: 10 },
 	],
 };
 
@@ -283,11 +291,11 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 16 region seed points using Poisson-disk-like sampling.
+ * Place 18 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
-	const minDist = Math.min(width, height) * 0.18; // ~36 tiles apart minimum
+	const minDist = Math.min(width, height) * 0.16; // ~32 tiles apart minimum
 	const margin = 20; // keep away from edges
 	const seeds = new Map<RegionId, Position>();
 
@@ -730,6 +738,24 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'hot_spring', name: 'Moonwell', hidden: true },
 		{ type: 'grave_site', name: 'Elven Barrow', hidden: true },
 		{ type: 'obelisk', name: 'Canopy Spire', hidden: false },
+		{ type: 'ancient_tree', name: 'The Rootmother\'s Embrace', hidden: false },
+		{ type: 'hidden_cave', name: 'Spider Queen\'s Lair', hidden: true },
+		{ type: 'ruins', name: 'Overgrown Watchtower', hidden: false },
+		{ type: 'shrine', name: 'Moonpetal Glade', hidden: true },
+		{ type: 'hot_spring', name: 'Starlight Pool', hidden: true },
+		{ type: 'standing_stones', name: 'The Singing Stones', hidden: false },
+		{ type: 'grave_site', name: 'Warden\'s Grave', hidden: true },
+		{ type: 'hidden_cave', name: 'Herb Grotto', hidden: true },
+	],
+	stormcradle: [
+		{ type: 'ruins', name: 'Shattered Lightning Temple', hidden: false },
+		{ type: 'standing_stones', name: 'Thundercrown Circle', hidden: false },
+		{ type: 'shrine', name: 'Storm Altar', hidden: false },
+		{ type: 'obelisk', name: 'The Fulgurite Spire', hidden: false },
+		{ type: 'hidden_cave', name: 'Shaper\'s Vein Entrance', hidden: true },
+		{ type: 'hot_spring', name: 'Lightning Glass Pool', hidden: true },
+		{ type: 'grave_site', name: 'Storm Warden\'s Cairn', hidden: true },
+		{ type: 'ancient_tree', name: 'The Charred Sentinel', hidden: false },
 	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
@@ -1066,6 +1092,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	grey_wastes: { prefixes: ['Grey', 'Ash', 'Scar', 'Cairn', 'Wither', 'Blight', 'Husk'], suffixes: ['rest', 'hollow', 'mark', 'field', 'reach', 'ward', 'moor'] },
 	korthaven: { prefixes: ['Crown', 'Guild', 'Merchant', 'Coin', 'Trade', 'Noble', 'Silver'], suffixes: ['gate', 'ward', 'market', 'square', 'hall', 'row', 'quarter'] },
 	eldergrove: { prefixes: ['Silver', 'Star', 'Moon', 'Dawn', 'Briar', 'Alder', 'Birch', 'Rowan'], suffixes: ['glade', 'spire', 'song', 'root', 'bower', 'reach', 'hollow'] },
+	stormcradle: { prefixes: ['Thunder', 'Bolt', 'Gale', 'Fulgar', 'Tempest', 'Strike', 'Flash'], suffixes: ['crest', 'ridge', 'fall', 'hold', 'peak', 'watch', 'break'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -1091,7 +1118,8 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	hollow_sea: ['Sunken Dominion Vault', 'Coral Labyrinth', 'Drowned Archives', 'Leviathan\'s Maw', 'Abyssal Rift', 'Pelagathis Approach', 'Matter-Thin Passage'],
 	grey_wastes: ['The Hollow Vein', 'Veiled Laboratory', 'Petrified Grove Depths', 'Ley Line Corpse', 'Pilgrim\'s Catacombs', 'Scar Trench Tunnels', 'Blighted Root Cellar'],
 	korthaven: ['City Sewers', 'Thieves\' Catacombs', 'Smuggler\'s Tunnels', 'Arena Undercroft', 'Noble\'s Vault', 'Old Prison', 'Guild Cellar'],
-	eldergrove: ['Forgotten Elven Temple', 'Bandit Warrens', 'Rootbound Crypt', 'Spider-Silk Cavern', 'Moonlit Catacombs', 'Beast Lord\'s Den', 'Thorn-Choked Ruins'],
+	eldergrove: ['Forgotten Elven Temple', 'Bandit Warrens', 'Rootbound Crypt', 'Spider-Silk Cavern', 'Moonlit Catacombs', 'Beast Lord\'s Den', 'Thorn-Choked Ruins', 'Canopy Stalker\'s Nest', 'Vine-Strangled Vault', 'The Deep Hollow', 'Mushroom Caves', 'Poacher\'s Tunnel', 'Treant\'s Grotto'],
+	stormcradle: ['Lightning-Split Cavern', 'Shaper\'s Vein Tunnel', 'Storm Warden\'s Crypt', 'Fulgurite Mines', 'Thunderbird Nest', 'Collapsed Signal Tower', 'Electrified Ruins'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 

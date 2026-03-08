@@ -553,6 +553,160 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 		isMainQuest: false,
 	},
 
+	side_eg_herbs: {
+		id: 'side_eg_herbs',
+		title: 'Moonpetal Harvest',
+		description:
+			'The elven healers need moonpetals — rare flowers that bloom only under starlight in the deepest glades. Gather them before the next new moon, when their potency fades.',
+		objectives: [
+			{ id: 'eg_herbs_collect', description: 'Collect moonpetals from the deep glades', type: 'collect', target: 'moonpetal', required: 6 },
+		],
+		rewards: { xp: 180, hp: 3 },
+		giverNpcName: 'Warden Ithilra',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		turnLimit: 70,
+	},
+
+	side_eg_silverleaf: {
+		id: 'side_eg_silverleaf',
+		title: 'The Silver Harvest',
+		description:
+			'The Archivists need silverleaf to bind new volumes — the leaves must be harvested fresh from living silverwood, which means venturing into groves the spiders have claimed.',
+		objectives: [
+			{ id: 'eg_silver_collect', description: 'Gather silverleaf from the spider groves', type: 'collect', target: 'silverleaf', required: 8 },
+			{ id: 'eg_silver_kill', description: 'Clear spiders guarding the groves', type: 'kill', target: 'Spider', required: 4 },
+		],
+		rewards: {
+			xp: 200,
+			rumor: {
+				id: 'rumor_silverleaf_books',
+				text: 'The Archivists bind their most dangerous texts in silverleaf. The leaves absorb Old Magic, making the books undetectable to the Ascended\'s Veiled Hand.',
+				source: 'Archivist Faelorn',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Archivist Faelorn',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_glowcaps: {
+		id: 'side_eg_glowcaps',
+		title: 'The Mushroom Caves',
+		description:
+			'A network of caves beneath the great roots harbors glowcap mushrooms — prized by healers and alchemists. But something has moved into the caves. The mushroom gatherers won\'t go back.',
+		objectives: [
+			{ id: 'eg_glow_explore', description: 'Explore the Mushroom Caves', type: 'explore', target: 'mushroom_caves', required: 1 },
+			{ id: 'eg_glow_collect', description: 'Collect glowcap mushrooms', type: 'collect', target: 'glowcap_mushroom', required: 5 },
+			{ id: 'eg_glow_kill', description: 'Clear the cave intruders', type: 'kill', target: 'Troll', required: 2 },
+		],
+		rewards: { xp: 250, hp: 4, atk: 1 },
+		giverNpcName: 'Ranger Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_thorn_king: {
+		id: 'side_eg_thorn_king',
+		title: 'The Thorn King\'s Ransom',
+		description:
+			'The Briarwood Gang has captured an elven Archivist carrying irreplaceable texts. The Thorn King demands a ransom the Wardens refuse to pay. Rescue the hostage — by force or by cunning.',
+		objectives: [
+			{ id: 'eg_thorn_explore', description: 'Find the Bandit King\'s Hollow', type: 'explore', target: 'bandit_kings_hollow', required: 1 },
+			{ id: 'eg_thorn_kill', description: 'Defeat the Thorn King\'s lieutenants', type: 'kill', target: 'Bandit', required: 6 },
+			{ id: 'eg_thorn_talk', description: 'Free the captive Archivist', type: 'talk', target: 'Captive Archivist', required: 1 },
+		],
+		rewards: {
+			xp: 350,
+			atk: 2,
+			story: {
+				id: 'story_thorn_king',
+				title: 'The Lord Who Became a Bandit',
+				text: 'Lord Aldren Voss lost his ancestral lands to a Church of Solaris decree. The priests cited an "ancestor\'s debt" — a legal fiction designed to seize his family\'s holdings. Now he takes from the road what was taken from him by the altar.',
+				teller: 'Captive Archivist',
+				type: 'personal',
+			},
+		},
+		giverNpcName: 'Warden Ithilra',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_beast: {
+		id: 'side_eg_beast',
+		title: 'The Thornveil Beast',
+		description:
+			'Something ancient and immense stalks the deepest paths of the Eldergrove. Tracks larger than a wagon wheel, trees gouged by claws the length of swords. The Council has sealed the records, but the Rangers need answers before someone dies.',
+		objectives: [
+			{ id: 'eg_beast_explore1', description: 'Follow the Thornveil Beast\'s tracks', type: 'explore', target: 'thornveil_tracks', required: 1 },
+			{ id: 'eg_beast_explore2', description: 'Find the Beast\'s lair', type: 'explore', target: 'beast_lair', required: 1 },
+			{ id: 'eg_beast_talk', description: 'Report findings to Warden Ithilra', type: 'talk', target: 'Warden Ithilra', required: 1 },
+		],
+		rewards: {
+			xp: 400,
+			hp: 5,
+			story: {
+				id: 'story_thornveil_beast',
+				title: 'The Last Guardian',
+				text: 'The creature is no beast. It is a Guardian — one of the ancient wardens the Original Seven left behind to protect the Ley Line nexus points. It has been here since before the Ascension, watching over something buried deep beneath the forest. It did not attack. It watched. And then it let you leave.',
+				teller: 'Warden Ithilra',
+				type: 'lore',
+			},
+		},
+		giverNpcName: 'Ranger Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_eg_stag',
+	},
+
+	side_eg_canopy: {
+		id: 'side_eg_canopy',
+		title: 'The High Road',
+		description:
+			'Canopy Stalkers have severed the vine bridges between two elven settlements. Travelers must take the dangerous ground route through spider territory. The Wardens need someone to clear the canopy and repair the bridges.',
+		objectives: [
+			{ id: 'eg_canopy_kill', description: 'Kill Canopy Stalkers', type: 'kill', target: 'Canopy Stalker', required: 4 },
+			{ id: 'eg_canopy_collect', description: 'Gather spider silk for bridge repair', type: 'collect', target: 'spider_silk', required: 5 },
+		],
+		rewards: { xp: 280, hp: 3, atk: 1 },
+		giverNpcName: 'Warden Ithilra',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_poachers: {
+		id: 'side_eg_poachers',
+		title: 'Hunters Become Hunted',
+		description:
+			'Poachers from outside the forest are trapping and killing rare creatures for profit — silverwood foxes for their pelts, glowcap beetles for their shells. The Rangers want them stopped, permanently.',
+		objectives: [
+			{ id: 'eg_poach_kill', description: 'Defeat the poachers', type: 'kill', target: 'Poacher', required: 6 },
+			{ id: 'eg_poach_explore', description: 'Destroy the poacher camp', type: 'explore', target: 'poacher_camp', required: 1 },
+		],
+		rewards: { xp: 220, atk: 1 },
+		giverNpcName: 'Ranger Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+	},
+
+	side_eg_lost_patrol: {
+		id: 'side_eg_lost_patrol',
+		title: 'The Lost Patrol',
+		description:
+			'A patrol of three Rangers entered the deep forest to map new spider nests and hasn\'t returned. The Thornveil camp grows anxious. Find them — or what remains.',
+		objectives: [
+			{ id: 'eg_patrol_explore', description: 'Search the deep forest for the lost patrol', type: 'explore', target: 'lost_patrol_site', required: 1 },
+			{ id: 'eg_patrol_kill', description: 'Clear the spider nest', type: 'kill', target: 'Spider', required: 8 },
+			{ id: 'eg_patrol_talk', description: 'Report back to Ranger Thandril', type: 'talk', target: 'Ranger Thandril', required: 1 },
+		],
+		rewards: { xp: 260, hp: 4 },
+		giverNpcName: 'Ranger Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		turnLimit: 60,
+	},
+
 	// ===================================================================
 	// SIDE QUESTS — Korthaven
 	// ===================================================================

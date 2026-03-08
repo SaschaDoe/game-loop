@@ -4340,6 +4340,576 @@ const ARCHIVIST_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── KORTHAVEN: INSPECTOR KAELEN ───
+
+export const INSPECTOR_KAELEN_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*The inspector looks up from a stack of parchment, dark circles under his eyes.* Another body this morning. Third this month. If you\'re here to help, I could use it. If you\'re here to gawk, the arena\'s east of here.',
+			[
+				opt('Tell me about the murders.', 'case_overview', '#ff4'),
+				opt('Who are the suspects?', 'suspects', '#f44'),
+				opt('I want to help.', 'help_needed', '#4f4'),
+				opt('Just passing through.', 'return', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Kaelen glances up.* Back again. Any leads?',
+			[
+				opt('What\'s the latest on the case?', 'case_overview', '#ff4'),
+				opt('Tell me about the masks.', 'masks_meaning', '#c8f'),
+				opt('Who are the suspects?', 'suspects', '#f44'),
+				opt('I\'ll keep looking.', 'farewell', '#0ff'),
+			]
+		),
+		case_overview: node('case_overview',
+			'Three merchants dead. Each found at dawn with a golden mask pressed to their face — not worn, *pressed*, as if it grew there. No signs of struggle. No poison I can identify. And each victim had recently acquired an unusual artifact. *He taps the table.* Someone is targeting collectors of pre-Ascension relics.',
+			[
+				opt('What kind of artifacts?', 'evidence', '#ff4'),
+				opt('What do the masks mean?', 'masks_meaning', '#c8f'),
+				opt('Who benefits from their deaths?', 'suspects', '#f44'),
+				opt('I\'ll investigate.', 'return', '#0ff'),
+			]
+		),
+		evidence: node('evidence',
+			'A crystal that hummed when held. A fragment of text in Deepscript. A coin that wouldn\'t melt. All items from before the Ascension. All items that, according to the Church, should have been surrendered for "safekeeping." *He lowers his voice.* Someone is silencing anyone who gets too close to the old truth.',
+			[
+				opt('The Church is behind this?', 'suspects', '#f44'),
+				opt('What truth?', 'masks_meaning', '#c8f'),
+				opt('I\'ll look into it.', 'return', '#0ff', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'Inspector Kaelen shares details about the ritual murders.' } }),
+			]
+		),
+		masks_meaning: node('masks_meaning',
+			'*His voice drops.* The golden masks match illustrations from a banned text — "The Rite of Ascension." Seven mortals, climbing a stair of light, each wearing a golden face. The masks aren\'t decoration. They\'re part of a ritual. Someone is either commemorating the Ascension... or trying to repeat it.',
+			[
+				opt('Repeat the Ascension? Is that possible?', 'veiled_hand', '#c8f'),
+				opt('Who would want to?', 'suspects', '#f44'),
+				opt('This is bigger than murder. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'You learn the masks are connected to the Ascension ritual.' } }),
+			]
+		),
+		suspects: node('suspects',
+			'The Duke\'s advisors have been acting strangely — meeting in secret, burning documents. The merchant guilds are at war with each other over artifact trade. And there\'s a group called the Veiled Hand that I\'ve only heard whispered about. *He rubs his temples.* Everyone has motive. Nobody has clean hands.',
+			[
+				opt('The Veiled Hand?', 'veiled_hand', '#c8f'),
+				opt('What about the Thieves\' Guild?', 'thieves_angle', '#a4f'),
+				opt('I\'ll dig deeper.', 'return', '#0ff'),
+			]
+		),
+		veiled_hand: node('veiled_hand',
+			'Shadows within shadows. The Veiled Hand operates behind every faction — Church, Crown, Guild. Their goal, near as I can tell, is to control access to pre-Ascension knowledge. Whether to protect it or use it, I don\'t know. But the murders started after someone found something they wanted kept hidden.',
+			[
+				opt('I\'ll find out what they\'re hiding.', 'help_needed', '#4f4'),
+				opt('This goes deep. [Rumor learned]', 'return', '#ff4', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'You learn about the Veiled Hand\'s involvement in the murders.' } }),
+			]
+		),
+		thieves_angle: node('thieves_angle',
+			'Nyx and her Shadow Court are many things, but they\'re not killers. Not like this. Ritual murder isn\'t their style — bad for business. If anything, Nyx might know who IS behind it. The Guild sees everything that moves through Korthaven\'s shadows.',
+			[
+				opt('Maybe I should talk to Nyx.', 'return', '#a4f'),
+				opt('What else can you tell me?', 'case_overview', '#ff4'),
+			]
+		),
+		help_needed: node('help_needed',
+			'*He slides a badge across the table.* Consider yourself deputized. Talk to people. Follow the artifacts. Find out where the masks are being made. And be careful — the last person I sent to investigate hasn\'t come back.',
+			[
+				opt('I\'ll find the truth.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Inspector Kaelen nods gratefully.' } }),
+			]
+		),
+		farewell: node('farewell',
+			'Watch yourself out there. Korthaven\'s streets are friendly enough by day, but the nights belong to other powers.',
+			[
+				opt('[Leave]', 'return', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── KORTHAVEN: GUILDMASTER NYX ───
+
+export const GUILDMASTER_NYX_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A woman in dark leather leans against the wall, a thin blade balanced on one finger.* You found the Guild. That means you\'re either resourceful or Sera talked too much. Either way, you\'re here. Let\'s see if you\'re useful.',
+			[
+				opt('What is the Shadow Court?', 'underworld', '#a4f'),
+				opt('I want to join.', 'trust_test', '#ff4'),
+				opt('I need information about the murders.', 'murder_info', '#f44'),
+				opt('Wrong door. Leaving now.', 'return', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Nyx watches you with unreadable eyes.* Still breathing. That\'s promising.',
+			[
+				opt('Tell me about the Shadow Court.', 'underworld', '#a4f'),
+				opt('I have a job for you.', 'trust_test', '#ff4'),
+				opt('What do you know about the murders?', 'murder_info', '#f44'),
+				opt('I\'ll be going.', 'farewell', '#0ff'),
+			]
+		),
+		underworld: node('underworld',
+			'The Shadow Court has operated in Korthaven for two centuries. We don\'t steal from the poor. We don\'t kill without cause. We maintain *balance*. When the merchant guilds get too greedy, we redistribute. When the Duke overreaches, we leak his secrets. Without us, this city would have torn itself apart decades ago.',
+			[
+				opt('That sounds almost noble.', 'shadow_court_purpose', '#c8f'),
+				opt('And what do you get out of it?', 'profit', '#ff4'),
+				opt('I want in.', 'trust_test', '#4f4'),
+			]
+		),
+		shadow_court_purpose: node('shadow_court_purpose',
+			'*She stops spinning the blade.* Noble? No. Necessary. The Shadow Court was founded by someone who understood what power does when it concentrates. *She pauses.* The founder left a single directive: "Guard what sleeps beneath." I don\'t know what that means. But I follow it. And the city survives.',
+			[
+				opt('What sleeps beneath Korthaven?', 'beneath', '#c8f'),
+				opt('The founder — who were they?', 'founder', '#ff4'),
+				opt('Interesting. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.korthaven_thieves, message: 'You learn the Shadow Court\'s true founding purpose.' } }),
+			]
+		),
+		beneath: node('beneath',
+			'*Her expression hardens.* I don\'t know. And that\'s the truth. The tunnels beneath the Guild connect to something old — older than the city, older than the Duke\'s bloodline. Doors we can\'t open. Seals we can\'t read. Whatever it is, the Veiled Hand wants it. And if they want it, it should stay locked.',
+			[
+				opt('The Veiled Hand again...', 'murder_info', '#f44'),
+				opt('I\'ll help protect it.', 'trust_test', '#4f4'),
+			]
+		),
+		founder: node('founder',
+			'*She tilts her head.* A woman called Selvara. Before she took the name, she was something else. The records are deliberately vague — just that she understood poison, power, and the price of divine ambition. *She smiles thinly.* Sound like anyone you\'ve heard of?',
+			[
+				opt('Selvara... the goddess of knowledge?', 'selvara_truth', '#c8f'),
+				opt('What\'s the connection to the Grey Wastes?', 'grey_wastes_connection', '#ff4'),
+			]
+		),
+		selvara_truth: node('selvara_truth',
+			'Now you\'re asking the right questions. But this isn\'t the place. *She glances at the walls.* Even shadows have ears. Prove yourself first. Then we talk about gods and the lives they lived before they stole their thrones.',
+			[
+				opt('How do I prove myself?', 'trust_test', '#4f4'),
+				opt('I understand. [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_thieves, message: 'Nyx hints at Selvara\'s mortal past and the Guild\'s connection to it.' } }),
+			]
+		),
+		grey_wastes_connection: node('grey_wastes_connection',
+			'The Grey Wastes have a dead Ley Line. Dead because someone killed it. The Pilgrims there think it was natural decay. The Shadow Court\'s records say otherwise. *She meets your eyes.* Selvara poisoned it. Before the Ascension. Practice, maybe. Or a test run.',
+			[
+				opt('A god poisoned a Ley Line? [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'You learn a devastating secret about Selvara\'s mortal crimes.' } }),
+			]
+		),
+		profit: node('profit',
+			'Survival. Information. And enough gold to keep the operation running. We\'re not saints — we take our cut. But we\'re cheaper than the alternative. A city without a shadow court is a city that burns.',
+			[
+				opt('Fair enough. Need any help?', 'trust_test', '#4f4'),
+				opt('Noted.', 'return', '#0ff'),
+			]
+		),
+		trust_test: node('trust_test',
+			'There\'s a ledger in the smuggler\'s tunnels beneath the docks. A rival faction stole it from us — names, routes, contacts. I need it back before those names start turning into bodies. *She tosses you a lockpick.* Bring me the ledger and we talk properly.',
+			[
+				opt('I\'ll get your ledger.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Nyx nods approvingly.' } }),
+				opt('What\'s in it for me?', 'reward', '#ff4'),
+			]
+		),
+		reward: node('reward',
+			'The Guild\'s gratitude. Which means access to our network, our fences, and information that the Duke\'s inspector would sell his left arm for. Plus, you won\'t wake up with a knife at your throat.',
+			[
+				opt('Compelling argument. I\'m in.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Nyx almost smiles.' } }),
+			]
+		),
+		murder_info: node('murder_info',
+			'The murders aren\'t random. Someone is collecting. The artifacts, the victims, the masks — it\'s a ritual. My people found traces of the same ritual components in three locations: the arena undercroft, the Duke\'s old vault, and a sealed cellar near the docks. *She leans forward.* The Veiled Hand is building something.',
+			[
+				opt('Building what?', 'veiled_hand_goal', '#c8f'),
+				opt('I need to stop them.', 'return', '#f44', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'Nyx reveals the locations of Veiled Hand ritual sites.' } }),
+			]
+		),
+		veiled_hand_goal: node('veiled_hand_goal',
+			'A bridge. Or a key. Or a weapon — the terminology varies depending on who you ask. But the effect is the same: they want to open a path to the divine thrones. Not to worship. Not to pray. To *reach*. And what they do when they get there... that\'s what terrifies me.',
+			[
+				opt('Another Ascension...', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'You understand the Veiled Hand\'s apocalyptic ambition.' } }),
+			]
+		),
+		farewell: node('farewell',
+			'The door\'s always open. In a manner of speaking.',
+			[
+				opt('[Leave]', 'return', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── KORTHAVEN: DUKE ARANDEL ───
+
+export const DUKE_ARANDEL_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*The Duke stands behind a desk covered in maps and sealed letters.* Korthaven welcomes travelers who bring trade and trouble in equal measure. Which are you?',
+			[
+				opt('I\'m here to help with the murders.', 'conspiracy', '#f44'),
+				opt('Tell me about Korthaven.', 'city_state', '#ff4'),
+				opt('Just a traveler.', 'return', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*The Duke regards you over steepled fingers.* What news do you bring?',
+			[
+				opt('About the conspiracy...', 'conspiracy', '#f44'),
+				opt('How fares Korthaven?', 'city_state', '#ff4'),
+				opt('What do you know about the Veiled Hand?', 'veiled_hand', '#c8f'),
+				opt('Nothing yet.', 'farewell', '#0ff'),
+			]
+		),
+		city_state: node('city_state',
+			'Korthaven is the jewel of the Free Cities — the greatest market between the mountains and the sea. We answer to no king, no emperor. The merchant guilds govern alongside the Duke. A delicate balance. *He frowns.* One that someone is trying to upset.',
+			[
+				opt('Who\'s upsetting it?', 'conspiracy', '#f44'),
+				opt('Tell me about your advisors.', 'seven_advisors', '#ff4'),
+				opt('Interesting.', 'return', '#0ff'),
+			]
+		),
+		conspiracy: node('conspiracy',
+			'*He locks the door.* What I\'m about to tell you doesn\'t leave this room. Three of my seven advisors have been compromised. They meet in secret, they burn correspondence, and they\'ve been funding excavations beneath the city. I believe they\'re connected to the murders — and to a group called the Veiled Hand.',
+			[
+				opt('The Veiled Hand — what do they want?', 'veiled_hand', '#c8f'),
+				opt('Seven advisors... like seven gods?', 'seven_advisors', '#ff4'),
+				opt('I\'ll root them out.', 'quest_accept', '#4f4'),
+			]
+		),
+		seven_advisors: node('seven_advisors',
+			'Seven advisors. An old tradition — one for each of the divine portfolios. Commerce, Justice, War, Knowledge, Nature, Time, and Spirit. *He pauses.* I\'ve always found it curious. Seven thrones above, seven chairs below. Someone designed this government to mirror the heavens. Or to mock them.',
+			[
+				opt('That\'s not coincidence.', 'the_eighth', '#c8f'),
+				opt('Which advisors are compromised?', 'conspiracy', '#f44'),
+				opt('Noted.', 'return', '#0ff'),
+			]
+		),
+		veiled_hand: node('veiled_hand',
+			'They want what was lost in the Ascension — or what was stolen. The Veiled Hand believes the current gods are frauds who murdered their way to divinity. And they want to prove it. Not through scholarship. Through *repetition*. They intend to recreate the Ascension ritual. Here. In Korthaven.',
+			[
+				opt('Can it be stopped?', 'quest_accept', '#4f4'),
+				opt('What happens if they succeed?', 'consequences', '#f44'),
+			]
+		),
+		consequences: node('consequences',
+			'*His voice is barely a whisper.* If they succeed, seven new mortals claim divine thrones. The current gods fall. And the world... rearranges itself around new masters. New laws of nature. New definitions of truth and justice. It happened before. The world survived. But the cost... *He gestures at the maps.* Everything changes. Everything.',
+			[
+				opt('I\'ll stop them.', 'quest_accept', '#4f4'),
+				opt('Where do I start?', 'quest_accept', '#ff4'),
+			]
+		),
+		the_eighth: node('the_eighth',
+			'*The Duke looks at you sharply.* You know the legend? Seven ascended. But the histories — the real ones, not the sanitized Church versions — mention an eighth candidate. Someone who qualified for Ascension but refused. Chose mortality over godhood. *He shakes his head.* If that person still exists, in some form, they might be the only one who can stop this.',
+			[
+				opt('An eighth who refused... [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'Duke Arandel reveals the legend of the Eighth — one who refused godhood.' } }),
+			]
+		),
+		quest_accept: node('quest_accept',
+			'*He grips your arm.* Find the Veiled Hand\'s hideout. It\'s somewhere beneath the old quarter. Recover whatever ritual components they\'ve gathered. And if you encounter their agents... do what must be done. Korthaven\'s survival depends on it.',
+			[
+				opt('Consider it done.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Duke Arandel places his trust in you.' } }),
+			]
+		),
+		farewell: node('farewell',
+			'The city needs vigilant eyes. Return if you learn anything.',
+			[
+				opt('[Leave]', 'return', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── KORTHAVEN: MADAME VESPER ───
+
+export const MADAME_VESPER_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A woman with silver-streaked hair polishes a glass behind the bar.* Welcome to the Gilded Flagon. First drink\'s on the house if you\'ve got a story worth hearing.',
+			[
+				opt('What\'s the gossip in Korthaven?', 'city_gossip', '#ff4'),
+				opt('I hear there have been murders.', 'murder_rumors', '#f44'),
+				opt('Who are the important people here?', 'important_people', '#da4'),
+				opt('Just a drink, thanks.', 'return', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Vesper slides a drink across the bar.* You look like someone carrying more questions than answers.',
+			[
+				opt('Any new gossip?', 'city_gossip', '#ff4'),
+				opt('Tell me about the arena.', 'arena_secrets', '#f84'),
+				opt('What do you know about the murders?', 'murder_rumors', '#f44'),
+				opt('Thanks, Vesper.', 'farewell', '#0ff'),
+			]
+		),
+		city_gossip: node('city_gossip',
+			'The Duke\'s locked himself in the palace. The merchant guilds are buying guards. The arena\'s had record attendance — nothing like violence to distract from violence. And the Thieves\' Guild is quieter than usual, which means they\'re *busy*. When Nyx goes quiet, smart people lock their valuables.',
+			[
+				opt('The arena — is that normal?', 'arena_secrets', '#f84'),
+				opt('The Duke seems worried.', 'important_people', '#da4'),
+				opt('Thanks for the update.', 'return', '#0ff'),
+			]
+		),
+		murder_rumors: node('murder_rumors',
+			'Three dead. All wealthy. All collectors. And all found wearing masks of gold that no goldsmith in Korthaven made. *She leans close.* The night before each murder, Old Daven said he heard singing from beneath the streets. Not human singing. Something older. Something with more voices than throats.',
+			[
+				opt('Singing from below... [Rumor learned]', 'sealed_chamber', '#c8f', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'Vesper reveals an eerie detail about the murders.' } }),
+				opt('Who might know more?', 'important_people', '#da4'),
+			]
+		),
+		important_people: node('important_people',
+			'Inspector Kaelen\'s the law. Duke Arandel\'s the power. Nyx — don\'t pretend you haven\'t heard of her — she\'s the shadow. And the Masked Figure who drinks in the corner some nights? *She drops her voice.* That one knows things that would make the gods themselves nervous.',
+			[
+				opt('A masked figure?', 'the_eighth_hint', '#c8f'),
+				opt('Tell me about the arena.', 'arena_secrets', '#f84'),
+				opt('Good to know.', 'return', '#0ff'),
+			]
+		),
+		arena_secrets: node('arena_secrets',
+			'The Crucible\'s been here longer than the Duke\'s bloodline. Gorath runs a tight show — fair fights, good coin. But the old-timers say there\'s a chamber beneath the arena floor. Sealed since before anyone can remember. Champions who win three seasons are invited down. *She pauses.* None of them fight the same after.',
+			[
+				opt('What\'s in the chamber?', 'sealed_chamber', '#c8f'),
+				opt('Kael — the current champion?', 'kael_rumor', '#ff4'),
+				opt('Interesting. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.korthaven_arena, message: 'Vesper tells you about the sealed chamber beneath the Crucible.' } }),
+			]
+		),
+		sealed_chamber: node('sealed_chamber',
+			'Nobody knows for certain. But the architecture beneath the arena and the tunnels beneath the Guild — they match. Same stone, same mason marks. And those marks? They predate Korthaven. They predate the gods. *She traces a symbol on the bar.* Seven circles, interlocking. The old symbol for the Ascension.',
+			[
+				opt('Pre-Ascension architecture... [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'Vesper connects the underground architecture to the Ascension.' } }),
+			]
+		),
+		kael_rumor: node('kael_rumor',
+			'Kael fights like someone who\'s already dead and hasn\'t noticed. Thirty consecutive wins. No fear, no hesitation. After his last bout, I saw him staring at his hands like he didn\'t recognize them. Whatever Gorath showed him beneath the arena... it changed him.',
+			[
+				opt('I should talk to Gorath.', 'return', '#ff4'),
+				opt('That\'s unsettling.', 'return', '#0ff'),
+			]
+		),
+		the_eighth_hint: node('the_eighth_hint',
+			'*Vesper stops polishing.* The Masked Figure appears and disappears. No name, no origin. But they know things — details about the Ascension that aren\'t in any book, names of gods from before they were gods. Once, after too much wine, they said: "I was offered a throne and I chose this barstool instead." *She shrugs.* Probably just the wine talking.',
+			[
+				opt('Or perhaps the most honest thing said in Korthaven. [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'Vesper shares a cryptic quote from the Masked Figure.' } }),
+			]
+		),
+		farewell: node('farewell',
+			'Stay safe out there. And come back with stories — the Flagon thrives on them.',
+			[
+				opt('[Leave]', 'return', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── KORTHAVEN: ARENA MASTER GORATH ───
+
+export const ARENA_MASTER_GORATH_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A massive man with scarred forearms grins at you.* Fresh meat! The Crucible welcomes all challengers. Gold for blood, glory for the brave. What\'ll it be?',
+			[
+				opt('I want to fight.', 'fight_challenge', '#f44'),
+				opt('Tell me about the arena\'s history.', 'arena_history', '#ff4'),
+				opt('What about the champion — Kael?', 'champion_kael', '#fa4'),
+				opt('Not today.', 'return', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*Gorath cracks his knuckles.* Ready for the sand yet?',
+			[
+				opt('Sign me up for a fight.', 'fight_challenge', '#f44'),
+				opt('Tell me about the arena.', 'arena_history', '#ff4'),
+				opt('What\'s beneath the arena?', 'sealed_chamber', '#c8f'),
+				opt('Maybe later.', 'farewell', '#0ff'),
+			]
+		),
+		fight_challenge: node('fight_challenge',
+			'Five bouts to reach the championship. Each harder than the last. Win them all, and you face Kael himself. *He leans closer.* Nobody\'s beaten Kael. Nobody. But the crowd loves a challenger. You in?',
+			[
+				opt('I\'m in. Bring on the fights.', 'accepted', '#4f4'),
+				opt('What\'s the reward?', 'reward', '#ff4'),
+				opt('I need to prepare first.', 'return', '#0ff'),
+			]
+		),
+		accepted: node('accepted',
+			'*He slaps your shoulder hard enough to rattle teeth.* That\'s the spirit! Report to the arena floor when you\'re ready. The crowd loves a good entrance — give them something to remember.',
+			[
+				opt('I won\'t disappoint.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'Arena Master Gorath roars with approval.' } }),
+			]
+		),
+		reward: node('reward',
+			'Five hundred gold and a weapon of your choosing from the Crucible vault. But more than that — *renown*. The champion of Korthaven\'s arena is known from the Pale Coast to the Sunstone Expanse. Doors open. People listen. That\'s worth more than gold.',
+			[
+				opt('I\'m convinced. Let\'s fight.', 'accepted', '#4f4'),
+				opt('What\'s in the vault?', 'sealed_chamber', '#c8f'),
+			]
+		),
+		arena_history: node('arena_history',
+			'The Crucible is older than Korthaven itself. Built on foundations that go deeper than anyone wants to dig. My grandfather ran it, and his grandfather before him. The arena has always been here. *He pauses.* The fights change. The fighters change. But the arena itself... it endures.',
+			[
+				opt('What\'s beneath the foundations?', 'sealed_chamber', '#c8f'),
+				opt('Who were the greatest champions?', 'greatest_champions', '#ff4'),
+				opt('Impressive.', 'return', '#0ff'),
+			]
+		),
+		champion_kael: node('champion_kael',
+			'Kael walked in three seasons ago. No name, no history, no fighting style I could identify. Just... efficiency. He moves like he already knows what you\'ll do. After his thirtieth win, I showed him the chamber. *Gorath\'s expression darkens.* He was different after. Better. But different.',
+			[
+				opt('The chamber?', 'sealed_chamber', '#c8f'),
+				opt('Different how?', 'kael_changed', '#ff4'),
+			]
+		),
+		kael_changed: node('kael_changed',
+			'He used to smile between rounds. Joke with the crowd. After the chamber, he fights in silence. Perfect silence. And sometimes — only in the torchlight — his shadow moves a half-second before he does. *Gorath shakes his head.* I don\'t know what he saw down there. He won\'t talk about it.',
+			[
+				opt('His shadow moves first? [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_arena, message: 'Gorath reveals something disturbing about Kael\'s transformation.' } }),
+			]
+		),
+		sealed_chamber: node('sealed_chamber',
+			'*He glances around.* The chamber is tradition. Champions earn the right to descend. What\'s down there... it\'s not treasure. It\'s not a weapon. It\'s *knowledge*. Written on walls older than any language I know. And in the center of the chamber, there\'s a circle — seven points, seven marks. Standing in it, you feel... connected. To everything.',
+			[
+				opt('Seven points. Like the Ascension. [Rumor learned]', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_arena, message: 'Gorath describes the ritual circle beneath the Crucible.' } }),
+			]
+		),
+		greatest_champions: node('greatest_champions',
+			'Three legends: Iron Marta, who fought for twenty seasons with a mechanical arm from the Thornlands. The Pale Dancer, who moved so fast the crowd couldn\'t follow — she vanished one night and was never seen again. And the Nameless Champion, who won the title, descended to the chamber, and came back speaking a language nobody understood. He walked out of Korthaven and was never heard from again.',
+			[
+				opt('The Nameless Champion spoke a new language?', 'sealed_chamber', '#c8f'),
+				opt('Good stories.', 'return', '#0ff'),
+			]
+		),
+		farewell: node('farewell',
+			'The sand waits for no one. Come back when you\'re ready to bleed.',
+			[
+				opt('[Leave]', 'return', '#0ff'),
+			]
+		),
+	}
+};
+
+// ─── KORTHAVEN: THE MASKED FIGURE ───
+
+export const MASKED_FIGURE_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A figure in a plain golden mask sits perfectly still in the shadows. When they speak, the voice is neither young nor old.* You can see me. That is the first qualification. Sit, if you wish to hear what the gods do not want spoken.',
+			[
+				opt('Who are you?', 'who_are_you', '#ff4'),
+				opt('Tell me about the Ascension.', 'ascension_truth', '#c8f'),
+				opt('What do you know about the murders?', 'murders', '#f44'),
+				opt('This is unsettling. I\'m leaving.', 'return', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*The Masked Figure inclines their head.* You return. The curious always do.',
+			[
+				opt('Tell me about the Original Seven.', 'original_seven', '#c8f'),
+				opt('Who were the Ascended before they ascended?', 'ascension_truth', '#c8f'),
+				opt('Is the Ascension reversible?', 'ritual_reversal', '#ff4'),
+				opt('Tell me about the Eighth.', 'the_eighth', '#c8f', { showIf: { hasRumor: 'korthaven_eighth' } }),
+				opt('[Leave]', 'farewell', '#0ff'),
+			]
+		),
+		who_are_you: node('who_are_you',
+			'A witness. A remnant. A mistake the gods forgot to correct. *They touch the mask.* This face is not hiding. It is remembering. The Ascension required masks — seven faces to replace seven Principles. I wear mine as reminder of what was taken.',
+			[
+				opt('What was taken?', 'original_seven', '#c8f'),
+				opt('Are you one of the Original Seven?', 'the_eighth', '#c8f'),
+				opt('You speak as if you were there.', 'ascension_truth', '#ff4'),
+			]
+		),
+		ascension_truth: node('ascension_truth',
+			'*The voice is flat, factual.* Seven mortals. The worst of their era. A mass poisoner who called herself a healer. A forger who manufactured wars. A torturer who wore the robes of justice. A warlord who salted the earth of nations. They found the ritual in ruins older than civilization and used it to replace the Principles that governed reality.',
+			[
+				opt('The Principles — the Original Seven?', 'original_seven', '#c8f'),
+				opt('The gods were the worst mortals?', 'betrayers', '#f44'),
+				opt('This is... a lot. [Rumor learned]', 'return', '#4f4', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'The Masked Figure reveals the horrifying truth of the Ascension.' } }),
+			]
+		),
+		original_seven: node('original_seven',
+			'Not gods. Principles. The framework of existence. Order gave structure. Spirit gave consciousness. Energy gave motion. Change gave growth. Space gave place. Matter gave substance. Time gave sequence. They were not beings — they were *functions*. The Ascended murdered functions and wore their corpses like crowns.',
+			[
+				opt('Can the Principles be restored?', 'ritual_reversal', '#ff4'),
+				opt('Selvara\'s poison — what did she really do?', 'selvara_poison', '#c8f'),
+				opt('This changes everything.', 'return', '#c8f'),
+			]
+		),
+		betrayers: node('betrayers',
+			'Selvara poisoned a Ley Line to test whether divine energy could be extracted. Ash-Velk forged documents that caused the Brother War — four hundred thousand dead to create enough grief to fuel the ritual. Khorvan burned civilizations for the raw energy of destruction. Each of the seven committed an atrocity that generated enough power for one step of the Ascension stair.',
+			[
+				opt('Each atrocity powered the ritual?', 'ritual_reversal', '#c8f'),
+				opt('Selvara poisoned a Ley Line?', 'selvara_poison', '#c8f'),
+				opt('I feel sick.', 'return', '#0ff'),
+			]
+		),
+		selvara_poison: node('selvara_poison',
+			'The Grey Wastes were green once. A living Ley Line ran through them — the strongest in the world. Selvara distilled a toxin from crystallized divine essence and introduced it into the Ley Line over thirty years. Slow. Patient. The land died by inches. The Ley Line\'s death generated enough raw magical energy to power the Knowledge seat of the Ascension. *They pause.* She called herself a scholar. The poison was her thesis.',
+			[
+				opt('And now she sits on the throne of Knowledge.', 'return', '#c8f', { onSelect: { mood: 'neutral', message: 'The Masked Figure nods slowly.' } }),
+				opt('Can the Ley Line be healed?', 'ritual_reversal', '#ff4'),
+			]
+		),
+		the_eighth: node('the_eighth',
+			'*Long silence.* There were eight candidates. Eight who qualified. Seven ascended. One... *they touch the mask again* ...chose differently. The Eighth understood what the ritual truly cost and refused. Not from weakness. From clarity. *Their voice drops.* The Eighth walks the world still. Mortal. Aging. Watching the thrones they rejected.',
+			[
+				opt('You\'re the Eighth.', 'identity', '#ff4'),
+				opt('Why refuse godhood?', 'refusal', '#c8f'),
+				opt('Can the Eighth stop the Veiled Hand?', 'veiled_hand_purpose', '#f44'),
+			]
+		),
+		identity: node('identity',
+			'*The mask tilts, and for a moment something ancient and tired looks through the eyeholes.* I am someone who made a choice. The right choice. The hard choice. And who has spent an eternity in mortal flesh watching the consequences of those who chose differently. *They straighten.* Names are for those who wish to be found.',
+			[
+				opt('Why stay hidden?', 'refusal', '#c8f'),
+				opt('Can you stop what\'s happening?', 'veiled_hand_purpose', '#f44'),
+			]
+		),
+		refusal: node('refusal',
+			'Because the throne was a cage. The Ascension doesn\'t grant power — it *replaces* you. The mortal who ascends ceases to exist. What sits on the throne is a function wearing a face. Selvara the mortal had doubt, regret, the capacity for change. Selvara the god has only the portfolio of Knowledge — perfect, eternal, and utterly hollow. I chose imperfection. I chose *being alive*.',
+			[
+				opt('That\'s the bravest thing I\'ve ever heard.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'The Masked Figure\'s posture softens almost imperceptibly.' } }),
+				opt('Can you help stop the Veiled Hand?', 'veiled_hand_purpose', '#f44'),
+			]
+		),
+		murders: node('murders',
+			'The Veiled Hand is searching. The masks, the killings — they\'re not punishment. They\'re *tests*. Each victim was exposed to divine residue through their artifacts. The masks detect resonance — compatibility with the Ascension. The Veiled Hand is looking for seven new candidates.',
+			[
+				opt('They want to create new gods?', 'veiled_hand_purpose', '#f44'),
+				opt('Can the ritual work again?', 'ritual_reversal', '#c8f'),
+				opt('We need to stop them. [Rumor learned]', 'return', '#f44', { onSelect: { rumor: RUMORS.korthaven_murders, message: 'The Masked Figure reveals the true purpose of the golden mask murders.' } }),
+			]
+		),
+		veiled_hand_purpose: node('veiled_hand_purpose',
+			'The Veiled Hand believes the current gods are corrupt — which is true. They believe new gods would be better — which is naive. The Ascension doesn\'t select for virtue. It selects for *power*. And power, unchecked, creates the same monsters every time. *They lean forward.* They must be stopped. Not because the gods deserve their thrones, but because the ritual itself is an abomination.',
+			[
+				opt('How do I stop them?', 'how_to_stop', '#4f4'),
+				opt('Is reversal possible instead?', 'ritual_reversal', '#c8f'),
+			]
+		),
+		how_to_stop: node('how_to_stop',
+			'Destroy the ritual components. The Veiled Hand needs seven convergence points — they\'ve found three beneath Korthaven. The arena, the docks, and the old vault. Disrupt those, and the ritual fails. But be warned: the agents guarding them are zealots. They believe they\'re saving the world.',
+			[
+				opt('I\'ll handle it.', 'return', '#4f4', { onSelect: { mood: 'friendly', message: 'The Masked Figure nods — a gesture that carries the weight of ages.' } }),
+			]
+		),
+		ritual_reversal: node('ritual_reversal',
+			'*The voice becomes very quiet.* In theory, yes. The Ascension can be reversed. The Principles can be restored. But the cost would be... equivalent. Seven atrocities created the current gods. Seven acts of equal magnitude — but opposite nature — could unmake them. Not destruction, but *healing*. Not war, but *reconciliation*. The difficulty isn\'t the magic. It\'s finding seven acts of genuine goodness powerful enough to match seven acts of genuine evil.',
+			[
+				opt('Seven acts of healing to undo seven atrocities.', 'return', '#c8f', { onSelect: { rumor: RUMORS.korthaven_eighth, message: 'The Masked Figure reveals the theoretical path to reversing the Ascension.' } }),
+			]
+		),
+		farewell: node('farewell',
+			'The truth is patient. It will be here when you return.',
+			[
+				opt('[Leave]', 'return', '#0ff'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -4352,4 +4922,10 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Whispering Shade': SHADE_DIALOGUE,
 	'Grikkle': GOBLIN_PEDDLER_DIALOGUE,
 	'Archivist Faelorn': ARCHIVIST_DIALOGUE,
+	'Inspector Kaelen': INSPECTOR_KAELEN_DIALOGUE,
+	'Guildmaster Nyx': GUILDMASTER_NYX_DIALOGUE,
+	'Duke Arandel': DUKE_ARANDEL_DIALOGUE,
+	'Madame Vesper': MADAME_VESPER_DIALOGUE,
+	'Arena Master Gorath': ARENA_MASTER_GORATH_DIALOGUE,
+	'The Masked Figure': MASKED_FIGURE_DIALOGUE,
 };

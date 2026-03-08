@@ -359,6 +359,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	grey_wastes: 'The trees stand like bones, grey and leafless. The ground is ashen and silent. Somewhere beneath your feet, a dead Ley Line lies like a severed nerve — and the land has never stopped grieving.',
 	korthaven: 'Golden wheat fields stretch between walled farmsteads and merchant caravans. The spires of Korthaven rise in the distance — the Free Cities\' greatest market, where coin speaks louder than prayer.',
 	eldergrove: 'The trees here are immense — silver-barked giants whose canopy swallows the sky. Shafts of green-gold light pierce the perpetual twilight. Somewhere above, elven bridges span the branches like spider silk, and the forest hums with a music older than prayer.',
+	stormcradle: 'Lightning splits the sky every few heartbeats. The highlands are scoured bare — only scrub grass and blackened stone survive. Between the thunder, you hear something deeper: a hum from beneath the rock, as if the earth itself remembers the blow that cracked the sky.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -448,6 +449,7 @@ const REGION_COLORS: Record<string, string> = {
 	grey_wastes: '#898',
 	korthaven: '#da6',
 	eldergrove: '#6d8',
+	stormcradle: '#99f',
 	underdepths: '#a4f',
 };
 
@@ -715,6 +717,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'G', color: '#fa8', name: 'Guild Factor', dialogue: ['Korthaven moves more coin in a day than most kingdoms see in a year. The Free Cities built that.', 'Mercatus blesses the harvest and the ledger alike. Though between you and me, gold prays louder than grain.', 'We don\'t ask where goods come from. We ask what they\'re worth. That\'s Trade Common for you.'], gives: { atk: 1 }, mood: 'neutral' },
 		{ char: 'H', color: '#ca8', name: 'Caravan Master Halda', dialogue: ['Twelve years I\'ve carried this coin. Won\'t leave my pocket. Won\'t spend. Won\'t melt. My uninvited guest.', 'The roads between cities are the real kingdom. Whoever controls the caravans controls everything.', 'I\'ve seen impossible things on the trade roads. Merchants learn to accept the impossible and price it accordingly.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
+	stormcradle: [
+		{ char: 'W', color: '#aaf', name: 'Storm Warden Kael', dialogue: ['The lightning is not random. It follows the veins beneath the rock — old Shaper tunnels, still conducting power after millennia.', 'We harvest fulgurite from the strike points. Each piece remembers the shape of the bolt that made it. Some of them hum.', 'The sky broke here during the Primordial War. It never healed. That is why the storms never stop.'], gives: { hp: 2 }, mood: 'neutral' },
+		{ char: 'L', color: '#ccf', name: 'Lightning Harvester Yenn', dialogue: ['Storm Cant is not spoken — it is shouted between thunderclaps. You learn to say everything that matters in three syllables.', 'The Fulgurite Spire was not built. A single bolt struck the hilltop and fused the sand into a tower. Perfectly symmetrical. Perfectly hollow.', 'I sell lightning-glass to the merchants in Korthaven. They call it jewelry. I call it frozen screaming.'], gives: { atk: 1 }, mood: 'friendly' },
+		{ char: 'D', color: '#88c', name: 'Tunnel Delver Mossrig', dialogue: ['The Shaper tunnels beneath the Stormcradle are older than anything on the surface. The walls pulse with a rhythm — not a heartbeat, but close.', 'Something carved these tunnels with heat, not tools. The stone is glazed smooth, like the inside of a kiln.', 'I found markings down there that match nothing in any language above ground. The scholars in Korthaven offered me gold. I kept the rubbings.'], gives: { hp: 3 }, mood: 'friendly' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -877,6 +884,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	grey_wastes:      'The stone is veined with dull crystal — dead Ley Line fragments. The deeper you go, the more the walls seem to weep grey dust.',
 	korthaven:        'Brick gives way to older stone. The smell of sewage fades into something mustier — old vaults, forgotten cellars, the bones of the city beneath the city.',
 	eldergrove:       'Roots twist into a staircase descending beneath the forest floor. The walls are living wood, and sap glows faintly amber in the crevices. Something ancient breathes below.',
+	stormcradle:      'The tunnel walls are fused glass — lightning-bored through solid rock. Static raises every hair on your body. The deeper you go, the louder the hum.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -899,6 +907,7 @@ const GRAVE_LORE: Record<string, string> = {
 	grey_wastes:      'A Grey Pilgrim who sang to the dead Ley Line every dawn for forty years. Her final words: "It answered. Once. Then went silent forever."',
 	korthaven:        'A merchant prince who funded expeditions to every corner of the world. His ledger\'s last entry: "The gods trade in souls. We merely trade in coin. I wonder which currency is more honest."',
 	eldergrove:       'An elven archivist who hid the last pre-Ascension texts beneath the roots. Her final note: "They burned the library at Ashfall. They will come for these next. The trees will not let them take them."',
+	stormcradle:      'A storm warden who mapped the lightning patterns for thirty years. Her final chart note: "The bolts are not striking the ground. They are striking back at the sky."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -1017,6 +1026,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	grey_wastes:      { combat: ['Wraith', 'Zombie', 'Spider'], nonCombat: ['A Grey Pilgrim kneels beside a dead tree, whispering in Old Primal. For a moment, a single grey leaf unfurls — then crumbles.', 'The ground hums beneath your feet. A faint warmth rises through your boots — the dead Ley Line, dreaming.'] },
 	korthaven:        { combat: ['Rat', 'Goblin', 'Wolf'], nonCombat: ['A merchant caravan rumbles past, guards eyeing you warily. The factor tips his hat and tosses you a bread roll.', 'A street performer juggles coins that catch the light strangely — one of them hums. She winks and pockets it before you can look closer.'] },
 	eldergrove:       { combat: ['Spider', 'Wolf', 'Troll'], nonCombat: ['A silver-barked tree shifts its branches, revealing a hidden path that was not there a moment ago.', 'An elven scout drops from the canopy, studies you in silence, then vanishes back into the leaves with a curt nod.'] },
+	stormcradle:      { combat: ['Wolf', 'Troll', 'Ogre'], nonCombat: ['Lightning strikes a boulder twenty paces ahead. When the afterimage fades, a fulgurite sculpture stands where the rock was — shaped like a hand reaching upward.', 'A storm warden signals you from a ridge, pointing toward a safe path between the strike zones. She vanishes before you can shout thanks.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 
