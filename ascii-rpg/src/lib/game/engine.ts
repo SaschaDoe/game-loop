@@ -634,20 +634,108 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	}
 }
 
-/** Discover a POI on the overworld. */
-function discoverPOI(state: GameState, poi: PointOfInterest): void {
+/** POI-type-specific reward text for grave sites. */
+const GRAVE_LORE: Record<string, string> = {
+	greenweald:       'An ancient elven ranger who fell defending the forest from corruption.',
+	ashlands:         'An orc warlord whose dying wish was for peace between the clans.',
+	hearthlands:      'A merchant prince who hid a fortune beneath the crossroads.',
+	frostpeak:        'A dwarven runesmith whose final creation was never completed.',
+	drowned_mire:     'A swamp witch who sacrificed herself to seal a plague beneath the waters.',
+	sunstone_expanse: 'A nomadic stargazer who mapped the constellations into the desert stones.',
+	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
+};
+
+/** Discover a POI on the overworld — gives type-specific rewards. */
+export function discoverPOI(state: GameState, poi: PointOfInterest): void {
+	const worldMap = state.worldMap as WorldMap;
+
 	if (!poi.discovered) {
 		poi.discovered = true;
 		addMessage(state, `Discovered: ${poi.name}!`, 'discovery');
 		state.stats.secretsFound++;
-		// Small XP reward for discovery
+
+		// Base XP reward for discovery
 		const xpGain = 10 + (state.characterLevel * 2);
 		state.xp += xpGain;
 		addMessage(state, `+${xpGain} XP for exploration.`, 'level_up');
+
+		// Type-specific first-visit rewards
+		const regionDef = REGION_DEFS[poi.region];
+
+		switch (poi.type) {
+			case 'shrine':
+				applyEffect(state.player, 'regeneration', 10, 2);
+				addMessage(state, 'You pray at the shrine. A warm light envelops you. (Regeneration 10 turns)', 'healing');
+				break;
+
+			case 'standing_stones': {
+				const lang = regionDef?.language ?? 'Common';
+				if (lang !== 'Common' && !state.knownLanguages.includes(lang)) {
+					state.knownLanguages = [...state.knownLanguages, lang];
+					addMessage(state, `The stone inscriptions whisper in your mind. Language learned: ${lang}!`, 'discovery');
+				} else {
+					// Already know the language — extra XP instead
+					const bonusXp = 15 + (state.characterLevel * 3);
+					state.xp += bonusXp;
+					addMessage(state, `The inscriptions are familiar to you. +${bonusXp} bonus XP.`, 'level_up');
+				}
+				break;
+			}
+
+			case 'ruins':
+				state.player.attack += 1;
+				addMessage(state, 'Among the rubble you find a well-preserved weapon. (+1 ATK)', 'discovery');
+				break;
+
+			case 'hidden_cave':
+				state.player.hp = state.player.maxHp;
+				addMessage(state, 'A sheltered cave with a clear spring. You rest and recover fully.', 'healing');
+				break;
+
+			case 'ancient_tree':
+				state.player.hp = state.player.maxHp;
+				applyEffect(state.player, 'regeneration', 15, 3);
+				addMessage(state, 'The ancient tree radiates life energy. You feel renewed. (Full HP + Regen 15 turns)', 'healing');
+				break;
+
+			case 'hot_spring':
+				state.player.hp = state.player.maxHp;
+				addMessage(state, 'You soak in the warm waters. All weariness fades. (Full HP)', 'healing');
+				break;
+
+			case 'grave_site': {
+				const storyId = `grave_${poi.region}`;
+				if (!state.heardStories.includes(storyId)) {
+					state.heardStories = [...state.heardStories, storyId];
+				}
+				const lore = GRAVE_LORE[poi.region] ?? 'A forgotten soul rests here.';
+				addMessage(state, `The epitaph reads: "${lore}"`, 'npc');
+				break;
+			}
+
+			case 'obelisk':
+				revealOverworldArea(worldMap, poi.pos, 15);
+				addMessage(state, 'Atop the obelisk, you survey the land. A vast area is revealed on your map!', 'discovery');
+				break;
+		}
+
 		checkLevelUp(state);
 		processAchievements(state);
 	} else {
-		addMessage(state, `${poi.name} — you've been here before.`, 'info');
+		// Revisit rewards for certain POI types
+		switch (poi.type) {
+			case 'shrine':
+				state.player.hp = Math.min(state.player.maxHp, state.player.hp + 3);
+				addMessage(state, `${poi.name} — you pray quietly. (+3 HP)`, 'healing');
+				break;
+			case 'hot_spring':
+				state.player.hp = Math.min(state.player.maxHp, state.player.hp + 10);
+				addMessage(state, `${poi.name} — the warm waters soothe you. (+10 HP)`, 'healing');
+				break;
+			default:
+				addMessage(state, `${poi.name} — you've been here before.`, 'info');
+				break;
+		}
 	}
 }
 

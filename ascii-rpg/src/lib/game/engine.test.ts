@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay } from './engine';
+import { createGame, handleInput, xpForLevel, xpReward, attemptFlee, attemptPush, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, effectiveSightRadius, exitToOverworld, renderColored, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay, discoverPOI } from './engine';
 import { BOSS_DEFS, MONSTER_DEFS, createMonster, createRareMonster, isBoss } from './monsters';
 import { ABILITY_DEFS } from './abilities';
 import { applyEffect, hasEffect } from './status-effects';
@@ -2405,5 +2405,124 @@ describe('overworld integration', () => {
 			if (current.locationMode !== 'overworld') break;
 		}
 		expect(current).toBeDefined();
+	});
+});
+
+describe('POI rewards (US-OW-12)', () => {
+	function makePOI(type: string, region: string, discovered = false) {
+		return {
+			id: `poi_test_${type}`,
+			name: `Test ${type}`,
+			region: region as any,
+			pos: { x: 50, y: 50 },
+			type: type as any,
+			hidden: false,
+			discovered,
+		};
+	}
+
+	function makeOverworldState() {
+		const state = createGame({ name: 'Tester', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'poi-test' });
+		state.locationMode = 'overworld';
+		state.overworldPos = { x: 50, y: 50 };
+		return state;
+	}
+
+	it('shrine grants regeneration on first visit', () => {
+		const state = makeOverworldState();
+		const poi = makePOI('shrine', 'greenweald');
+		const prevHp = state.player.hp;
+		discoverPOI(state, poi);
+		expect(poi.discovered).toBe(true);
+		expect(state.player.statusEffects.some(e => e.type === 'regeneration')).toBe(true);
+		expect(state.stats.secretsFound).toBe(1);
+	});
+
+	it('shrine heals +3 HP on revisit', () => {
+		const state = makeOverworldState();
+		state.player.hp = 10;
+		const poi = makePOI('shrine', 'greenweald', true);
+		discoverPOI(state, poi);
+		expect(state.player.hp).toBe(13);
+	});
+
+	it('standing stones teach regional language', () => {
+		const state = makeOverworldState();
+		state.knownLanguages = [];
+		const poi = makePOI('standing_stones', 'greenweald');
+		discoverPOI(state, poi);
+		expect(state.knownLanguages).toContain('Elvish');
+	});
+
+	it('standing stones give bonus XP if language already known', () => {
+		const state = makeOverworldState();
+		state.knownLanguages = ['Elvish'];
+		const prevXp = state.xp;
+		const poi = makePOI('standing_stones', 'greenweald');
+		discoverPOI(state, poi);
+		// Should get base XP + bonus XP (no language learned)
+		expect(state.xp).toBeGreaterThan(prevXp + 20);
+		expect(state.knownLanguages.filter(l => l === 'Elvish').length).toBe(1);
+	});
+
+	it('ruins grant +1 ATK', () => {
+		const state = makeOverworldState();
+		const prevAtk = state.player.attack;
+		const poi = makePOI('ruins', 'ashlands');
+		discoverPOI(state, poi);
+		expect(state.player.attack).toBe(prevAtk + 1);
+	});
+
+	it('hidden cave restores full HP', () => {
+		const state = makeOverworldState();
+		state.player.hp = 5;
+		state.player.maxHp = 30;
+		const poi = makePOI('hidden_cave', 'frostpeak');
+		discoverPOI(state, poi);
+		expect(state.player.hp).toBe(30);
+	});
+
+	it('obelisk reveals large area on world map', () => {
+		const state = makeOverworldState();
+		const worldMap = state.worldMap as any;
+		// Count explored tiles before
+		let exploredBefore = 0;
+		for (let y = 0; y < worldMap.height; y++) {
+			for (let x = 0; x < worldMap.width; x++) {
+				if (worldMap.explored[y][x]) exploredBefore++;
+			}
+		}
+		const poi = makePOI('obelisk', 'sunstone_expanse');
+		discoverPOI(state, poi);
+		// Count explored tiles after — should be significantly more
+		let exploredAfter = 0;
+		for (let y = 0; y < worldMap.height; y++) {
+			for (let x = 0; x < worldMap.width; x++) {
+				if (worldMap.explored[y][x]) exploredAfter++;
+			}
+		}
+		expect(exploredAfter).toBeGreaterThan(exploredBefore + 100);
+	});
+
+	it('grave site adds a story to heardStories', () => {
+		const state = makeOverworldState();
+		state.heardStories = [];
+		const poi = makePOI('grave_site', 'drowned_mire');
+		discoverPOI(state, poi);
+		expect(state.heardStories).toContain('grave_drowned_mire');
+	});
+
+	it('hot spring restores full HP on first visit and +10 on revisit', () => {
+		const state = makeOverworldState();
+		state.player.hp = 5;
+		state.player.maxHp = 30;
+		const poi = makePOI('hot_spring', 'hearthlands');
+		discoverPOI(state, poi);
+		expect(state.player.hp).toBe(30);
+
+		// Revisit
+		state.player.hp = 10;
+		discoverPOI(state, poi);
+		expect(state.player.hp).toBe(20);
 	});
 });

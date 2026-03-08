@@ -331,10 +331,27 @@ As a player, I want discoverable points of interest scattered across the world, 
 - Abandoned camps: journals, supplies, story fragments
 
 **Acceptance Criteria:**
-- [ ] At least 3 types of POI per region
-- [ ] POIs provide meaningful rewards (loot, lore, buffs)
-- [ ] POIs are distributed across the map, not clustered
-- [ ] Discovering a POI adds it to the player's map
+- [x] At least 3 types of POI per region
+- [x] POIs provide meaningful rewards (loot, lore, buffs)
+- [x] POIs are distributed across the map, not clustered
+- [x] Discovering a POI adds it to the player's map
+
+**Implementation Notes (completed):**
+- 8 POI types: shrine, ruins, standing_stones, hidden_cave, ancient_tree, hot_spring, grave_site, obelisk
+- 4-6 region-themed templates per region (REGION_POIS in overworld.ts), 3-5 placed per region
+- Spacing rules: min 12 from settlements, 10 from other POIs, 5 from roads
+- Type-specific first-visit rewards:
+  - **Shrine**: regeneration buff (10 turns, potency 2); revisit heals +3 HP
+  - **Standing stones**: teaches regional language (Elvish/Orcish/Runic/etc.); bonus XP if already known
+  - **Ruins**: +1 permanent ATK from found weapon
+  - **Hidden cave**: full HP restore in sheltered spring
+  - **Ancient tree**: full HP + regeneration (15 turns, potency 3)
+  - **Hot spring**: full HP restore; revisit heals +10 HP
+  - **Grave site**: lore story added to journal (region-specific epitaph)
+  - **Obelisk**: reveals radius-15 area on overworld map
+- Discovery grants base XP (10 + 2×characterLevel) + secretsFound stat
+- POIs marked on world map (?) when discovered, hidden POIs require adjacency
+- 9 new tests: shrine regen, shrine revisit, standing stones language, standing stones XP fallback, ruins ATK, cave heal, obelisk reveal, grave story, hot spring first+revisit
 
 ---
 
