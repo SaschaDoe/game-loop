@@ -1718,6 +1718,123 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`instead.`,
 		],
 	},
+
+	// -----------------------------------------------------------------------
+	// 19. The First Lesson — Runeweavers / runes predate the gods
+	// -----------------------------------------------------------------------
+	book_first_lesson: {
+		id: 'book_first_lesson',
+		name: 'The First Lesson',
+		char: 'B',
+		color: '#aa9977',
+		type: 'book',
+		description:
+			'Notes scratched onto thin stone tablets in a steady, angular hand. The margins contain diagrams of symbols that seem to shift when not looked at directly.',
+		pages: [
+			`THE FIRST LESSON\n` +
+				`(as transcribed by an apprentice\n` +
+				` whose name has been filed away)\n\n` +
+				`Sit. Pay attention. I will say\n` +
+				`this once.\n\n` +
+				`A rune is not a decoration. It is\n` +
+				`not a shortcut. It is not a prayer\n` +
+				`scratched into stone by someone too\n` +
+				`lazy to speak. A rune is a letter\n` +
+				`in the alphabet of reality.\n\n` +
+				`There are seven fundamental runes.\n` +
+				`Order. Change. Time. Space.\n` +
+				`Substance. Energy. Awareness.\n\n` +
+				`These are not spells. These are\n` +
+				`the sounds the world makes when\n` +
+				`it talks to itself. Every stone is\n` +
+				`a sentence. Every river is a verb.\n` +
+				`Every star is a noun that has been\n` +
+				`burning its meaning into the dark\n` +
+				`since before there were eyes to\n` +
+				`read it.\n\n` +
+				`You are not learning magic. You are\n` +
+				`learning to read.`,
+
+			`The priests will tell you that the\n` +
+				`gods gave us the runes. That Verath\n` +
+				`carved Order into the first stone.\n` +
+				`That Orinthas spoke Time into the\n` +
+				`first clock. They are wrong.\n\n` +
+				`I have studied runes for forty years.\n` +
+				`I have traced them to their oldest\n` +
+				`forms — inscriptions on cave walls\n` +
+				`so deep underground that no temple\n` +
+				`has ever reached them. These runes\n` +
+				`predate every scripture. Every hymn.\n` +
+				`Every throne.\n\n` +
+				`The rune of Order was carved into\n` +
+				`the first stone before any god\n` +
+				`existed. The language is older than\n` +
+				`the speaker.\n\n` +
+				`Yes, I am saying what you think I\n` +
+				`am saying. The runes are not gifts\n` +
+				`from the gods. The gods are\n` +
+				`latecomers who learned to speak a\n` +
+				`language that was already being\n` +
+				`spoken and claimed they invented it.\n\n` +
+				`Close your mouth. You look like\n` +
+				`a fish.`,
+
+			`Write the seven fundamental runes\n` +
+				`in a circle. Speak the harmonic I\n` +
+				`taught you. Go on.\n\n` +
+				`Feel that? That vibration in the\n` +
+				`stone? That is reality recognizing\n` +
+				`its own grammar. That is the world\n` +
+				`saying yes. No god made that happen.\n` +
+				`No prayer was involved. You simply\n` +
+				`spoke correctly in a language older\n` +
+				`than prayer.\n\n` +
+				`But do not let the temples hear you\n` +
+				`say this. They will call it heresy.\n` +
+				`They are afraid of anyone who can\n` +
+				`speak without their gods translating.\n` +
+				`An unmediated voice is the most\n` +
+				`dangerous thing in the world —\n` +
+				`because it proves the mediator was\n` +
+				`never necessary.\n\n` +
+				`Now. I am going to show you\n` +
+				`something that is not in any\n` +
+				`textbook. Something the Guild does\n` +
+				`not teach. If you repeat this to\n` +
+				`anyone, I will deny we ever spoke.`,
+
+			`There is an eighth rune.\n\n` +
+				`It is not in any curriculum. It is\n` +
+				`not carved on any guild wall. I\n` +
+				`found it in a cave where reality is\n` +
+				`thin — where the air tastes of\n` +
+				`nothing and your shadow bends the\n` +
+				`wrong way. It was already carved\n` +
+				`there, waiting. It has been waiting\n` +
+				`for a very long time.\n\n` +
+				`The seven runes are the world's\n` +
+				`words. The eighth is the silence\n` +
+				`between them — the absence that\n` +
+				`gives the other seven their shape,\n` +
+				`the way darkness gives meaning to\n` +
+				`light.\n\n` +
+				`I do not know its full purpose.\n` +
+				`I am old, and I have spent my life\n` +
+				`reading the first seven letters,\n` +
+				`and I am only beginning to suspect\n` +
+				`what language they are spelling.\n\n` +
+				`But I will tell you this: any\n` +
+				`alphabet that is missing a letter\n` +
+				`is lying about what it can say.\n` +
+				`And someone removed that letter\n` +
+				`a very long time ago and hoped\n` +
+				`no one would notice the gap.\n\n` +
+				`That is the first lesson. Come\n` +
+				`back when you have stopped being\n` +
+				`afraid of what the letters mean.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
