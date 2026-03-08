@@ -364,6 +364,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	duskhollow: 'The trees are wrong. Half-visible, their trunks flickering between solid wood and translucent grey. Mist clings to everything. Buildings appear and vanish at the corner of your eye — there, then not, then there again. The air tastes of two worlds, and neither one is entirely real.',
 	irongate: 'Iron and stone rise from the scorched earth — massive walls half-buried under landslide rubble. The air smells of rust and old forge smoke. Somewhere beneath the mountain, gears still turn. The ruins of the Iron Republics\' last free city, buried but not forgotten.',
 	arcane_conservatory: 'Towers of pale stone rise from manicured grounds, connected by covered walkways and floating bridges. The air hums with residual enchantment. Students in blue robes cross courtyards where fountain water flows upward. Somewhere a bell tolls — not with sound, but with a pulse of warm light that passes through walls.',
+	gallowmere: 'Rotting farmland stretches between ruined villages. Two throne rooms still stand — one north, one south — both empty, both preserved by locals who cannot say why. The province never recovered from its civil war. Ten years of brother against brother left the land scarred and the people quiet. Weeds grow through cobblestones where market squares once thrived.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -458,6 +459,7 @@ const REGION_COLORS: Record<string, string> = {
 	duskhollow: '#97a',
 	irongate: '#a86',
 	arcane_conservatory: '#a8f',
+	gallowmere: '#a97',
 	underdepths: '#a4f',
 };
 
@@ -752,6 +754,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'M', color: '#ff8', name: 'Professor Mirael Dawnwhisper', dialogue: ['You have questions. I know what they are. I will not answer them yet — not because I am being mysterious, but because you are not ready to hear the answers without going quite mad.', 'Divination is not seeing the future. The future does not exist yet. Divination is seeing the patterns that make certain futures more likely than others. The distinction matters.', 'I looked through the Astral Observatory last night and saw something I have not seen in thirty years of scrying. Seven shadows where there should be none, seated on thrones that do not belong to them. I wrote it in my journal and the ink vanished.'], mood: 'neutral' },
 		{ char: 'A', color: '#ec8', name: 'Archmage Aldric Voss', dialogue: ['The Conservatory has stood for four centuries. In that time we have produced some of the finest minds in the known world. Our curriculum is carefully designed — every subject balanced against every other.', 'Cross-stream mastery is a romantic idea but impractical. No mind can hold more than two or three magical disciplines without risking catastrophic instability. This is settled science.', 'I trust you are finding your studies satisfying? Good, good. Remember: the Conservatory exists to serve the greater good. And the greater good is best served by following the established curriculum.'], gives: { hp: 2 }, mood: 'friendly' },
 	],
+	gallowmere: [
+		{ char: 'P', color: '#a97', name: 'Pol\'s Granddaughter Maren', dialogue: ['My family has lived in this cottage for five generations. Grandmother said never to dig under the hearthstone. I don\'t know why. I don\'t ask.', 'The twins\' war ended the same day it should have never started. Both kings dead by their own hand. Everyone says it was grief. Nobody says what caused the grief.', 'A rider came. Nobody knew him. He delivered letters to both throne rooms on the same morning. By evening, both kings were dead. The rider was never seen again.'], gives: { hp: 2 }, mood: 'neutral' },
+		{ char: 'H', color: '#ca8', name: 'Chronicler Haleth', dialogue: ['The accounts contradict each other in almost every detail. Edric\'s men say Oswin provoked every escalation. Oswin\'s men say the same of Edric. But three witnesses — independently, decades apart — mentioned a rider neither court recognized. That detail I cannot explain away.', 'The evidence that started the war — the poisoned wife, the planted vial, the forged letters — none of it survives. Every original document has vanished. Copies of copies is all we have. That pattern does not happen by accident.', 'There were excavations under the capital during the war. Official records call them sewer maintenance. Ten years of sewer maintenance. During a siege. I have written it in my notes and I still don\'t know what to make of it.'], gives: { atk: 1 }, mood: 'friendly' },
+		{ char: 'W', color: '#886', name: 'Old Soldier Corben', dialogue: ['I fought for Edric. My brother fought for Oswin. We didn\'t speak for ten years. Then both kings died and we had nothing left to fight about. We still don\'t speak. The silence is different now.', 'The farmers\' army against the professional army. We had numbers. They had training. It was perfectly matched — as if someone had designed it to last as long as possible.', 'After the war, strangers came through and bought land for nothing. Built estates where villages used to be. They didn\'t farm the land. They just... owned it. Watched it. Some of those estates are still occupied.'], gives: { hp: 3 }, mood: 'neutral' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -919,6 +926,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	duskhollow:       'The tunnel entrance flickers — solid stone one moment, translucent the next. Inside, you can see through the walls to a second tunnel overlaid on the first, like two drawings on the same page.',
 	irongate:              'Iron rivets line the passage walls. The air is hot and dry — forge heat, centuries old, still radiating from the stone. Gears click in the darkness ahead. Something mechanical is still running.',
 	arcane_conservatory:   'The stairs descend beneath the campus into older stone. Sigils glow along the walls — ward-work, still active after centuries. The air hums with latent enchantment, and somewhere below, something is practicing spells unsupervised.',
+	gallowmere:            'The passage descends into old foundation stone — older than the war, older than the twin kingdoms. Someone has been down here recently: fresh torch marks on the walls, swept floors, and a single boot print in the dust heading deeper.',
 	underdepths:           'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -946,6 +954,7 @@ const GRAVE_LORE: Record<string, string> = {
 	duskhollow:       'A twilight midwife who delivered children in both worlds. Her epitaph: "Born in flesh and spirit both. Now neither world will claim her."',
 	irongate:              'A Republic centurion buried standing upright, shield on arm. His epitaph is a single word scratched into the iron: "REMEMBER."',
 	arcane_conservatory:   'A student who attempted to master all four schools simultaneously. Her tombstone reads: "She reached for everything and grasped the infinite. It did not let go."',
+	gallowmere:            'A servant buried without a name. The headstone reads only: "He could not read, but he listened. And he never forgot."',
 	underdepths:           'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -1069,6 +1078,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	duskhollow:       { combat: ['Wraith', 'Spider', 'Wolf'], nonCombat: ['A figure walks beside you for several paces — translucent, grey, mouthing words you cannot hear. It reaches toward you, then the veil thickens and it is gone.', 'A building appears between two trees, solid and warm with candlelight. You blink and it is a ruin, dark and overgrown. You blink again and the candles return, briefly.'] },
 	irongate:              { combat: ['Golem', 'Troll', 'Skeleton'], nonCombat: ['A gear the size of a wagon wheel grinds slowly in the wall beside you, driven by some mechanism deep underground. Oil drips from its teeth — fresh oil, recently applied by someone.', 'You find a Republic-era coin half-buried in ash. One side shows a broken chain. The other side has been scratched blank — deliberately, methodically, as if someone wanted a face erased from history.'] },
 	arcane_conservatory:   { combat: ['Skeleton', 'Slime', 'Spider'], nonCombat: ['A student rushes past muttering about a failed transmutation exam. Sparks trail from her fingers.', 'An enchanted broom sweeps the path ahead of you, then pauses, seems to regard you, and sweeps off in the opposite direction.'] },
+	gallowmere:            { combat: ['Wolf', 'Rat', 'Goblin'], nonCombat: ['A crow lands on a broken fence post and caws twice. An old woman in a nearby field stops working and counts something on her fingers, then resumes as if nothing happened.', 'You pass a crossroads marker listing two villages in opposite directions. Both villages have the same name — scratched out, rewritten, scratched out again.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 

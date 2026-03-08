@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'luminara_ruins' | 'duskhollow' | 'irongate' | 'arcane_conservatory' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'luminara_ruins' | 'duskhollow' | 'irongate' | 'arcane_conservatory' | 'gallowmere' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -90,7 +90,7 @@ export const WORLD_W = 200;
 export const WORLD_H = 200;
 
 /** Surface regions (21) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle', 'luminara_ruins', 'duskhollow', 'irongate', 'arcane_conservatory'];
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle', 'luminara_ruins', 'duskhollow', 'irongate', 'arcane_conservatory', 'gallowmere'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -115,6 +115,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	duskhollow:       { name: 'Duskhollow',            language: 'Twilight Cant',    dangerLevel: 6 },
 	irongate:              { name: 'Irongate',              language: 'Old Iron',         dangerLevel: 8 },
 	arcane_conservatory:   { name: 'The Arcane Conservatory', language: 'Arcane Script',    dangerLevel: 4 },
+	gallowmere:           { name: 'Gallowmere',             language: 'Old Solanthine',   dangerLevel: 5 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -272,6 +273,13 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'forest', weight: 10 },
 		{ terrain: 'mountain', weight: 10 },
 	],
+	gallowmere: [
+		{ terrain: 'farmland', weight: 30 },
+		{ terrain: 'grass', weight: 25 },
+		{ terrain: 'dead_trees', weight: 20 },
+		{ terrain: 'rock', weight: 15 },
+		{ terrain: 'mud', weight: 10 },
+	],
 };
 
 // ── Perlin Noise (simplified 2D value noise) ──
@@ -327,7 +335,7 @@ function distance(a: Position, b: Position): number {
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
-	const minDist = Math.min(width, height) * 0.15; // ~30 tiles apart minimum
+	const minDist = Math.min(width, height) * 0.14; // ~28 tiles apart minimum
 	const margin = 20; // keep away from edges
 	const seeds = new Map<RegionId, Position>();
 
@@ -837,6 +845,16 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'ruins', name: 'The Forbidden Library Annex', hidden: true },
 		{ type: 'grave_site', name: 'The Expelled Students\' Marker', hidden: true },
 	],
+	gallowmere: [
+		{ type: 'ruins', name: 'The North Throne Room', hidden: false },
+		{ type: 'ruins', name: 'The South Throne Room', hidden: false },
+		{ type: 'standing_stones', name: 'The Brothers\' Memorial', hidden: false },
+		{ type: 'obelisk', name: 'War Census Pillar', hidden: false },
+		{ type: 'hidden_cave', name: 'Pol\'s Cottage Cellar', hidden: true },
+		{ type: 'grave_site', name: 'The Unmarked Field', hidden: true },
+		{ type: 'shrine', name: 'Edric\'s Chapel', hidden: false },
+		{ type: 'hidden_cave', name: 'The Old Sewer Drain', hidden: true },
+	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
@@ -1177,6 +1195,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	duskhollow: { prefixes: ['Dusk', 'Shade', 'Veil', 'Glimmer', 'Wane', 'Haze', 'Mist'], suffixes: ['hollow', 'ford', 'mere', 'shade', 'crossing', 'watch', 'fall'] },
 	irongate: { prefixes: ['Iron', 'Anvil', 'Forge', 'Steel', 'Gear', 'Chain', 'Hammer'], suffixes: ['gate', 'hold', 'works', 'keep', 'wall', 'yard', 'march'] },
 	arcane_conservatory: { prefixes: ['Spell', 'Rune', 'Arcane', 'Sigil', 'Glyph', 'Lumen', 'Mana', 'Ward'], suffixes: ['hall', 'tower', 'court', 'ward', 'spire', 'gate', 'arch', 'keep'] },
+	gallowmere: { prefixes: ['Gallow', 'Voss', 'Crown', 'Ash', 'Twin', 'Throne', 'Red'], suffixes: ['mere', 'field', 'stead', 'hold', 'cross', 'wall', 'rest'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -1208,6 +1227,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	duskhollow: ['Flickering Catacombs', 'Spirit Bridge Ruins', 'The Half-World Cellar', 'Ghostbloom Cavern', 'Twilight Archive', 'Hollow One\'s Nest', 'The Membrane Breach'],
 	irongate: ['Buried Senate Chamber', 'Forge Undercroft', 'Centurion\'s Crypt', 'Clockwork Vault', 'Collapsed Armory', 'The Betrayer\'s Tunnel', 'Siege Engine Graveyard'],
 	arcane_conservatory: ['The Practice Vaults', 'Enchantment Laboratory Sublevel', 'The Forbidden Archive', 'Alchemy Cellar', 'Summoning Chamber Ruins', 'Divination Crypt', 'The Headmaster\'s Undercroft', 'Collapsed Dormitory Wing', 'Warding Stone Tunnels', 'The Mana Reservoir', 'Expelled Students\' Hideout', 'Crystal Growth Caves', 'The Final Exam Dungeon'],
+	gallowmere: ['Old Capital Undercroft', 'War Tunnel Network', 'Edric\'s Hidden Armory', 'Oswin\'s War Room Cellar', 'Sewer Cistern', 'Disturbed Foundation Vault', 'Burned Granary Basement'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 
