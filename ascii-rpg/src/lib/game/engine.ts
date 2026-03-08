@@ -361,6 +361,7 @@ const REGION_FLAVOR: Record<string, string> = {
 	eldergrove: 'The trees here are immense — silver-barked giants whose canopy swallows the sky. Shafts of green-gold light pierce the perpetual twilight. Somewhere above, elven bridges span the branches like spider silk, and the forest hums with a music older than prayer.',
 	stormcradle: 'Lightning splits the sky every few heartbeats. The highlands are scoured bare — only scrub grass and blackened stone survive. Between the thunder, you hear something deeper: a hum from beneath the rock, as if the earth itself remembers the blow that cracked the sky.',
 	luminara_ruins: 'Golden spires rise from the dust, half-collapsed and half-frozen in amber light. The air smells of old parchment and ash. In places the ruins shimmer — time pooling like water in the broken streets, preserving moments of beauty a heartbeat before their destruction.',
+	duskhollow: 'The trees are wrong. Half-visible, their trunks flickering between solid wood and translucent grey. Mist clings to everything. Buildings appear and vanish at the corner of your eye — there, then not, then there again. The air tastes of two worlds, and neither one is entirely real.',
 };
 
 /** Convert numeric danger level to display label and color. */
@@ -452,6 +453,7 @@ const REGION_COLORS: Record<string, string> = {
 	eldergrove: '#6d8',
 	stormcradle: '#99f',
 	luminara_ruins: '#ec8',
+	duskhollow: '#97a',
 	underdepths: '#a4f',
 };
 
@@ -729,6 +731,11 @@ const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'T', color: '#da6', name: 'Temporal Guide Essra', dialogue: ['The time pockets are beautiful and terrible. You step through and for a moment you are in the golden age — the gardens, the music, the light. Then it tears you back.', 'Do not linger in the frozen moments. Some scholars have been trapped for hours that felt like years. They came back... different.', 'The Frozen Fountain still runs, if you can call it running. The water hangs in the air, mid-splash, and has for two thousand years.'], gives: { hp: 3 }, mood: 'friendly' },
 		{ char: 'M', color: '#ca8', name: 'Ruin-Keeper Daven', dialogue: ['I guard the Inscription Wall. Most visitors read it and walk away confused. A few read it and go very, very quiet.', 'The last king destroyed things that took centuries to build. Not in war. Not by accident. By decree. Read the wall and judge for yourself.', 'Someone tried to chisel the Inscription off the wall last month. Hired hands — professional. I did not ask who sent them.'], gives: { atk: 1 }, mood: 'neutral' },
 	],
+	duskhollow: [
+		{ char: 'E', color: '#a8b', name: 'Elder Miravel', dialogue: ['We could see both worlds once. The living and the dead, walking the same streets. Now the veil thickens year by year, and we lose a little more of ourselves each time.', 'My grandmother spoke to ancestors as easily as I speak to you. My children cannot see them at all. Something is being taken from us — slowly, deliberately.', 'The Dusk Markets traded goods between worlds. Spirit-silk, dreamglass, bottled memory. Now the stalls stand empty, flickering.'], gives: { hp: 3 }, mood: 'neutral' },
+		{ char: 'W', color: '#8ac', name: 'Spirit-Walker Thessyn', dialogue: ['I can still cross, but barely. The passage grows narrower each year. Like squeezing through a closing door.', 'The ghosts on the other side remember things. Old things. They try to tell me, but the veil muffles their voices. I catch fragments — names, warnings, apologies.', 'Do not trust the exorcists who come in official robes. The ones they banish are always the oldest — the ones who remember before. I do not know why. I only know they do not leave by choice.'], gives: { atk: 1 }, mood: 'friendly' },
+		{ char: 'V', color: '#667', name: 'Watcher Coravel', dialogue: ['I am here to ensure the boundary remains stable. Nothing more.', 'The Division of Silence monitors thin-spots for public safety. The spirit world is dangerous to the untrained.', 'The twilight folk are a dying culture. Unfortunate, but the veil exists for a reason. Some doors should stay closed.'], mood: 'hostile' },
+	],
 	underdepths: [
 		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
 		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -893,6 +900,7 @@ const DUNGEON_ENTRANCE_FLAVOR: Record<string, string> = {
 	eldergrove:       'Roots twist into a staircase descending beneath the forest floor. The walls are living wood, and sap glows faintly amber in the crevices. Something ancient breathes below.',
 	stormcradle:      'The tunnel walls are fused glass — lightning-bored through solid rock. Static raises every hair on your body. The deeper you go, the louder the hum.',
 	luminara_ruins:   'The stairs descend through layers of history — gilded mosaic gives way to charred stone gives way to something older. Time stutters here. Your torch flame freezes, then leaps forward.',
+	duskhollow:       'The tunnel entrance flickers — solid stone one moment, translucent the next. Inside, you can see through the walls to a second tunnel overlaid on the first, like two drawings on the same page.',
 	underdepths:      'The darkness here is absolute. Even your torch seems to shrink from the void.',
 };
 
@@ -917,6 +925,7 @@ const GRAVE_LORE: Record<string, string> = {
 	eldergrove:       'An elven archivist who hid the last pre-Ascension texts beneath the roots. Her final note: "They burned the library at Ashfall. They will come for these next. The trees will not let them take them."',
 	stormcradle:      'A storm warden who mapped the lightning patterns for thirty years. Her final chart note: "The bolts are not striking the ground. They are striking back at the sky."',
 	luminara_ruins:   'A Luminari mathematician buried with her equations. Her epitaph: "The king said my proofs were sedition. I said they were truth. The ruins prove which of us was right."',
+	duskhollow:       'A twilight midwife who delivered children in both worlds. Her epitaph: "Born in flesh and spirit both. Now neither world will claim her."',
 	underdepths:      'A Deepscript scholar who went mad deciphering the Void Monolith.',
 };
 
@@ -1037,6 +1046,7 @@ const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] 
 	eldergrove:       { combat: ['Spider', 'Wolf', 'Troll'], nonCombat: ['A silver-barked tree shifts its branches, revealing a hidden path that was not there a moment ago.', 'An elven scout drops from the canopy, studies you in silence, then vanishes back into the leaves with a curt nod.'] },
 	stormcradle:      { combat: ['Wolf', 'Troll', 'Ogre'], nonCombat: ['Lightning strikes a boulder twenty paces ahead. When the afterimage fades, a fulgurite sculpture stands where the rock was — shaped like a hand reaching upward.', 'A storm warden signals you from a ridge, pointing toward a safe path between the strike zones. She vanishes before you can shout thanks.'] },
 	luminara_ruins:   { combat: ['Wraith', 'Skeleton', 'Golem'], nonCombat: ['The air shimmers and for a heartbeat you see the street as it was — golden, alive, filled with scholars in white robes. Then ash.', 'A charred scroll fragment tumbles past your feet. The visible text reads: "...and the king decreed that henceforth all books shall..." The rest is burned away.'] },
+	duskhollow:       { combat: ['Wraith', 'Spider', 'Wolf'], nonCombat: ['A figure walks beside you for several paces — translucent, grey, mouthing words you cannot hear. It reaches toward you, then the veil thickens and it is gone.', 'A building appears between two trees, solid and warm with candlelight. You blink and it is a ruin, dark and overgrown. You blink again and the candles return, briefly.'] },
 	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
 };
 

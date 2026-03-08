@@ -9,7 +9,7 @@ import { SeededRandom, hashSeed, createRng } from './seeded-random';
 
 // ── Region & Terrain Types ──
 
-export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'luminara_ruins' | 'underdepths';
+export type RegionId = 'greenweald' | 'ashlands' | 'hearthlands' | 'frostpeak' | 'drowned_mire' | 'sunstone_expanse' | 'thornlands' | 'pale_coast' | 'glassfields' | 'verdant_deep' | 'mirrow_wastes' | 'silence_peaks' | 'timeless_wastes' | 'hollow_sea' | 'grey_wastes' | 'korthaven' | 'eldergrove' | 'stormcradle' | 'luminara_ruins' | 'duskhollow' | 'underdepths';
 
 export type TerrainType =
 	| 'grass' | 'forest' | 'mountain' | 'water' | 'sand'
@@ -89,8 +89,8 @@ export interface WorldMap {
 export const WORLD_W = 200;
 export const WORLD_H = 200;
 
-/** Surface regions (19) — Underdepths is underground, not placed on surface */
-const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle', 'luminara_ruins'];
+/** Surface regions (20) — Underdepths is underground, not placed on surface */
+const SURFACE_REGIONS: RegionId[] = ['greenweald', 'ashlands', 'hearthlands', 'frostpeak', 'drowned_mire', 'sunstone_expanse', 'thornlands', 'pale_coast', 'glassfields', 'verdant_deep', 'mirrow_wastes', 'silence_peaks', 'timeless_wastes', 'hollow_sea', 'grey_wastes', 'korthaven', 'eldergrove', 'stormcradle', 'luminara_ruins', 'duskhollow'];
 
 export const REGION_DEFS: Record<RegionId, { name: string; language: string; dangerLevel: number }> = {
 	greenweald:       { name: 'The Greenweald',       language: 'Elvish',       dangerLevel: 1 },
@@ -112,6 +112,7 @@ export const REGION_DEFS: Record<RegionId, { name: string; language: string; dan
 	eldergrove:       { name: 'The Eldergrove',        language: 'Sylvan',           dangerLevel: 5 },
 	stormcradle:      { name: 'The Stormcradle',       language: 'Storm Cant',       dangerLevel: 6 },
 	luminara_ruins:   { name: 'The Luminara Ruins',    language: 'Luminari Script',  dangerLevel: 7 },
+	duskhollow:       { name: 'Duskhollow',            language: 'Twilight Cant',    dangerLevel: 6 },
 	underdepths:      { name: 'The Underdepths',       language: 'Deepscript',   dangerLevel: 10 },
 };
 
@@ -248,6 +249,13 @@ const TERRAIN_WEIGHTS: Record<Exclude<RegionId, 'underdepths'>, { terrain: Terra
 		{ terrain: 'ice', weight: 15 },
 		{ terrain: 'ash', weight: 10 },
 	],
+	duskhollow: [
+		{ terrain: 'forest', weight: 40 },
+		{ terrain: 'swamp', weight: 20 },
+		{ terrain: 'grass', weight: 15 },
+		{ terrain: 'water', weight: 15 },
+		{ terrain: 'mud', weight: 10 },
+	],
 };
 
 // ── Perlin Noise (simplified 2D value noise) ──
@@ -299,11 +307,11 @@ function distance(a: Position, b: Position): number {
 }
 
 /**
- * Place 19 region seed points using Poisson-disk-like sampling.
+ * Place 20 region seed points using Poisson-disk-like sampling.
  * Ensures minimum spacing between points.
  */
 function placeRegionSeeds(width: number, height: number, rng: SeededRandom): Map<RegionId, Position> {
-	const minDist = Math.min(width, height) * 0.16; // ~32 tiles apart minimum
+	const minDist = Math.min(width, height) * 0.15; // ~30 tiles apart minimum
 	const margin = 20; // keep away from edges
 	const seeds = new Map<RegionId, Position>();
 
@@ -775,6 +783,16 @@ const REGION_POIS: Record<RegionId, { type: POIType; name: string; hidden: boole
 		{ type: 'grave_site', name: 'Arcanist\'s Cenotaph', hidden: true },
 		{ type: 'ancient_tree', name: 'The Petrified Scholar-Tree', hidden: false },
 	],
+	duskhollow: [
+		{ type: 'ruins', name: 'The Flickering Court', hidden: false },
+		{ type: 'standing_stones', name: 'Spirit Bridge Pillars', hidden: false },
+		{ type: 'shrine', name: 'Shrine of the Thin Place', hidden: false },
+		{ type: 'obelisk', name: 'The Membrane Stone', hidden: false },
+		{ type: 'hidden_cave', name: 'Passage Between', hidden: true },
+		{ type: 'hot_spring', name: 'Ghostwater Pool', hidden: true },
+		{ type: 'grave_site', name: 'Twilight Elder\'s Barrow', hidden: true },
+		{ type: 'ancient_tree', name: 'The Half-Visible Oak', hidden: false },
+	],
 	underdepths: [
 		{ type: 'obelisk', name: 'Void Monolith', hidden: false },
 		{ type: 'shrine', name: 'Echo Shrine', hidden: true },
@@ -1112,6 +1130,7 @@ const REGION_SYLLABLES: Record<RegionId, { prefixes: string[]; suffixes: string[
 	eldergrove: { prefixes: ['Silver', 'Star', 'Moon', 'Dawn', 'Briar', 'Alder', 'Birch', 'Rowan'], suffixes: ['glade', 'spire', 'song', 'root', 'bower', 'reach', 'hollow'] },
 	stormcradle: { prefixes: ['Thunder', 'Bolt', 'Gale', 'Fulgar', 'Tempest', 'Strike', 'Flash'], suffixes: ['crest', 'ridge', 'fall', 'hold', 'peak', 'watch', 'break'] },
 	luminara_ruins: { prefixes: ['Lumen', 'Ash', 'Golden', 'Scroll', 'Ruin', 'Frost', 'Echo'], suffixes: ['arch', 'court', 'spire', 'vault', 'hall', 'rest', 'mark'] },
+	duskhollow: { prefixes: ['Dusk', 'Shade', 'Veil', 'Glimmer', 'Wane', 'Haze', 'Mist'], suffixes: ['hollow', 'ford', 'mere', 'shade', 'crossing', 'watch', 'fall'] },
 	underdepths: { prefixes: ['Deep', 'Void', 'Echo', 'Shadow', 'Abyss', 'Glyph'], suffixes: ['fall', 'maw', 'core', 'vault', 'depth', 'reach'] },
 };
 
@@ -1140,6 +1159,7 @@ const DUNGEON_PREFIXES: Record<RegionId, string[]> = {
 	eldergrove: ['Forgotten Elven Temple', 'Bandit Warrens', 'Rootbound Crypt', 'Spider-Silk Cavern', 'Moonlit Catacombs', 'Beast Lord\'s Den', 'Thorn-Choked Ruins', 'Canopy Stalker\'s Nest', 'Vine-Strangled Vault', 'The Deep Hollow', 'Mushroom Caves', 'Poacher\'s Tunnel', 'Treant\'s Grotto'],
 	stormcradle: ['Lightning-Split Cavern', 'Ancient Vein Tunnel', 'Storm Warden\'s Crypt', 'Fulgurite Mines', 'Thunderbird Nest', 'Shattered Observatory', 'Electrified Ruins'],
 	luminara_ruins: ['Collapsed Library Vaults', 'Frozen Throne Room', 'Scholar\'s Catacombs', 'Temporal Labyrinth', 'Ash-Choked Archives', 'The Erased Gallery', 'Philosopher\'s Crypts'],
+	duskhollow: ['Flickering Catacombs', 'Spirit Bridge Ruins', 'The Half-World Cellar', 'Ghostbloom Cavern', 'Twilight Archive', 'Hollow One\'s Nest', 'The Membrane Breach'],
 	underdepths: ['Abyssal Pit', 'Fungal Network', 'Crystal Depths', 'Echo Vault', 'Void Fissure', 'Worm Tunnels', 'Shaper\'s Passage'],
 };
 
