@@ -4,7 +4,7 @@ import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
-import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, getMonsterTier, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
+import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, getMonsterTier, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect, MONSTER_DEFS } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, applyHazardToEntity, hazardChar, hazardColor } from './hazards';
@@ -540,6 +540,11 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 
 	state.turnCount += moveCost;
 
+	// Random encounter check (before location entry)
+	if (checkRandomEncounter(state)) {
+		return { ...state }; // Combat encounter — player is now in arena
+	}
+
 	// Check for location entry
 	const location = getOverworldLocation(worldMap, state.overworldPos);
 	if (location) {
@@ -644,6 +649,132 @@ function discoverPOI(state: GameState, poi: PointOfInterest): void {
 	} else {
 		addMessage(state, `${poi.name} — you've been here before.`, 'info');
 	}
+}
+
+// ── Overworld Random Encounters ──
+
+/** Region-specific encounter monster names (matched from MONSTER_DEFS or custom). */
+const REGION_ENCOUNTERS: Record<string, { combat: string[]; nonCombat: string[] }> = {
+	greenweald:       { combat: ['Wolf', 'Spider', 'Bat'], nonCombat: ['A wandering herbalist offers you a healing potion.', 'A lost elven traveler thanks you for directions.'] },
+	hearthlands:      { combat: ['Goblin', 'Rat', 'Wolf'], nonCombat: ['A merchant caravan passes by and offers to trade.', 'A farmer shares bread and cheese with you.'] },
+	ashlands:         { combat: ['Goblin', 'Ogre', 'Slime'], nonCombat: ['An orc scout watches you from a distance, then nods.', 'You find a discarded war banner — the forge clans passed here.'] },
+	frostpeak:        { combat: ['Wolf', 'Skeleton', 'Troll'], nonCombat: ['A dwarven prospector shares warmth by a campfire.', 'You discover a frozen shrine and warm your hands.'] },
+	drowned_mire:     { combat: ['Slime', 'Spider', 'Zombie'], nonCombat: ['A swamp witch offers a bitter tonic that restores health.', 'You find dry ground and an abandoned camp with supplies.'] },
+	sunstone_expanse: { combat: ['Skeleton', 'Rat', 'Ogre'], nonCombat: ['A nomadic stargazer reads your fortune.', 'A desert trader sells you water from an oasis.'] },
+	underdepths:      { combat: ['Wraith', 'Troll', 'Minotaur'], nonCombat: ['A fungal glow illuminates a small alcove with a healing spring.', 'An echo from the deep whispers ancient knowledge.'] },
+};
+
+/** Encounter chance: ~5% off-road, ~2% on roads. Returns true if encounter triggers. */
+function rollEncounter(tile: OverworldTile, turnCount: number): boolean {
+	// Use turnCount as a simple pseudo-random source to keep it deterministic-ish
+	const hash = ((turnCount * 2654435761) >>> 0) / 4294967296;
+	const chance = tile.road ? 0.02 : 0.05;
+	return hash < chance;
+}
+
+/** Generate a random combat encounter on the overworld. */
+function triggerCombatEncounter(state: GameState, regionId: string): void {
+	const worldMap = state.worldMap as WorldMap;
+	const regionDef = REGION_DEFS[regionId as RegionId];
+	if (!regionDef) return;
+
+	const dangerLevel = regionDef.dangerLevel;
+	const encounterLevel = Math.max(1, dangerLevel);
+	const encounterDefs = REGION_ENCOUNTERS[regionId]?.combat ?? ['Rat', 'Goblin'];
+
+	// Generate a small 15x10 arena
+	const arenaW = 15;
+	const arenaH = 10;
+	const rng = createRng(hashSeed((state.characterConfig.worldSeed || 'enc') + ':enc:' + state.turnCount));
+	const arenaMap = generateMap(arenaW, arenaH, 0, rng);
+	// Remove stairs from encounter arena (no descending)
+	for (let y = 0; y < arenaH; y++) {
+		for (let x = 0; x < arenaW; x++) {
+			if (arenaMap.tiles[y][x] === '<' || arenaMap.tiles[y][x] === '>') {
+				arenaMap.tiles[y][x] = '.';
+			}
+		}
+	}
+
+	const enemyCount = 1 + Math.floor(rng.next() * Math.min(3, 1 + Math.floor(dangerLevel / 3)));
+	const positions = getSpawnPositions(arenaMap, 1 + enemyCount, rng);
+
+	// Place player
+	const playerPos = positions[0] ?? { x: 1, y: 1 };
+
+	// Create enemies from region encounter table
+	const enemies: Entity[] = [];
+	for (let i = 1; i < positions.length && i <= enemyCount; i++) {
+		const monsterName = encounterDefs[Math.floor(rng.next() * encounterDefs.length)];
+		const def = MONSTER_DEFS.find(m => m.name === monsterName) ?? pickMonsterDef(encounterLevel, rng);
+		const enemy = createMonster(positions[i], encounterLevel, def);
+		applyDifficultyToEnemy(enemy, state.characterConfig.difficulty);
+		enemies.push(enemy);
+	}
+
+	// Save overworld state and switch to encounter
+	state.map = arenaMap;
+	state.player.pos = playerPos;
+	state.enemies = enemies;
+	state.locationMode = 'location';
+	state.currentLocationId = 'encounter';
+	state.level = 0; // level 0 so stairs will exit back to overworld
+	state.visibility = createVisibilityGrid(arenaW, arenaH);
+	state.sightRadius = DEFAULT_SIGHT_RADIUS;
+	updateVisibility(arenaMap, playerPos, state.sightRadius, state.visibility);
+	state.traps = [];
+	state.hazards = [];
+	state.chests = [];
+	state.lootDrops = [];
+	state.npcs = [];
+	state.landmarks = [];
+
+	const enemyNames = enemies.map(e => e.name).join(', ');
+	addMessage(state, `Ambush! You are attacked by ${enemyNames}!`, 'danger');
+}
+
+/** Trigger a non-combat encounter — healing, XP, or flavor. */
+function triggerNonCombatEncounter(state: GameState, regionId: string): void {
+	const encounters = REGION_ENCOUNTERS[regionId]?.nonCombat ?? ['You see something in the distance, but it vanishes.'];
+	// Use turnCount for deterministic selection
+	const hash = ((state.turnCount * 1664525 + 1013904223) >>> 0) / 4294967296;
+	const text = encounters[Math.floor(hash * encounters.length)];
+	addMessage(state, text, 'npc');
+
+	// 50% chance: heal some HP, 50% chance: small XP reward
+	if (hash < 0.5) {
+		const healAmt = Math.min(5 + state.characterLevel, state.player.maxHp - state.player.hp);
+		if (healAmt > 0) {
+			state.player.hp += healAmt;
+			addMessage(state, `You recover ${healAmt} HP.`, 'healing');
+		}
+	} else {
+		const xpGain = 3 + state.characterLevel * 2;
+		state.xp += xpGain;
+		addMessage(state, `+${xpGain} XP from the encounter.`, 'level_up');
+		checkLevelUp(state);
+	}
+}
+
+/** Check and trigger random encounter on overworld movement. Returns true if encounter occurred. */
+function checkRandomEncounter(state: GameState): boolean {
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos!;
+	const tile = worldMap.tiles[pos.y]?.[pos.x];
+	if (!tile) return false;
+	// No encounters on settlement/dungeon/POI tiles
+	if (tile.locationId) return false;
+
+	if (!rollEncounter(tile, state.turnCount)) return false;
+
+	// 70% combat, 30% non-combat
+	const combatHash = (((state.turnCount + 7) * 2246822519) >>> 0) / 4294967296;
+	if (combatHash < 0.7) {
+		triggerCombatEncounter(state, tile.region);
+	} else {
+		triggerNonCombatEncounter(state, tile.region);
+	}
+	return combatHash < 0.7; // return true only if combat (blocks further movement)
 }
 
 /** Return to the overworld from a location. */
@@ -2147,6 +2278,12 @@ export function handleInput(state: GameState, key: string): GameState {
 	const survivalResult = tickSurvival(state);
 	for (const msg of survivalResult.messages) {
 		state.messages.push(msg);
+	}
+
+	// Auto-return to overworld after clearing encounter arena
+	if (state.currentLocationId === 'encounter' && state.worldMap && state.overworldPos && state.enemies.length === 0 && state.locationMode === 'location') {
+		addMessage(state, 'The encounter is over. You return to the overworld.', 'discovery');
+		return exitToOverworld(state);
 	}
 
 	return { ...state };

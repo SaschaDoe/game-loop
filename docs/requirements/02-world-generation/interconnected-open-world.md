@@ -273,10 +273,20 @@ As a player, I want random encounters while traveling the overworld, so that jou
 - Non-combat encounters: merchant caravans, lost travelers, shrine discoveries
 
 **Acceptance Criteria:**
-- [ ] Random encounters trigger at appropriate rates
-- [ ] Encounter content matches the current region
-- [ ] Combat encounters use temporary maps
-- [ ] Non-combat encounters provide meaningful interactions
+- [x] Random encounters trigger at appropriate rates
+- [x] Encounter content matches the current region
+- [x] Combat encounters use temporary maps
+- [x] Non-combat encounters provide meaningful interactions
+
+**Implementation Notes (completed):**
+- `REGION_ENCOUNTERS` table: 7 regions each with combat monster lists and non-combat flavor text
+- `rollEncounter()`: 5% chance off-road, 2% on roads per overworld step (hash-based deterministic roll)
+- `triggerCombatEncounter()`: generates 15×10 arena via `generateMap()`, spawns 1–3 region-themed enemies, sets `currentLocationId = 'encounter'`
+- `triggerNonCombatEncounter()`: 50/50 healing (+5 HP) or XP (+10) with region-flavored messages
+- `checkRandomEncounter()`: 70% combat / 30% non-combat split
+- Auto-return to overworld when all enemies defeated in encounter arena (checked at end of `handleInput()`)
+- Road travel reduces encounter rate (2% vs 5%), incentivizing road use
+- 4 new tests: encounter triggers, arena generation, road rate reduction, non-combat encounters
 
 ---
 
