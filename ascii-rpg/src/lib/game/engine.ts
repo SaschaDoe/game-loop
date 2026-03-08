@@ -210,7 +210,7 @@ export function createGame(config?: CharacterConfig): GameState {
 			statusEffects: []
 		},
 		enemies: locResult.enemies,
-		npcs: locResult.npcs,
+		npcs: spawnRegionalNPCs(locResult.map, startSettlement.region, locResult.npcs),
 		map: locResult.map,
 		messages: [{ text: locResult.welcomeMessage, type: 'info' as const }],
 		level: 0,
@@ -561,6 +561,85 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 	return { ...state };
 }
 
+// ── Regional NPCs for settlements ──
+
+interface RegionalNPCDef {
+	char: string;
+	color: string;
+	name: string;
+	dialogue: string[];
+	gives?: { hp?: number; atk?: number };
+	mood: NPC['mood'];
+}
+
+const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
+	greenweald: [
+		{ char: 'E', color: '#8f8', name: 'Elven Ranger', dialogue: ['The forest watches over those who respect it.', 'I patrol these woods daily. The corruption spreads from the east.', 'May the canopy shelter you.'], mood: 'friendly' },
+		{ char: 'D', color: '#4a4', name: 'Druid', dialogue: ['The Elder Oak speaks of dark times ahead.', 'Nature provides, if you know where to look.', 'Have you visited the Fey Circle? The stones hum with power.'], gives: { hp: 3 }, mood: 'friendly' },
+	],
+	ashlands: [
+		{ char: 'O', color: '#f84', name: 'Orc Blacksmith', dialogue: ['You want weapon? I forge best steel in Ashlands.', 'The goblin clans grow restless. War comes.', 'Respect the fire, outsider, and it will not burn you.'], gives: { atk: 1 }, mood: 'neutral' },
+		{ char: 'G', color: '#a64', name: 'Goblin Trader', dialogue: ['Cheap goods! Good goods! Only slightly stolen!', 'The Charred Fortress has treasures... and death.', 'Boss not happy lately. Bad sign for everyone.'], mood: 'friendly' },
+	],
+	hearthlands: [
+		{ char: 'M', color: '#da4', name: 'Merchant', dialogue: ['Trade is the lifeblood of the Hearthlands.', 'The roads have become dangerous — bandits everywhere.', 'I hear the King\'s Stones hold ancient magic.'], mood: 'friendly' },
+		{ char: 'G', color: '#8a4', name: 'Guard Captain', dialogue: ['Keep your weapons sheathed within town walls.', 'We\'ve had reports of strange creatures on the roads.', 'The Old Watchtower was abandoned years ago. Haunted, they say.'], gives: { hp: 2 }, mood: 'neutral' },
+	],
+	frostpeak: [
+		{ char: 'D', color: '#8df', name: 'Dwarven Smith', dialogue: ['These mountains hold iron that sings when struck.', 'The frozen halls above... even we dare not enter.', 'Take this — you\'ll need warmth where you\'re going.'], gives: { hp: 3 }, mood: 'friendly' },
+		{ char: 'R', color: '#aaf', name: 'Runekeeper', dialogue: ['The runes speak truths that words cannot.', 'Frostpeak was old when the world was young.', 'The ice holds secrets of the First Age.'], mood: 'neutral' },
+	],
+	drowned_mire: [
+		{ char: 'W', color: '#6a6', name: 'Swamp Witch', dialogue: ['The mire gives and takes in equal measure.', 'Drink this. It tastes foul but wards off the plague.', 'The bog spirits are restless tonight...'], gives: { hp: 4 }, mood: 'friendly' },
+		{ char: 'H', color: '#886', name: 'Herbalist', dialogue: ['These mushrooms cure most poisons. Most.', 'Don\'t stray from the stilts after dark.', 'The Sunken Altar holds power over the drowned dead.'], mood: 'neutral' },
+	],
+	sunstone_expanse: [
+		{ char: 'N', color: '#fa4', name: 'Nomad Guide', dialogue: ['The desert tests all who cross it.', 'Follow the stars — they never lie, unlike the sands.', 'The buried temples hold treasures of forgotten kings.'], mood: 'friendly' },
+		{ char: 'S', color: '#ff8', name: 'Stargazer', dialogue: ['The constellations shifted last night. A bad omen.', 'Sandscript cannot be learned from books alone.', 'The oasis shrines were built by the Sand Mages long ago.'], gives: { hp: 2 }, mood: 'neutral' },
+	],
+	underdepths: [
+		{ char: '?', color: '#a4f', name: 'Deep Scholar', dialogue: ['The Void Monolith predates all civilizations above.', 'Deepscript is not merely language — it reshapes thought.', 'Light is a crutch. True sight comes in darkness.'], mood: 'neutral' },
+		{ char: 'F', color: '#4af', name: 'Fungal Farmer', dialogue: ['These glowing caps are safe to eat. Probably.', 'The mushroom forests stretch for miles in every direction.', 'Something stirs in the deep. Even the fungi tremble.'], gives: { hp: 3 }, mood: 'friendly' },
+	],
+};
+
+/** Spawn regional NPCs in a settlement based on its region. */
+function spawnRegionalNPCs(map: GameMap, region: string, existingNPCs: NPC[]): NPC[] {
+	const defs = REGIONAL_NPCS[region];
+	if (!defs) return existingNPCs;
+
+	const occupied = new Set<string>();
+	for (const npc of existingNPCs) occupied.add(`${npc.pos.x},${npc.pos.y}`);
+
+	const result = [...existingNPCs];
+	for (const def of defs) {
+		// Find a free floor tile for this NPC
+		let placed = false;
+		for (let attempt = 0; attempt < 100 && !placed; attempt++) {
+			const x = 2 + Math.floor(Math.random() * (map.width - 4));
+			const y = 2 + Math.floor(Math.random() * (map.height - 4));
+			const key = `${x},${y}`;
+			if (map.tiles[y]?.[x] === '.' && !occupied.has(key)) {
+				result.push({
+					pos: { x, y },
+					char: def.char,
+					color: def.color,
+					name: def.name,
+					dialogue: def.dialogue,
+					dialogueIndex: 0,
+					gives: def.gives,
+					given: false,
+					mood: def.mood,
+					moodTurns: 0,
+				});
+				occupied.add(key);
+				placed = true;
+			}
+		}
+	}
+	return result;
+}
+
 /** Enter a settlement from the overworld. */
 function enterSettlement(state: GameState, settlement: Settlement): void {
 	state.level = 0;
@@ -582,7 +661,7 @@ function enterSettlement(state: GameState, settlement: Settlement): void {
 	state.map = locResult.map;
 	state.player.pos = locResult.playerPos;
 	state.enemies = locResult.enemies;
-	state.npcs = locResult.npcs;
+	state.npcs = spawnRegionalNPCs(locResult.map, settlement.region, locResult.npcs);
 	state.visibility = createVisibilityGrid(MAP_W, MAP_H);
 	state.traps = [];
 	state.detectedTraps = new Set();

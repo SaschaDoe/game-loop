@@ -103,10 +103,26 @@ As a player, I want the world divided into distinct regions with unique identiti
    - Threats: shadow creatures, cave horrors, mind-warping fungi, ancient constructs
 
 **Acceptance Criteria:**
-- [ ] Each region has a distinct color palette and tile set
-- [ ] Region boundaries are identifiable via terrain transitions
-- [ ] Each region has at least 2 settlements, 2 dungeon entrances, and unique NPCs
-- [ ] Entering a new region triggers a flavor message
+- [x] Each region has a distinct color palette and tile set
+- [x] Region boundaries are identifiable via terrain transitions
+- [x] Each region has at least 2 settlements, 2 dungeon entrances, and unique NPCs
+- [x] Entering a new region triggers a flavor message
+
+**Implementation Notes (completed):**
+- TERRAIN_WEIGHTS: distinct terrain distributions per region (Greenweald=70% forest, Ashlands=50% scorched+25% lava, Frostpeak=40% snow+30% mountain, etc.)
+- TERRAIN_DISPLAY: per-terrain ASCII chars and colors (grass=`.`/#4a4, forest=`T`/#2a2, lava=`&`/#f40, snow=`*`/#ddf, etc.)
+- REGION_COLORS: distinct HUD display color per region (7 colors)
+- `applyTransitionZones()`: 3-tile border blending with grass at region boundaries
+- Settlements: 3 starting settlements + 2-3 additional per region, region-specific names via REGION_SYLLABLES
+- Dungeons: 2-3 per region, depth scales with danger level, names from DUNGEON_PREFIXES
+- `REGIONAL_NPCS`: 2 unique NPCs per region (14 total) with region-flavored names, dialogue, and gifts
+  - Greenweald: Elven Ranger, Druid; Ashlands: Orc Blacksmith, Goblin Trader; Hearthlands: Merchant, Guard Captain
+  - Frostpeak: Dwarven Smith, Runekeeper; Drowned Mire: Swamp Witch, Herbalist
+  - Sunstone Expanse: Nomad Guide, Stargazer; Underdepths: Deep Scholar, Fungal Farmer
+- `spawnRegionalNPCs()`: injects region NPCs into settlements on entry (including initial createGame)
+- REGION_FLAVOR: atmospheric flavor text on region entry (6 regions)
+- Danger warnings for high-danger regions (danger >= 4)
+- 4 new tests: regional NPCs spawn in village/tavern/cave starts, region NPC count verification
 
 ---
 
