@@ -841,6 +841,361 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 		isMainQuest: false,
 		turnLimit: 80,
 	},
+
+	// ===================================================================
+	// SIDE QUESTS — Arcane Conservatory (magic school)
+	// ===================================================================
+
+	// --- Enrollment ---
+	side_ac_enrollment: {
+		id: 'side_ac_enrollment',
+		title: 'The Entrance Exam',
+		description:
+			'Archmage Aldric Voss studies you with cold, appraising eyes. "Every student must prove themselves in the practice vaults before they earn a place here. Clear out the slimes — and try not to embarrass yourself."',
+		objectives: [
+			{ id: 'ac_enroll_kill', description: 'Kill slimes in the practice vaults', type: 'kill', target: 'Slime', required: 5 },
+		],
+		rewards: { xp: 100, hp: 2 },
+		giverNpcName: 'Archmage Aldric Voss',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	// --- Semester 1: Foundations ---
+	side_ac_elem101: {
+		id: 'side_ac_elem101',
+		title: 'Elements 101: First Spark',
+		description:
+			'Professor Ignis Valdren slams a tome on the lectern. "Fire is not your friend. It is a force that tolerates your attention. Collect three fire crystals from the elemental chamber — without burning down my classroom."',
+		objectives: [
+			{ id: 'ac_elem101_collect', description: 'Collect fire crystals', type: 'collect', target: 'fire_crystal', required: 3 },
+		],
+		rewards: { xp: 120, atk: 1 },
+		giverNpcName: 'Professor Ignis Valdren',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_ench101: {
+		id: 'side_ac_ench101',
+		title: 'Enchantment 101: Ward Weaving',
+		description:
+			'Professor Seraphina Ashveil traces silver lines in the air. "Every doorway in this school is warded. Your assignment: study the dormitory ward and understand its weave. Touch nothing you cannot unravel."',
+		objectives: [
+			{ id: 'ac_ench101_explore', description: 'Study the dormitory ward', type: 'explore', target: 'dormitory_ward', required: 1 },
+		],
+		rewards: { xp: 120, hp: 2 },
+		giverNpcName: 'Professor Seraphina Ashveil',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_alch101: {
+		id: 'side_ac_alch101',
+		title: 'Alchemy 101: First Brew',
+		description:
+			'Professor Bramwell Thornwick adjusts his soot-stained spectacles. "Your first potion will be a simple mana restorative. Gather starfern and mandrake root from the greenhouse. And for pity\'s sake, don\'t confuse them."',
+		objectives: [
+			{ id: 'ac_alch101_collect1', description: 'Collect starfern', type: 'collect', target: 'starfern', required: 2 },
+			{ id: 'ac_alch101_collect2', description: 'Collect mandrake root', type: 'collect', target: 'mandrake_root', required: 2 },
+		],
+		rewards: { xp: 120, hp: 2, items: ['mana_potion'] },
+		giverNpcName: 'Professor Bramwell Thornwick',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_div101: {
+		id: 'side_ac_div101',
+		title: 'Divination 101: The Scryer\'s Eye',
+		description:
+			'Professor Mirael Dawnwhisper sits beneath a sky of revolving brass instruments. "Before you can read the stars, you must learn to see. Visit the astral observatory and open your mind to what drifts between the spheres."',
+		objectives: [
+			{ id: 'ac_div101_explore', description: 'Visit the astral observatory', type: 'explore', target: 'astral_observatory', required: 1 },
+		],
+		rewards: { xp: 120, hp: 1 },
+		giverNpcName: 'Professor Mirael Dawnwhisper',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_midterm: {
+		id: 'side_ac_midterm',
+		title: 'Midterm: Trial of the Practice Vault',
+		description:
+			'The practice vaults have been restocked with animated skeletons for the midterm examination. Survive the gauntlet and prove you have learned something this semester.',
+		objectives: [
+			{ id: 'ac_midterm_kill', description: 'Kill skeletons in the practice vaults', type: 'kill', target: 'Skeleton', required: 8 },
+		],
+		rewards: { xp: 200, hp: 3 },
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_enrollment',
+	},
+
+	// --- Semester 2: Advanced ---
+	side_ac_elem201: {
+		id: 'side_ac_elem201',
+		title: 'Elements 201: Containment',
+		description:
+			'Professor Ignis Valdren folds his arms. "Last semester you collected crystals. This semester you face the fire itself. Three elementals have escaped their binding circles. Contain them — permanently."',
+		objectives: [
+			{ id: 'ac_elem201_kill', description: 'Defeat fire elementals', type: 'kill', target: 'Fire Elemental', required: 3 },
+		],
+		rewards: { xp: 200, atk: 1 },
+		giverNpcName: 'Professor Ignis Valdren',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_elem101',
+	},
+
+	side_ac_ench201: {
+		id: 'side_ac_ench201',
+		title: 'Enchantment 201: Breaking Curses',
+		description:
+			'Professor Seraphina Ashveil\'s expression is grim. "A student accessed the cursed archive without authorization. The wards triggered and the section is now sealed by hostile enchantments. Retrieve the cursed tome they disturbed — before it spreads."',
+		objectives: [
+			{ id: 'ac_ench201_explore', description: 'Enter the cursed archive', type: 'explore', target: 'cursed_archive', required: 1 },
+			{ id: 'ac_ench201_collect', description: 'Retrieve the cursed tome', type: 'collect', target: 'cursed_tome', required: 1 },
+		],
+		rewards: { xp: 200, hp: 3 },
+		giverNpcName: 'Professor Seraphina Ashveil',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_ench101',
+	},
+
+	side_ac_alch201: {
+		id: 'side_ac_alch201',
+		title: 'Alchemy 201: Transmutation',
+		description:
+			'Professor Bramwell Thornwick whispers reverently. "Transmutation is the art of convincing matter to become something greater. Phoenix ash and void salt — rare, volatile, magnificent. Gather them, and we will brew something that changes the rules."',
+		objectives: [
+			{ id: 'ac_alch201_collect1', description: 'Collect phoenix ash', type: 'collect', target: 'phoenix_ash', required: 2 },
+			{ id: 'ac_alch201_collect2', description: 'Collect void salt', type: 'collect', target: 'void_salt', required: 2 },
+		],
+		rewards: { xp: 250, items: ['philosophers_draught'] },
+		giverNpcName: 'Professor Bramwell Thornwick',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_alch101',
+	},
+
+	side_ac_div201: {
+		id: 'side_ac_div201',
+		title: 'Divination 201: Star Reading',
+		description:
+			'Professor Mirael Dawnwhisper\'s voice trembles. "The advanced observatory reveals things the basic instruments cannot. I need a student brave enough to look — and to tell me if they see what I have seen in the stars."',
+		objectives: [
+			{ id: 'ac_div201_explore', description: 'Visit the advanced astral observatory', type: 'explore', target: 'astral_observatory_advanced', required: 1 },
+			{ id: 'ac_div201_talk', description: 'Report your visions to Professor Dawnwhisper', type: 'talk', target: 'Professor Mirael Dawnwhisper', required: 1 },
+		],
+		rewards: {
+			xp: 200,
+			hp: 2,
+			rumor: {
+				id: 'rumor_star_reading',
+				text: 'The stars do not move as the gods decree. They follow older paths — paths that lead to seven thrones, each casting a shadow the heavens refuse to acknowledge.',
+				source: 'Professor Mirael Dawnwhisper',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Professor Mirael Dawnwhisper',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_div101',
+	},
+
+	side_ac_final: {
+		id: 'side_ac_final',
+		title: 'Final Exam: The Forbidden Vault',
+		description:
+			'The final examination takes place in the Forbidden Vault — a sealed chamber beneath the school where failed experiments and dangerous specimens are contained. Defeat the Vault Guardian and survive the depths.',
+		objectives: [
+			{ id: 'ac_final_kill', description: 'Defeat the Vault Guardian', type: 'kill', target: 'Vault Guardian', required: 1 },
+			{ id: 'ac_final_explore', description: 'Explore the forbidden vault', type: 'explore', target: 'forbidden_vault', required: 1 },
+		],
+		rewards: { xp: 400, hp: 5, atk: 2 },
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_midterm',
+	},
+
+	// --- Side Quests ---
+	side_ac_library: {
+		id: 'side_ac_library',
+		title: 'The Restricted Section',
+		description:
+			'Professor Seraphina Ashveil lowers her voice. "There is a section of the library that has been sealed for decades. The wards have weakened. I need someone to inspect the restricted section before anything leaks out — and to report what books remain."',
+		objectives: [
+			{ id: 'ac_library_explore', description: 'Explore the restricted section', type: 'explore', target: 'restricted_section', required: 1 },
+		],
+		rewards: {
+			xp: 150,
+			rumor: {
+				id: 'rumor_removed_books',
+				text: 'Entire shelves have been stripped bare. The removed books all shared one subject: the mortal lives of the Ascended before they claimed their thrones.',
+				source: 'Restricted section records',
+				accuracy: 'true',
+			},
+		},
+		giverNpcName: 'Professor Seraphina Ashveil',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		turnLimit: 120,
+	},
+
+	side_ac_missing: {
+		id: 'side_ac_missing',
+		title: 'Missing Students',
+		description:
+			'Three students ventured into the catacombs beneath the school on a dare and have not returned. Their journals may reveal what happened. The catacombs are infested with the restless dead.',
+		objectives: [
+			{ id: 'ac_missing_collect', description: 'Find student journals in the catacombs', type: 'collect', target: 'student_journal', required: 3 },
+			{ id: 'ac_missing_kill', description: 'Clear skeletons from the catacombs', type: 'kill', target: 'Skeleton', required: 6 },
+		],
+		rewards: { xp: 200, hp: 3 },
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_rival: {
+		id: 'side_ac_rival',
+		title: 'The Rival\'s Challenge',
+		description:
+			'A fellow student named Caelum Darkthorn has challenged you to a formal duel in the practice arena. He claims no outsider deserves a place at the Conservatory. Prove him wrong.',
+		objectives: [
+			{ id: 'ac_rival_kill', description: 'Defeat Caelum Darkthorn in a duel', type: 'kill', target: 'Caelum Darkthorn', required: 1 },
+		],
+		rewards: { xp: 150, atk: 1 },
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_tunnels: {
+		id: 'side_ac_tunnels',
+		title: 'Beneath the School',
+		description:
+			'Strange noises echo through the walls at night. Something skitters in the service tunnels beneath the Conservatory. The groundskeeper refuses to investigate alone.',
+		objectives: [
+			{ id: 'ac_tunnels_explore', description: 'Explore the school tunnels', type: 'explore', target: 'school_tunnels', required: 1 },
+			{ id: 'ac_tunnels_kill', description: 'Kill spiders in the tunnels', type: 'kill', target: 'Spider', required: 4 },
+		],
+		rewards: { xp: 180, hp: 2 },
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_headmaster: {
+		id: 'side_ac_headmaster',
+		title: 'The Headmaster\'s Secret',
+		description:
+			'The restricted section hinted at something darker — a hidden vault accessible only from the headmaster\'s private chambers. What is Archmage Voss hiding behind his wards?',
+		objectives: [
+			{ id: 'ac_headmaster_explore', description: 'Find the headmaster\'s hidden vault', type: 'explore', target: 'headmaster_vault', required: 1 },
+			{ id: 'ac_headmaster_collect', description: 'Recover Veiled Hand orders', type: 'collect', target: 'veiled_hand_orders', required: 1 },
+		],
+		rewards: {
+			xp: 300,
+			rumor: {
+				id: 'rumor_voss_veiled_hand',
+				text: 'Archmage Aldric Voss is a ranking member of the Veiled Hand. The Conservatory is not merely a school — it is a recruitment ground. The brightest students are quietly inducted into the order.',
+				source: 'Sealed correspondence in the headmaster\'s vault',
+				accuracy: 'true',
+			},
+		},
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_library',
+	},
+
+	side_ac_ingredients: {
+		id: 'side_ac_ingredients',
+		title: 'Rare Ingredients',
+		description:
+			'Professor Bramwell Thornwick rubs his hands. "I am working on an experimental elixir — a draught that lets the drinker walk in dreams. I need phoenix ash and dreamleaf. The first is dangerous to gather; the second is dangerous to touch."',
+		objectives: [
+			{ id: 'ac_ingredients_collect1', description: 'Collect phoenix ash', type: 'collect', target: 'phoenix_ash', required: 3 },
+			{ id: 'ac_ingredients_collect2', description: 'Collect dreamleaf', type: 'collect', target: 'dreamleaf', required: 2 },
+		],
+		rewards: { xp: 200, items: ['dreamwalker_elixir'] },
+		giverNpcName: 'Professor Bramwell Thornwick',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_ghost: {
+		id: 'side_ac_ghost',
+		title: 'Ghost in the Library',
+		description:
+			'Students report a spectral figure drifting between the bookshelves after midnight, pulling volumes from the shelves and reading by ghostlight. The librarian wants it banished before it damages the collection.',
+		objectives: [
+			{ id: 'ac_ghost_kill', description: 'Defeat the Scholar Wraith', type: 'kill', target: 'Scholar Wraith', required: 1 },
+		],
+		rewards: {
+			xp: 180,
+			hp: 2,
+			story: {
+				id: 'story_scholar_wraith',
+				title: 'The Scholar Who Would Not Leave',
+				text: 'The wraith was once a professor who died mid-research, searching for proof that the Ascended gods had mortal identities. Death did not stop the inquiry. The ghost still turns pages, still takes notes in spectral ink, still searches for the truth.',
+				teller: 'The fading whisper of the Scholar Wraith',
+				type: 'personal',
+			},
+		},
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_expelled: {
+		id: 'side_ac_expelled',
+		title: 'The Chronomancer\'s Journal',
+		description:
+			'Rumor has it a student was expelled years ago for practicing chronomancy — forbidden time magic. Their journal was confiscated but never destroyed. It may still be hidden somewhere in the school.',
+		objectives: [
+			{ id: 'ac_expelled_collect', description: 'Find the chronomancer\'s journal', type: 'collect', target: 'chronomancer_journal', required: 1 },
+		],
+		rewards: {
+			xp: 200,
+			rumor: {
+				id: 'rumor_chronomancer',
+				text: 'The expelled student claimed to have glimpsed the moment of the Ascension through a temporal rift. They saw seven figures in masks climbing steps that led to empty thrones — and something vast and luminous being dragged away in chains.',
+				source: 'The chronomancer\'s journal',
+				accuracy: 'true',
+			},
+		},
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_garden: {
+		id: 'side_ac_garden',
+		title: 'The Poisoned Garden',
+		description:
+			'Professor Bramwell Thornwick rushes in, breathless. "The botanical garden has been overtaken by blighted vines — aggressive, venomous, and spreading fast. If we don\'t stop them, the entire greenhouse will be lost. I need the vines cut back and starfern gathered for an antidote."',
+		objectives: [
+			{ id: 'ac_garden_kill', description: 'Destroy blighted vines', type: 'kill', target: 'Blighted Vine', required: 6 },
+			{ id: 'ac_garden_collect', description: 'Collect starfern for the antidote', type: 'collect', target: 'starfern', required: 3 },
+		],
+		rewards: { xp: 180, hp: 2, items: ['antidote'] },
+		giverNpcName: 'Professor Bramwell Thornwick',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	side_ac_artifact: {
+		id: 'side_ac_artifact',
+		title: 'The Lost Artifact',
+		description:
+			'An old blueprint found in the archives references a sealed chamber beneath the oldest wing of the school — the artifact chamber, built by the Conservatory\'s founders. Whatever they locked inside has been forgotten for centuries.',
+		objectives: [
+			{ id: 'ac_artifact_explore', description: 'Find and enter the artifact chamber', type: 'explore', target: 'artifact_chamber', required: 1 },
+			{ id: 'ac_artifact_collect', description: 'Recover the Founder\'s Crystal', type: 'collect', target: 'founders_crystal', required: 1 },
+		],
+		rewards: { xp: 250, hp: 3, atk: 1 },
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
 };
 
 // ---------------------------------------------------------------------------

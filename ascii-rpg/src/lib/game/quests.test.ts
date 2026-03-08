@@ -96,8 +96,8 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 describe('QUEST_CATALOG', () => {
 	const allDefs = Object.values(QUEST_CATALOG);
 
-	it('has the expected number of quests (5 main + 34 side = 39)', () => {
-		expect(Object.keys(QUEST_CATALOG).length).toBe(39);
+	it('has the expected number of quests (5 main + 55 side = 60)', () => {
+		expect(Object.keys(QUEST_CATALOG).length).toBe(60);
 	});
 
 	it('every quest has a valid id that matches its catalog key', () => {
@@ -147,7 +147,7 @@ describe('QUEST_CATALOG', () => {
 		const mainQuests = allDefs.filter((d) => d.isMainQuest);
 		const sideQuests = allDefs.filter((d) => !d.isMainQuest);
 		expect(mainQuests.length).toBe(5);
-		expect(sideQuests.length).toBe(34);
+		expect(sideQuests.length).toBe(55);
 	});
 
 	it('main quests form a prerequisite chain', () => {
@@ -643,9 +643,9 @@ describe('getAvailableQuests', () => {
 	it('returns all available quests when no filters are provided', () => {
 		const state = makeTestState();
 		const available = getAvailableQuests(state);
-		// Only non-prerequisite quests should be available: side quests without prereqs (32) + main_01 (no prereq) = 33
-		// main_02-05, side_kort_crown, and side_eg_beast are excluded because their prereqs are not met
-		expect(available.length).toBe(33);
+		// Only non-prerequisite quests should be available: side quests without prereqs (46) + main_01 (no prereq) = 47
+		// main_02-05, side_kort_crown, side_eg_beast, and 7 arcane_conservatory prereq quests are excluded
+		expect(available.length).toBe(47);
 	});
 
 	it('returns quests filtered by both NPC name and region', () => {
