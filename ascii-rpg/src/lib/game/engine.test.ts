@@ -52,7 +52,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedSecrets: new Set<string>(),
 		traps: [],
 		detectedTraps: new Set<string>(),
-		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const },
+		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
 		abilityCooldown: 0,
 		hazards: [],
 		npcs: [],
@@ -576,7 +576,7 @@ describe('Special abilities integration', () => {
 		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100 });
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = handleInput(state, 'q');
@@ -605,7 +605,7 @@ describe('Special abilities integration', () => {
 			enemies: [enemy],
 			level: 1,
 			characterLevel: 50,
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const expectedReward = xpReward(enemy, 1);
 
@@ -616,7 +616,7 @@ describe('Special abilities integration', () => {
 
 	it('mage teleport moves player position', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const originalPos = { ...state.player.pos };
 
@@ -709,7 +709,7 @@ describe('Environmental hazards integration', () => {
 
 describe('Difficulty scaling integration', () => {
 	it('createGame with easy difficulty creates enemies', () => {
-		const easyState = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'easy', startingLocation: 'cave' });
+		const easyState = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'easy', startingLocation: 'cave', worldSeed: 'test' });
 		// Easy difficulty still generates enemies
 		expect(easyState.enemies.length).toBeGreaterThan(0);
 		// Each easy enemy should have difficulty applied (hp rounded from 0.7x multiplier)
@@ -719,7 +719,7 @@ describe('Difficulty scaling integration', () => {
 	});
 
 	it('createGame with hard difficulty creates enemies', () => {
-		const hardState = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'hard', startingLocation: 'cave' });
+		const hardState = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'hard', startingLocation: 'cave', worldSeed: 'test' });
 		expect(hardState.enemies.length).toBeGreaterThan(0);
 		for (const e of hardState.enemies) {
 			expect(e.hp).toBe(e.maxHp);
@@ -729,7 +729,7 @@ describe('Difficulty scaling integration', () => {
 	it('permadeath death message says journey ends forever', () => {
 		// Use lava to guarantee death (no enemy movement randomness)
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'permadeath' as const, startingLocation: 'cave' as const },
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'permadeath' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
 			hazards: [{ pos: { x: 6, y: 5 }, type: 'lava' }],
 			level: 10
 		});
@@ -742,7 +742,7 @@ describe('Difficulty scaling integration', () => {
 
 	it('normal death message says press R to restart', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const },
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
 			hazards: [{ pos: { x: 6, y: 5 }, type: 'lava' }],
 			level: 10
 		});
@@ -756,7 +756,7 @@ describe('Difficulty scaling integration', () => {
 	it('permadeath restart resets to default config', () => {
 		const state = makeTestState({
 			gameOver: true,
-			characterConfig: { name: 'CustomHero', characterClass: 'mage' as const, difficulty: 'permadeath' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'CustomHero', characterClass: 'mage' as const, difficulty: 'permadeath' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = handleInput(state, 'r');
@@ -768,7 +768,7 @@ describe('Difficulty scaling integration', () => {
 	it('normal restart preserves character config', () => {
 		const state = makeTestState({
 			gameOver: true,
-			characterConfig: { name: 'CustomHero', characterClass: 'mage' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'CustomHero', characterClass: 'mage' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = handleInput(state, 'r');
@@ -778,7 +778,7 @@ describe('Difficulty scaling integration', () => {
 
 	it('difficulty preserved when descending stairs', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'hard' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'hard' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		state.map.tiles[5][6] = '>';
 
@@ -957,14 +957,14 @@ describe('flee from combat', () => {
 		Math.random = () => 0.55;
 		const rogueState = makeTestState({
 			enemies: [{ ...enemy }],
-			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const rogueResult = attemptFlee(rogueState);
 
 		Math.random = () => 0.55;
 		const warriorState = makeTestState({
 			enemies: [{ ...enemy }],
-			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const warriorResult = attemptFlee(warriorState);
 
@@ -1039,7 +1039,7 @@ describe('treasure chests', () => {
 		const state = makeTestState({
 			chests: [chest],
 			level: 3,
-			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const startHp = state.player.hp;
 
@@ -1110,7 +1110,7 @@ describe('dodge and block', () => {
 		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 10 });
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const startHp = state.player.hp;
 
@@ -1132,7 +1132,7 @@ describe('dodge and block', () => {
 		const enemy = makeEnemy(6, 5, { name: 'TestEnemy', hp: 10, maxHp: 10, attack: 5 });
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const startHp = state.player.hp;
 
@@ -1151,7 +1151,7 @@ describe('dodge and block', () => {
 		const boss = makeEnemy(6, 5, { name: 'The Hollow King', char: 'K', hp: 30, maxHp: 30, attack: 5 });
 		const state = makeTestState({
 			enemies: [boss],
-			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const startHp = state.player.hp;
 
@@ -1503,7 +1503,7 @@ describe('push integration in combat', () => {
 		applyEffect(enemy, 'freeze', 5, 0); // Freeze so enemy can't move back after push
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: 'test' }
 		});
 		const orig = Math.random;
 		Math.random = () => 0.01;
@@ -1525,7 +1525,7 @@ describe('push integration in combat', () => {
 			enemies: [enemy],
 			hazards: [hazard],
 			level: 5, // lava does 2+5=7 damage
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: 'test' }
 		});
 		state.player.attack = 3; // Low attack: 3+0=3 damage, leaving enemy at 12HP, then lava does 7 → 5HP (survives)
 		// Actually we need enemy to die from lava. Let's set HP so attack + lava kills.
@@ -1910,12 +1910,12 @@ describe('survival integration', () => {
 	});
 
 	it('survival is disabled on easy difficulty', () => {
-		const state = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'easy', startingLocation: 'cave' });
+		const state = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'easy', startingLocation: 'cave', worldSeed: 'test' });
 		expect(state.survivalEnabled).toBe(false);
 	});
 
 	it('survival is enabled on normal difficulty', () => {
-		const state = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' });
+		const state = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: 'test' });
 		expect(state.survivalEnabled).toBe(true);
 	});
 

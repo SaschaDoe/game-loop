@@ -28,3 +28,9 @@ As a player, I want the world to have roads connecting towns, hidden trails thro
 - [ ] Weather affects road traversal speed
 - [ ] Signposts and milestones are placed at correct intervals
 - [ ] Off-road speed penalties apply per terrain type
+
+## See Also
+
+This story is expanded and superseded by:
+- [interconnected-open-world.md](interconnected-open-world.md) — US-OW-05 (roads and paths)
+- [world-generation-algorithm.md](world-generation-algorithm.md) — US-WG-05 (road network generation)

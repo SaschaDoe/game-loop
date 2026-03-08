@@ -35,7 +35,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedSecrets: new Set<string>(),
 		traps: [],
 		detectedTraps: new Set<string>(),
-		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const },
+		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
 		abilityCooldown: 0,
 		hazards: [],
 		npcs: [],

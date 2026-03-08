@@ -1,6 +1,8 @@
 import type { GameMap, Tile, Position } from './types';
+import { SeededRandom } from './seeded-random';
 
-export function generateMap(width: number, height: number, level: number): GameMap {
+export function generateMap(width: number, height: number, level: number, rng?: SeededRandom): GameMap {
+	const r = rng ?? new SeededRandom(Date.now());
 	const tiles: Tile[][] = Array.from({ length: height }, () =>
 		Array.from({ length: width }, () => '#' as Tile)
 	);
@@ -9,14 +11,14 @@ export function generateMap(width: number, height: number, level: number): GameM
 	const roomCount = 5 + level;
 
 	for (let i = 0; i < roomCount; i++) {
-		const w = 4 + Math.floor(Math.random() * 6);
-		const h = 3 + Math.floor(Math.random() * 4);
-		const x = 1 + Math.floor(Math.random() * (width - w - 2));
-		const y = 1 + Math.floor(Math.random() * (height - h - 2));
+		const w = 4 + r.nextInt(6);
+		const h = 3 + r.nextInt(4);
+		const x = 1 + r.nextInt(width - w - 2);
+		const y = 1 + r.nextInt(height - h - 2);
 
 		let overlap = false;
-		for (const r of rooms) {
-			if (x <= r.x + r.w + 1 && x + w + 1 >= r.x && y <= r.y + r.h + 1 && y + h + 1 >= r.y) {
+		for (const room of rooms) {
+			if (x <= room.x + room.w + 1 && x + w + 1 >= room.x && y <= room.y + room.h + 1 && y + h + 1 >= room.y) {
 				overlap = true;
 				break;
 			}
@@ -56,9 +58,9 @@ export function generateMap(width: number, height: number, level: number): GameM
 
 	// add secret rooms (0-2 per level)
 	const secretWalls = new Set<string>();
-	const secretRoomCount = Math.floor(Math.random() * 3); // 0, 1, or 2
+	const secretRoomCount = r.nextInt(3); // 0, 1, or 2
 	for (let s = 0; s < secretRoomCount && rooms.length >= 2; s++) {
-		const result = placeSecretRoom(tiles, rooms, width, height);
+		const result = placeSecretRoom(tiles, rooms, width, height, r);
 		if (result) {
 			for (const key of result.walls) {
 				secretWalls.add(key);
@@ -76,8 +78,8 @@ export function generateMap(width: number, height: number, level: number): GameM
 	const itemCount = 2 + level;
 	let placed = 0;
 	while (placed < itemCount) {
-		const rx = Math.floor(Math.random() * width);
-		const ry = Math.floor(Math.random() * height);
+		const rx = r.nextInt(width);
+		const ry = r.nextInt(height);
 		if (tiles[ry][rx] === '.') {
 			tiles[ry][rx] = '*';
 			placed++;
@@ -91,40 +93,41 @@ function placeSecretRoom(
 	tiles: Tile[][],
 	existingRooms: { x: number; y: number; w: number; h: number }[],
 	width: number,
-	height: number
+	height: number,
+	r: SeededRandom
 ): { room: { x: number; y: number; w: number; h: number }; walls: string[] } | null {
 	// Try to place a small secret room adjacent to an existing room
 	for (let attempt = 0; attempt < 20; attempt++) {
-		const sourceRoom = existingRooms[Math.floor(Math.random() * existingRooms.length)];
-		const sw = 2 + Math.floor(Math.random() * 2); // 2-3 wide
-		const sh = 2 + Math.floor(Math.random() * 2); // 2-3 tall
+		const sourceRoom = r.pick(existingRooms);
+		const sw = 2 + r.nextInt(2); // 2-3 wide
+		const sh = 2 + r.nextInt(2); // 2-3 tall
 
 		// Pick a side of the source room to attach to
-		const side = Math.floor(Math.random() * 4);
+		const side = r.nextInt(4);
 		let sx: number, sy: number, wallX: number, wallY: number;
 
 		switch (side) {
 			case 0: // north
-				sx = sourceRoom.x + Math.floor(Math.random() * Math.max(1, sourceRoom.w - sw));
+				sx = sourceRoom.x + r.nextInt(Math.max(1, sourceRoom.w - sw));
 				sy = sourceRoom.y - sh - 1;
 				wallX = sx + Math.floor(sw / 2);
 				wallY = sourceRoom.y - 1;
 				break;
 			case 1: // south
-				sx = sourceRoom.x + Math.floor(Math.random() * Math.max(1, sourceRoom.w - sw));
+				sx = sourceRoom.x + r.nextInt(Math.max(1, sourceRoom.w - sw));
 				sy = sourceRoom.y + sourceRoom.h + 1;
 				wallX = sx + Math.floor(sw / 2);
 				wallY = sourceRoom.y + sourceRoom.h;
 				break;
 			case 2: // west
 				sx = sourceRoom.x - sw - 1;
-				sy = sourceRoom.y + Math.floor(Math.random() * Math.max(1, sourceRoom.h - sh));
+				sy = sourceRoom.y + r.nextInt(Math.max(1, sourceRoom.h - sh));
 				wallX = sourceRoom.x - 1;
 				wallY = sy + Math.floor(sh / 2);
 				break;
 			default: // east
 				sx = sourceRoom.x + sourceRoom.w + 1;
-				sy = sourceRoom.y + Math.floor(Math.random() * Math.max(1, sourceRoom.h - sh));
+				sy = sourceRoom.y + r.nextInt(Math.max(1, sourceRoom.h - sh));
 				wallX = sourceRoom.x + sourceRoom.w;
 				wallY = sy + Math.floor(sh / 2);
 				break;
@@ -164,11 +167,12 @@ function placeSecretRoom(
 	return null;
 }
 
-export function getSpawnPositions(map: GameMap, count: number): Position[] {
+export function getSpawnPositions(map: GameMap, count: number, rng?: SeededRandom): Position[] {
+	const r = rng ?? new SeededRandom(Date.now());
 	const positions: Position[] = [];
 	while (positions.length < count) {
-		const x = Math.floor(Math.random() * map.width);
-		const y = Math.floor(Math.random() * map.height);
+		const x = r.nextInt(map.width);
+		const y = r.nextInt(map.height);
 		if (map.tiles[y][x] === '.' && !positions.some((p) => p.x === x && p.y === y)) {
 			positions.push({ x, y });
 		}

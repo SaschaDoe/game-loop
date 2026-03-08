@@ -1,5 +1,6 @@
 import type { GameState, Trap, TrapType, Position, GameMap, CharacterClass } from './types';
 import { applyEffect } from './status-effects';
+import type { SeededRandom } from './seeded-random';
 
 interface TrapDef {
 	type: TrapType;
@@ -16,8 +17,9 @@ const TRAP_DEFS: TrapDef[] = [
 
 const totalWeight = TRAP_DEFS.reduce((sum, d) => sum + d.weight, 0);
 
-export function pickTrapType(): TrapType {
-	let roll = Math.floor(Math.random() * totalWeight);
+export function pickTrapType(rng?: SeededRandom): TrapType {
+	const rand = rng ? rng.next() : Math.random();
+	let roll = Math.floor(rand * totalWeight);
 	for (const def of TRAP_DEFS) {
 		roll -= def.weight;
 		if (roll < 0) return def.type;
@@ -33,18 +35,20 @@ export function createTrap(pos: Position, type: TrapType): Trap {
 	return { pos, type, triggered: false };
 }
 
-export function placeTraps(map: GameMap, level: number): Trap[] {
+export function placeTraps(map: GameMap, level: number, rng?: SeededRandom): Trap[] {
 	const count = 1 + Math.floor(level * 0.5);
 	const traps: Trap[] = [];
 	let attempts = 0;
 	while (traps.length < count && attempts < 200) {
 		attempts++;
-		const x = Math.floor(Math.random() * map.width);
-		const y = Math.floor(Math.random() * map.height);
+		const rand = rng ? rng.next() : Math.random();
+		const rand2 = rng ? rng.next() : Math.random();
+		const x = Math.floor(rand * map.width);
+		const y = Math.floor(rand2 * map.height);
 		if (map.tiles[y][x] !== '.') continue;
 		const key = `${x},${y}`;
 		if (traps.some((t) => `${t.pos.x},${t.pos.y}` === key)) continue;
-		traps.push(createTrap({ x, y }, pickTrapType()));
+		traps.push(createTrap({ x, y }, pickTrapType(rng)));
 	}
 	return traps;
 }

@@ -49,7 +49,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		detectedSecrets: new Set<string>(),
 		traps: [],
 		detectedTraps: new Set<string>(),
-		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const },
+		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
 		abilityCooldown: 0,
 		hazards: [],
 		npcs: [],
@@ -139,7 +139,7 @@ describe('Warrior Whirlwind', () => {
 		const e3 = makeEnemy(5, 4); // above
 		const state = makeTestState({
 			enemies: [e1, e2, e3],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -155,7 +155,7 @@ describe('Warrior Whirlwind', () => {
 		const far = makeEnemy(8, 5); // 3 tiles away
 		const state = makeTestState({
 			enemies: [near, far],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		useAbility(state);
@@ -166,7 +166,7 @@ describe('Warrior Whirlwind', () => {
 	it('does not use ability when no enemies nearby', () => {
 		const state = makeTestState({
 			enemies: [makeEnemy(9, 9)],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		const result = useAbility(state);
 		expect(result.used).toBe(false);
@@ -176,7 +176,7 @@ describe('Warrior Whirlwind', () => {
 		const enemy = makeEnemy(6, 5, { hp: 100, maxHp: 100 });
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		state.player.attack = 7;
 
@@ -188,7 +188,7 @@ describe('Warrior Whirlwind', () => {
 		const diag = makeEnemy(6, 6); // diagonal
 		const state = makeTestState({
 			enemies: [diag],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -201,7 +201,7 @@ describe('Warrior Whirlwind', () => {
 		const e2 = makeEnemy(4, 5, { hp: 1 });
 		const state = makeTestState({
 			enemies: [e1, e2],
-			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'warrior', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -214,7 +214,7 @@ describe('Warrior Whirlwind', () => {
 describe('Mage Teleport', () => {
 	it('teleports to a visible floor tile', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -237,7 +237,7 @@ describe('Mage Teleport', () => {
 		}
 		const state = makeTestState({
 			enemies,
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -249,7 +249,7 @@ describe('Mage Teleport', () => {
 
 	it('does not teleport onto walls', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		// Put walls everywhere except player pos and one floor tile
 		for (let y = 0; y < 10; y++) {
@@ -268,7 +268,7 @@ describe('Mage Teleport', () => {
 
 	it('fails when no valid destination exists', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		// Walls everywhere except player pos
 		for (let y = 0; y < 10; y++) {
@@ -285,7 +285,7 @@ describe('Mage Teleport', () => {
 
 	it('only teleports within range 5', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		// Run many times to verify range constraint
@@ -301,7 +301,7 @@ describe('Mage Teleport', () => {
 
 	it('does not teleport to non-visible tiles', () => {
 		const state = makeTestState({
-			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'mage', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 		// Make all tiles except player area unexplored
 		for (let y = 0; y < 10; y++) {
@@ -324,7 +324,7 @@ describe('Rogue Smoke Bomb', () => {
 		const e2 = makeEnemy(8, 5); // distance 3
 		const state = makeTestState({
 			enemies: [e1, e2],
-			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -337,7 +337,7 @@ describe('Rogue Smoke Bomb', () => {
 		const far = makeEnemy(9, 9); // distance 8
 		const state = makeTestState({
 			enemies: [far],
-			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -348,7 +348,7 @@ describe('Rogue Smoke Bomb', () => {
 		const enemy = makeEnemy(6, 5);
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		useAbility(state);
@@ -362,7 +362,7 @@ describe('Rogue Smoke Bomb', () => {
 		const e2 = makeEnemy(4, 5);
 		const state = makeTestState({
 			enemies: [e1, e2],
-			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);
@@ -374,7 +374,7 @@ describe('Rogue Smoke Bomb', () => {
 		const enemy = makeEnemy(6, 5);
 		const state = makeTestState({
 			enemies: [enemy],
-			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const }
+			characterConfig: { name: 'Hero', characterClass: 'rogue', difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' }
 		});
 
 		const result = useAbility(state);

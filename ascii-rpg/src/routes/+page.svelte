@@ -34,6 +34,7 @@
 	let selectedClass: CharacterClass = $state('warrior');
 	let selectedLocation: StartingLocation = $state('village');
 	let selectedDifficulty: Difficulty = $state('normal');
+	let worldSeed = $state('');
 	let state: GameState = $state(createGame());
 	let grid = $derived(renderColored(state));
 	let nameInput: HTMLInputElement;
@@ -105,7 +106,8 @@
 			name: playerName.trim() || 'Hero',
 			characterClass: selectedClass,
 			difficulty: selectedDifficulty,
-			startingLocation: selectedLocation
+			startingLocation: selectedLocation,
+			worldSeed: worldSeed.trim()
 		};
 		state = createGame(config);
 		phase = 'playing';
@@ -135,7 +137,7 @@
 				e.preventDefault();
 				startGame();
 			}
-			const isTyping = nameInput && document.activeElement === nameInput;
+			const isTyping = document.activeElement?.tagName === 'INPUT';
 			if (!isTyping) {
 				if (e.key === '1') selectedClass = 'warrior';
 				else if (e.key === '2') selectedClass = 'mage';
@@ -314,6 +316,19 @@
 					<span class="class-desc">{info.description}</span>
 				</button>
 			{/each}
+		</div>
+
+		<div class="seed-section">
+			<label for="world-seed">World Seed</label>
+			<input
+				id="world-seed"
+				type="text"
+				bind:value={worldSeed}
+				placeholder="random"
+				maxlength="20"
+				class="seed-input"
+			/>
+			<span class="seed-hint">Same seed = same world</span>
 		</div>
 
 		<button class="start-btn" onclick={startGame}>Begin Adventure</button>
@@ -690,6 +705,38 @@
 	.class-stats {
 		font-size: 12px;
 		color: #af4;
+	}
+
+	.seed-section {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 24px;
+	}
+
+	.seed-section label {
+		color: #888;
+		font-size: 14px;
+	}
+
+	.seed-input {
+		background: #1a1a1a;
+		border: 1px solid #555;
+		color: #c84;
+		font-family: 'Courier New', monospace;
+		font-size: 14px;
+		padding: 6px 10px;
+		width: 160px;
+		outline: none;
+	}
+
+	.seed-input:focus {
+		border-color: #c84;
+	}
+
+	.seed-hint {
+		color: #555;
+		font-size: 11px;
 	}
 
 	.start-btn {

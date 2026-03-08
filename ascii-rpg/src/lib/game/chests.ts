@@ -1,4 +1,5 @@
 import type { Entity, Chest, ChestType, GameMap, MessageType } from './types';
+import type { SeededRandom } from './seeded-random';
 
 interface ChestDef {
 	type: ChestType;
@@ -26,7 +27,7 @@ export function chestColor(type: ChestType): string {
 	return CHEST_BY_TYPE.get(type)?.color ?? '#ffffff';
 }
 
-export function placeChests(map: GameMap, level: number): Chest[] {
+export function placeChests(map: GameMap, level: number, rng?: SeededRandom): Chest[] {
 	const available = CHEST_DEFS.filter((d) => level >= d.minLevel);
 	if (available.length === 0) return [];
 
@@ -37,20 +38,25 @@ export function placeChests(map: GameMap, level: number): Chest[] {
 
 	while (chests.length < count && attempts < 200) {
 		attempts++;
-		const x = Math.floor(Math.random() * map.width);
-		const y = Math.floor(Math.random() * map.height);
+		const rand = rng ? rng.next() : Math.random();
+		const rand2 = rng ? rng.next() : Math.random();
+		const x = Math.floor(rand * map.width);
+		const y = Math.floor(rand2 * map.height);
 		if (map.tiles[y][x] !== '.') continue;
 		if (chests.some((c) => c.pos.x === x && c.pos.y === y)) continue;
 
-		let roll = Math.floor(Math.random() * totalWeight);
+		const rand3 = rng ? rng.next() : Math.random();
+		let roll = Math.floor(rand3 * totalWeight);
 		let def: ChestDef = available[0];
 		for (const d of available) {
 			roll -= d.weight;
 			if (roll < 0) { def = d; break; }
 		}
 
-		const trapped = Math.random() < def.trapChance;
-		const mimic = !trapped && Math.random() < def.mimicChance;
+		const rand4 = rng ? rng.next() : Math.random();
+		const rand5 = rng ? rng.next() : Math.random();
+		const trapped = rand4 < def.trapChance;
+		const mimic = !trapped && rand5 < def.mimicChance;
 
 		chests.push({ pos: { x, y }, type: def.type, opened: false, trapped, mimic });
 	}

@@ -1,4 +1,5 @@
 import type { GameMap, Landmark, LandmarkType, Position } from './types';
+import type { SeededRandom } from './seeded-random';
 
 export interface LandmarkDef {
 	type: LandmarkType;
@@ -141,19 +142,21 @@ export function getAdjacentLandmarks(landmarks: Landmark[], pos: Position): Land
 	return result;
 }
 
-export function placeLandmarks(map: GameMap, level: number, occupied: Set<string>): Landmark[] {
+export function placeLandmarks(map: GameMap, level: number, occupied: Set<string>, rng?: SeededRandom): Landmark[] {
 	const eligible = LANDMARK_DEFS.filter((d) => level >= d.minLevel);
 	if (eligible.length === 0) return [];
 
 	// 1-3 landmarks per level, scaling slightly with level
-	const count = Math.min(1 + Math.floor(Math.random() * Math.min(3, 1 + Math.floor(level / 2))), 3);
+	const rand = rng ? rng.next() : Math.random();
+	const count = Math.min(1 + Math.floor(rand * Math.min(3, 1 + Math.floor(level / 2))), 3);
 
 	const totalWeight = eligible.reduce((s, d) => s + d.weight, 0);
 	const landmarks: Landmark[] = [];
 
 	for (let i = 0; i < count; i++) {
 		// Weighted random pick
-		let roll = Math.random() * totalWeight;
+		const rand2 = rng ? rng.next() : Math.random();
+		let roll = rand2 * totalWeight;
 		let pick = eligible[0];
 		for (const def of eligible) {
 			roll -= def.weight;
@@ -172,7 +175,8 @@ export function placeLandmarks(map: GameMap, level: number, occupied: Set<string
 		}
 		if (floors.length === 0) break;
 
-		const pos = floors[Math.floor(Math.random() * floors.length)];
+		const rand3 = rng ? rng.next() : Math.random();
+		const pos = floors[Math.floor(rand3 * floors.length)];
 		occupied.add(`${pos.x},${pos.y}`);
 		landmarks.push({ pos, type: pick.type, examined: false });
 	}

@@ -14,6 +14,7 @@ export interface CharacterConfig {
 	characterClass: CharacterClass;
 	difficulty: Difficulty;
 	startingLocation: StartingLocation;
+	worldSeed: string;
 }
 
 export type NPCMood = 'friendly' | 'neutral' | 'hostile' | 'afraid' | 'amused' | 'sad';

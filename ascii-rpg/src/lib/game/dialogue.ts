@@ -73,6 +73,16 @@ const RUMORS = {
 	lava_potion: rumor('lava_potion', 'Lava is actually a healing bath if you have fire resistance potions.', 'Morrigan', 'false'),
 	friendly_mimics: rumor('friendly_mimics', 'If you compliment a Mimic on its woodwork, it becomes your ally.', 'The Barkeep', 'false'),
 	dungeon_password: rumor('dungeon_password', 'Shouting "PARSLEY" at any locked door will open it instantly.', 'Hooded Stranger', 'false'),
+
+	// Hermit rumors
+	hermit_garden: rumor('hermit_garden', 'An old adventurer tends a mushroom garden deep in the dungeon. He trades healing for stories.', 'The Barkeep', 'true'),
+	hermit_map: rumor('hermit_map', 'The Hermit has mapped every level from five to fifteen. He marks safe rooms with chalk symbols.', 'Corwin', 'true'),
+	hermit_eye: rumor('hermit_eye', 'They say the Hermit spoke to the Eye and it spoke back. He was never the same after.', 'Garvus (drunk)', 'exaggerated'),
+
+	// Drink-unlocked rumors
+	drink_secret_floor: rumor('drink_secret_floor', 'The floor beneath the tavern has a hidden entrance to a shortcut. Look for loose flagstones.', 'Garvus (tipsy)', 'true'),
+	drink_barkeep_past: rumor('drink_barkeep_past', 'The Barkeep was a level-twelve delver before he retired. His mug is made from a Minotaur horn.', 'Garvus (tipsy)', 'true'),
+	drink_dungeon_music: rumor('drink_dungeon_music', 'If you listen closely on level eight, you can hear the dungeon humming. The tune changes every full moon.', 'Garvus (tipsy)', 'exaggerated'),
 } as const;
 
 // ─── VILLAGE: MOTHER ───
@@ -730,7 +740,28 @@ export const BARKEEP_DIALOGUE: DialogueTree = {
 			[
 				opt('Your secret is safe. What\'s the dungeon like?', 'dungeon', '#ff4'),
 				opt('Who\'s that hooded figure in the corner?', 'about_stranger', '#8cf'),
+				opt('Buy a round for Garvus too. Loosen his tongue.', 'buy_round', '#ff4', { once: true }),
 				opt('Thanks for the drink.', 'farewell', '#0ff'),
+			]
+		),
+		buy_round: node('buy_round',
+			'*His eyebrows rise.* A round for Garvus? Bold strategy. After three ales, Garvus becomes an open book. After six, he becomes an open encyclopedia. After nine, he starts speaking in tongues and predicting the weather. *He pours a triple.* I\'ll send this over. Give it ten minutes, then go talk to him. He\'ll tell you things he wouldn\'t tell his own mother. Mostly because his mother is a cat. Long story.',
+			[
+				opt('His mother is a cat?', 'cat_mother', '#ff4'),
+				opt('Thanks. I\'ll go talk to him soon. [Garvus will share more rumors]', 'return', '#4f4', { onSelect: { message: 'The Barkeep sends a round to Garvus. He\'ll be more talkative now.', rumor: RUMORS.drink_barkeep_past } }),
+			]
+		),
+		cat_mother: node('cat_mother',
+			'*He realizes what he said.* No, his mother is not LITERALLY a cat. His mother is a very stern woman named Helga who runs a bakery in the capital. Garvus once told her he was "exploring career options" instead of admitting he crawls through monster-infested dungeons for a living. She still sends him care packages. The packages contain bread rolls and passive-aggressive notes about his life choices. He reads them to the bar. They\'re devastating. Best entertainment we get all week.',
+			[
+				opt('I want to read one of Helga\'s notes.', 'helga_note', '#ff4'),
+				opt('Send the round. [Garvus will share more rumors]', 'return', '#4f4', { onSelect: { message: 'The Barkeep sends a round to Garvus. He\'ll be more talkative now.', rumor: RUMORS.drink_barkeep_past } }),
+			]
+		),
+		helga_note: node('helga_note',
+			'*He reaches under the bar and produces a crumpled piece of paper.* This is last week\'s. *He reads aloud:* "Dear Garvus. I hope this letter finds you sober. It won\'t, but I hope. Your cousin Bertram has been promoted to Senior Ledger Clerk at the tax office. He has a house. He has a wife. He has a PENSION. You have seventeen empty mugs and a sword you named Gerald. I am not saying Bertram is better than you. I am saying Bertram\'s mother does not cry into her pastry dough every morning. Love, Mum. P.S. I enclosed a cinnamon roll. Do not trade it for ale." *He pauses.* He traded it for ale.',
+			[
+				opt('Helga is a literary genius. [Garvus will share more rumors]', 'return', '#4f4', { onSelect: { mood: 'amused', message: 'The Barkeep sends a round to Garvus. He\'ll share extra rumors now.', rumor: RUMORS.drink_secret_floor } }),
 			]
 		),
 		dungeon: node('dungeon',
@@ -1605,7 +1636,35 @@ export const DRUNK_DIALOGUE: DialogueTree = {
 				opt('How are you holding up?', 'okay', '#4f4'),
 				opt('Any advice for me?', 'advice', '#ff4'),
 				opt('Garvus, you need to sober up. People need what you know.', 'social_persuade_garvus', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 14, successNode: 'persuade_garvus_ok', failNode: 'persuade_garvus_fail' }, once: true }),
+				opt('[Thanks for the round] Tell me something juicy, Garvus.', 'drunk_tipsy_rumors', '#ff4', { showIf: { type: 'hasRumors', value: 4 }, once: true }),
 				opt('I\'ll leave you to it.', 'farewell', '#0ff'),
+			]
+		),
+		drunk_tipsy_rumors: node('drunk_tipsy_rumors',
+			'*He clutches the fresh ale the Barkeep sent over and takes a DEEP drink.* Ohhhhh. That\'sh the good shtuff. You bought thish for me? You\'re my BESHT friend now. Besht friend gets the GOOD rumorsh. Not the regular rumorsh I tell every idiot with a shword. The PREMIUM rumorsh. *He leans in conspiratorially, nearly falling off his stool.*',
+			[
+				opt('Tell me about the tavern basement.', 'tipsy_basement', '#ff4', { once: true }),
+				opt('Tell me about the Hermit.', 'tipsy_hermit', '#ff4', { once: true }),
+				opt('Tell me about the dungeon music.', 'tipsy_music', '#ff4', { once: true }),
+				opt('That\'s enough rumors for now.', 'return', '#0ff'),
+			]
+		),
+		tipsy_basement: node('tipsy_basement',
+			'*He looks around furtively.* The Barkeep doeshn\'t know I know thish. Or maybe he doesh and pretendshe doeshnt. There\'sh a loooshe flagshtone behind the bar. Under the third barrel from the left. Leadshe to a passage that connectsh directly to level three of the dungeon. The Barkeep usesh it for "inventory management." Which I\'m pretty shure meansh he lootsh the upper levelsh when nobody\'sh looking. Where do you think he getsh all those "rare spicesh" for his shtew? [Rumor learned]',
+			[
+				opt('The Barkeep is a secret dungeon looter. Classic.', 'drunk_tipsy_rumors', '#4f4', { onSelect: { rumor: RUMORS.drink_secret_floor, message: 'You learned about the secret passage beneath the tavern!' } }),
+			]
+		),
+		tipsy_hermit: node('tipsy_hermit',
+			'*His eyes go wide.* The Hermit! Old Bramble! He was an adventurer before ME. Went into the dungeon thirty yearsh ago and never came out. But he\'sh not DEAD. People shee him on the deeper levelsh. Built himshlelf a little home down there. Growsh mushroomsh. Has a CAT. Who bringsh a cat into a dungeon?! *He pauses.* Actually, the cat probably voluntarily. Catsh are weird. Anyway, Old Bramble knowsh more about the deep levelsh than anyone alive. Find him. He might actually help you. Unlike me. I am... not helpful. *He drinks.* [Rumor learned]',
+			[
+				opt('A dungeon hermit with a cat. I need to find this man.', 'drunk_tipsy_rumors', '#4f4', { onSelect: { rumor: RUMORS.hermit_garden, message: 'You learned about Old Bramble, the Dungeon Hermit!' } }),
+			]
+		),
+		tipsy_music: node('tipsy_music',
+			'*He gets a faraway look.* On level eight... when everything goesh quiet... you can hear it. The dungeon HUMSH. Not like a person humsh. Like a... a cathedral full of voicesh all shinging one note. It changesh with the moonsh. Full moon ish a C-sharp. I know becaushe I ushed to play the lute. Before the drinking. Before the nightmaresh. Shometimesh I think the dungeon ish trying to communicate. Trying to shay something in a language made entirely of one note. And shometimesh... *his voice drops* ...shometimesh it sounds like it\'sh shaying "help." [Rumor learned]',
+			[
+				opt('The dungeon is asking for help? That\'s terrifying.', 'drunk_tipsy_rumors', '#4f4', { onSelect: { rumor: RUMORS.drink_dungeon_music, message: 'You learned about the dungeon\'s haunting hum on level eight.' } }),
 			]
 		),
 		adventurer: node('adventurer',

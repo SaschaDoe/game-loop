@@ -103,8 +103,9 @@ export function getRareBaseName(name: string): string | undefined {
 	return undefined;
 }
 
-export function createRareMonster(pos: Position, level: number, def: MonsterDef): Entity {
-	const prefix = RARE_PREFIXES[Math.floor(Math.random() * RARE_PREFIXES.length)];
+export function createRareMonster(pos: Position, level: number, def: MonsterDef, rng?: { next(): number }): Entity {
+	const rand = rng ? rng.next() : Math.random();
+	const prefix = RARE_PREFIXES[Math.floor(rand * RARE_PREFIXES.length)];
 	const color = RARE_COLORS[RARE_PREFIXES.indexOf(prefix)];
 	const hp = (def.baseHp + Math.floor(def.hpPerLevel * level)) * 2;
 	const attack = Math.floor((def.baseAttack + Math.floor(def.attackPerLevel * level)) * 1.5);
@@ -140,9 +141,10 @@ export function createMonster(pos: Position, level: number, def: MonsterDef): En
 	};
 }
 
-export function pickMonsterDef(level: number): MonsterDef {
+export function pickMonsterDef(level: number, rng?: { next(): number }): MonsterDef {
 	const pool = monstersForLevel(level);
-	return pool[Math.floor(Math.random() * pool.length)];
+	const rand = rng ? rng.next() : Math.random();
+	return pool[Math.floor(rand * pool.length)];
 }
 
 export interface MoveDecision {

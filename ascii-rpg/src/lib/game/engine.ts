@@ -1,6 +1,7 @@
 import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
+import { createRng, randomSeedString, hashSeed } from './seeded-random';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
 import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, getMonsterTier, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect } from './monsters';
@@ -137,23 +138,25 @@ function checkLevelUp(state: GameState): void {
 	}
 }
 
-function createEnemy(pos: Position, level: number, difficulty: Difficulty): Entity {
-	const def = pickMonsterDef(level);
+function createEnemy(pos: Position, level: number, difficulty: Difficulty, rng?: { next(): number }): Entity {
+	const def = pickMonsterDef(level, rng);
 	let enemy: Entity;
-	if (Math.random() < RARE_SPAWN_CHANCE) {
-		enemy = createRareMonster(pos, level, def);
+	const rareRoll = rng ? rng.next() : Math.random();
+	if (rareRoll < RARE_SPAWN_CHANCE) {
+		enemy = createRareMonster(pos, level, def, rng);
 	} else {
 		enemy = createMonster(pos, level, def);
 	}
 	applyDifficultyToEnemy(enemy, difficulty);
-	if (def.sleepChance && Math.random() < def.sleepChance) {
+	const sleepRoll = rng ? rng.next() : Math.random();
+	if (def.sleepChance && sleepRoll < def.sleepChance) {
 		applyEffect(enemy, 'sleep', 999, 0);
 	}
 	return enemy;
 }
 
-function spawnEnemies(positions: Position[], level: number, difficulty: Difficulty): Entity[] {
-	const enemies = positions.map((p) => createEnemy(p, level, difficulty));
+function spawnEnemies(positions: Position[], level: number, difficulty: Difficulty, rng?: { next(): number }): Entity[] {
+	const enemies = positions.map((p) => createEnemy(p, level, difficulty, rng));
 	if (isBossLevel(level) && positions.length > 0) {
 		const bossDef = pickBossDef(level);
 		const boss = createMonster(positions[positions.length - 1], level, bossDef);
@@ -169,10 +172,10 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	rogue: { hp: 0, atk: 1, sight: 1, description: 'A nimble adventurer with keen senses' }
 };
 
-const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave' };
+const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
 
 export function createGame(config?: CharacterConfig): GameState {
-	const cfg = config ?? DEFAULT_CONFIG;
+	const cfg = config ? { ...config, worldSeed: config.worldSeed || randomSeedString() } : { ...DEFAULT_CONFIG, worldSeed: randomSeedString() };
 
 	// Level 0: starting location; level 1+: dungeon
 	const locResult = generateStartingLocation(cfg.startingLocation, MAP_W, MAP_H);
@@ -262,12 +265,14 @@ const DUNGEON_NPCS: DungeonNPCDef[] = [
 
 const NPC_SPAWN_CHANCE = 0.3;
 
-function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][] }, level: number, occupied: Set<string>): NPC[] {
-	if (Math.random() > NPC_SPAWN_CHANCE) return [];
+function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][] }, level: number, occupied: Set<string>, rng?: { next(): number }): NPC[] {
+	const spawnRoll = rng ? rng.next() : Math.random();
+	if (spawnRoll > NPC_SPAWN_CHANCE) return [];
 	const eligible = DUNGEON_NPCS.filter(d => level >= d.minLevel);
 	if (eligible.length === 0) return [];
 	const totalWeight = eligible.reduce((s, d) => s + d.weight, 0);
-	let roll = Math.random() * totalWeight;
+	const weightRoll = rng ? rng.next() : Math.random();
+	let roll = weightRoll * totalWeight;
 	let pick = eligible[0];
 	for (const def of eligible) {
 		roll -= def.weight;
@@ -283,7 +288,8 @@ function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][
 		}
 	}
 	if (floors.length === 0) return [];
-	const pos = floors[Math.floor(Math.random() * floors.length)];
+	const posRoll = rng ? rng.next() : Math.random();
+	const pos = floors[Math.floor(posRoll * floors.length)];
 	return [{
 		pos,
 		char: pick.char,
@@ -298,26 +304,30 @@ function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][
 	}];
 }
 
-function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
+function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: string = ''): GameState {
+	// Create a deterministic RNG for this level from worldSeed + level
+	const levelSeed = hashSeed(worldSeed + ':level:' + level);
+	const rng = createRng(levelSeed);
+
 	const baseEnemyCount = 3 + level;
 	const enemyCount = difficultySpawnCount(baseEnemyCount, difficulty);
-	const map = generateMap(MAP_W, MAP_H, level);
-	const spawns = getSpawnPositions(map, 1 + enemyCount);
+	const map = generateMap(MAP_W, MAP_H, level, rng);
+	const spawns = getSpawnPositions(map, 1 + enemyCount, rng);
 	const playerPos = spawns[0];
 	const enemyPositions = spawns.slice(1);
 	const sightRadius = DEFAULT_SIGHT_RADIUS;
 	const visibility = createVisibilityGrid(map.width, map.height);
 	updateVisibility(visibility, map, playerPos, sightRadius);
 
-	const traps = placeTraps(map, level);
+	const traps = placeTraps(map, level, rng);
 	// Don't place traps on player spawn
 	const filteredTraps = traps.filter((t) => !(t.pos.x === playerPos.x && t.pos.y === playerPos.y));
 
-	const hazards = placeHazards(map, level);
+	const hazards = placeHazards(map, level, rng);
 	// Don't place hazards on player spawn
 	const filteredHazards = hazards.filter((h) => !(h.pos.x === playerPos.x && h.pos.y === playerPos.y));
 
-	const chests = placeChests(map, level);
+	const chests = placeChests(map, level, rng);
 	const filteredChests = chests.filter((c) => !(c.pos.x === playerPos.x && c.pos.y === playerPos.y));
 
 	// Build occupied positions set for NPC spawning
@@ -326,9 +336,9 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 	for (const ep of enemyPositions) occupiedPositions.add(`${ep.x},${ep.y}`);
 	for (const t of filteredTraps) occupiedPositions.add(`${t.pos.x},${t.pos.y}`);
 	for (const c of filteredChests) occupiedPositions.add(`${c.pos.x},${c.pos.y}`);
-	const npcs = spawnDungeonNPCs(map, level, occupiedPositions);
+	const npcs = spawnDungeonNPCs(map, level, occupiedPositions, rng);
 	for (const n of npcs) occupiedPositions.add(`${n.pos.x},${n.pos.y}`);
-	const landmarks = placeLandmarks(map, level, occupiedPositions);
+	const landmarks = placeLandmarks(map, level, occupiedPositions, rng);
 
 	const state: GameState = {
 		player: {
@@ -341,7 +351,7 @@ function newLevel(level: number, difficulty: Difficulty = 'normal'): GameState {
 			attack: 2 + level,
 			statusEffects: []
 		},
-		enemies: spawnEnemies(enemyPositions, level, difficulty),
+		enemies: spawnEnemies(enemyPositions, level, difficulty, rng),
 		map,
 		messages: [{ text: `Welcome to dungeon level ${level}. Use WASD or arrow keys to move.`, type: 'info' as const }],
 		level,
@@ -1178,7 +1188,7 @@ export function handleInput(state: GameState, key: string): GameState {
 	// stairs
 	if (state.map.tiles[ny][nx] === '>') {
 		const nextLevel = state.level === 0 ? 1 : state.level + 1;
-		const next = newLevel(nextLevel, state.characterConfig.difficulty);
+		const next = newLevel(nextLevel, state.characterConfig.difficulty, state.characterConfig.worldSeed);
 		next.player.hp = state.player.hp;
 		next.player.maxHp = Math.max(state.player.maxHp, next.player.maxHp);
 		next.player.attack = Math.max(state.player.attack, next.player.attack);

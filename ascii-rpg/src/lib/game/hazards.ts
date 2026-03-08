@@ -1,5 +1,6 @@
 import type { GameState, Entity, Hazard, HazardType, GameMap, Position, MessageType } from './types';
 import { applyEffect } from './status-effects';
+import type { SeededRandom } from './seeded-random';
 
 interface HazardDef {
 	type: HazardType;
@@ -29,7 +30,7 @@ export function hazardColor(type: HazardType): string {
 	return HAZARD_BY_TYPE.get(type)?.color ?? '#ffffff';
 }
 
-export function placeHazards(map: GameMap, level: number): Hazard[] {
+export function placeHazards(map: GameMap, level: number, rng?: SeededRandom): Hazard[] {
 	const available = HAZARD_DEFS.filter((d) => level >= d.minLevel);
 	if (available.length === 0) return [];
 
@@ -40,13 +41,16 @@ export function placeHazards(map: GameMap, level: number): Hazard[] {
 
 	while (hazards.length < count && attempts < 200) {
 		attempts++;
-		const x = Math.floor(Math.random() * map.width);
-		const y = Math.floor(Math.random() * map.height);
+		const rand = rng ? rng.next() : Math.random();
+		const rand2 = rng ? rng.next() : Math.random();
+		const x = Math.floor(rand * map.width);
+		const y = Math.floor(rand2 * map.height);
 		if (map.tiles[y][x] !== '.') continue;
 		const key = `${x},${y}`;
 		if (hazards.some((h) => `${h.pos.x},${h.pos.y}` === key)) continue;
 
-		let roll = Math.floor(Math.random() * totalWeight);
+		const rand3 = rng ? rng.next() : Math.random();
+		let roll = Math.floor(rand3 * totalWeight);
 		let type: HazardType = available[0].type;
 		for (const def of available) {
 			roll -= def.weight;

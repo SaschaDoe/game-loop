@@ -17,3 +17,10 @@ As a player, I want to explore different biomes in the overworld, so that the wo
 - [ ] Biome-specific mechanics are functional (e.g., slower movement in swamp)
 - [ ] Biome transitions render smoothly
 - [ ] Biome-specific content spawns correctly
+
+## See Also
+
+This story is expanded and superseded by:
+- [interconnected-open-world.md](interconnected-open-world.md) — US-OW-02 (7 regions with biomes)
+- [regional-cultures.md](regional-cultures.md) — US-RC-01 through US-RC-07 (culture/genre per biome)
+- [world-generation-algorithm.md](world-generation-algorithm.md) — US-WG-03 (terrain generation per region)

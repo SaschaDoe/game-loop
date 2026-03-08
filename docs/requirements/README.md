@@ -13,7 +13,7 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | Epic | Description |
 |------|-------------|
 | 01-character-creation | Race, class, stats, backstory, and appearance |
-| 02-world-generation | Procedural maps, biomes, towns, weather, seeds |
+| 02-world-generation | Interconnected open world with 7 regions, biomes, cultures, procedural generation |
 | 03-game-modes | Observer mode, normal play mode, spectating |
 | 04-combat-system | Turn-based combat, spells, status effects |
 | 05-npc-system | NPC routines, personalities, factions, merchants |

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateMap, getSpawnPositions } from './map';
+import { SeededRandom } from './seeded-random';
 
 describe('generateMap', () => {
 	it('returns a map with correct dimensions', () => {
@@ -83,6 +84,44 @@ describe('generateMap', () => {
 			if (f10 > f1) higherCount++;
 		}
 		expect(higherCount).toBeGreaterThanOrEqual(2); // At least 2/5 should be higher
+	});
+});
+
+describe('seeded map generation', () => {
+	it('same seed produces identical maps', () => {
+		const rng1 = new SeededRandom(42);
+		const rng2 = new SeededRandom(42);
+		const map1 = generateMap(50, 24, 3, rng1);
+		const map2 = generateMap(50, 24, 3, rng2);
+		for (let y = 0; y < 24; y++) {
+			for (let x = 0; x < 50; x++) {
+				expect(map1.tiles[y][x]).toBe(map2.tiles[y][x]);
+			}
+		}
+		expect([...map1.secretWalls].sort()).toEqual([...map2.secretWalls].sort());
+	});
+
+	it('different seeds produce different maps', () => {
+		const rng1 = new SeededRandom(42);
+		const rng2 = new SeededRandom(99);
+		const map1 = generateMap(50, 24, 3, rng1);
+		const map2 = generateMap(50, 24, 3, rng2);
+		let differences = 0;
+		for (let y = 0; y < 24; y++) {
+			for (let x = 0; x < 50; x++) {
+				if (map1.tiles[y][x] !== map2.tiles[y][x]) differences++;
+			}
+		}
+		expect(differences).toBeGreaterThan(0);
+	});
+
+	it('seeded spawn positions are deterministic', () => {
+		const map = generateMap(50, 24, 3, new SeededRandom(42));
+		const rng1 = new SeededRandom(100);
+		const rng2 = new SeededRandom(100);
+		const spawns1 = getSpawnPositions(map, 5, rng1);
+		const spawns2 = getSpawnPositions(map, 5, rng2);
+		expect(spawns1).toEqual(spawns2);
 	});
 });
 

@@ -1,7 +1,7 @@
 import type { GameState, Tile, GameStats } from './types';
 import { createDefaultStats } from './achievements';
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {

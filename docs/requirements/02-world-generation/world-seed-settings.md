@@ -20,3 +20,8 @@ As a player, I want to enter a world seed or configure generation settings befor
 - [ ] All settings are adjustable and affect generation
 - [ ] Settings are persisted in save files
 - [ ] Default preset produces a balanced experience
+
+## See Also
+
+This story is expanded and superseded by:
+- [world-generation-algorithm.md](world-generation-algorithm.md) — US-WG-01 (seed-based world generation)
