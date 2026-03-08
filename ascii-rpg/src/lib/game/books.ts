@@ -2041,6 +2041,106 @@ export const BOOK_CATALOG: Record<string, Item> = {
 				`small enough to disappear.`,
 		],
 	},
+	book_irongate_songs: {
+		id: 'book_irongate_songs',
+		name: 'Songs of the Irongate Valley',
+		char: 'B',
+		color: '#7788aa',
+		type: 'book',
+		description: 'A water-stained notebook filled with musical notation and cramped handwriting.',
+		pages: [
+			`SONGS OF THE IRONGATE VALLEY\n` +
+				`Collected by Pell Oathwright,\n` +
+				`Itinerant Folklorist\n\n` +
+				`I came to record harvest songs.\n` +
+				`Every valley has them. But the\n` +
+				`people of the Irongate Valley\n` +
+				`sing differently from anyone\n` +
+				`I have encountered.\n\n` +
+				`Their songs are not about crops\n` +
+				`or weather or courtship. They\n` +
+				`are about waiting.\n\n` +
+				`The valley sits beneath a great\n` +
+				`mountain the locals call the\n` +
+				`Captain's Cairn. It is an odd\n` +
+				`name. No captain is buried there\n` +
+				`that anyone can recall. When I\n` +
+				`asked a shepherd why they call\n` +
+				`it that, he said: "Because he\n` +
+				`is still inside it."\n\n` +
+				`He would not elaborate.`,
+			`SONG THE FIRST — a counting\n` +
+				`rhyme sung by children at play:\n\n` +
+				`  One for the general who ran,\n` +
+				`  Two for the lie he told,\n` +
+				`  Three for the gates he\n` +
+				`    left unbarred,\n` +
+				`  Four for the brave and bold.\n` +
+				`  Five for the blood upon\n` +
+				`    the stone,\n` +
+				`  Six for the oath he swore,\n` +
+				`  Seven for the soldier\n` +
+				`    underground,\n` +
+				`  Eight for the eight who\n` +
+				`    count no more.\n\n` +
+				`The children chant "eight" in\n` +
+				`multiples — eighty, eight hundred,\n` +
+				`eight thousand — each child\n` +
+				`trying to reach the highest\n` +
+				`number before running out of\n` +
+				`breath. I asked a girl what the\n` +
+				`eight thousand were. She said:\n` +
+				`"The ones who stayed."`,
+			`SONG THE SECOND — a lullaby,\n` +
+				`sung very quietly:\n\n` +
+				`  Under stone, under sky,\n` +
+				`  Someone waits who cannot die.\n` +
+				`  Made a promise, cut it deep,\n` +
+				`  Swore in blood he would\n` +
+				`    not sleep.\n\n` +
+				`  Hush now, child, and\n` +
+				`    hold your breath —\n` +
+				`  Listen past the sound\n` +
+				`    of death.\n` +
+				`  Hear him tapping, soft\n` +
+				`    and slow?\n` +
+				`  He is waiting down below.\n\n` +
+				`I heard this sung by a mother\n` +
+				`whose cottage sits at the\n` +
+				`mountain's base. I asked her\n` +
+				`who taught it to her. "My\n` +
+				`mother," she said. And her\n` +
+				`mother before that. And hers.\n\n` +
+				`"Do you know who waits?" I\n` +
+				`asked. She gave me a look one\n` +
+				`gives a fool. "Someone who was\n` +
+				`promised the truth would come\n` +
+				`out. So he waits for it."`,
+			`I have collected eleven songs\n` +
+				`from this valley. All share the\n` +
+				`same elements: a betrayal, a\n` +
+				`mountain that was not always\n` +
+				`there, a soldier who refuses\n` +
+				`to stop waiting.\n\n` +
+				`No one can tell me who wrote\n` +
+				`them. No one can tell me when\n` +
+				`they began. When I pressed an\n` +
+				`elder, she said something that\n` +
+				`I cannot stop thinking about.\n\n` +
+				`"Nobody wrote them, scholar.\n` +
+				`The mountain sings them. We\n` +
+				`just have the ears."\n\n` +
+				`On my last night I camped at\n` +
+				`the mountain's foot. The wind\n` +
+				`died after midnight and in the\n` +
+				`silence I heard — or imagined\n` +
+				`I heard — a tapping. Rhythmic.\n` +
+				`Patient. From deep, deep under\n` +
+				`the stone.\n\n` +
+				`Like a man knocking on a door\n` +
+				`he knows will eventually open.`,
+		],
+	},
 };
 
 export function getBookById(id: string): Item | undefined {
