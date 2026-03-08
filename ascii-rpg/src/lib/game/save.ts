@@ -4,7 +4,7 @@ import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -65,6 +65,70 @@ interface SerializedState {
 	activeContainer: string | null;
 	inventoryCursor: number;
 	inventoryPanel: 'inventory' | 'equipment' | 'container';
+	locationCache: Record<string, SerializedCachedLocation>;
+}
+
+interface SerializedCachedLocation {
+	map: { width: number; height: number; tiles: Tile[][]; secretWalls: string[] };
+	enemies: GameState['enemies'];
+	npcs: GameState['npcs'];
+	traps: GameState['traps'];
+	detectedTraps: string[];
+	hazards: GameState['hazards'];
+	chests: GameState['chests'];
+	lootDrops: GameState['lootDrops'];
+	landmarks: GameState['landmarks'];
+	visibility: number[][];
+	detectedSecrets: string[];
+	playerPos: { x: number; y: number };
+	containers: WorldContainer[];
+}
+
+import type { CachedLocationState } from './types';
+
+function serializeLocationCache(cache: Record<string, CachedLocationState>): Record<string, SerializedCachedLocation> {
+	const result: Record<string, SerializedCachedLocation> = {};
+	for (const [key, loc] of Object.entries(cache)) {
+		result[key] = {
+			map: { width: loc.map.width, height: loc.map.height, tiles: loc.map.tiles, secretWalls: [...loc.map.secretWalls] },
+			enemies: loc.enemies,
+			npcs: loc.npcs,
+			traps: loc.traps,
+			detectedTraps: [...loc.detectedTraps],
+			hazards: loc.hazards,
+			chests: loc.chests,
+			lootDrops: loc.lootDrops,
+			landmarks: loc.landmarks,
+			visibility: loc.visibility,
+			detectedSecrets: [...loc.detectedSecrets],
+			playerPos: loc.playerPos,
+			containers: loc.containers,
+		};
+	}
+	return result;
+}
+
+function deserializeLocationCache(raw: Record<string, SerializedCachedLocation> | undefined): Record<string, CachedLocationState> {
+	if (!raw) return {};
+	const result: Record<string, CachedLocationState> = {};
+	for (const [key, loc] of Object.entries(raw)) {
+		result[key] = {
+			map: { width: loc.map.width, height: loc.map.height, tiles: loc.map.tiles, secretWalls: new Set(loc.map.secretWalls) },
+			enemies: loc.enemies,
+			npcs: (loc.npcs ?? []).map((n: any) => ({ ...n, moodTurns: n.moodTurns ?? 0 })),
+			traps: loc.traps,
+			detectedTraps: new Set(loc.detectedTraps),
+			hazards: loc.hazards,
+			chests: loc.chests,
+			lootDrops: loc.lootDrops,
+			landmarks: loc.landmarks,
+			visibility: loc.visibility,
+			detectedSecrets: new Set(loc.detectedSecrets),
+			playerPos: loc.playerPos,
+			containers: loc.containers ?? [],
+		};
+	}
+	return result;
 }
 
 export function serializeState(state: GameState): string {
@@ -123,6 +187,7 @@ export function serializeState(state: GameState): string {
 			activeContainer: state.activeContainer,
 			inventoryCursor: state.inventoryCursor,
 			inventoryPanel: state.inventoryPanel,
+			locationCache: serializeLocationCache(state.locationCache),
 		}
 	};
 	return JSON.stringify(data);
@@ -134,7 +199,7 @@ export function deserializeState(json: string): GameState {
 		throw new Error(`Incompatible save version: ${data.version} (expected ${SAVE_VERSION})`);
 	}
 	const s = data.state;
-	return {
+	const result: GameState = {
 		player: s.player,
 		enemies: s.enemies,
 		map: {
@@ -187,6 +252,7 @@ export function deserializeState(json: string): GameState {
 		activeContainer: s.activeContainer ?? null,
 		inventoryCursor: s.inventoryCursor ?? 0,
 		inventoryPanel: s.inventoryPanel ?? 'inventory',
+		locationCache: deserializeLocationCache(s.locationCache),
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

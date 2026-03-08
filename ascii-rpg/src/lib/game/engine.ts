@@ -1,4 +1,4 @@
-import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode } from './types';
+import type { GameState, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode, CachedLocationState } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
@@ -255,6 +255,7 @@ export function createGame(config?: CharacterConfig): GameState {
 		activeContainer: null,
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
+		locationCache: {},
 	};
 
 	// Apply class bonuses
@@ -562,6 +563,18 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 
 /** Enter a settlement from the overworld. */
 function enterSettlement(state: GameState, settlement: Settlement): void {
+	state.level = 0;
+	state.locationMode = 'location';
+	state.currentLocationId = settlement.id;
+
+	// Try to restore from cache
+	if (restoreFromCache(state, settlement.id, 0)) {
+		updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
+		addMessage(state, `You return to ${settlement.name}.`, 'discovery');
+		return;
+	}
+
+	// Generate fresh
 	const locResult = generateStartingLocation(
 		settlement.isStartingLocation ?? 'village',
 		MAP_W, MAP_H
@@ -578,9 +591,6 @@ function enterSettlement(state: GameState, settlement: Settlement): void {
 	state.chests = [];
 	state.lootDrops = [];
 	state.landmarks = [];
-	state.level = 0;
-	state.locationMode = 'location';
-	state.currentLocationId = settlement.id;
 	updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
 	addMessage(state, `You enter ${settlement.name}.`, 'discovery');
 }
@@ -591,6 +601,18 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	const regionDef = REGION_DEFS[dungeon.region as RegionId];
 	const dangerOffset = regionDef ? Math.max(0, regionDef.dangerLevel - 1) : 0;
 	const startLevel = 1 + dangerOffset;
+
+	state.locationMode = 'location';
+	state.currentLocationId = dungeon.id;
+
+	// Try to restore from cache
+	if (restoreFromCache(state, dungeon.id, startLevel)) {
+		state.level = startLevel;
+		updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
+		addMessage(state, `You return to ${dungeon.name}...`, 'discovery');
+		return;
+	}
+
 	const next = newLevel(startLevel, state.characterConfig.difficulty, state.characterConfig.worldSeed);
 	// Carry over player state
 	next.player.hp = state.player.hp;
@@ -625,6 +647,7 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	next.equipment = { ...state.equipment };
 	next.containers = [...state.containers];
 	next.waypoint = state.waypoint;
+	next.locationCache = state.locationCache;
 	// Copy into state (mutate in place since we're inside handleOverworldInput)
 	Object.assign(state, next);
 	addMessage(state, `You descend into ${dungeon.name}...`, 'discovery');
@@ -865,9 +888,61 @@ function checkRandomEncounter(state: GameState): boolean {
 	return combatHash < 0.7; // return true only if combat (blocks further movement)
 }
 
+// ── Location State Caching ──
+
+/** Build a cache key for a location + level combination. */
+function locationCacheKey(locationId: string, level: number): string {
+	return `${locationId}:${level}`;
+}
+
+/** Snapshot the current location state into the cache. */
+function cacheCurrentLocation(state: GameState): void {
+	if (!state.currentLocationId || state.currentLocationId === 'encounter') return;
+	const key = locationCacheKey(state.currentLocationId, state.level);
+	state.locationCache[key] = {
+		map: state.map,
+		enemies: [...state.enemies],
+		npcs: [...state.npcs],
+		traps: [...state.traps],
+		detectedTraps: new Set(state.detectedTraps),
+		hazards: [...state.hazards],
+		chests: [...state.chests],
+		lootDrops: [...state.lootDrops],
+		landmarks: [...state.landmarks],
+		visibility: state.visibility.map(row => [...row]),
+		detectedSecrets: new Set(state.detectedSecrets),
+		playerPos: { ...state.player.pos },
+		containers: [...state.containers],
+	};
+}
+
+/** Restore a cached location state. Returns true if cache existed. */
+function restoreFromCache(state: GameState, locationId: string, level: number): boolean {
+	const key = locationCacheKey(locationId, level);
+	const cached = state.locationCache[key];
+	if (!cached) return false;
+
+	state.map = cached.map;
+	state.enemies = cached.enemies;
+	state.npcs = cached.npcs;
+	state.traps = cached.traps;
+	state.detectedTraps = cached.detectedTraps;
+	state.hazards = cached.hazards;
+	state.chests = cached.chests;
+	state.lootDrops = cached.lootDrops;
+	state.landmarks = cached.landmarks;
+	state.visibility = cached.visibility;
+	state.detectedSecrets = cached.detectedSecrets;
+	state.player.pos = cached.playerPos;
+	state.containers = cached.containers;
+	return true;
+}
+
 /** Return to the overworld from a location. */
 export function exitToOverworld(state: GameState): GameState {
 	if (!state.worldMap || !state.overworldPos) return state;
+	// Cache current location state before leaving
+	cacheCurrentLocation(state);
 	state.locationMode = 'overworld';
 	state.currentLocationId = null;
 	state.enemies = [];
@@ -1335,6 +1410,7 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		activeContainer: null,
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
+		locationCache: {},
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -2302,6 +2378,9 @@ export function handleInput(state: GameState, key: string): GameState {
 			return exitToOverworld(state);
 		}
 
+		// Cache current dungeon level before descending
+		cacheCurrentLocation(state);
+
 		const nextLevel = state.level === 0 ? 1 : state.level + 1;
 		const next = newLevel(nextLevel, state.characterConfig.difficulty, state.characterConfig.worldSeed);
 		next.player.hp = state.player.hp;
@@ -2339,6 +2418,7 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.inventory = [...state.inventory];
 		next.equipment = { ...state.equipment };
 		next.containers = [...state.containers];
+		next.locationCache = state.locationCache;
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
 		return next;

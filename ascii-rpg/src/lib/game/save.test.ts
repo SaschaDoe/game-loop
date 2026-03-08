@@ -102,6 +102,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		activeContainer: null,
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
+		locationCache: {},
 		...overrides
 	};
 }
@@ -407,5 +408,38 @@ describe('localStorage integration', () => {
 		const restored = loadGame();
 		expect(restored).not.toBeNull();
 		expect(restored!.turnCount).toBe(73);
+	});
+
+	it('preserves locationCache through round-trip', () => {
+		const state = makeTestState({
+			locationCache: {
+				'settlement_1:0': {
+					map: { width: 10, height: 10, tiles: Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => '.' as const)), secretWalls: new Set<string>(['3,4']) },
+					enemies: [{ pos: { x: 2, y: 3 }, char: 'G', color: '#0f0', name: 'Goblin', hp: 5, maxHp: 5, attack: 2, statusEffects: [] }],
+					npcs: [],
+					traps: [],
+					detectedTraps: new Set<string>(['1,1']),
+					hazards: [],
+					chests: [],
+					lootDrops: [],
+					landmarks: [],
+					visibility: Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => 0)),
+					detectedSecrets: new Set<string>(['5,5']),
+					playerPos: { x: 3, y: 3 },
+					containers: [],
+				}
+			}
+		});
+		const restored = deserializeState(serializeState(state));
+		const cached = restored.locationCache['settlement_1:0'];
+		expect(cached).toBeDefined();
+		expect(cached.enemies).toHaveLength(1);
+		expect(cached.enemies[0].name).toBe('Goblin');
+		expect(cached.playerPos).toEqual({ x: 3, y: 3 });
+		expect(cached.detectedTraps).toBeInstanceOf(Set);
+		expect(cached.detectedTraps.has('1,1')).toBe(true);
+		expect(cached.detectedSecrets.has('5,5')).toBe(true);
+		expect(cached.map.secretWalls).toBeInstanceOf(Set);
+		expect(cached.map.secretWalls.has('3,4')).toBe(true);
 	});
 });

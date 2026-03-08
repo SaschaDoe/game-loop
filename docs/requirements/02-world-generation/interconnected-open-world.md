@@ -197,10 +197,24 @@ As a player, I want to enter settlements and dungeons from the overworld and ret
 - Location state persists (NPCs talked to, enemies killed) for the current session
 
 **Acceptance Criteria:**
-- [ ] Player can enter locations from the overworld
-- [ ] Player can exit locations back to the overworld
-- [ ] Dungeon depth still works (deeper floors accessible via stairs)
-- [ ] Location state is preserved within a session
+- [x] Player can enter locations from the overworld
+- [x] Player can exit locations back to the overworld
+- [x] Dungeon depth still works (deeper floors accessible via stairs)
+- [x] Location state is preserved within a session
+
+**Implementation Notes (completed):**
+- Entry: stepping onto settlement/dungeon tile triggers `enterSettlement()`/`enterDungeon()` which generate interior maps
+- Exit: `exitToOverworld()` returns player to last `overworldPos`, clears location-specific entities
+- Dungeon depth: stairs '>' descend to next level; level 0 stairs exit to overworld
+- Location state caching: `CachedLocationState` interface stores map, enemies, NPCs, traps, chests, loot, landmarks, visibility, containers
+- `cacheCurrentLocation()`: snapshots current location state into `locationCache` (keyed by `locationId:level`)
+- Cache triggers: on `exitToOverworld()`, on stairs descent (before generating next level)
+- `restoreFromCache()`: restores cached state when re-entering a previously visited location
+- `enterSettlement()` and `enterDungeon()` check cache before generating fresh — shows "You return to..." message
+- Cache persists through save/load: Sets serialized to arrays, restored on deserialize (SAVE_VERSION 16)
+- Fixed unreachable dead code bug in `deserializeState()` (worldMap regeneration was after early return)
+- Encounter arenas (`currentLocationId === 'encounter'`) are not cached
+- 4 new tests: exitToOverworld caches state, re-entering restores cache, cache on GameState, save/load round-trip
 
 ---
 

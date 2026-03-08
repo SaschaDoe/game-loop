@@ -85,6 +85,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		activeContainer: null,
 		inventoryCursor: 0,
 		inventoryPanel: 'inventory' as const,
+		locationCache: {},
 		...overrides
 	};
 }

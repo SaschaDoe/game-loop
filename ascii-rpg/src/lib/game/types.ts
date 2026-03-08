@@ -249,6 +249,22 @@ export interface GameStats {
 
 export type LocationMode = 'overworld' | 'location';
 
+export interface CachedLocationState {
+	map: GameMap;
+	enemies: Entity[];
+	npcs: NPC[];
+	traps: Trap[];
+	detectedTraps: Set<string>;
+	hazards: Hazard[];
+	chests: Chest[];
+	lootDrops: LootDrop[];
+	landmarks: Landmark[];
+	visibility: Visibility[][];
+	detectedSecrets: Set<string>;
+	playerPos: Position;
+	containers: WorldContainer[];
+}
+
 export interface GameState {
 	player: Entity;
 	enemies: Entity[];
@@ -297,6 +313,7 @@ export interface GameState {
 	activeContainer: string | null;  // container id when interacting
 	inventoryCursor: number;  // which slot is selected (0-11 for inventory, 12-19 for equipment, 20+ for container)
 	inventoryPanel: 'inventory' | 'equipment' | 'container';  // which panel has focus
+	locationCache: Record<string, CachedLocationState>;  // cached location states keyed by "locationId:level"
 }
 
 export interface BestiaryEntry {
