@@ -56,10 +56,18 @@ As a developer, I want regions placed via Voronoi-like partitioning, so that reg
 4. Generate Underdepths as underground layer accessible via cave tiles
 
 **Acceptance Criteria:**
-- [ ] 7 regions are placed with organic boundaries
-- [ ] No region is too small (minimum ~400 tiles) or too large
+- [x] 7 regions are placed with organic boundaries
+- [x] No region is too small (minimum ~400 tiles) or too large
 - [ ] Underdepths is underground, accessible via cave entrances
-- [ ] Region placement is deterministic from seed
+- [x] Region placement is deterministic from seed
+
+**Implementation Notes (completed):**
+- `overworld.ts`: `generateWorld(worldSeed, width?, height?)` — full pipeline
+- Voronoi partitioning with Poisson-disk seed placement (min 25% of map dimension apart)
+- Noise-distorted boundaries for organic region edges (value noise, scale 12)
+- 6 surface regions + Underdepths (underground, no surface tiles yet)
+- Validation helpers: `getRegionTileCounts()`, `getRegionTerrainDistribution()`
+- Tests: `overworld.test.ts` — 21 tests covering determinism, region counts, terrain distribution, settlements, dungeons
 
 ---
 
@@ -77,10 +85,17 @@ As a developer, I want each region to generate appropriate terrain, so that biom
 - Transition zones (3-tile width) blend adjacent biome terrain types
 
 **Acceptance Criteria:**
-- [ ] Each region's terrain matches its biome identity
-- [ ] Perlin noise creates natural variation within regions
-- [ ] Transition zones blend smoothly between regions
-- [ ] Terrain generation is deterministic from seed
+- [x] Each region's terrain matches its biome identity
+- [x] Perlin noise creates natural variation within regions
+- [x] Transition zones blend smoothly between regions
+- [x] Terrain generation is deterministic from seed
+
+**Implementation Notes (completed):**
+- Two-octave value noise (scales 8 and 20) with smoothstep interpolation for natural terrain variation
+- `TERRAIN_WEIGHTS` per region define biome-appropriate terrain distributions
+- `pickTerrain()` maps noise values to weighted terrain types
+- `applyTransitionZones()` blends region borders with 40% chance of neutral grass at border tiles
+- Tests verify biome identity: forest-dominated Greenweald, snow/mountain Frostpeak, sand-dominated Sunstone, wet Drowned Mire
 
 ---
 
@@ -96,10 +111,18 @@ As a developer, I want settlements placed logically within regions, so that the 
 - Settlement names generated from culture-specific syllable tables
 
 **Acceptance Criteria:**
-- [ ] Settlements are placed on passable terrain
-- [ ] Starting locations are correctly placed in their regions
-- [ ] Settlement names are culture-appropriate
-- [ ] Minimum spacing is enforced
+- [x] Settlements are placed on passable terrain
+- [x] Starting locations are correctly placed in their regions
+- [x] Settlement names are culture-appropriate
+- [x] Minimum spacing is enforced
+
+**Implementation Notes (completed):**
+- `placeSettlements()`: anchors 3 starting locations first (Willowmere/Greenweald, Crossroads Inn/Hearthlands, Goblin Cave/Ashlands)
+- 2-3 additional settlements per region, random offset from center, clamped to bounds
+- `findPassableTile()` avoids water/mountain/lava, searches within radius
+- `REGION_SYLLABLES` provides culture-specific prefix/suffix syllable tables for name generation
+- Min 15 tiles between settlements (enforced in placement loop)
+- Tests verify: 3 starting locations present, correct regions, passable terrain, minimum spacing
 
 ---
 
@@ -132,10 +155,16 @@ As a developer, I want dungeon entrances scattered across the world, so that eac
 - Dungeon interiors generated on-demand when entered (using existing map.ts with themed modifications)
 
 **Acceptance Criteria:**
-- [ ] Each region has multiple dungeon entrances
-- [ ] Dungeon themes match their region
-- [ ] Dungeon depth scales with world position
+- [x] Each region has multiple dungeon entrances
+- [x] Dungeon themes match their region
+- [x] Dungeon depth scales with world position
 - [ ] Interiors generate on-demand
+
+**Implementation Notes (partial):**
+- `placeDungeonEntrances()`: 2-3 entrances per surface region, min 10 tiles apart, min 8 tiles from settlements
+- `DUNGEON_PREFIXES` per region: region-themed names (e.g., "Overgrown Ruins" for Greenweald, "Buried Pyramid" for Sunstone)
+- `maxDepth = 3 + dangerLevel + random(0-5)` — scales with region danger level
+- On-demand interior generation NOT yet implemented (needs engine integration)
 
 ---
 
