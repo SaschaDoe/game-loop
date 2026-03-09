@@ -4,7 +4,7 @@ import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
 import { createVisibilityGrid, updateVisibility } from './fov';
 import { applyEffect, hasEffect, tickEffects, effectColor } from './status-effects';
-import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, getMonsterTier, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect, MONSTER_DEFS } from './monsters';
+import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, isBoss, isRare, getMonsterTier, RARE_SPAWN_CHANCE, decideMoveDirection, getMonsterBehavior, getMonsterOnHitEffect, MONSTER_DEFS, getMonsterDefByName } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps } from './traps';
 import { useAbility, tickAbilityCooldown, ABILITY_DEFS } from './abilities';
 import { placeHazards, applyHazards, getHazardAt, applyHazardToEntity, hazardChar, hazardColor } from './hazards';
@@ -2128,6 +2128,77 @@ function moveEnemies(state: GameState, defending = false) {
 			}
 			if (state.player.hp <= 0) handlePlayerDeath(state);
 			continue;
+		}
+
+		// Spellcaster enemy AI
+		const monsterDef = getMonsterDefByName(enemy.name);
+		if (monsterDef?.isSpellcaster && monsterDef.spells) {
+			// Handle channeling completion
+			if (enemy.channeling) {
+				enemy.channeling.turnsLeft--;
+				if (enemy.channeling.turnsLeft <= 0) {
+					const chSpell = getSpellDef(enemy.channeling.spellId);
+					if (chSpell && chSpell.baseDamage > 0) {
+						const dmg = Math.max(1, Math.floor(chSpell.baseDamage * (1 + state.level / 10)));
+						state.player.hp -= dmg;
+						addMessage(state, `${enemy.name} unleashes ${chSpell.name} for ${dmg} damage!`, 'damage_taken');
+					}
+					if (chSpell?.statusEffect) {
+						applyEffect(state.player, chSpell.statusEffect.type as any, chSpell.statusEffect.duration, chSpell.statusEffect.potency);
+					}
+					enemy.channeling = null;
+				}
+				if (state.player.hp <= 0) handlePlayerDeath(state);
+				continue; // skip normal movement while channeling
+			}
+
+			// Try to cast a spell
+			const dist = Math.max(Math.abs(enemy.pos.x - state.player.pos.x), Math.abs(enemy.pos.y - state.player.pos.y));
+			if (dist <= 5) {
+				if (!enemy.enemySpellCooldowns) enemy.enemySpellCooldowns = {};
+
+				let castSpell = false;
+				for (const opt of monsterDef.spells) {
+					if ((enemy.enemySpellCooldowns[opt.spellId] ?? 0) > 0) continue;
+					if (Math.random() > opt.castChance) continue;
+
+					const spell = getSpellDef(opt.spellId);
+					if (!spell) continue;
+
+					if (spell.tier >= 3) {
+						enemy.channeling = { spellId: spell.id, turnsLeft: 1 };
+						addMessage(state, `${enemy.name} begins channeling ${spell.name}!`, 'danger');
+						enemy.enemySpellCooldowns[opt.spellId] = spell.cooldown + 1;
+						castSpell = true;
+						break;
+					}
+
+					const dmg = Math.max(1, Math.floor(spell.baseDamage * (1 + state.level / 10)));
+					if (dmg > 0 && spell.baseDamage > 0) {
+						state.player.hp -= dmg;
+						addMessage(state, `${enemy.name} casts ${spell.name} for ${dmg} damage!`, 'damage_taken');
+					}
+					if (spell.statusEffect) {
+						applyEffect(state.player, spell.statusEffect.type as any, spell.statusEffect.duration, spell.statusEffect.potency);
+						if (spell.baseDamage <= 0) {
+							addMessage(state, `${enemy.name} casts ${spell.name}!`, 'danger');
+						}
+					}
+					enemy.enemySpellCooldowns[opt.spellId] = spell.cooldown;
+					castSpell = true;
+					break;
+				}
+
+				// Tick cooldowns
+				for (const id of Object.keys(enemy.enemySpellCooldowns)) {
+					if (enemy.enemySpellCooldowns[id] > 0) enemy.enemySpellCooldowns[id]--;
+				}
+
+				if (castSpell) {
+					if (state.player.hp <= 0) handlePlayerDeath(state);
+					continue; // skip normal movement this turn
+				}
+			}
 		}
 
 		const behavior = getMonsterBehavior(enemy);

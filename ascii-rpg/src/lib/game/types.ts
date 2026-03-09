@@ -230,6 +230,10 @@ export interface Entity {
 	dodgeChance?: number;
 	critChance?: number;
 	physicalDefense?: number;
+
+	// Enemy spellcasting AI
+	enemySpellCooldowns?: Record<string, number>;
+	channeling?: { spellId: string; turnsLeft: number } | null;
 }
 
 export type TrapType = 'spike' | 'poison_dart' | 'alarm' | 'teleport';

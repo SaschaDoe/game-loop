@@ -20,6 +20,8 @@ export interface MonsterDef {
 	sleepChance?: number;
 	boss?: boolean;
 	phases?: MonsterPhase[];
+	spells?: { spellId: string; weight: number; castChance: number }[];
+	isSpellcaster?: boolean;
 }
 
 export type MonsterBehavior = 'aggressive' | 'cowardly' | 'erratic' | 'pack' | 'relentless';
@@ -42,6 +44,18 @@ export const MONSTER_DEFS: MonsterDef[] = [
 	{ name: 'Wraith', char: 'W', color: '#8844ff', tier: 3, baseHp: 8, hpPerLevel: 3, baseAttack: 5, attackPerLevel: 0.8, behavior: 'aggressive', onHitEffect: { type: 'stun', duration: 1, potency: 0 } },
 	{ name: 'Troll', char: 'T', color: '#448844', tier: 3, baseHp: 15, hpPerLevel: 4, baseAttack: 5, attackPerLevel: 0.6, behavior: 'relentless' },
 	{ name: 'Minotaur', char: 'M', color: '#cc4400', tier: 3, baseHp: 12, hpPerLevel: 3, baseAttack: 6, attackPerLevel: 0.8, behavior: 'aggressive' },
+
+	// Spellcaster enemies
+	{ name: 'Frost Imp', char: 'i', color: '#88ccff', tier: 1, baseHp: 3, hpPerLevel: 1, baseAttack: 1, attackPerLevel: 0.2, behavior: 'erratic',
+		isSpellcaster: true, spells: [{ spellId: 'spell_frost_lance', weight: 1, castChance: 0.4 }] },
+	{ name: 'Fire Mage', char: 'f', color: '#ff6600', tier: 2, baseHp: 5, hpPerLevel: 2, baseAttack: 2, attackPerLevel: 0.3, behavior: 'cowardly',
+		isSpellcaster: true, spells: [{ spellId: 'spell_firebolt', weight: 2, castChance: 0.4 }, { spellId: 'spell_fireball', weight: 1, castChance: 0.25 }] },
+	{ name: 'Shadow Priest', char: 'p', color: '#a66aff', tier: 2, baseHp: 6, hpPerLevel: 2, baseAttack: 2, attackPerLevel: 0.4, behavior: 'cowardly',
+		isSpellcaster: true, spells: [{ spellId: 'spell_shadow_bolt', weight: 2, castChance: 0.4 }, { spellId: 'spell_life_drain', weight: 1, castChance: 0.3 }] },
+	{ name: 'Dark Necromancer', char: 'n', color: '#66aa66', tier: 3, baseHp: 8, hpPerLevel: 2, baseAttack: 3, attackPerLevel: 0.5, behavior: 'cowardly',
+		isSpellcaster: true, spells: [{ spellId: 'spell_shadow_bolt', weight: 2, castChance: 0.4 }, { spellId: 'spell_curse_of_weakness', weight: 1, castChance: 0.25 }] },
+	{ name: 'Void Cultist', char: 'v', color: '#9933cc', tier: 3, baseHp: 7, hpPerLevel: 2, baseAttack: 4, attackPerLevel: 0.6, behavior: 'erratic',
+		isSpellcaster: true, spells: [{ spellId: 'spell_shadow_bolt', weight: 2, castChance: 0.4 }] },
 ];
 
 export const BOSS_DEFS: MonsterDef[] = [
@@ -216,6 +230,11 @@ export function getMonsterDef(enemy: Entity): MonsterDef | undefined {
 	const baseName = getRareBaseName(enemy.name);
 	if (baseName) return MONSTER_BY_NAME.get(baseName);
 	return undefined;
+}
+
+export function getMonsterDefByName(name: string): MonsterDef | undefined {
+	const allDefs = [...MONSTER_DEFS, ...BOSS_DEFS];
+	return allDefs.find(m => name === m.name) ?? allDefs.find(m => name.includes(m.name));
 }
 
 function getActivePhase(def: MonsterDef, enemy: Entity): MonsterPhase | undefined {
