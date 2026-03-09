@@ -5,7 +5,7 @@ import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
 import { createEmptyMastery } from './mastery';
 
-export const SAVE_VERSION = 20;
+export const SAVE_VERSION = 21;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -96,6 +96,13 @@ interface SerializedState {
 	specialization?: string | null;
 	pendingSpecialization?: boolean;
 	forbiddenPassives?: string[];
+	// Ritual system
+	learnedRituals?: string[];
+	ritualChanneling?: { ritualId: string; turnsRemaining: number; turnsTotal: number } | null;
+	activeWards?: { center: { x: number; y: number }; radius: number; damage: number; turnsRemaining: number }[];
+	teleportAnchors?: Record<number, { x: number; y: number }>;
+	activeSummon?: GameState['activeSummon'];
+	scriedLevel?: number | null;
 }
 
 interface SerializedCachedLocation {
@@ -237,6 +244,12 @@ export function serializeState(state: GameState): string {
 			specialization: state.specialization,
 			pendingSpecialization: state.pendingSpecialization,
 			forbiddenPassives: state.forbiddenPassives,
+			learnedRituals: state.learnedRituals,
+			ritualChanneling: state.ritualChanneling,
+			activeWards: state.activeWards,
+			teleportAnchors: state.teleportAnchors,
+			activeSummon: state.activeSummon,
+			scriedLevel: state.scriedLevel,
 		}
 	};
 	return JSON.stringify(data);
@@ -333,6 +346,12 @@ export function deserializeState(json: string): GameState {
 		specialization: s.specialization ?? null,
 		pendingSpecialization: s.pendingSpecialization ?? false,
 		forbiddenPassives: s.forbiddenPassives ?? [],
+		learnedRituals: s.learnedRituals ?? [],
+		ritualChanneling: s.ritualChanneling ?? null,
+		activeWards: s.activeWards ?? [],
+		teleportAnchors: s.teleportAnchors ?? {},
+		activeSummon: s.activeSummon ?? null,
+		scriedLevel: s.scriedLevel ?? null,
 	};
 
 	// Regenerate world from seed and restore explored/discovered state
