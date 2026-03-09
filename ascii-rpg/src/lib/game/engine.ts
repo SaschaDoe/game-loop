@@ -1,4 +1,4 @@
-import type { GameState, GameMap, Entity, Position, MessageType, CharacterClass, CharacterConfig, Difficulty, ActiveDialogue, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode, CachedLocationState } from './types';
+import type { GameState, GameMap, Entity, Position, MessageType, CharacterClass, CharacterArchetype, CharacterConfig, Difficulty, ActiveDialogue, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode, CachedLocationState, AttributeName } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
@@ -26,6 +26,9 @@ import { BOOK_CATALOG, getAllBookIds } from './books';
 import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn, generateNoise, getAlertSymbol, getAlertColor, initializeAwareness } from './stealth';
 import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, completeLesson, passExamPart1, passExam, canTeach, completeTeachingSession, isLessonReady, allLessonsComplete } from './academy';
+import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, defaultMagicFields, getWeaponBonus, getArmorValue, getEquippedArmorWeight } from './magic';
+import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost } from './spells';
+import type { ArmorWeight } from './spells';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -38,6 +41,7 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		hpPercent: Math.round((state.player.hp / state.player.maxHp) * 100),
 		enemyCount: state.enemies.length,
 		rumorCount: state.rumors.length,
+		rumorIds: state.rumors.map(r => r.id),
 		storyCount: state.heardStories.length,
 		knownLanguages: state.knownLanguages,
 		playerName: state.player.name,
@@ -78,6 +82,7 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'minEnemiesKilled': return ctx.enemiesKilled >= cond.value;
 		case 'hasBossKills': return ctx.bossesKilled >= cond.value;
 		case 'minSecretsFound': return ctx.secretsFound >= cond.value;
+		case 'hasRumor': return ctx.rumorIds.includes(cond.value);
 		case 'minChestsOpened': return ctx.chestsOpened >= cond.value;
 		case 'startingLocation': return ctx.startingLocation === cond.value;
 		case 'minLevelsCleared': return ctx.levelsCleared >= cond.value;
@@ -157,13 +162,36 @@ function checkLevelUp(state: GameState): void {
 	while (state.xp >= threshold && state.characterLevel < 50) {
 		state.xp -= threshold;
 		state.characterLevel++;
-		const hpGain = 3 + state.characterLevel;
-		const atkGain = state.characterLevel % 2 === 0 ? 1 : 0;
-		state.player.maxHp += hpGain;
-		state.player.hp += hpGain;
-		state.player.attack += atkGain;
+
+		// Auto-increment primary attribute based on archetype
+		const archetypeKey = state.characterConfig.archetype ?? CLASS_PROFILES[state.characterConfig.characterClass].suggestedArchetype;
+		const archetype = ARCHETYPE_ATTRIBUTES[archetypeKey];
+		const primaryAttr = archetype.primaryAttribute;
+		state.player[primaryAttr] = (state.player[primaryAttr] ?? 10) + 1;
+
+		// Grant pending free attribute point
+		state.pendingAttributePoint = true;
+
 		state.skillPoints++;
-		addMessage(state, `Level up! You are now level ${state.characterLevel}. +${hpGain} HP${atkGain ? `, +${atkGain} ATK` : ''}, +1 Skill Point.`, 'level_up');
+
+		// Recalculate derived stats (captures new VIT→maxHp, STR→attack, etc.)
+		const prevMaxHp = state.player.maxHp;
+		const prevMaxMana = state.player.maxMana ?? 0;
+		const weaponBonus = getWeaponBonus(state.equipment);
+		const armorValue = getArmorValue(state.equipment);
+		recalculateDerivedStats(state.player, state.characterLevel, armorValue, weaponBonus, archetype.manaModifier);
+
+		const hpGain = state.player.maxHp - prevMaxHp;
+		const manaGain = (state.player.maxMana ?? 0) - prevMaxMana;
+		// Restore the HP/mana we gained
+		state.player.hp += Math.max(0, hpGain);
+		state.player.mana = (state.player.mana ?? 0) + Math.max(0, manaGain);
+
+		let msg = `Level up! Level ${state.characterLevel}. +1 ${primaryAttr.toUpperCase()}, +1 free point`;
+		if (hpGain > 0) msg += `, +${hpGain} HP`;
+		if (manaGain > 0) msg += `, +${manaGain} MP`;
+		msg += ', +1 Skill Point.';
+		addMessage(state, msg, 'level_up');
 		threshold = xpForLevel(state.characterLevel + 1);
 	}
 }
@@ -207,10 +235,12 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	bard: { hp: 0, atk: 0, sight: 1, description: 'A charming performer whose songs shape fate' },
 };
 
-const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
+const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', archetype: 'might', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
 
 export function createGame(config?: CharacterConfig): GameState {
-	const cfg = config ? { ...config, worldSeed: config.worldSeed || randomSeedString() } : { ...DEFAULT_CONFIG, worldSeed: randomSeedString() };
+	const rawCfg = config ? { ...config, worldSeed: config.worldSeed || randomSeedString() } : { ...DEFAULT_CONFIG, worldSeed: randomSeedString() };
+	// Default archetype from class profile if not specified
+	const cfg = { ...rawCfg, archetype: rawCfg.archetype ?? CLASS_PROFILES[rawCfg.characterClass].suggestedArchetype };
 
 	// Generate the overworld
 	const worldMap = generateWorld(cfg.worldSeed);
@@ -229,16 +259,35 @@ export function createGame(config?: CharacterConfig): GameState {
 	const sightRadius = DEFAULT_SIGHT_RADIUS;
 	const visibility = createVisibilityGrid(MAP_W, MAP_H);
 
+	// Set up archetype attributes
+	const archetype = ARCHETYPE_ATTRIBUTES[cfg.archetype];
+	const classProfile = CLASS_PROFILES[cfg.characterClass];
+
 	const state: GameState = {
 		player: {
 			pos: locResult.playerPos,
 			char: '@',
 			color: '#ff0',
 			name: cfg.name,
-			hp: 12,
-			maxHp: 12,
-			attack: 3,
-			statusEffects: []
+			hp: 10, // placeholder — recalculated below
+			maxHp: 10,
+			attack: 0,
+			statusEffects: [],
+			// Core attributes from archetype
+			str: archetype.str,
+			int: archetype.int,
+			wil: archetype.wil,
+			agi: archetype.agi,
+			vit: archetype.vit,
+			// Mana — calculated below
+			mana: 0,
+			maxMana: 0,
+			// Derived stats — calculated below
+			spellPower: 0,
+			magicResist: 0,
+			dodgeChance: 0,
+			critChance: 0,
+			physicalDefense: 0,
 		},
 		enemies: locResult.enemies,
 		npcs: spawnRegionalNPCs(locResult.map, startSettlement.region, locResult.npcs),
@@ -293,6 +342,17 @@ export function createGame(config?: CharacterConfig): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+
+		// Magic system (Epic 79)
+		learnedSpells: [],
+		spellCooldowns: {},
+		quickCastSlots: [null, null, null, null],
+		manaRegenBaseCounter: 0,
+		manaRegenIntCounter: 0,
+		spellMenuOpen: false,
+		spellMenuCursor: 0,
+		pendingAttributePoint: false,
+		spellTargeting: null,
 	};
 
 	// Academy initialization
@@ -306,13 +366,6 @@ export function createGame(config?: CharacterConfig): GameState {
 			state.academyState = createAcademyState(true, false, 0);
 		}
 	}
-
-	// Apply class bonuses
-	const bonuses = CLASS_BONUSES[cfg.characterClass];
-	state.player.hp += bonuses.hp;
-	state.player.maxHp += bonuses.hp;
-	state.player.attack += bonuses.atk;
-	state.sightRadius += bonuses.sight;
 
 	// Give starting equipment based on class
 	const CLASS_STARTING_ITEMS: Record<CharacterClass, { equip: [EquipmentSlot, string][]; inventory: string[] }> = {
@@ -333,6 +386,23 @@ export function createGame(config?: CharacterConfig): GameState {
 	for (const itemId of startingGear.inventory) {
 		const item = ITEM_CATALOG[itemId];
 		if (item) addToInventory(state.inventory, { ...item });
+	}
+
+	// Calculate derived stats from archetype attributes + equipment
+	const weaponBonus = getWeaponBonus(state.equipment);
+	const armorValue = getArmorValue(state.equipment);
+	recalculateDerivedStats(state.player, state.characterLevel, armorValue, weaponBonus, archetype.manaModifier);
+	state.player.hp = state.player.maxHp; // Start at full HP
+	state.player.mana = state.player.maxMana; // Start at full mana
+
+	// Apply sight radius based on archetype (Arcane sees further)
+	if (cfg.archetype === 'arcane') state.sightRadius += 2;
+	else if (cfg.archetype === 'finesse') state.sightRadius += 1;
+
+	// Grant starting spell from class profile
+	if (classProfile.startingSpell && SPELL_CATALOG[classProfile.startingSpell]) {
+		state.learnedSpells.push(classProfile.startingSpell);
+		state.quickCastSlots[0] = classProfile.startingSpell;
 	}
 
 	// Apply starting location HP factor (cave start = 60%)
@@ -1766,6 +1836,16 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		// Magic system defaults
+		learnedSpells: [],
+		spellCooldowns: {},
+		quickCastSlots: [null, null, null, null],
+		manaRegenBaseCounter: 0,
+		manaRegenIntCounter: 0,
+		spellMenuOpen: false,
+		spellMenuCursor: 0,
+		pendingAttributePoint: false,
+		spellTargeting: null,
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -2003,6 +2083,10 @@ function moveEnemies(state: GameState, defending = false) {
 
 	// Tick player status effects
 	tickEntityEffects(state, state.player);
+
+	// Tick mana regeneration and spell cooldowns
+	tickManaRegen(state);
+	tickSpellCooldowns(state);
 
 	for (const enemy of state.enemies) {
 		if (hasEffect(enemy, 'stun') || hasEffect(enemy, 'sleep') || hasEffect(enemy, 'freeze')) continue;
@@ -2333,6 +2417,132 @@ export function getActiveBook(state: GameState): Item | null {
 		?? null;
 }
 
+// ---------------------------------------------------------------------------
+// Spell casting helpers
+// ---------------------------------------------------------------------------
+
+function handleSpellKills(state: GameState, killed: Entity[]): void {
+	for (const enemy of killed) {
+		tryDropLoot(state, enemy);
+		const bossKill = isBoss(enemy);
+		const rareKill = isRare(enemy);
+		const baseReward = xpReward(enemy, state.level);
+		const reward = applyXpMultiplier(bossKill ? baseReward * 3 : rareKill ? baseReward * 2 : baseReward, state);
+		state.xp += reward;
+		state.stats.enemiesKilled++;
+		if (bossKill) state.stats.bossesKilled++;
+		recordKill(state.bestiary, enemy);
+		const questMsgs = updateQuestProgress(state, 'kill', enemy.name);
+		for (const qm of questMsgs) addMessage(state, qm, 'discovery');
+		addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
+		if (enemy.name === 'Exam Golem' && state.academyState && !state.academyState.examPassed) {
+			passExam(state);
+			addMessage(state, 'You defeated the Exam Golem! You have passed the combat trial!', 'level_up');
+		}
+	}
+	state.enemies = state.enemies.filter(e => !killed.includes(e));
+	if (killed.length > 0) {
+		checkLevelUp(state);
+		processAchievements(state);
+	}
+}
+
+function castSpellById(state: GameState, spellId: string): GameState {
+	const spell = getSpellDef(spellId);
+	if (!spell) {
+		addMessage(state, 'Unknown spell!', 'warning');
+		return { ...state };
+	}
+
+	if (hasEffect(state.player, 'stun')) {
+		addMessage(state, 'You are stunned and cannot cast!', 'damage_taken');
+		moveEnemies(state);
+		return { ...state };
+	}
+
+	// Check cooldown
+	if (state.spellCooldowns[spellId] > 0) {
+		addMessage(state, `${spell.name} on cooldown (${state.spellCooldowns[spellId]} turns).`, 'warning');
+		return { ...state };
+	}
+
+	// Check mana
+	const armorWeight = getEquippedArmorWeight(state.equipment, CLASS_PROFILES[state.characterConfig.characterClass]);
+	const cost = effectiveManaCost(spell, armorWeight);
+	if ((state.player.mana ?? 0) < cost) {
+		addMessage(state, `Not enough mana! (need ${cost}, have ${state.player.mana ?? 0})`, 'warning');
+		return { ...state };
+	}
+
+	// Self-targeting spells cast immediately
+	if (spell.targetType === 'self') {
+		// AoE self-centered: hit all enemies in radius
+		let targets: Entity[] = [];
+		if (spell.aoeRadius > 0 && (spell.baseDamage > 0 || spell.statusEffect)) {
+			const { x: px, y: py } = state.player.pos;
+			targets = state.enemies.filter(e =>
+				Math.abs(e.pos.x - px) <= spell.aoeRadius && Math.abs(e.pos.y - py) <= spell.aoeRadius
+			);
+		}
+		const result = executeSpell(spell, state.player, targets, armorWeight);
+		for (const msg of result.messages) addMessage(state, msg.text, msg.type);
+		if (result.success) {
+			state.spellCooldowns[spell.id] = spell.cooldown;
+			handleSpellKills(state, result.killedEnemies);
+		}
+		state.spellMenuOpen = false;
+		moveEnemies(state);
+		return { ...state };
+	}
+
+	// Directional/targeted spells enter targeting mode
+	if (spell.targetType === 'single_enemy' || spell.targetType === 'direction') {
+		state.spellTargeting = { spellId: spell.id, targetType: spell.targetType };
+		state.spellMenuOpen = false;
+		addMessage(state, `${spell.name}: Choose a direction (WASD). Escape to cancel.`, 'magic');
+		return { ...state };
+	}
+
+	// Fallback: cast on self
+	const result = executeSpell(spell, state.player, [], armorWeight);
+	for (const msg of result.messages) addMessage(state, msg.text, msg.type);
+	if (result.success) state.spellCooldowns[spell.id] = spell.cooldown;
+	state.spellMenuOpen = false;
+	moveEnemies(state);
+	return { ...state };
+}
+
+function castSpellFromMenu(state: GameState, menuIndex: number): GameState {
+	if (menuIndex < 0 || menuIndex >= state.learnedSpells.length) return state;
+	const spellId = state.learnedSpells[menuIndex];
+	return castSpellById(state, spellId);
+}
+
+/** Export for external use (assign quick-cast slots) */
+export function assignQuickCast(state: GameState, slot: number, spellId: string): GameState {
+	if (slot < 0 || slot > 3) return state;
+	if (!state.learnedSpells.includes(spellId)) return state;
+	state.quickCastSlots[slot] = spellId;
+	const spell = getSpellDef(spellId);
+	addMessage(state, `${spell?.name ?? spellId} assigned to slot ${slot + 1}.`, 'info');
+	return { ...state };
+}
+
+/** Export: teach the player a spell */
+export function learnSpell(state: GameState, spellId: string): boolean {
+	if (state.learnedSpells.includes(spellId)) return false;
+	if (!SPELL_CATALOG[spellId]) return false;
+	state.learnedSpells.push(spellId);
+	// Auto-assign to first empty quick-cast slot
+	const emptySlot = state.quickCastSlots.indexOf(null);
+	if (emptySlot !== -1) {
+		state.quickCastSlots[emptySlot] = spellId;
+	}
+	const spell = SPELL_CATALOG[spellId];
+	addMessage(state, `You have learned ${spell.name}!`, 'magic');
+	return true;
+}
+
 export function handleInput(state: GameState, key: string): GameState {
 	// Overworld mode: delegate to overworld handler
 	if (state.locationMode === 'overworld') {
@@ -2351,6 +2561,109 @@ export function handleInput(state: GameState, key: string): GameState {
 			return createGame(state.characterConfig);
 		}
 		return state;
+	}
+
+	// Spell targeting mode: WASD picks direction, Escape cancels
+	if (state.spellTargeting) {
+		if (key === 'Escape') {
+			state.spellTargeting = null;
+			addMessage(state, 'Spell cancelled.', 'info');
+			return { ...state };
+		}
+		const targeting = state.spellTargeting;
+		const spell = getSpellDef(targeting.spellId);
+		if (!spell) { state.spellTargeting = null; return { ...state }; }
+
+		if (targeting.targetType === 'single_enemy' || targeting.targetType === 'direction') {
+			let tdx = 0, tdy = 0;
+			if (key === 'w' || key === 'ArrowUp') tdy = -1;
+			else if (key === 's' || key === 'ArrowDown') tdy = 1;
+			else if (key === 'a' || key === 'ArrowLeft') tdx = -1;
+			else if (key === 'd' || key === 'ArrowRight') tdx = 1;
+			else return state;
+
+			const tx = state.player.pos.x + tdx;
+			const ty = state.player.pos.y + tdy;
+
+			if (targeting.targetType === 'single_enemy') {
+				const target = state.enemies.find(e => e.pos.x === tx && e.pos.y === ty);
+				if (!target) {
+					addMessage(state, 'No enemy in that direction.', 'warning');
+					return { ...state };
+				}
+				const armorWeight = getEquippedArmorWeight(state.equipment, CLASS_PROFILES[state.characterConfig.characterClass]);
+				const result = executeSpell(spell, state.player, [target], armorWeight);
+				for (const msg of result.messages) addMessage(state, msg.text, msg.type);
+				if (result.success) {
+					state.spellCooldowns[spell.id] = spell.cooldown;
+					handleSpellKills(state, result.killedEnemies);
+				}
+			}
+
+			state.spellTargeting = null;
+			moveEnemies(state);
+			return { ...state };
+		}
+		return state;
+	}
+
+	// Spell menu open: navigate and cast
+	if (state.spellMenuOpen) {
+		if (key === 'Escape' || key === 'm') {
+			state.spellMenuOpen = false;
+			return { ...state };
+		}
+		if (key === 'w' || key === 'ArrowUp') {
+			state.spellMenuCursor = Math.max(0, state.spellMenuCursor - 1);
+			return { ...state };
+		}
+		if (key === 's' || key === 'ArrowDown') {
+			state.spellMenuCursor = Math.min(state.learnedSpells.length - 1, state.spellMenuCursor + 1);
+			return { ...state };
+		}
+		if (key === 'Enter' || key === ' ') {
+			return castSpellFromMenu(state, state.spellMenuCursor);
+		}
+		return state;
+	}
+
+	// Attribute allocation mode
+	if (state.pendingAttributePoint) {
+		const attrMap: Record<string, AttributeName> = { '1': 'str', '2': 'int', '3': 'wil', '4': 'agi', '5': 'vit' };
+		if (attrMap[key]) {
+			const attr = attrMap[key];
+			state.player[attr] = (state.player[attr] ?? 10) + 1;
+			state.pendingAttributePoint = false;
+			const weaponBonus = getWeaponBonus(state.equipment);
+			const armorValue = getArmorValue(state.equipment);
+			const archetype = ARCHETYPE_ATTRIBUTES[state.characterConfig.archetype ?? CLASS_PROFILES[state.characterConfig.characterClass].suggestedArchetype];
+			recalculateDerivedStats(state.player, state.characterLevel, armorValue, weaponBonus, archetype.manaModifier);
+			addMessage(state, `+1 ${attr.toUpperCase()} allocated! (now ${state.player[attr]})`, 'level_up');
+			return { ...state };
+		}
+		return state; // Block other input during attribute allocation
+	}
+
+	// Open spell menu (M key)
+	if (key === 'm') {
+		if (state.learnedSpells.length === 0) {
+			addMessage(state, 'You have not learned any spells yet.', 'info');
+			return { ...state };
+		}
+		state.spellMenuOpen = true;
+		state.spellMenuCursor = 0;
+		return { ...state };
+	}
+
+	// Quick-cast keys (1-4)
+	if (key >= '1' && key <= '4') {
+		const slotIndex = parseInt(key) - 1;
+		const spellId = state.quickCastSlots[slotIndex];
+		if (!spellId) {
+			addMessage(state, `Quick-cast slot ${key} is empty. Open spell menu (M) to assign.`, 'info');
+			return { ...state };
+		}
+		return castSpellById(state, spellId);
 	}
 
 	// Ability key

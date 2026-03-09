@@ -7,13 +7,18 @@ export interface Position {
 
 export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' | 'paladin' | 'necromancer' | 'bard';
 
+export type CharacterArchetype = 'arcane' | 'finesse' | 'might';
+
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'permadeath';
 
 export type StartingLocation = 'village' | 'tavern' | 'cave' | 'academy';
 
+export type AttributeName = 'str' | 'int' | 'wil' | 'agi' | 'vit';
+
 export interface CharacterConfig {
 	name: string;
 	characterClass: CharacterClass;
+	archetype?: CharacterArchetype;
 	difficulty: Difficulty;
 	startingLocation: StartingLocation;
 	worldSeed: string;
@@ -72,6 +77,7 @@ export type DialogueCondition =
 	| { type: 'minEnemiesKilled'; value: number }
 	| { type: 'hasBossKills'; value: number }
 	| { type: 'minSecretsFound'; value: number }
+	| { type: 'hasRumor'; value: string }
 	| { type: 'minChestsOpened'; value: number }
 	| { type: 'startingLocation'; value: StartingLocation }
 	| { type: 'minLevelsCleared'; value: number }
@@ -127,6 +133,7 @@ export interface DialogueContext {
 	hpPercent: number;
 	enemyCount: number;
 	rumorCount: number;
+	rumorIds: string[];
 	storyCount: number;
 	knownLanguages: string[];
 	playerName: string;
@@ -205,6 +212,24 @@ export interface Entity {
 	awareness?: EnemyAwareness;
 	/** Turn counter for special AI patterns (e.g., Exam Golem 3-turn cycle) */
 	turnCounter?: number;
+
+	// Core attributes (US-MS-01) — optional for backward compat with monsters/tests
+	str?: number;
+	int?: number;
+	wil?: number;
+	agi?: number;
+	vit?: number;
+
+	// Mana (US-MS-03)
+	mana?: number;
+	maxMana?: number;
+
+	// Derived stats (US-MS-02) — recalculated via recalculateDerivedStats()
+	spellPower?: number;
+	magicResist?: number;
+	dodgeChance?: number;
+	critChance?: number;
+	physicalDefense?: number;
 }
 
 export type TrapType = 'spike' | 'poison_dart' | 'alarm' | 'teleport';
@@ -256,7 +281,7 @@ export enum Visibility {
 	Visible = 2
 }
 
-export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap' | 'npc' | 'danger';
+export type MessageType = 'info' | 'player_attack' | 'damage_taken' | 'healing' | 'level_up' | 'discovery' | 'death' | 'trap' | 'npc' | 'danger' | 'magic' | 'warning';
 
 export interface GameMessage {
 	text: string;
@@ -304,6 +329,15 @@ export interface CachedLocationState {
 	detectedSecrets: Set<string>;
 	playerPos: Position;
 	containers: WorldContainer[];
+}
+
+export type SpellTargetType = 'self' | 'single_enemy' | 'direction' | 'area' | 'tile';
+
+export interface SpellTargetingState {
+	spellId: string;
+	targetType: SpellTargetType;
+	/** For area spells, the selected position */
+	cursorPos?: Position;
 }
 
 export interface GameState {
@@ -361,6 +395,19 @@ export interface GameState {
 	stealth: StealthState;
 	academyState: AcademyState | null;
 	playerTitles: string[];
+
+	// Magic system (Epic 79)
+	learnedSpells: string[];            // spell IDs the player has learned
+	spellCooldowns: Record<string, number>;  // spell ID → remaining cooldown turns
+	quickCastSlots: (string | null)[];  // 4 quick-cast slots (keys 1-4), each holds a spell ID or null
+	manaRegenBaseCounter: number;       // turn counter for base mana regen (+1 per 5 turns)
+	manaRegenIntCounter: number;        // turn counter for INT-based mana regen
+	spellMenuOpen: boolean;             // whether the spell selection menu is open
+	spellMenuCursor: number;            // selected spell index in the menu
+	/** Pending attribute point to allocate on level-up */
+	pendingAttributePoint: boolean;
+	/** Targeting mode for spells that need a direction/position */
+	spellTargeting: SpellTargetingState | null;
 }
 
 // ---------------------------------------------------------------------------

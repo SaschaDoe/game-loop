@@ -93,6 +93,15 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		learnedSpells: [],
+		spellCooldowns: {},
+		quickCastSlots: [null, null, null, null],
+		manaRegenBaseCounter: 0,
+		manaRegenIntCounter: 0,
+		spellMenuOpen: false,
+		spellMenuCursor: 0,
+		pendingAttributePoint: false,
+		spellTargeting: null,
 		...overrides
 	};
 }
@@ -232,12 +241,13 @@ describe('Level-up', () => {
 		const threshold = xpForLevel(2);
 		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: threshold });
 		const state = makeTestState({ enemies: [enemy], });
-		state.player.hp = 10; // below max
+		const beforeMaxHp = state.player.maxHp;
+		state.player.hp = beforeMaxHp - 5; // below max
 
 		const result = handleInput(state, 'd');
-		// HP should have increased by the hpGain (3 + newLevel)
-		const hpGain = 3 + 2; // level 2
-		expect(result.player.hp).toBe(10 + hpGain);
+		// HP should have increased by the hpGain (new maxHp - old maxHp)
+		const hpGain = result.player.maxHp - beforeMaxHp;
+		expect(result.player.hp).toBe(beforeMaxHp - 5 + hpGain);
 	});
 
 	it('shows level-up message', () => {
@@ -248,7 +258,7 @@ describe('Level-up', () => {
 		const result = handleInput(state, 'd');
 		const lvlMsg = result.messages.find((m) => m.text.includes('Level up!'));
 		expect(lvlMsg).toBeDefined();
-		expect(lvlMsg!.text).toContain('level 2');
+		expect(lvlMsg!.text).toContain('Level 2');
 	});
 
 	it('can level up multiple times at once with large XP gain', () => {

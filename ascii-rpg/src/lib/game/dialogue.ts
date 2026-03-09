@@ -4198,7 +4198,7 @@ const ARCHIVIST_DIALOGUE: DialogueTree = {
 				opt('Tell me about the old gods.', 'old_gods', '#ff4'),
 				opt('What do you know about the blight?', 'blight', '#f44'),
 				opt('I found something in the forest...', 'discovery', '#4f4'),
-				opt('What can you tell me about Selvara?', 'selvara', '#f4f', { showIf: { minSecretsFound: 3 } }),
+				opt('What can you tell me about Selvara?', 'selvara', '#f4f', { showIf: { type: 'minSecretsFound', value: 3 } }),
 				opt('I should go.', '__exit__', '#888'),
 			]
 		),
@@ -4290,7 +4290,7 @@ const ARCHIVIST_DIALOGUE: DialogueTree = {
 			'*Faelorn speaks carefully.* Before the Ascension, there were seven principles woven into reality itself. Order, Change, Time, Space, Matter, Energy, Spirit. They were not gods in the way the temples teach — they were the world\'s own nature, given voice. They sacrificed themselves to cage the Void Serpent. And seven mortals stole the thrones they left behind.',
 			[
 				opt('The Void Serpent?', 'void_serpent', '#f4f'),
-				opt('Can the original gods be restored?', 'restoration', '#ff4', { showIf: { minSecretsFound: 5 } }),
+				opt('Can the original gods be restored?', 'restoration', '#ff4', { showIf: { type: 'minSecretsFound', value: 5 } }),
 				opt('Let me ask about something else.', 'return', '#888'),
 			]
 		),
@@ -4666,7 +4666,7 @@ export const ARENA_MASTER_GORATH_DIALOGUE: DialogueTree = {
 				opt('Sign me up for a fight.', 'fight_challenge', '#f84'),
 				opt('Tell me about the arena\'s history.', 'arena_history', '#8cf'),
 				opt('Who\'s the best fighter here?', 'champion_kael', '#ff4'),
-				opt('What\'s beneath the arena?', 'sealed_chamber', '#c8f', { showIf: { hasRumor: 'korthaven_arena' } }),
+				opt('What\'s beneath the arena?', 'sealed_chamber', '#c8f', { showIf: { type: 'hasRumor', value: 'korthaven_arena' } }),
 				opt('Who were the greatest champions?', 'greatest_champions', '#ff4'),
 				opt('Maybe later.', 'farewell', '#0ff'),
 			]
@@ -4763,7 +4763,7 @@ export const MASKED_FIGURE_DIALOGUE: DialogueTree = {
 				opt('Tell me about the Original Seven.', 'original_seven', '#c8f'),
 				opt('Who were the Ascended before they ascended?', 'ascension_truth', '#c8f'),
 				opt('Is the Ascension reversible?', 'ritual_reversal', '#ff4'),
-				opt('Tell me about the Eighth.', 'the_eighth', '#c8f', { showIf: { hasRumor: 'korthaven_eighth' } }),
+				opt('Tell me about the Eighth.', 'the_eighth', '#c8f', { showIf: { type: 'hasRumor', value: 'korthaven_eighth' } }),
 				opt('[Leave]', 'farewell', '#0ff'),
 			]
 		),
@@ -4772,7 +4772,7 @@ export const MASKED_FIGURE_DIALOGUE: DialogueTree = {
 			[
 				opt('What were the Principles?', 'original_seven', '#c8f'),
 				opt('You speak as if you were there.', 'ascension_truth', '#ff4'),
-				opt('Are you the Eighth?', 'the_eighth', '#c8f', { showIf: { hasRumor: 'korthaven_eighth' } }),
+				opt('Are you the Eighth?', 'the_eighth', '#c8f', { showIf: { type: 'hasRumor', value: 'korthaven_eighth' } }),
 				opt('This is unsettling.', 'return', '#0ff'),
 			]
 		),
@@ -4789,7 +4789,7 @@ export const MASKED_FIGURE_DIALOGUE: DialogueTree = {
 			[
 				opt('Can the Principles be restored?', 'ritual_reversal', '#ff4'),
 				opt('Selvara\'s poison — what did she do to the Ley Lines?', 'selvara_poison', '#c8f'),
-				opt('The Principle of Matter — Dro-Mahk. Is that what\'s beneath the arena?', 'return', '#c8f', { showIf: { hasRumor: 'korthaven_arena' }, onSelect: { message: 'The Masked Figure goes very still. "You have been to the Crucible. You felt it. The scream of Matter, torn from the world and forced into mortal hands that could never hold it properly. Yes. That convergence point is where Dro-Mahk was severed."' } }),
+				opt('The Principle of Matter — Dro-Mahk. Is that what\'s beneath the arena?', 'return', '#c8f', { showIf: { type: 'hasRumor', value: 'korthaven_arena' }, onSelect: { message: 'The Masked Figure goes very still. "You have been to the Crucible. You felt it. The scream of Matter, torn from the world and forced into mortal hands that could never hold it properly. Yes. That convergence point is where Dro-Mahk was severed."' } }),
 				opt('This changes everything.', 'return', '#c8f'),
 			]
 		),
@@ -5344,8 +5344,8 @@ export const ARCHMAGE_VOSS_DIALOGUE: DialogueTree = {
 				opt('Why can\'t students study multiple streams?', 'cross_stream', '#ff4'),
 				opt('Tell me about your travels.', 'travels', '#ff4'),
 				opt('What is the political situation at the school?', 'school_politics', '#ff4'),
-				opt('Professor Dawnwhisper says she saw the Ascension in the stars.', 'mirael_claim', '#c8f', { showIf: { hasRumor: 'mirael_ascension_stars' } }),
-				opt('I know about the Veiled Hand.', 'veiled_hand_confront', '#f44', { showIf: { hasRumor: 'conservatory_cross_stream' } }),
+				opt('Professor Dawnwhisper says she saw the Ascension in the stars.', 'mirael_claim', '#c8f', { showIf: { type: 'hasRumor', value: 'mirael_ascension_stars' } }),
+				opt('I know about the Veiled Hand.', 'veiled_hand_confront', '#f44', { showIf: { type: 'hasRumor', value: 'conservatory_cross_stream' } }),
 				opt('I should go.', 'farewell', '#0ff'),
 			]
 		),
@@ -5362,7 +5362,7 @@ export const ARCHMAGE_VOSS_DIALOGUE: DialogueTree = {
 			[
 				opt('That sounds very... settled. [Suspicious]', 'cross_stream', '#ff4'),
 				opt('[Persuade] Professor Ignis says cross-stream limits are artificial.', 'persuade_cross_stream', '#4cf', { socialCheck: { skill: 'persuade', difficulty: 14, successNode: 'persuade_cross_success', failNode: 'persuade_cross_fail' }, once: true }),
-				opt('What about the missing library books?', 'missing_books', '#c8f', { showIf: { hasRumor: 'seraphina_missing_books' } }),
+				opt('What about the missing library books?', 'missing_books', '#c8f', { showIf: { type: 'hasRumor', value: 'seraphina_missing_books' } }),
 				opt('Back to other topics.', 'return', '#0ff'),
 			]
 		),

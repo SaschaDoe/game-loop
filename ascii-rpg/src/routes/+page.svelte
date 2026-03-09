@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook, assignQuickCast, learnSpell } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
-	import type { GameState, CharacterClass, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
+	import type { GameState, CharacterClass, CharacterArchetype, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
 	import { DIFFICULTY_DEFS, DIFFICULTIES, isPermadeath } from '$lib/game/difficulty';
 	import { deleteSave } from '$lib/game/save';
 	import { SLOT_DISPLAY, INVENTORY_SIZE, type EquipmentSlot } from '$lib/game/items';
+	import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES } from '$lib/game/magic';
+	import { SPELL_CATALOG, getSpellDef, effectiveManaCost, SPELL_SCHOOL_COLORS } from '$lib/game/spells';
+	import type { ArmorWeight } from '$lib/game/spells';
 
 	declare const __APP_VERSION__: string;
 	declare const __BUILD_NUMBER__: string;
@@ -37,8 +40,16 @@
 	let phase: GamePhase = $state('intro');
 	let introStep = $state(0);
 	let playerName = $state('');
+	let selectedArchetype: CharacterArchetype = $state('might');
 	let selectedClass: CharacterClass = $state('warrior');
 	let selectedLocation: StartingLocation = $state('village');
+
+	const ARCHETYPES: CharacterArchetype[] = ['arcane', 'finesse', 'might'];
+	const ARCHETYPE_LABELS: Record<CharacterArchetype, string> = {
+		arcane: 'ARCANE',
+		finesse: 'FINESSE',
+		might: 'MIGHT',
+	};
 	let selectedDifficulty: Difficulty = $state('normal');
 	let worldSeed = $state('');
 	let state: GameState = $state(createGame());
@@ -127,6 +138,7 @@
 		const config: CharacterConfig = {
 			name: playerName.trim() || 'Hero',
 			characterClass: selectedClass,
+			archetype: selectedArchetype,
 			difficulty: selectedDifficulty,
 			startingLocation: selectedLocation,
 			worldSeed: worldSeed.trim()
@@ -382,22 +394,43 @@
 			/>
 		</div>
 
+		<p class="class-label">Choose your archetype:</p>
+		<div class="class-grid">
+			{#each ARCHETYPES as arch}
+				{@const def = ARCHETYPE_ATTRIBUTES[arch]}
+				<button
+					class="class-card"
+					class:selected={selectedArchetype === arch}
+					onclick={() => (selectedArchetype = arch)}
+				>
+					<span class="class-name">{ARCHETYPE_LABELS[arch]}</span>
+					<span class="class-desc">{def.description}</span>
+					<span class="class-stats">
+						STR {def.str} INT {def.int} WIL {def.wil} AGI {def.agi} VIT {def.vit}
+					</span>
+					<span class="class-stats" style="color: #4488ff">
+						Mana: x{def.manaModifier.toFixed(2)}
+					</span>
+				</button>
+			{/each}
+		</div>
+
 		<p class="class-label">Choose your class:</p>
 		<div class="class-grid">
 			{#each CLASSES as cls, i}
-				{@const bonuses = CLASS_BONUSES[cls]}
+				{@const profile = CLASS_PROFILES[cls]}
 				<button
 					class="class-card"
 					class:selected={selectedClass === cls}
-					onclick={() => (selectedClass = cls)}
+					onclick={() => { selectedClass = cls; selectedArchetype = profile.suggestedArchetype; }}
 				>
 					<span class="class-key">[{i + 1}]</span>
 					<span class="class-name">{CLASS_LABELS[cls]}</span>
-					<span class="class-desc">{bonuses.description}</span>
+					<span class="class-desc">{profile.description}</span>
 					<span class="class-stats">
-						HP {bonuses.hp >= 0 ? '+' : ''}{bonuses.hp} &middot;
-						ATK {bonuses.atk >= 0 ? '+' : ''}{bonuses.atk} &middot;
-						Sight {bonuses.sight >= 0 ? '+' : ''}{bonuses.sight}
+						{profile.startingAbility ? `Q: ${profile.startingAbility}` : ''}
+						{profile.startingSpell ? `Spell: ${SPELL_CATALOG[profile.startingSpell]?.name ?? ''}` : ''}
+						Armor: {profile.armorProficiency}
 					</span>
 				</button>
 			{/each}
@@ -455,6 +488,9 @@
 	<div class="game-container">
 		<div class="hud">
 			<span class="hp">HP: {state.player.hp}/{state.player.maxHp}</span>
+			{#if state.learnedSpells.length > 0 || (state.player.mana ?? 0) > 0}
+				<span class="mp" style="color: {(state.player.mana ?? 0) < (state.player.maxMana ?? 1) * 0.2 ? '#f80' : '#4488ff'}">MP: {state.player.mana ?? 0}/{state.player.maxMana ?? 0}</span>
+			{/if}
 			<span class="atk">ATK: {state.player.attack}</span>
 			{#if state.locationMode === 'overworld'}
 				{@const owInfo = getOverworldInfo(state)}
@@ -873,6 +909,63 @@
 						W/S navigate · A/D switch panel · ENTER to use/equip/read · X drop · ESC close
 					{/if}
 				</div>
+			</div>
+		</div>
+	{/if}
+	{#if state.spellMenuOpen}
+		<div class="spell-menu-overlay">
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="spell-menu" onclick={(e) => e.stopPropagation()}>
+				<h3 class="spell-menu-title">SPELLS (M to close)</h3>
+				{#each state.learnedSpells as spellId, i}
+					{@const spell = getSpellDef(spellId)}
+					{@const onCd = (state.spellCooldowns[spellId] ?? 0) > 0}
+					{@const armorWeight = CLASS_PROFILES[state.characterConfig.characterClass]?.armorProficiency ?? 'light'}
+					{@const cost = spell ? effectiveManaCost(spell, armorWeight) : 0}
+					{@const noMana = (state.player.mana ?? 0) < cost}
+					{@const slotIdx = state.quickCastSlots.indexOf(spellId)}
+					{#if spell}
+						<div
+							class="spell-entry"
+							class:spell-selected={state.spellMenuCursor === i}
+							class:spell-disabled={onCd || noMana}
+							style="border-left: 3px solid {SPELL_SCHOOL_COLORS[spell.school] ?? '#888'}"
+						>
+							<span class="spell-slot">{slotIdx >= 0 ? `[${slotIdx + 1}]` : '   '}</span>
+							<span class="spell-name">{spell.name}</span>
+							<span class="spell-cost" style="color:{noMana ? '#f44' : '#4488ff'}">{cost} MP</span>
+							{#if onCd}
+								<span class="spell-cd" style="color:#f80">CD:{state.spellCooldowns[spellId]}</span>
+							{/if}
+							<span class="spell-effect">{spell.effect}</span>
+						</div>
+					{/if}
+				{/each}
+				{#if state.learnedSpells.length === 0}
+					<p style="color:#666">No spells learned yet.</p>
+				{/if}
+				<div class="dialogue-hint">W/S navigate · ENTER cast · ESC close</div>
+			</div>
+		</div>
+	{/if}
+	{#if state.spellTargeting}
+		<div class="targeting-overlay">
+			<div class="targeting-hint">
+				<span style="color:#ff8">{getSpellDef(state.spellTargeting.spellId)?.name ?? 'Spell'}: Choose direction (WASD) · ESC cancel</span>
+			</div>
+		</div>
+	{/if}
+	{#if state.pendingAttributePoint}
+		<div class="attr-overlay">
+			<div class="attr-panel">
+				<h3 class="spell-menu-title">ALLOCATE ATTRIBUTE POINT</h3>
+				<div class="attr-row"><span class="attr-key">[1]</span> STR: {state.player.str ?? 10}</div>
+				<div class="attr-row"><span class="attr-key">[2]</span> INT: {state.player.int ?? 10}</div>
+				<div class="attr-row"><span class="attr-key">[3]</span> WIL: {state.player.wil ?? 10}</div>
+				<div class="attr-row"><span class="attr-key">[4]</span> AGI: {state.player.agi ?? 10}</div>
+				<div class="attr-row"><span class="attr-key">[5]</span> VIT: {state.player.vit ?? 10}</div>
+				<div class="dialogue-hint">Press 1-5 to allocate</div>
 			</div>
 		</div>
 	{/if}
@@ -1995,5 +2088,89 @@
 		.inv-panels {
 			flex-direction: column;
 		}
+	}
+
+	/* ── Spell Menu ── */
+	.spell-menu-overlay, .targeting-overlay, .attr-overlay {
+		position: fixed;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0, 0, 0, 0.85);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 260;
+	}
+	.spell-menu, .attr-panel {
+		background: #1a1a22;
+		border: 2px solid #555;
+		border-radius: 4px;
+		padding: 16px;
+		min-width: 360px;
+		max-width: 500px;
+		font-family: 'Courier New', monospace;
+	}
+	.spell-menu-title {
+		color: #aaf;
+		margin: 0 0 8px 0;
+		font-size: 14px;
+		text-align: center;
+	}
+	.spell-entry {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 8px;
+		padding: 4px 8px;
+		margin: 2px 0;
+		border-radius: 2px;
+		font-size: 12px;
+		align-items: baseline;
+	}
+	.spell-entry.spell-selected {
+		background: #333;
+	}
+	.spell-entry.spell-disabled {
+		opacity: 0.5;
+	}
+	.spell-slot {
+		color: #888;
+		font-size: 11px;
+		width: 24px;
+	}
+	.spell-name {
+		color: #eee;
+		font-weight: bold;
+		min-width: 120px;
+	}
+	.spell-cost {
+		font-size: 11px;
+	}
+	.spell-cd {
+		font-size: 11px;
+	}
+	.spell-effect {
+		color: #999;
+		font-size: 11px;
+		flex-basis: 100%;
+		padding-left: 32px;
+	}
+	.mp {
+		font-size: 13px;
+		white-space: nowrap;
+	}
+	.targeting-hint {
+		background: #1a1a22;
+		border: 2px solid #ff8;
+		border-radius: 4px;
+		padding: 12px 24px;
+		font-size: 14px;
+	}
+	.attr-row {
+		padding: 6px 8px;
+		font-size: 14px;
+		color: #ccc;
+	}
+	.attr-key {
+		color: #ff8;
+		margin-right: 8px;
 	}
 </style>

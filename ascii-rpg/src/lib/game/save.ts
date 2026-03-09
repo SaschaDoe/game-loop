@@ -4,7 +4,7 @@ import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
 
-export const SAVE_VERSION = 18;
+export const SAVE_VERSION = 19;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -72,6 +72,13 @@ interface SerializedState {
 	stealth?: GameState['stealth'];
 	academyState?: GameState['academyState'];
 	playerTitles?: string[];
+	// Magic system (Epic 79)
+	learnedSpells?: string[];
+	spellCooldowns?: Record<string, number>;
+	quickCastSlots?: (string | null)[];
+	manaRegenBaseCounter?: number;
+	manaRegenIntCounter?: number;
+	pendingAttributePoint?: boolean;
 }
 
 interface SerializedCachedLocation {
@@ -200,6 +207,12 @@ export function serializeState(state: GameState): string {
 			stealth: state.stealth,
 			academyState: state.academyState,
 			playerTitles: state.playerTitles,
+			learnedSpells: state.learnedSpells,
+			spellCooldowns: state.spellCooldowns,
+			quickCastSlots: state.quickCastSlots,
+			manaRegenBaseCounter: state.manaRegenBaseCounter,
+			manaRegenIntCounter: state.manaRegenIntCounter,
+			pendingAttributePoint: state.pendingAttributePoint,
 		}
 	};
 	return JSON.stringify(data);
@@ -230,7 +243,10 @@ export function deserializeState(json: string): GameState {
 		detectedSecrets: new Set(s.detectedSecrets),
 		traps: s.traps,
 		detectedTraps: new Set(s.detectedTraps),
-		characterConfig: s.characterConfig,
+		characterConfig: {
+			...s.characterConfig,
+			archetype: (s.characterConfig as any).archetype ?? 'might',
+		},
 		abilityCooldown: s.abilityCooldown,
 		hazards: s.hazards,
 		npcs: (s.npcs ?? []).map((n: any) => ({ ...n, moodTurns: n.moodTurns ?? 0 })),
@@ -271,6 +287,15 @@ export function deserializeState(json: string): GameState {
 		stealth: s.stealth ?? { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: s.academyState ?? null,
 		playerTitles: s.playerTitles ?? [],
+		learnedSpells: s.learnedSpells ?? [],
+		spellCooldowns: s.spellCooldowns ?? {},
+		quickCastSlots: s.quickCastSlots ?? [null, null, null, null],
+		manaRegenBaseCounter: s.manaRegenBaseCounter ?? 0,
+		manaRegenIntCounter: s.manaRegenIntCounter ?? 0,
+		spellMenuOpen: false,
+		spellMenuCursor: 0,
+		pendingAttributePoint: s.pendingAttributePoint ?? false,
+		spellTargeting: null,
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

@@ -87,6 +87,15 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		learnedSpells: [],
+		spellCooldowns: {},
+		quickCastSlots: [null, null, null, null],
+		manaRegenBaseCounter: 0,
+		manaRegenIntCounter: 0,
+		spellMenuOpen: false,
+		spellMenuCursor: 0,
+		pendingAttributePoint: false,
+		spellTargeting: null,
 		...overrides,
 	};
 }
