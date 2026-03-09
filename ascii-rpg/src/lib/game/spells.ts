@@ -3,8 +3,9 @@
  * Implements Epic 79 magic system with 7 arcane schools and 5 tiers.
  */
 
-import type { Entity, GameState, Position, SpellTargetType } from './types';
+import type { Entity, GameState, Position, SpellTargetType, TerrainEffect } from './types';
 import { applyEffect, hasEffect } from './status-effects';
+import type { TimePhase } from './day-night';
 
 // ---------------------------------------------------------------------------
 // Schools & Tiers
@@ -801,6 +802,31 @@ export function calculateSpellHealing(spell: SpellDef, caster: Entity): number {
 }
 
 // ---------------------------------------------------------------------------
+// Ley Line & Environmental Modifiers
+// ---------------------------------------------------------------------------
+
+/** Get spell effect multiplier based on Ley Line level (0=dead..4=convergence) */
+export function getLeyLineEffectModifier(leyLineLevel: number): number {
+	return [0, 0.9, 1.0, 1.1, 1.25][leyLineLevel] ?? 1.0;
+}
+
+/** Get environmental modifier for a spell based on time of day and location */
+export function getEnvironmentalModifier(
+	spell: SpellDef,
+	timePhase: string,
+	isOutdoor: boolean
+): number {
+	let mod = 1.0;
+	if (isOutdoor) {
+		// Night bonuses for divination and shadow
+		if (timePhase === 'night' && (spell.school === 'divination' || spell.school === 'shadow')) mod *= 1.15;
+		// Day bonuses for elements
+		if (timePhase === 'day' && spell.school === 'elements') mod *= 1.15;
+	}
+	return mod;
+}
+
+// ---------------------------------------------------------------------------
 // Armor Casting Penalty (US-MS-32)
 // ---------------------------------------------------------------------------
 
@@ -844,6 +870,9 @@ export function executeSpell(
 	caster: Entity,
 	targets: Entity[],
 	armorWeight: ArmorWeight,
+	leyLineLevel: number = 2,
+	timePhase: string = 'morning',
+	isOutdoor: boolean = false,
 ): SpellResult {
 	const result: SpellResult = {
 		success: true,
@@ -880,9 +909,14 @@ export function executeSpell(
 		});
 	}
 
+	// Calculate combined modifier from ley line and environment
+	const leyMod = getLeyLineEffectModifier(leyLineLevel);
+	const envMod = getEnvironmentalModifier(spell, timePhase, isOutdoor);
+	const combinedMod = leyMod * envMod;
+
 	// Healing spells
 	if (spell.baseHeal > 0) {
-		const healAmount = calculateSpellHealing(spell, caster);
+		const healAmount = Math.max(1, Math.floor(calculateSpellHealing(spell, caster) * combinedMod));
 		const actualHeal = Math.min(healAmount, caster.maxHp - caster.hp);
 		caster.hp += actualHeal;
 		result.healingDone = actualHeal;
@@ -915,7 +949,7 @@ export function executeSpell(
 	// Damage spells
 	if (spell.baseDamage > 0) {
 		for (const target of targets) {
-			const dmg = calculateSpellDamage(spell, caster, target);
+			const dmg = Math.max(1, Math.floor(calculateSpellDamage(spell, caster, target) * combinedMod));
 			target.hp -= dmg;
 			result.damageDealt += dmg;
 			result.messages.push({
@@ -976,19 +1010,27 @@ export function tickManaRegen(state: GameState): void {
 	if (player.mana === undefined || player.maxMana === undefined) return;
 	if (player.mana >= player.maxMana) return;
 
-	// Base regen: +1 per 5 turns
+	// Ley Line multiplier affects regen amount
+	const leyLineMultiplier = [0, 0.5, 1.0, 1.5, 2.0][state.leyLineLevel ?? 2] ?? 1.0;
+
+	// Dead zone: no regen at all
+	if (leyLineMultiplier === 0) return;
+
+	const regenAmount = Math.max(1, Math.floor(1 * leyLineMultiplier));
+
+	// Base regen: +regenAmount per 5 turns
 	state.manaRegenBaseCounter++;
 	if (state.manaRegenBaseCounter >= 5) {
 		state.manaRegenBaseCounter = 0;
-		player.mana = Math.min(player.maxMana!, player.mana! + 1);
+		player.mana = Math.min(player.maxMana!, player.mana! + regenAmount);
 	}
 
-	// INT bonus regen: +1 per max(1, 20 - floor(INT/2)) turns
+	// INT bonus regen: +regenAmount per max(1, 20 - floor(INT/2)) turns
 	const intInterval = Math.max(1, 20 - Math.floor((player.int ?? 10) / 2));
 	state.manaRegenIntCounter++;
 	if (state.manaRegenIntCounter >= intInterval) {
 		state.manaRegenIntCounter = 0;
-		player.mana = Math.min(player.maxMana!, player.mana! + 1);
+		player.mana = Math.min(player.maxMana!, player.mana! + regenAmount);
 	}
 }
 
@@ -1006,4 +1048,23 @@ export function tickSpellCooldowns(state: GameState): void {
 			}
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Terrain Effects from Spells
+// ---------------------------------------------------------------------------
+
+/** Create terrain effects at a target position based on the spell's element */
+export function createTerrainEffects(spell: SpellDef, targetPos: Position): TerrainEffect[] {
+	const effects: TerrainEffect[] = [];
+	if (spell.element === 'fire' && spell.baseDamage > 0) {
+		effects.push({ pos: { ...targetPos }, type: 'burning', duration: 3, damagePerTurn: 2 });
+	}
+	if (spell.element === 'ice' && spell.baseDamage > 0) {
+		effects.push({ pos: { ...targetPos }, type: 'frozen', duration: 5, damagePerTurn: 0 });
+	}
+	if (spell.element === 'lightning' && spell.baseDamage > 0) {
+		effects.push({ pos: { ...targetPos }, type: 'electrified', duration: 2, damagePerTurn: 1 });
+	}
+	return effects;
 }

@@ -90,6 +90,8 @@ interface SerializedState {
 		soulCapLost: number;
 	};
 	leyLineLevel?: number;
+	// Terrain effects from spells
+	terrainEffects?: GameState['terrainEffects'];
 }
 
 interface SerializedCachedLocation {
@@ -227,6 +229,7 @@ export function serializeState(state: GameState): string {
 			schoolMastery: state.schoolMastery,
 			forbiddenCosts: state.forbiddenCosts,
 			leyLineLevel: state.leyLineLevel,
+			terrainEffects: state.terrainEffects,
 		}
 	};
 	return JSON.stringify(data);
@@ -319,6 +322,7 @@ export function deserializeState(json: string): GameState {
 			soulCapLost: 0,
 		},
 		leyLineLevel: s.leyLineLevel ?? 0,
+		terrainEffects: s.terrainEffects ?? [],
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

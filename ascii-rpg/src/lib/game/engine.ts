@@ -27,9 +27,11 @@ import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn,
 import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, completeLesson, passExamPart1, passExam, canTeach, completeTeachingSession, isLessonReady, allLessonsComplete } from './academy';
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, defaultMagicFields, getWeaponBonus, getArmorValue, getEquippedArmorWeight } from './magic';
-import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost, FORBIDDEN_SCHOOLS } from './spells';
+import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost, FORBIDDEN_SCHOOLS, createTerrainEffects, getLeyLineEffectModifier, getEnvironmentalModifier } from './spells';
 import type { ArmorWeight, ForbiddenSchool } from './spells';
 import { createEmptyMastery, getMasteryLevel, canCastTier, addMasteryXP } from './mastery';
+import { RITUAL_CATALOG, getRitualDef, hasReagents, getMissingReagents, consumeReagents, rollInterruption } from './rituals';
+import type { RitualDef } from './rituals';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -364,8 +366,23 @@ export function createGame(config?: CharacterConfig): GameState {
 			sanityLost: 0,
 			soulCapLost: 0,
 		},
-		leyLineLevel: 0,
+		leyLineLevel: 2,
+
+		// Ritual system
+		learnedRituals: [],
+		ritualChanneling: null,
+		activeWards: [],
+		teleportAnchors: {},
+		activeSummon: null,
+		scriedLevel: null,
+		terrainEffects: [],
 	};
+
+	// Grant starting rituals for mages and necromancers
+	if (cfg.characterClass === 'mage' || cfg.characterClass === 'necromancer') {
+		state.learnedRituals.push('ritual_ward_of_protection');
+		state.learnedRituals.push('ritual_scrying');
+	}
 
 	// Academy initialization
 	if (cfg.startingLocation === 'academy') {
@@ -951,6 +968,8 @@ function enterSettlement(state: GameState, settlement: Settlement): void {
 	state.lootDrops = [];
 	state.landmarks = [];
 	updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
+	// Set ley line level: academy locations get convergence, others normal
+	state.leyLineLevel = settlement.id.includes('academy') ? 4 : 2;
 	addMessage(state, `You enter ${settlement.name}.`, 'discovery');
 }
 
@@ -1007,6 +1026,19 @@ function enterDungeon(state: GameState, dungeon: DungeonEntrance): void {
 	next.containers = [...state.containers];
 	next.waypoint = state.waypoint;
 	next.locationCache = state.locationCache;
+	// Set ley line level based on dungeon depth
+	const dungeonLevel = startLevel;
+	if (dungeon.id.includes('academy')) {
+		next.leyLineLevel = 4; // Convergence near academy
+	} else if (dungeonLevel >= 8) {
+		// Deep dungeons: varies (use level hash for pseudo-random)
+		next.leyLineLevel = 1 + (dungeonLevel % 3); // 1, 2, or 3
+	} else if (dungeonLevel >= 4) {
+		// Mid dungeons: normal or high
+		next.leyLineLevel = dungeonLevel % 2 === 0 ? 2 : 3;
+	} else {
+		next.leyLineLevel = 2; // Shallow: normal
+	}
 	// Copy into state (mutate in place since we're inside handleOverworldInput)
 	Object.assign(state, next);
 	addMessage(state, `You descend into ${dungeon.name}...`, 'discovery');
@@ -1383,6 +1415,7 @@ export function exitToOverworld(state: GameState): GameState {
 	state.chests = [];
 	state.lootDrops = [];
 	state.landmarks = [];
+	state.leyLineLevel = 2; // Overworld: normal ley line level
 	addMessage(state, 'You return to the overworld.', 'info');
 	return { ...state };
 }
@@ -1858,6 +1891,26 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		spellMenuCursor: 0,
 		pendingAttributePoint: false,
 		spellTargeting: null,
+
+		// Mastery & Forbidden magic
+		schoolMastery: createEmptyMastery() as unknown as Record<string, number>,
+		forbiddenCosts: {
+			corruption: 0,
+			paradoxBaseline: 0,
+			maxHpLost: 0,
+			sanityLost: 0,
+			soulCapLost: 0,
+		},
+		leyLineLevel: 2,
+
+		// Ritual system
+		learnedRituals: [],
+		ritualChanneling: null,
+		activeWards: [],
+		teleportAnchors: {},
+		activeSummon: null,
+		scriedLevel: null,
+		terrainEffects: [],
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -2100,6 +2153,22 @@ function moveEnemies(state: GameState, defending = false) {
 	tickManaRegen(state);
 	tickSpellCooldowns(state);
 
+	// Tick terrain effects (burning/frozen/electrified ground)
+	tickTerrainEffects(state);
+	if (state.player.hp <= 0) {
+		handlePlayerDeath(state);
+	}
+	// Remove enemies killed by terrain effects
+	state.enemies = state.enemies.filter((e) => {
+		if (e.hp <= 0) {
+			tryDropLoot(state, e);
+			const reward = applyXpMultiplier(xpReward(e, state.level), state);
+			state.xp += reward;
+			return false;
+		}
+		return true;
+	});
+
 	for (const enemy of state.enemies) {
 		if (hasEffect(enemy, 'stun') || hasEffect(enemy, 'sleep') || hasEffect(enemy, 'freeze')) continue;
 
@@ -2118,6 +2187,7 @@ function moveEnemies(state: GameState, defending = false) {
 					state.player.hp -= blastDmg;
 					state.stats.damageTaken += blastDmg;
 					addMessage(state, `Exam Golem unleashes ARCANE BLAST for ${blastDmg} damage!`, 'damage_taken');
+					checkRitualInterrupt(state, blastDmg);
 				} else {
 					addMessage(state, 'Exam Golem unleashes ARCANE BLAST — but you\'re out of range!', 'info');
 				}
@@ -2132,6 +2202,7 @@ function moveEnemies(state: GameState, defending = false) {
 					state.player.hp -= chargeDmg;
 					state.stats.damageTaken += chargeDmg;
 					addMessage(state, `Exam Golem charges! ${chargeDmg} damage.`, 'damage_taken');
+					checkRitualInterrupt(state, chargeDmg);
 				} else if (nx >= 0 && ny >= 0 && nx < state.map.width && ny < state.map.height &&
 					state.map.tiles[ny][nx] === '.') {
 					enemy.pos = { x: nx, y: ny };
@@ -2245,6 +2316,7 @@ function moveEnemies(state: GameState, defending = false) {
 			state.player.hp -= dmg;
 			state.stats.damageTaken += dmg;
 			addMessage(state, `${enemy.name} hits you for ${dmg} damage!`, 'damage_taken');
+			checkRitualInterrupt(state, dmg);
 			const onHit = getMonsterOnHitEffect(enemy);
 			if (onHit) {
 				applyEffect(state.player, onHit.type, onHit.duration, onHit.potency);
@@ -2267,6 +2339,86 @@ function moveEnemies(state: GameState, defending = false) {
 				}
 			}
 			enemy.pos = { x: nx, y: ny };
+		}
+	}
+
+	// Tick active wards
+	state.activeWards = state.activeWards.filter(ward => {
+		ward.turnsRemaining--;
+		if (ward.turnsRemaining <= 0) {
+			addMessage(state, 'A protective ward fades away.', 'info');
+			return false;
+		}
+		// Damage enemies inside the ward radius
+		for (const enemy of state.enemies) {
+			const dx = Math.abs(enemy.pos.x - ward.center.x);
+			const dy = Math.abs(enemy.pos.y - ward.center.y);
+			if (dx <= ward.radius && dy <= ward.radius) {
+				enemy.hp -= ward.damage;
+				applyEffect(enemy, 'freeze', 1, 0);
+				addMessage(state, `${enemy.name} is struck by the ward for ${ward.damage} damage!`, 'player_attack');
+			}
+		}
+		// Remove enemies killed by wards
+		state.enemies = state.enemies.filter(e => {
+			if (e.hp <= 0) {
+				tryDropLoot(state, e);
+				const reward = applyXpMultiplier(xpReward(e, state.level), state);
+				state.xp += reward;
+				state.stats.enemiesKilled++;
+				recordKill(state.bestiary, e);
+				addMessage(state, `${e.name} is destroyed by the ward! +${reward} XP`, 'player_attack');
+				return false;
+			}
+			return true;
+		});
+		if (state.enemies.length === 0) checkLevelUp(state);
+		return true;
+	});
+
+	// Summon AI
+	if (state.activeSummon && state.activeSummon.hp > 0) {
+		const summon = state.activeSummon;
+		let nearestEnemy: Entity | null = null;
+		let nearestDist = Infinity;
+		for (const enemy of state.enemies) {
+			const dist = Math.abs(enemy.pos.x - summon.pos.x) + Math.abs(enemy.pos.y - summon.pos.y);
+			if (dist < nearestDist) {
+				nearestDist = dist;
+				nearestEnemy = enemy;
+			}
+		}
+		if (nearestEnemy) {
+			if (nearestDist <= 1) {
+				// Attack
+				nearestEnemy.hp -= summon.attack;
+				addMessage(state, `Arcane Familiar attacks ${nearestEnemy.name} for ${summon.attack} damage!`, 'player_attack');
+				if (nearestEnemy.hp <= 0) {
+					tryDropLoot(state, nearestEnemy);
+					const reward = applyXpMultiplier(xpReward(nearestEnemy, state.level), state);
+					state.xp += reward;
+					state.stats.enemiesKilled++;
+					recordKill(state.bestiary, nearestEnemy);
+					addMessage(state, `${nearestEnemy.name} is slain by your familiar! +${reward} XP`, 'player_attack');
+					state.enemies = state.enemies.filter(e => e.hp > 0);
+					checkLevelUp(state);
+				}
+			} else {
+				// Move toward nearest enemy
+				const mdx = Math.sign(nearestEnemy.pos.x - summon.pos.x);
+				const mdy = Math.sign(nearestEnemy.pos.y - summon.pos.y);
+				const candidates: Position[] = [];
+				if (mdx !== 0) candidates.push({ x: summon.pos.x + mdx, y: summon.pos.y });
+				if (mdy !== 0) candidates.push({ x: summon.pos.x, y: summon.pos.y + mdy });
+				for (const c of candidates) {
+					if (c.x < 0 || c.y < 0 || c.x >= state.map.width || c.y >= state.map.height) continue;
+					if (state.map.tiles[c.y][c.x] === '#') continue;
+					if (c.x === state.player.pos.x && c.y === state.player.pos.y) continue;
+					if (state.enemies.some(e => e.pos.x === c.x && e.pos.y === c.y)) continue;
+					summon.pos = c;
+					break;
+				}
+			}
 		}
 	}
 }
@@ -2501,6 +2653,58 @@ export function getActiveBook(state: GameState): Item | null {
 }
 
 // ---------------------------------------------------------------------------
+// Terrain effects from spells
+// ---------------------------------------------------------------------------
+
+/** Apply terrain effects from a spell at the given position, handling element cancellation */
+function applyTerrainEffectsFromSpell(state: GameState, spell: { element?: string; baseDamage: number }, targetPos: Position): void {
+	if (!state.terrainEffects) state.terrainEffects = [];
+	const newEffects = createTerrainEffects(spell as Parameters<typeof createTerrainEffects>[0], targetPos);
+	for (const effect of newEffects) {
+		// Fire removes frozen terrain at same position
+		if (effect.type === 'burning') {
+			state.terrainEffects = state.terrainEffects.filter(
+				e => !(e.type === 'frozen' && e.pos.x === effect.pos.x && e.pos.y === effect.pos.y)
+			);
+		}
+		// Ice removes burning terrain at same position
+		if (effect.type === 'frozen') {
+			state.terrainEffects = state.terrainEffects.filter(
+				e => !(e.type === 'burning' && e.pos.x === effect.pos.x && e.pos.y === effect.pos.y)
+			);
+		}
+		state.terrainEffects.push(effect);
+	}
+}
+
+/** Tick terrain effects: apply damage to entities standing on them, decrement durations */
+function tickTerrainEffects(state: GameState): void {
+	if (!state.terrainEffects) return;
+
+	for (const effect of state.terrainEffects) {
+		if (effect.damagePerTurn > 0) {
+			// Damage player if standing on it
+			if (state.player.pos.x === effect.pos.x && state.player.pos.y === effect.pos.y) {
+				state.player.hp -= effect.damagePerTurn;
+				addMessage(state, `You take ${effect.damagePerTurn} damage from ${effect.type} ground!`, 'damage_taken');
+			}
+			// Damage enemies standing on it
+			for (const enemy of state.enemies) {
+				if (enemy.pos.x === effect.pos.x && enemy.pos.y === effect.pos.y) {
+					enemy.hp -= effect.damagePerTurn;
+					if (enemy.hp <= 0) {
+						addMessage(state, `${enemy.name} is killed by ${effect.type} ground!`, 'magic');
+					}
+				}
+			}
+		}
+		effect.duration--;
+	}
+
+	state.terrainEffects = state.terrainEffects.filter(e => e.duration > 0);
+}
+
+// ---------------------------------------------------------------------------
 // Spell casting helpers
 // ---------------------------------------------------------------------------
 
@@ -2543,6 +2747,12 @@ function castSpellById(state: GameState, spellId: string): GameState {
 		return { ...state };
 	}
 
+	// Dead zone check: no spells can be cast
+	if (state.leyLineLevel === 0) {
+		addMessage(state, 'The magic fizzles! This is a dead zone — no spells can be cast here.', 'warning');
+		return { ...state };
+	}
+
 	// Check cooldown
 	if (state.spellCooldowns[spellId] > 0) {
 		addMessage(state, `${spell.name} on cooldown (${state.spellCooldowns[spellId]} turns).`, 'warning');
@@ -2576,6 +2786,9 @@ function castSpellById(state: GameState, spellId: string): GameState {
 	}
 
 	const charClass = state.characterConfig.characterClass;
+	const leyLevel = state.leyLineLevel ?? 2;
+	const timePhase = getTimePhase(state.turnCount);
+	const isOutdoor = state.locationMode === 'overworld';
 
 	// Self-targeting spells cast immediately
 	if (spell.targetType === 'self') {
@@ -2587,12 +2800,16 @@ function castSpellById(state: GameState, spellId: string): GameState {
 				Math.abs(e.pos.x - px) <= spell.aoeRadius && Math.abs(e.pos.y - py) <= spell.aoeRadius
 			);
 		}
-		const result = executeSpell(spell, state.player, targets, armorWeight);
+		const result = executeSpell(spell, state.player, targets, armorWeight, leyLevel, timePhase, isOutdoor);
 		for (const msg of result.messages) addMessage(state, msg.text, msg.type);
 		if (result.success) {
 			state.spellCooldowns[spell.id] = spell.cooldown;
 			handleSpellKills(state, result.killedEnemies);
 			state.schoolMastery = addMasteryXP(state.schoolMastery as any, spell.school as any, 5, charClass) as unknown as Record<string, number>;
+			// Create terrain effects at target positions (self-centered AoE)
+			for (const target of targets) {
+				applyTerrainEffectsFromSpell(state, spell, target.pos);
+			}
 		}
 		state.spellMenuOpen = false;
 		moveEnemies(state);
@@ -2616,7 +2833,7 @@ function castSpellById(state: GameState, spellId: string): GameState {
 	}
 
 	// Fallback: cast on self
-	const result = executeSpell(spell, state.player, [], armorWeight);
+	const result = executeSpell(spell, state.player, [], armorWeight, leyLevel, timePhase, isOutdoor);
 	for (const msg of result.messages) addMessage(state, msg.text, msg.type);
 	if (result.success) {
 		state.spellCooldowns[spell.id] = spell.cooldown;
@@ -2695,6 +2912,195 @@ export function learnSpell(state: GameState, spellId: string): boolean {
 	return true;
 }
 
+/** Teach the player a ritual */
+export function learnRitual(state: GameState, ritualId: string): boolean {
+	if (state.learnedRituals.includes(ritualId)) return false;
+	if (!RITUAL_CATALOG[ritualId]) return false;
+	state.learnedRituals.push(ritualId);
+	const ritual = RITUAL_CATALOG[ritualId];
+	addMessage(state, `You have learned the ritual: ${ritual.name}!`, 'magic');
+	return true;
+}
+
+/** Begin channeling a ritual */
+function beginRitual(state: GameState, ritualId: string): void {
+	const ritual = getRitualDef(ritualId);
+	if (!ritual) {
+		addMessage(state, 'Unknown ritual.', 'warning');
+		return;
+	}
+	if (state.ritualChanneling) {
+		addMessage(state, 'You are already channeling a ritual!', 'warning');
+		return;
+	}
+	if ((state.player.mana ?? 0) < ritual.manaCost) {
+		addMessage(state, `Not enough mana! (need ${ritual.manaCost}, have ${state.player.mana ?? 0})`, 'warning');
+		return;
+	}
+	if (!hasReagents(state.inventory, ritual)) {
+		const missing = getMissingReagents(state.inventory, ritual);
+		const names = missing.map(m => `${m.quantity}x ${m.itemId}`).join(', ');
+		addMessage(state, `Missing reagents: ${names}`, 'warning');
+		return;
+	}
+
+	if (ritual.effectType === 'seal') {
+		// Special state for direction picking (turnsRemaining = -1)
+		state.ritualChanneling = { ritualId, turnsRemaining: -1, turnsTotal: ritual.castTurns };
+		addMessage(state, 'Choose a direction to seal (WASD/arrows). Escape to cancel.', 'magic');
+		return;
+	}
+
+	// Normal channeling
+	state.ritualChanneling = { ritualId, turnsRemaining: ritual.castTurns, turnsTotal: ritual.castTurns };
+	addMessage(state, `You begin channeling ${ritual.name}... (${ritual.castTurns} turns)`, 'magic');
+	state.spellMenuOpen = false;
+	moveEnemies(state);
+}
+
+/** Tick ritual channeling — called when player presses any key during channeling */
+function tickRitualChanneling(state: GameState): void {
+	if (!state.ritualChanneling || state.ritualChanneling.turnsRemaining <= 0) return;
+
+	state.ritualChanneling.turnsRemaining--;
+
+	if (state.ritualChanneling.turnsRemaining > 0) {
+		const ritual = getRitualDef(state.ritualChanneling.ritualId);
+		addMessage(state, `Channeling ${ritual?.name ?? 'ritual'}... (${state.ritualChanneling.turnsRemaining} turns remaining)`, 'magic');
+		return;
+	}
+
+	// Channeling complete (turnsRemaining === 0)
+	const ritual = getRitualDef(state.ritualChanneling.ritualId);
+	if (!ritual) {
+		state.ritualChanneling = null;
+		return;
+	}
+
+	// Special handling for seal — converts tile to wall
+	if (ritual.effectType === 'seal') {
+		const sealTarget = (state.ritualChanneling as any).sealTarget;
+		if (sealTarget) {
+			state.map.tiles[sealTarget.y][sealTarget.x] = '#';
+		}
+		// Consume mana + reagents
+		state.player.mana = (state.player.mana ?? 0) - ritual.manaCost;
+		consumeReagents(state.inventory, ritual);
+		addMessage(state, 'Ancient stone surges from the ground — the passage is sealed!', 'magic');
+		state.ritualChanneling = null;
+		return;
+	}
+
+	// Consume mana + reagents
+	state.player.mana = (state.player.mana ?? 0) - ritual.manaCost;
+	consumeReagents(state.inventory, ritual);
+	addMessage(state, `${ritual.name} complete!`, 'magic');
+	applyRitualEffect(state, ritual);
+	state.ritualChanneling = null;
+}
+
+/** Check for ritual interrupt when player takes damage */
+function checkRitualInterrupt(state: GameState, _damageAmount: number): void {
+	if (!state.ritualChanneling || state.ritualChanneling.turnsRemaining <= 0) return;
+
+	const ritual = getRitualDef(state.ritualChanneling.ritualId);
+	if (rollInterruption()) {
+		// Interrupted — consume mana + reagents
+		if (ritual) {
+			state.player.mana = (state.player.mana ?? 0) - ritual.manaCost;
+			consumeReagents(state.inventory, ritual);
+		}
+		state.ritualChanneling = null;
+		addMessage(state, 'Your concentration shatters — the ritual fails!', 'damage_taken');
+	} else {
+		addMessage(state, 'You hold your focus despite the blow!', 'magic');
+	}
+}
+
+/** Apply the effect of a completed ritual */
+function applyRitualEffect(state: GameState, ritual: RitualDef): void {
+	switch (ritual.effectType) {
+		case 'ward': {
+			state.activeWards.push({
+				center: { x: state.player.pos.x, y: state.player.pos.y },
+				radius: 2,
+				damage: 5,
+				turnsRemaining: 50,
+			});
+			addMessage(state, 'A protective ward shimmers into existence around you!', 'magic');
+			break;
+		}
+		case 'summon': {
+			if (state.activeSummon) {
+				addMessage(state, 'Your previous familiar fades away...', 'info');
+			}
+			const adjPos = findAdjacentFloor(state, state.player.pos.x, state.player.pos.y);
+			if (!adjPos) {
+				addMessage(state, 'There is no space to summon a familiar!', 'warning');
+				break;
+			}
+			state.activeSummon = {
+				pos: adjPos,
+				char: 'f',
+				color: '#c8f',
+				name: 'Arcane Familiar',
+				hp: 3,
+				maxHp: 3,
+				attack: 2,
+				statusEffects: [],
+			};
+			addMessage(state, 'An Arcane Familiar materializes beside you!', 'magic');
+			break;
+		}
+		case 'scry': {
+			state.scriedLevel = state.level + 1;
+			addMessage(state, 'Visions of the level below flood your mind. The layout will be revealed when you descend.', 'magic');
+			break;
+		}
+		case 'purify': {
+			const px = state.player.pos.x;
+			const py = state.player.pos.y;
+			const before = state.hazards.length;
+			state.hazards = state.hazards.filter(h => {
+				const dx = Math.abs(h.pos.x - px);
+				const dy = Math.abs(h.pos.y - py);
+				return dx > 3 || dy > 3;
+			});
+			const removed = before - state.hazards.length;
+			if (removed > 0) {
+				addMessage(state, `Purifying light washes over the area — ${removed} hazard${removed > 1 ? 's' : ''} cleansed!`, 'magic');
+			} else {
+				addMessage(state, 'The purification finds no hazards nearby.', 'info');
+			}
+			break;
+		}
+		case 'teleport_anchor': {
+			state.teleportAnchors[state.level] = { x: state.player.pos.x, y: state.player.pos.y };
+			addMessage(state, 'A glowing circle inscribes itself into the floor. You can return here at will.', 'magic');
+			break;
+		}
+		case 'seal': {
+			// Seal effect is applied during direction picking flow, not here
+			break;
+		}
+	}
+}
+
+/** Find an adjacent floor tile that isn't occupied */
+function findAdjacentFloor(state: GameState, x: number, y: number): Position | null {
+	const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+	for (const [dx, dy] of dirs) {
+		const nx = x + dx;
+		const ny = y + dy;
+		if (nx < 0 || ny < 0 || nx >= state.map.width || ny >= state.map.height) continue;
+		if (state.map.tiles[ny][nx] !== '.') continue;
+		if (state.enemies.some(e => e.pos.x === nx && e.pos.y === ny)) continue;
+		if (state.npcs.some(n => n.pos.x === nx && n.pos.y === ny)) continue;
+		return { x: nx, y: ny };
+	}
+	return null;
+}
+
 export function handleInput(state: GameState, key: string): GameState {
 	// Overworld mode: delegate to overworld handler
 	if (state.locationMode === 'overworld') {
@@ -2703,6 +3109,64 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	// Block game input during dialogue
 	if (state.activeDialogue) return state;
+
+	// Ritual channeling in progress — only Escape cancels
+	if (state.ritualChanneling && state.ritualChanneling.turnsRemaining > 0) {
+		if (key === 'Escape') {
+			const ritual = getRitualDef(state.ritualChanneling.ritualId);
+			if (ritual) {
+				state.player.mana = (state.player.mana ?? 0) - ritual.manaCost;
+				consumeReagents(state.inventory, ritual);
+			}
+			state.ritualChanneling = null;
+			addMessage(state, 'You break your concentration — the ritual fails!', 'damage_taken');
+			return { ...state };
+		}
+		// Any other key continues channeling
+		tickRitualChanneling(state);
+		moveEnemies(state);
+		return { ...state };
+	}
+
+	// Seal direction picking — WASD/arrows pick target, Escape cancels
+	if (state.ritualChanneling && state.ritualChanneling.turnsRemaining === -1) {
+		if (key === 'Escape') {
+			state.ritualChanneling = null;
+			addMessage(state, 'Seal ritual cancelled.', 'info');
+			return { ...state };
+		}
+		let sdx = 0, sdy = 0;
+		if (key === 'w' || key === 'ArrowUp') sdy = -1;
+		else if (key === 's' || key === 'ArrowDown') sdy = 1;
+		else if (key === 'a' || key === 'ArrowLeft') sdx = -1;
+		else if (key === 'd' || key === 'ArrowRight') sdx = 1;
+		else return state;
+
+		const tx = state.player.pos.x + sdx;
+		const ty = state.player.pos.y + sdy;
+		if (tx < 0 || ty < 0 || tx >= state.map.width || ty >= state.map.height) {
+			addMessage(state, 'Cannot seal outside the map.', 'warning');
+			return { ...state };
+		}
+		const targetTile = state.map.tiles[ty][tx];
+		if (targetTile !== '.' && targetTile !== '>') {
+			addMessage(state, 'You can only seal passable tiles.', 'warning');
+			return { ...state };
+		}
+		if (state.enemies.some(e => e.pos.x === tx && e.pos.y === ty) ||
+			state.npcs.some(n => n.pos.x === tx && n.pos.y === ty)) {
+			addMessage(state, 'There is something in the way!', 'warning');
+			return { ...state };
+		}
+
+		const ritual = getRitualDef(state.ritualChanneling.ritualId)!;
+		state.ritualChanneling = { ritualId: state.ritualChanneling.ritualId, turnsRemaining: ritual.castTurns, turnsTotal: ritual.castTurns };
+		(state.ritualChanneling as any).sealTarget = { x: tx, y: ty };
+		addMessage(state, `You begin channeling ${ritual.name}... (${ritual.castTurns} turns)`, 'magic');
+		state.spellMenuOpen = false;
+		moveEnemies(state);
+		return { ...state };
+	}
 
 	if (state.gameOver) {
 		if (key === 'r') {
@@ -2774,11 +3238,16 @@ export function handleInput(state: GameState, key: string): GameState {
 					}
 				}
 
-				const result = executeSpell(spell, state.player, [target], armorWeight);
+				const tLeyLevel = state.leyLineLevel ?? 2;
+				const tTimePhase = getTimePhase(state.turnCount);
+				const tIsOutdoor = state.locationMode === 'overworld';
+				const result = executeSpell(spell, state.player, [target], armorWeight, tLeyLevel, tTimePhase, tIsOutdoor);
 				for (const msg of result.messages) addMessage(state, msg.text, msg.type);
 				if (result.success) {
 					state.spellCooldowns[spell.id] = spell.cooldown;
 					handleSpellKills(state, result.killedEnemies);
+					// Create terrain effects at target position
+					applyTerrainEffectsFromSpell(state, spell, { x: tx, y: ty });
 				}
 			}
 
@@ -2888,6 +3357,23 @@ export function handleInput(state: GameState, key: string): GameState {
 			return { ...state };
 		}
 		return castSpellById(state, spellId);
+	}
+
+	// Teleportation Circle return (R key)
+	if (key === 'r' && !state.gameOver) {
+		const anchor = state.teleportAnchors[state.level];
+		if (anchor) {
+			if ((state.player.mana ?? 0) < 5) {
+				addMessage(state, 'Not enough mana to teleport! (need 5)', 'warning');
+				return { ...state };
+			}
+			state.player.mana = (state.player.mana ?? 0) - 5;
+			state.player.pos = { x: anchor.x, y: anchor.y };
+			updateVisibility(state.visibility, state.map, state.player.pos, effectiveSightRadius(state));
+			addMessage(state, 'You step through the teleportation circle and reappear at your anchor point!', 'magic');
+			moveEnemies(state);
+			return { ...state };
+		}
 	}
 
 	// Ability key
@@ -3453,8 +3939,40 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.equipment = { ...state.equipment };
 		next.containers = [...state.containers];
 		next.locationCache = state.locationCache;
+		// Carry ritual state through dungeon levels
+		next.learnedRituals = [...state.learnedRituals];
+		next.ritualChanneling = null; // Cancel any active channeling on descend
+		next.activeWards = []; // Wards don't carry between levels
+		next.teleportAnchors = { ...state.teleportAnchors };
+		next.activeSummon = null; // Summon doesn't follow between levels
+		next.scriedLevel = state.scriedLevel;
+		// Set ley line level based on dungeon depth
+		const isAcademyDungeon = (state.currentLocationId ?? '').includes('academy');
+		if (isAcademyDungeon) {
+			next.leyLineLevel = 4;
+		} else if (nextLevel >= 8) {
+			next.leyLineLevel = 1 + (nextLevel % 3); // 1, 2, or 3
+		} else if (nextLevel >= 4) {
+			next.leyLineLevel = nextLevel % 2 === 0 ? 2 : 3;
+		} else {
+			next.leyLineLevel = 2;
+		}
 		processAchievements(next);
 		addMessage(next, `Descended to dungeon level ${next.level}.`);
+
+		// Apply scrying — reveal layout of the new level
+		if (next.scriedLevel === next.level) {
+			for (let sy = 0; sy < next.map.height; sy++) {
+				for (let sx = 0; sx < next.map.width; sx++) {
+					if (next.visibility[sy][sx] === Visibility.Unexplored) {
+						next.visibility[sy][sx] = Visibility.Explored;
+					}
+				}
+			}
+			next.scriedLevel = null;
+			addMessage(next, 'Your scrying visions crystallize — the layout of this level is revealed!', 'magic');
+		}
+
 		return next;
 	}
 
@@ -3832,9 +4350,16 @@ export function renderColored(state: GameState): { char: string; color: string }
 						if (hazard) {
 							row.push({ char: hazardChar(hazard.type), color: hazardColor(hazard.type) });
 						} else {
-							const tile = state.map.tiles[y][x];
-							const isSecret = state.detectedSecrets.has(key);
-							row.push({ char: tile, color: tileColor(tile, isSecret) });
+							const terrain = state.terrainEffects?.find(e => e.pos.x === x && e.pos.y === y);
+							if (terrain) {
+								const tChar = terrain.type === 'burning' ? '~' : terrain.type === 'frozen' ? '.' : '*';
+								const tColor = terrain.type === 'burning' ? '#f44' : terrain.type === 'frozen' ? '#0ff' : '#ff0';
+								row.push({ char: tChar, color: tColor });
+							} else {
+								const tile = state.map.tiles[y][x];
+								const isSecret = state.detectedSecrets.has(key);
+								row.push({ char: tile, color: tileColor(tile, isSecret) });
+							}
 						}
 					}
 				}
@@ -3859,9 +4384,16 @@ export function renderColored(state: GameState): { char: string; color: string }
 						if (hazard) {
 							row.push({ char: hazardChar(hazard.type), color: dimColor(hazardColor(hazard.type)) });
 						} else {
-							const tile = state.map.tiles[y][x];
-							const isSecret = state.detectedSecrets.has(key);
-							row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+							const terrain = state.terrainEffects?.find(e => e.pos.x === x && e.pos.y === y);
+							if (terrain) {
+								const tChar = terrain.type === 'burning' ? '~' : terrain.type === 'frozen' ? '.' : '*';
+								const tColor = terrain.type === 'burning' ? '#f44' : terrain.type === 'frozen' ? '#0ff' : '#ff0';
+								row.push({ char: tChar, color: dimColor(tColor) });
+							} else {
+								const tile = state.map.tiles[y][x];
+								const isSecret = state.detectedSecrets.has(key);
+								row.push({ char: tile, color: dimColor(tileColor(tile, isSecret)) });
+							}
 						}
 					}
 				}

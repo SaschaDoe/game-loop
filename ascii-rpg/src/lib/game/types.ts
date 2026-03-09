@@ -335,6 +335,26 @@ export interface CachedLocationState {
 	containers: WorldContainer[];
 }
 
+export interface RitualChannelingState {
+	ritualId: string;
+	turnsRemaining: number;
+	turnsTotal: number;
+}
+
+export interface WardZone {
+	center: Position;
+	radius: number;
+	damage: number;
+	turnsRemaining: number;
+}
+
+export interface TerrainEffect {
+	pos: Position;
+	type: 'burning' | 'frozen' | 'electrified';
+	duration: number;
+	damagePerTurn: number;
+}
+
 export type SpellTargetType = 'self' | 'single_enemy' | 'direction' | 'area' | 'tile';
 
 export interface SpellTargetingState {
@@ -423,6 +443,17 @@ export interface GameState {
 		soulCapLost: number;
 	};
 	leyLineLevel: number;
+
+	// Ritual system (Epic 79)
+	learnedRituals: string[];
+	ritualChanneling: RitualChannelingState | null;
+	activeWards: WardZone[];
+	teleportAnchors: Record<number, Position>;  // dungeon level → anchor position
+	activeSummon: Entity | null;
+	scriedLevel: number | null;
+
+	// Terrain effects from spells
+	terrainEffects: TerrainEffect[];
 }
 
 // ---------------------------------------------------------------------------

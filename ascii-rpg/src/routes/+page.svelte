@@ -504,6 +504,15 @@
 			{#if state.learnedSpells.length > 0 || (state.player.mana ?? 0) > 0}
 				<span class="mp" style="color: {(state.player.mana ?? 0) < (state.player.maxMana ?? 1) * 0.2 ? '#f80' : '#4488ff'}">MP: {state.player.mana ?? 0}/{state.player.maxMana ?? 0}</span>
 			{/if}
+			{#if state.leyLineLevel === 0}
+				<span class="ley-indicator" style="color: #f44">LEY: DEAD</span>
+			{:else if state.leyLineLevel === 1}
+				<span class="ley-indicator" style="color: #888">LEY: Weak</span>
+			{:else if state.leyLineLevel === 3}
+				<span class="ley-indicator" style="color: #4ff">LEY: Strong</span>
+			{:else if state.leyLineLevel === 4}
+				<span class="ley-indicator" style="color: #fc4">LEY: Convergence</span>
+			{/if}
 			<span class="atk">ATK: {state.player.attack}</span>
 			{#if state.locationMode === 'overworld'}
 				{@const owInfo = getOverworldInfo(state)}

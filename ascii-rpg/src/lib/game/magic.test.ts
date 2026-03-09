@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, monsterAttributes } from './magic';
-import { SPELL_CATALOG, calculateSpellDamage, calculateSpellHealing, effectiveManaCost, executeSpell } from './spells';
+import { SPELL_CATALOG, calculateSpellDamage, calculateSpellHealing, effectiveManaCost, executeSpell, getLeyLineEffectModifier, getEnvironmentalModifier, createTerrainEffects } from './spells';
+import type { SpellDef } from './spells';
 import type { Entity, CharacterArchetype } from './types';
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
@@ -192,5 +193,135 @@ describe('Monster Attributes', () => {
 		const high = monsterAttributes(3, 10);
 		expect(high.str).toBeGreaterThan(low.str);
 		expect(high.vit).toBeGreaterThan(low.vit);
+	});
+});
+
+describe('Ley Line Effect Modifier', () => {
+	it('returns correct values for each level', () => {
+		expect(getLeyLineEffectModifier(0)).toBe(0);     // Dead zone
+		expect(getLeyLineEffectModifier(1)).toBe(0.9);   // Low
+		expect(getLeyLineEffectModifier(2)).toBe(1.0);   // Normal
+		expect(getLeyLineEffectModifier(3)).toBe(1.1);   // High
+		expect(getLeyLineEffectModifier(4)).toBe(1.25);  // Convergence
+	});
+
+	it('dead zone modifier is 0', () => {
+		expect(getLeyLineEffectModifier(0)).toBe(0);
+	});
+
+	it('returns 1.0 for out-of-range values', () => {
+		expect(getLeyLineEffectModifier(5)).toBe(1.0);
+		expect(getLeyLineEffectModifier(-1)).toBe(1.0);
+	});
+});
+
+describe('Environmental Modifier', () => {
+	it('boosts shadow spells at night outdoors', () => {
+		const shadowSpell = SPELL_CATALOG['spell_shadow_bolt'];
+		expect(getEnvironmentalModifier(shadowSpell, 'night', true)).toBe(1.15);
+	});
+
+	it('boosts divination spells at night outdoors', () => {
+		const divSpell = SPELL_CATALOG['spell_true_sight'];
+		expect(getEnvironmentalModifier(divSpell, 'night', true)).toBe(1.15);
+	});
+
+	it('boosts element spells during day outdoors', () => {
+		const fireSpell = SPELL_CATALOG['spell_firebolt'];
+		expect(getEnvironmentalModifier(fireSpell, 'day', true)).toBe(1.15);
+	});
+
+	it('no bonus indoors regardless of time', () => {
+		const shadowSpell = SPELL_CATALOG['spell_shadow_bolt'];
+		expect(getEnvironmentalModifier(shadowSpell, 'night', false)).toBe(1.0);
+	});
+
+	it('no bonus for mismatched school/time', () => {
+		const fireSpell = SPELL_CATALOG['spell_firebolt'];
+		expect(getEnvironmentalModifier(fireSpell, 'night', true)).toBe(1.0);
+	});
+
+	it('returns 1.0 for normal conditions', () => {
+		const fireSpell = SPELL_CATALOG['spell_firebolt'];
+		expect(getEnvironmentalModifier(fireSpell, 'morning', true)).toBe(1.0);
+	});
+});
+
+describe('Ley Line Spell Effects', () => {
+	it('convergence increases spell damage', () => {
+		const caster = makeEntity({ mana: 20, maxMana: 20, spellPower: 20 });
+		const target = makeEntity({ hp: 100, maxHp: 100, magicResist: 0 });
+		const spell = SPELL_CATALOG['spell_firebolt'];
+		// Normal (ley 2): base damage
+		const normalResult = executeSpell(spell, caster, [target], 'light', 2);
+		const normalDmg = normalResult.damageDealt;
+		// Reset
+		caster.mana = 20;
+		target.hp = 100;
+		// Convergence (ley 4): 1.25x damage
+		const convResult = executeSpell(spell, caster, [target], 'light', 4);
+		expect(convResult.damageDealt).toBeGreaterThan(normalDmg);
+	});
+
+	it('low ley line reduces spell damage', () => {
+		const caster = makeEntity({ mana: 20, maxMana: 20, spellPower: 20 });
+		const target = makeEntity({ hp: 100, maxHp: 100, magicResist: 0 });
+		const spell = SPELL_CATALOG['spell_firebolt'];
+		// Normal (ley 2)
+		const normalResult = executeSpell(spell, caster, [target], 'light', 2);
+		const normalDmg = normalResult.damageDealt;
+		// Reset
+		caster.mana = 20;
+		target.hp = 100;
+		// Low (ley 1): 0.9x damage
+		const lowResult = executeSpell(spell, caster, [target], 'light', 1);
+		expect(lowResult.damageDealt).toBeLessThan(normalDmg);
+	});
+});
+
+describe('Terrain Effects from Spells', () => {
+	it('creates burning terrain effect for fire spells', () => {
+		const fireSpell = SPELL_CATALOG['spell_firebolt'];
+		const effects = createTerrainEffects(fireSpell, { x: 5, y: 5 });
+		expect(effects).toHaveLength(1);
+		expect(effects[0].type).toBe('burning');
+		expect(effects[0].duration).toBe(3);
+		expect(effects[0].damagePerTurn).toBe(2);
+		expect(effects[0].pos).toEqual({ x: 5, y: 5 });
+	});
+
+	it('creates frozen terrain effect for ice spells', () => {
+		const iceSpell = SPELL_CATALOG['spell_frost_lance'];
+		const effects = createTerrainEffects(iceSpell, { x: 3, y: 4 });
+		expect(effects).toHaveLength(1);
+		expect(effects[0].type).toBe('frozen');
+		expect(effects[0].duration).toBe(5);
+		expect(effects[0].damagePerTurn).toBe(0);
+	});
+
+	it('creates electrified terrain effect for lightning spells', () => {
+		const lightningSpell = SPELL_CATALOG['spell_lightning_arc'];
+		const effects = createTerrainEffects(lightningSpell, { x: 7, y: 2 });
+		expect(effects).toHaveLength(1);
+		expect(effects[0].type).toBe('electrified');
+		expect(effects[0].duration).toBe(2);
+		expect(effects[0].damagePerTurn).toBe(1);
+	});
+
+	it('returns empty array for non-elemental spells', () => {
+		const healSpell = SPELL_CATALOG['spell_heal'];
+		const effects = createTerrainEffects(healSpell, { x: 1, y: 1 });
+		expect(effects).toHaveLength(0);
+	});
+
+	it('returns empty array for zero-damage elemental spells', () => {
+		// Create a mock spell with fire element but 0 base damage
+		const mockSpell: SpellDef = {
+			id: 'test_no_damage_fire', name: 'Test', school: 'elements', tier: 1,
+			description: '', effect: '', manaCost: 1, cooldown: 0,
+			targetType: 'self', baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'fire',
+		};
+		const effects = createTerrainEffects(mockSpell, { x: 1, y: 1 });
+		expect(effects).toHaveLength(0);
 	});
 });
