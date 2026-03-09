@@ -3154,7 +3154,8 @@ export function handleInput(state: GameState, key: string): GameState {
 			return { ...state };
 		}
 		if (state.enemies.some(e => e.pos.x === tx && e.pos.y === ty) ||
-			state.npcs.some(n => n.pos.x === tx && n.pos.y === ty)) {
+			state.npcs.some(n => n.pos.x === tx && n.pos.y === ty) ||
+			(state.activeSummon && state.activeSummon.hp > 0 && state.activeSummon.pos.x === tx && state.activeSummon.pos.y === ty)) {
 			addMessage(state, 'There is something in the way!', 'warning');
 			return { ...state };
 		}
