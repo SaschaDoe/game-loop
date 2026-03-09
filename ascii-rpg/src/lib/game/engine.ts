@@ -1818,6 +1818,21 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 						}
 					}
 
+					// 20% chance of a reagent
+					if (rng.next() < 0.20) {
+						let reagentPool: string[];
+						if (level <= 3) {
+							reagentPool = ['arcane_dust', 'starfern'];
+						} else if (level <= 6) {
+							reagentPool = ['arcane_dust', 'starfern', 'moonwater_vial', 'dreamleaf'];
+						} else {
+							reagentPool = ['arcane_dust', 'moonwater_vial', 'dreamleaf', 'void_salt', 'lightning_shard'];
+						}
+						const reagentId = reagentPool[Math.floor(rng.next() * reagentPool.length)];
+						const reagentItem = ITEM_CATALOG[reagentId];
+						if (reagentItem) containerItems.push({ ...reagentItem });
+					}
+
 					const container: WorldContainer = {
 						id: `container_${level}_${ci}`,
 						pos: { x: cx, y: cy },
