@@ -396,12 +396,6 @@ export function createGame(config?: CharacterConfig): GameState {
 		forbiddenPassives: [],
 	};
 
-	// Grant starting rituals for mages and necromancers
-	if (cfg.characterClass === 'mage' || cfg.characterClass === 'necromancer') {
-		state.learnedRituals.push('ritual_ward_of_protection');
-		state.learnedRituals.push('ritual_scrying');
-	}
-
 	// Academy initialization
 	if (cfg.startingLocation === 'academy') {
 		if (cfg.characterClass === 'mage') {

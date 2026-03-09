@@ -211,13 +211,12 @@ describe('Ritual Integration', () => {
 		expect(state.scriedLevel).toBeNull();
 	});
 
-	it('mage starts with starter rituals', () => {
+	it('mage starts with no starter rituals (discovered in-world)', () => {
 		const state = createGame({
 			name: 'Test', characterClass: 'mage', difficulty: 'normal',
 			startingLocation: 'cave', worldSeed: 'test', archetype: 'arcane',
 		});
-		expect(state.learnedRituals).toContain('ritual_ward_of_protection');
-		expect(state.learnedRituals).toContain('ritual_scrying');
+		expect(state.learnedRituals).toEqual([]);
 	});
 
 	it('warrior starts with no rituals', () => {
