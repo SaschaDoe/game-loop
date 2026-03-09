@@ -74,6 +74,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		completedQuestIds: [],
 		failedQuestIds: [],
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
+		academyState: null,
+		playerTitles: [],
 		...overrides
 	};
 }

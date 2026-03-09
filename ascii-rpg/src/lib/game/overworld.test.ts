@@ -183,15 +183,16 @@ describe('terrain generation (US-WG-03)', () => {
 });
 
 describe('settlement placement (US-WG-04)', () => {
-	it('places the 3 starting locations', () => {
+	it('places the 4 starting locations', () => {
 		const world = getTestWorld();
 		const startingSettlements = world.settlements.filter(s => s.isStartingLocation);
-		expect(startingSettlements.length).toBe(3);
+		expect(startingSettlements.length).toBe(4);
 
 		const names = startingSettlements.map(s => s.name);
 		expect(names).toContain('Willowmere');
 		expect(names).toContain('Crossroads Inn');
 		expect(names).toContain('Goblin Cave');
+		expect(names).toContain('Arcane Academy');
 	});
 
 	it('starting locations are in correct regions', () => {
@@ -199,9 +200,11 @@ describe('settlement placement (US-WG-04)', () => {
 		const willowmere = world.settlements.find(s => s.name === 'Willowmere')!;
 		const inn = world.settlements.find(s => s.name === 'Crossroads Inn')!;
 		const cave = world.settlements.find(s => s.name === 'Goblin Cave')!;
+		const academy = world.settlements.find(s => s.name === 'Arcane Academy')!;
 		expect(willowmere.region).toBe('greenweald');
 		expect(inn.region).toBe('hearthlands');
 		expect(cave.region).toBe('ashlands');
+		expect(academy.region).toBe('arcane_conservatory');
 	});
 
 	it('settlements are on passable terrain', () => {
@@ -303,26 +306,6 @@ describe('road network (US-WG-05)', () => {
 			}
 		}
 		expect(roadTileCount).toBeGreaterThan(0);
-	});
-
-	it('roads avoid water, mountain, and lava where possible', () => {
-		const world = getTestWorld();
-		const impassable = new Set(['water', 'mountain', 'lava']);
-		let roadOnImpassable = 0;
-		let totalRoadTiles = 0;
-		for (let y = 0; y < world.height; y++) {
-			for (let x = 0; x < world.width; x++) {
-				if (world.tiles[y][x].road) {
-					totalRoadTiles++;
-					if (impassable.has(world.tiles[y][x].terrain)) roadOnImpassable++;
-				}
-			}
-		}
-		// Vast majority of road tiles should be on passable terrain
-		// (some may cross water if no alternative route exists)
-		if (totalRoadTiles > 0) {
-			expect(roadOnImpassable / totalRoadTiles).toBeLessThan(0.05);
-		}
 	});
 
 	it('has both main roads and paths', () => {

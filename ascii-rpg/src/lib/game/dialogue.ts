@@ -148,7 +148,7 @@ export const MOTHER_DIALOGUE: DialogueTree = {
 			]
 		),
 		dungeon_info: node('dungeon_info',
-			'The Dungeon of Shadows... it appeared thirty years ago, the night the sky turned red. Your father explored the first few levels back then. He said the walls themselves seemed alive, shifting when you weren\'t looking. Whatever you do, watch your step. The deeper floors have traps that would make a seasoned adventurer weep.',
+			'The Slop Fortress... it appeared thirty years ago, the night the sky turned red. Your father explored the first few levels back then. He said the walls themselves seemed alive, shifting when you weren\'t looking. Whatever you do, watch your step. The deeper floors have traps that would make a seasoned adventurer weep.',
 			[
 				opt('What happened the night the sky turned red?', 'red_sky', '#8cf'),
 				opt('Father explored the dungeon?', 'father_past', '#ff4'),
@@ -480,7 +480,7 @@ export const FATHER_DIALOGUE: DialogueTree = {
 			]
 		),
 		his_past: node('his_past',
-			'*He leans back.* Aye, I was. Twenty years ago. Before the belly and the bad knee. I cleared the first three floors of the Dungeon of Shadows when it first appeared. Was going to go deeper, but then your mother told me you were on the way and... well. Some treasures are worth more than gold.',
+			'*He leans back.* Aye, I was. Twenty years ago. Before the belly and the bad knee. I cleared the first three floors of the Slop Fortress when it first appeared. Was going to go deeper, but then your mother told me you were on the way and... well. Some treasures are worth more than gold.',
 			[
 				opt('What was the scariest thing you faced?', 'scary', '#f44'),
 				opt('Why only three floors?', 'three_floors', '#ff4'),
@@ -5517,6 +5517,242 @@ export const ARCHMAGE_VOSS_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── ACADEMY STARTING LOCATION DIALOGUES ───
+
+const ARCHMAGUS_VEYLEN_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	conditionalStartNodes: [
+		{ condition: { type: 'class', value: 'mage' }, nodeId: 'start_mage' },
+		{ condition: { type: 'academyGraduated' }, nodeId: 'start_graduated' },
+	],
+	nodes: {
+		// ── Default start (non-mage, not yet enrolled) ──
+		start: node('start',
+			'Welcome to the Arcane Academy! I am Archmagus Veylen, headmaster of this institution. The autumn term begins today. Are you here to study the arcane arts?',
+			[
+				opt('I wish to enroll in the school year.', 'enroll', '#4f4', { onSelect: { enrollAcademy: true } }),
+				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
+				opt('I\'m just passing through.', 'farewell'),
+			]
+		),
+		// ── Mage class start (auto-graduated) ──
+		start_mage: node('start_mage',
+			'Ah, you return! I remember your final year — exemplary work in transmutation and ward theory. The faculty and I are honored to bestow upon you the title of Archmage Apprentice. Welcome back to the Academy. Perhaps you would consider sharing your knowledge with our new students?',
+			[
+				opt('I would be honored to teach.', 'teaching_intro', '#4f4'),
+				opt('Thank you, Archmagus. What else can I help with?', 'return_graduated'),
+				opt('I must continue my journey.', 'farewell'),
+			]
+		),
+		// ── Graduated (non-mage who passed exam) ──
+		start_graduated: node('start_graduated',
+			'Welcome back, graduate! You proved yourself in the trials. The Academy is proud to count you among its alumni. Would you like to teach a lesson today?',
+			[
+				opt('I\'d like to teach.', 'teaching_intro', '#4f4', { showIf: { type: 'academyGraduated' } }),
+				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
+				opt('Farewell, Archmagus.', 'farewell'),
+			]
+		),
+		// ── Return node (enrolled student) ──
+		return: node('return',
+			'How goes your studies? Remember — attend your lessons and prepare for the exam.',
+			[
+				opt('I\'m ready for the final exam.', 'exam_start', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'academyAllLessonsComplete' }, { type: 'academyExamNotTaken' }] } }),
+				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
+				opt('I\'d like to teach.', 'teaching_intro', '#4f4', { showIf: { type: 'academyGraduated' } }),
+				opt('Farewell.', 'farewell'),
+			]
+		),
+		return_graduated: node('return_graduated',
+			'The Academy thrives. Our students could benefit from your experience. What would you like to do?',
+			[
+				opt('I\'d like to teach a lesson.', 'teaching_intro', '#4f4'),
+				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
+				opt('Farewell.', 'farewell'),
+			]
+		),
+		about_academy: node('about_academy',
+			'The Arcane Academy has stood for three centuries in the Conservatory region. We teach alchemy, ward theory, elemental magic, and combat technique. Students attend six lessons in sequence — each available a few days after the last. Complete all lessons, then face a final exam: an alchemy question and a combat trial against an Arcane Golem.',
+			[
+				opt('What is the exam like?', 'about_exam', '#ff4'),
+				opt('Back.', 'return'),
+			]
+		),
+		about_exam: node('about_exam',
+			'The exam has two parts. First, an alchemy question testing what you learned in lessons. Second, a combat trial against an Arcane Golem — a construct with a predictable attack pattern. Pay attention in your lessons and you will survive. The exam becomes available once you have completed all six lessons.',
+			[
+				opt('I understand.', 'return'),
+			]
+		),
+		// ── Exam flow ──
+		exam_start: node('exam_start',
+			'Very well. The final exam begins now. Part One: Alchemy Knowledge. Answer correctly to proceed to the combat trial.\n\nQuestion: What are the two ingredients required to brew a basic Health Potion?',
+			[
+				opt('Starfern and Moonwater Vial.', 'exam_part1_pass', '#4f4'),
+				opt('Mandrake Root and Fire Crystal.', 'exam_part1_fail', '#f44'),
+				opt('Phoenix Ash and Void Salt.', 'exam_part1_fail', '#f44'),
+				opt('Dreamleaf and Shadowroot.', 'exam_part1_fail', '#f44'),
+			]
+		),
+		exam_part1_pass: node('exam_part1_pass',
+			'Correct! Starfern and Moonwater Vial — the fundamental healing brew. You paid attention in your lessons.\n\nNow for Part Two: the Combat Trial. An Arcane Golem will materialize in the practice arena. Defeat it to complete your exam. Remember what Professor Ignis taught you about its attack pattern!',
+			[
+				opt('I\'m ready. Summon the Golem!', 'farewell', '#ff4', { onSelect: { startExam: true } }),
+				opt('Wait — I need more time to prepare.', 'return'),
+			]
+		),
+		exam_part1_fail: node('exam_part1_fail',
+			'Incorrect. That is not the answer. Review your lesson notes — or rather, your memory. You may try again tomorrow.',
+			[
+				opt('I\'ll study harder.', 'return'),
+			]
+		),
+		// ── Graduation ceremony (triggered by talking after exam golem kill) ──
+		// This is reached via return node when academyGraduated is true but was recently set
+		// ── Teaching flow ──
+		teaching_intro: node('teaching_intro',
+			'Excellent! We have a group of first-year students waiting. They will ask you questions about the arcane curriculum. Answer correctly and you will be compensated for your time.',
+			[
+				opt('Let\'s begin the lesson.', 'teaching_q1', '#4f4', { onSelect: { startTeaching: true } }),
+				opt('Not right now.', 'return_graduated'),
+			]
+		),
+		teaching_q1: node('teaching_q1',
+			'A student raises their hand: "Professor, which two ingredients are needed for a basic Health Potion?"',
+			[
+				opt('Starfern and Moonwater Vial.', 'teaching_correct', '#4f4'),
+				opt('Mandrake Root and Fire Crystal.', 'teaching_wrong', '#f44'),
+				opt('Phoenix Ash and Void Salt.', 'teaching_wrong', '#f44'),
+				opt('Dreamleaf and Shadowroot.', 'teaching_wrong', '#f44'),
+			]
+		),
+		teaching_correct: node('teaching_correct',
+			'The student nods eagerly and scribbles notes. "Thank you, Professor!" The Archmagus nods approvingly. Well done.',
+			[
+				opt('My pleasure.', 'farewell', undefined, { onSelect: { completeTeaching: 'correct' } }),
+			]
+		),
+		teaching_wrong: node('teaching_wrong',
+			'The student looks confused. Another student whispers the correct answer. The Archmagus gives you a concerned look. Perhaps review the material before your next session.',
+			[
+				opt('I\'ll do better next time.', 'farewell', undefined, { onSelect: { completeTeaching: 'wrong' } }),
+			]
+		),
+		farewell: node('farewell',
+			'May knowledge light your path.',
+			[
+				opt('[Leave]', 'farewell'),
+			]
+		),
+	}
+};
+
+const PROFESSOR_IGNIS_ACADEMY_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	conditionalStartNodes: [
+		{ condition: { type: 'academyGraduated' }, nodeId: 'start_graduated' },
+	],
+	nodes: {
+		start: node('start',
+			'Welcome, student! I am Professor Ignis, master of alchemy and combat theory. I teach six lessons that will prepare you for your final exam. Your first lesson is ready now — shall we begin?',
+			[
+				opt('What will I learn?', 'curriculum', '#8cf'),
+				opt('I\'m ready for my lesson.', 'check_lesson', '#4f4', { showIf: { type: 'academyLessonReady' } }),
+				opt('Goodbye, Professor.', 'farewell'),
+			]
+		),
+		start_graduated: node('start_graduated',
+			'Ah, a fellow scholar! Always good to see a graduate. The potions on the shelf are yours if you need them.',
+			[
+				opt('Thank you, Professor.', 'farewell'),
+			]
+		),
+		return: node('return',
+			'Back again? Good — dedication is the mark of a true mage.',
+			[
+				opt('I\'m ready for my lesson.', 'check_lesson', '#4f4', { showIf: { type: 'academyLessonReady' } }),
+				opt('When is my next lesson?', 'next_lesson_info', '#8cf', { showIf: { type: 'allOf', conditions: [{ type: 'academyEnrolled' }, { type: 'lessonNotCompleted', value: 'final_review' }] } }),
+				opt('Remind me about the curriculum.', 'curriculum', '#8cf'),
+				opt('Goodbye.', 'farewell'),
+			]
+		),
+		curriculum: node('curriculum',
+			'I teach six lessons in sequence: Alchemy Fundamentals, Elemental Weaknesses, Arcane Golem Patterns, Advanced Transmutation, Protective Wards, and a Final Review. Each lesson becomes available a few days after you complete the previous one. Take your time — the lessons wait for you. But the exam does NOT forgive ignorance.',
+			[
+				opt('I\'ll be ready.', 'return'),
+			]
+		),
+		next_lesson_info: node('next_lesson_info',
+			'Your next lesson is not yet available. Come back in a few days — I will notify you when it is time.',
+			[
+				opt('I\'ll return later.', 'farewell'),
+			]
+		),
+		check_lesson: node('check_lesson',
+			'Ah yes, your next lesson. Let us begin.',
+			[
+				opt('Alchemy Fundamentals', 'lesson_alchemy_basics', '#ff4', { showIf: { type: 'lessonNotCompleted', value: 'alchemy_basics' } }),
+				opt('Elemental Weaknesses', 'lesson_elemental_theory', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'lessonCompleted', value: 'alchemy_basics' }, { type: 'lessonNotCompleted', value: 'elemental_theory' }] } }),
+				opt('Golem Patterns', 'lesson_golem_patterns', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'lessonCompleted', value: 'elemental_theory' }, { type: 'lessonNotCompleted', value: 'golem_patterns' }] } }),
+				opt('Transmutation', 'lesson_transmutation', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'lessonCompleted', value: 'golem_patterns' }, { type: 'lessonNotCompleted', value: 'transmutation' }] } }),
+				opt('Protective Wards', 'lesson_ward_theory', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'lessonCompleted', value: 'transmutation' }, { type: 'lessonNotCompleted', value: 'ward_theory' }] } }),
+				opt('Final Review', 'lesson_final_review', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'lessonCompleted', value: 'ward_theory' }, { type: 'lessonNotCompleted', value: 'final_review' }] } }),
+				opt('Back.', 'return'),
+			]
+		),
+		lesson_alchemy_basics: node('lesson_alchemy_basics',
+			'LESSON 1: ALCHEMY FUNDAMENTALS\n\nToday we study the Health Potion. The recipe is precise: combine Starfern with a Moonwater Vial. No substitutes. Starfern provides the restorative essence, Moonwater binds it.\n\nRemember: STARFERN and MOONWATER VIAL. This WILL be on the exam.',
+			[
+				opt('I\'ll remember. Starfern and Moonwater Vial.', 'lesson_complete', '#4f4', { onSelect: { completeLesson: 'alchemy_basics' } }),
+			]
+		),
+		lesson_elemental_theory: node('lesson_elemental_theory',
+			'LESSON 2: ELEMENTAL WEAKNESSES\n\nEvery elemental creature has a counter-element. Frost creatures fear fire. Fire creatures fear water.\n\nBut the Exam Golem is different — it is an arcane construct, not elemental. Do not waste time on elements against it. Instead, study its attack PATTERN.',
+			[
+				opt('Understood. Pattern, not element.', 'lesson_complete', '#4f4', { onSelect: { completeLesson: 'elemental_theory' } }),
+			]
+		),
+		lesson_golem_patterns: node('lesson_golem_patterns',
+			'LESSON 3: ARCANE GOLEM BEHAVIORAL PATTERNS\n\nThis is the most important lesson. The Arcane Golem follows a strict 3-TURN CYCLE:\n\nTurn 1: CHARGE (low damage, 1-2 HP)\nTurn 2: CHARGE (low damage, 1-2 HP)\nTurn 3: ARCANE BLAST (massive damage, 8-12 HP)\n\nThe key to survival: on every THIRD turn, RETREAT one tile away. The blast has melee range only.\n\nCharge, charge, BLAST. Retreat on the blast turn. This is how you survive the combat exam.',
+			[
+				opt('Charge, charge, BLAST — retreat on third turn. Got it.', 'lesson_complete', '#4f4', { onSelect: { completeLesson: 'golem_patterns' } }),
+			]
+		),
+		lesson_transmutation: node('lesson_transmutation',
+			'LESSON 4: ADVANCED TRANSMUTATION\n\nThe Philosopher\'s Draught requires five ingredients: Phoenix Ash, Moonwater Vial, Starfern, Mandrake Root, and Dreamleaf.\n\nMissing any one and the potion becomes volatile. The order matters: always add MANDRAKE ROOT LAST, or the solution crystallizes.',
+			[
+				opt('Mandrake Root last. Understood.', 'lesson_complete', '#4f4', { onSelect: { completeLesson: 'transmutation' } }),
+			]
+		),
+		lesson_ward_theory: node('lesson_ward_theory',
+			'LESSON 5: PROTECTIVE WARDS\n\nA ward is a standing spell anchored to a location. The strongest ward — the Shieldwall Glyph — requires THREE concentric circles of power. Each circle must face a cardinal direction.\n\nRemember: wards fail if the anchor point is disturbed.',
+			[
+				opt('Three circles, anchor point critical. Noted.', 'lesson_complete', '#4f4', { onSelect: { completeLesson: 'ward_theory' } }),
+			]
+		),
+		lesson_final_review: node('lesson_final_review',
+			'LESSON 6: FINAL REVIEW\n\nYour exam has two parts:\n\nPART ONE — Alchemy: You will be asked which two ingredients make a Health Potion. The answer is STARFERN and MOONWATER VIAL.\n\nPART TWO — Combat: You face an Arcane Golem. Remember its 3-turn cycle: CHARGE, CHARGE, BLAST. RETREAT on every third turn to avoid the blast.\n\nSpeak to the Archmagus when you are ready for the exam. Good luck.',
+			[
+				opt('Starfern + Moonwater. Charge, charge, blast — retreat on third. Ready.', 'lesson_complete', '#4f4', { onSelect: { completeLesson: 'final_review' } }),
+			]
+		),
+		lesson_complete: node('lesson_complete',
+			'Excellent! Remember what you learned today. There will be no study aids during the exam — only what you carry in your mind. I will notify you when your next lesson is ready.',
+			[
+				opt('I won\'t forget.', 'farewell'),
+			]
+		),
+		farewell: node('farewell',
+			'Study well. The practice dungeon awaits below if you want to sharpen your combat skills.',
+			[
+				opt('[Leave]', 'farewell'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -5540,4 +5776,6 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Professor Bramwell Thornwick': BRAMWELL_DIALOGUE,
 	'Professor Mirael Dawnwhisper': MIRAEL_DIALOGUE,
 	'Archmage Aldric Voss': ARCHMAGE_VOSS_DIALOGUE,
+	'Archmagus Veylen': ARCHMAGUS_VEYLEN_DIALOGUE,
+	'Professor Ignis': PROFESSOR_IGNIS_ACADEMY_DIALOGUE,
 };

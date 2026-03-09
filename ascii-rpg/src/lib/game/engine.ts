@@ -25,6 +25,7 @@ import { createEmptyInventory, createEmptyEquipment, addToInventory, removeFromI
 import { BOOK_CATALOG, getAllBookIds } from './books';
 import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn, generateNoise, getAlertSymbol, getAlertColor, initializeAwareness } from './stealth';
 import { updateQuestProgress, checkTimedQuests } from './quests';
+import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, completeLesson, passExamPart1, passExam, canTeach, completeTeachingSession, isLessonReady, allLessonsComplete } from './academy';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -50,6 +51,14 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		levelsCleared: state.stats.levelsCleared,
 		maxDungeonLevel: state.stats.maxDungeonLevel,
 		startingLocation: state.characterConfig.startingLocation,
+		playerTitles: state.playerTitles,
+		academyEnrolled: state.academyState?.enrolled ?? false,
+		academyGraduated: state.academyState?.graduated ?? false,
+		academyDay: getAcademyDay(state),
+		academyLessonReady: isLessonReady(state),
+		academyAllLessonsComplete: allLessonsComplete(state),
+		lessonsCompleted: state.academyState?.lessonsCompleted ?? [],
+		academyExamTaken: state.academyState?.examTaken ?? false,
 	};
 }
 
@@ -72,6 +81,16 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'minChestsOpened': return ctx.chestsOpened >= cond.value;
 		case 'startingLocation': return ctx.startingLocation === cond.value;
 		case 'minLevelsCleared': return ctx.levelsCleared >= cond.value;
+		case 'hasTitle': return ctx.playerTitles.includes(cond.value);
+		case 'academyEnrolled': return ctx.academyEnrolled;
+		case 'academyGraduated': return ctx.academyGraduated;
+		case 'academyDay': return ctx.academyDay >= cond.value;
+		case 'academyLessonReady': return ctx.academyLessonReady;
+		case 'academyAllLessonsComplete': return ctx.academyAllLessonsComplete;
+		case 'lessonCompleted': return ctx.lessonsCompleted.includes(cond.value);
+		case 'lessonNotCompleted': return !ctx.lessonsCompleted.includes(cond.value);
+		case 'academyExamNotTaken': return !ctx.academyExamTaken;
+		case 'allOf': return cond.conditions.every(c => checkCondition(c, ctx));
 	}
 }
 
@@ -272,7 +291,21 @@ export function createGame(config?: CharacterConfig): GameState {
 		completedQuestIds: [],
 		failedQuestIds: [],
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
+		academyState: null,
+		playerTitles: [],
 	};
+
+	// Academy initialization
+	if (cfg.startingLocation === 'academy') {
+		if (cfg.characterClass === 'mage') {
+			// Mages are recognized as graduates
+			state.academyState = createAcademyState(false, true, 0);
+			state.playerTitles.push('Archmage Apprentice');
+		} else {
+			// Others start enrolled
+			state.academyState = createAcademyState(true, false, 0);
+		}
+	}
 
 	// Apply class bonuses
 	const bonuses = CLASS_BONUSES[cfg.characterClass];
@@ -611,6 +644,10 @@ function handleOverworldInput(state: GameState, key: string): GameState {
 	}
 
 	state.turnCount += moveCost;
+
+	// Tick academy notifications on overworld
+	const academyOWMsgs = tickAcademy(state);
+	for (const msg of academyOWMsgs) state.messages.push(msg);
 
 	// Random encounter check (before location entry)
 	if (checkRandomEncounter(state)) {
@@ -1248,6 +1285,11 @@ function restoreFromCache(state: GameState, locationId: string, level: number): 
 /** Return to the overworld from a location. */
 export function exitToOverworld(state: GameState): GameState {
 	if (!state.worldMap || !state.overworldPos) return state;
+	// Block exit during exam combat
+	if (state.enemies.some(e => e.name === 'Exam Golem')) {
+		addMessage(state, 'You cannot leave during the combat trial!', 'danger');
+		return { ...state };
+	}
 	// Cache current location state before leaving
 	cacheCurrentLocation(state);
 	state.locationMode = 'overworld';
@@ -1722,6 +1764,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		completedQuestIds: [],
 		failedQuestIds: [],
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
+		academyState: null,
+		playerTitles: [],
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -1962,6 +2006,45 @@ function moveEnemies(state: GameState, defending = false) {
 
 	for (const enemy of state.enemies) {
 		if (hasEffect(enemy, 'stun') || hasEffect(enemy, 'sleep') || hasEffect(enemy, 'freeze')) continue;
+
+		// Exam Golem: 3-turn cycle AI (charge, charge, blast)
+		if (enemy.name === 'Exam Golem' && enemy.turnCounter !== undefined) {
+			enemy.turnCounter++;
+			const cycle = ((enemy.turnCounter - 1) % 3) + 1; // 1, 2, 3
+			const dx = state.player.pos.x - enemy.pos.x;
+			const dy = state.player.pos.y - enemy.pos.y;
+			const dist = Math.abs(dx) + Math.abs(dy);
+
+			if (cycle === 3) {
+				// BLAST turn — only hits if adjacent
+				if (dist <= 1) {
+					const blastDmg = 8 + Math.floor(Math.random() * 5); // 8-12
+					state.player.hp -= blastDmg;
+					state.stats.damageTaken += blastDmg;
+					addMessage(state, `Exam Golem unleashes ARCANE BLAST for ${blastDmg} damage!`, 'damage_taken');
+				} else {
+					addMessage(state, 'Exam Golem unleashes ARCANE BLAST — but you\'re out of range!', 'info');
+				}
+			} else {
+				// CHARGE turn — move toward player and deal low damage if adjacent
+				const moveX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+				const moveY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+				const nx = enemy.pos.x + moveX;
+				const ny = enemy.pos.y + moveY;
+				if (nx === state.player.pos.x && ny === state.player.pos.y) {
+					const chargeDmg = 1 + Math.floor(Math.random() * 2); // 1-2
+					state.player.hp -= chargeDmg;
+					state.stats.damageTaken += chargeDmg;
+					addMessage(state, `Exam Golem charges! ${chargeDmg} damage.`, 'damage_taken');
+				} else if (nx >= 0 && ny >= 0 && nx < state.map.width && ny < state.map.height &&
+					state.map.tiles[ny][nx] === '.') {
+					enemy.pos = { x: nx, y: ny };
+					addMessage(state, `Exam Golem charges toward you...`, 'info');
+				}
+			}
+			if (state.player.hp <= 0) handlePlayerDeath(state);
+			continue;
+		}
 
 		const behavior = getMonsterBehavior(enemy);
 		const move = decideMoveDirection(enemy, state.player.pos, state.enemies, behavior);
@@ -2300,6 +2383,12 @@ export function handleInput(state: GameState, key: string): GameState {
 				const questMsgs = updateQuestProgress(state, 'kill', enemy.name);
 				for (const qm of questMsgs) addMessage(state, qm, 'discovery');
 				addMessage(state, `${enemy.name} defeated! +${reward} XP`, 'player_attack');
+				// Check for exam golem kill
+				if (enemy.name === 'Exam Golem' && state.academyState && !state.academyState.examPassed) {
+					passExam(state);
+					addMessage(state, 'You defeated the Exam Golem! You have passed the combat trial!', 'level_up');
+					addMessage(state, 'The Archmagus awaits you for the graduation ceremony.', 'discovery');
+				}
 			}
 			state.enemies = state.enemies.filter((e) => e.hp > 0);
 			if (killed.length > 0) {
@@ -2508,6 +2597,16 @@ export function handleInput(state: GameState, key: string): GameState {
 					startId = moodReturnId;
 				}
 			}
+			// Conditional start nodes (e.g. mage at academy gets different greeting)
+			if (tree.conditionalStartNodes && npc.dialogueIndex === 0) {
+				const ctx = buildDialogueContext(state, npc.mood);
+				for (const csn of tree.conditionalStartNodes) {
+					if (checkCondition(csn.condition, ctx) && tree.nodes[csn.nodeId]) {
+						startId = csn.nodeId;
+						break;
+					}
+				}
+			}
 			// Hostile NPCs may refuse dialogue entirely
 			if (npc.mood === 'hostile' && npc.dialogueIndex > 0 && !tree.nodes[`return_hostile`]) {
 				addMessage(state, `${npc.name} glares at you and refuses to speak.`, 'npc');
@@ -2648,6 +2747,12 @@ export function handleInput(state: GameState, key: string): GameState {
 			// Quest progress on kill
 			const questMsgs = updateQuestProgress(state, 'kill', target.name);
 			for (const qm of questMsgs) addMessage(state, qm, 'discovery');
+			// Check for exam golem kill
+			if (target.name === 'Exam Golem' && state.academyState && !state.academyState.examPassed) {
+				passExam(state);
+				addMessage(state, 'You defeated the Exam Golem! You have passed the combat trial!', 'level_up');
+				addMessage(state, 'The Archmagus awaits you for the graduation ceremony.', 'discovery');
+			}
 			if (envKill) {
 				addMessage(state, `${target.name} perished in the environment! +${reward} XP (Creativity bonus!)`, 'level_up');
 			} else if (bossKill) {
@@ -2828,10 +2933,16 @@ export function handleInput(state: GameState, key: string): GameState {
 
 	moveEnemies(state);
 
-	// Tick time (day-night cycle)
+	// Tick time (day-night cycle) — also increments turnCount
 	const timeResult = tickTime(state);
 	if (timeResult.phaseChanged && timeResult.message) {
 		addMessage(state, timeResult.message);
+	}
+
+	// Tick academy day transitions
+	const academyMsgs = tickAcademy(state);
+	for (const msg of academyMsgs) {
+		state.messages.push(msg);
 	}
 
 	// Tick survival (hunger/thirst)
@@ -2955,6 +3066,49 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 				}
 			}
 			return { ...state };
+		}
+		// Academy effects
+		if (option.onSelect.enrollAcademy) {
+			enrollAtAcademy(state);
+			addMessage(state, 'You are now enrolled at the Arcane Academy! Your school year begins.', 'discovery');
+		}
+		if (option.onSelect.completeLesson) {
+			completeLesson(state, option.onSelect.completeLesson);
+			addMessage(state, 'Lesson complete! Remember what you learned.', 'discovery');
+		}
+		if (option.onSelect.addTitle && !state.playerTitles.includes(option.onSelect.addTitle)) {
+			state.playerTitles.push(option.onSelect.addTitle);
+			addMessage(state, `Title earned: ${option.onSelect.addTitle}!`, 'discovery');
+		}
+		if (option.onSelect.startExam) {
+			// Spawn exam golem in the arena area
+			const examGolem: Entity = {
+				pos: { x: 40, y: 17 },
+				char: 'G',
+				color: '#f0f',
+				name: 'Exam Golem',
+				hp: 20,
+				maxHp: 20,
+				attack: 2,
+				statusEffects: [],
+				turnCounter: 0,
+			};
+			state.enemies.push(examGolem);
+			addMessage(state, 'An Arcane Golem materializes in the practice arena! Defeat it to pass!', 'danger');
+			if (state.academyState) {
+				state.academyState.examTaken = true;
+				state.academyState.examPart1Passed = true;
+			}
+			state.activeDialogue = null;
+			return { ...state };
+		}
+		if (option.onSelect.startTeaching) {
+			// Teaching handled through dialogue flow — just mark the intent
+		}
+		if (option.onSelect.completeTeaching) {
+			const correct = option.onSelect.completeTeaching === 'correct';
+			const teachMsgs = completeTeachingSession(state, correct);
+			for (const tm of teachMsgs) state.messages.push(tm);
 		}
 	}
 

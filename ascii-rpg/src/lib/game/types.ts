@@ -9,7 +9,7 @@ export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' 
 
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'permadeath';
 
-export type StartingLocation = 'village' | 'tavern' | 'cave';
+export type StartingLocation = 'village' | 'tavern' | 'cave' | 'academy';
 
 export interface CharacterConfig {
 	name: string;
@@ -49,6 +49,12 @@ export interface DialogueEffect {
 	learnLanguage?: string;
 	story?: Story;
 	npcAction?: NPCAction;
+	enrollAcademy?: boolean;
+	startExam?: boolean;
+	startTeaching?: boolean;
+	completeTeaching?: 'correct' | 'wrong';
+	addTitle?: string;
+	completeLesson?: string;
 }
 
 export type DialogueCondition =
@@ -68,7 +74,17 @@ export type DialogueCondition =
 	| { type: 'minSecretsFound'; value: number }
 	| { type: 'minChestsOpened'; value: number }
 	| { type: 'startingLocation'; value: StartingLocation }
-	| { type: 'minLevelsCleared'; value: number };
+	| { type: 'minLevelsCleared'; value: number }
+	| { type: 'hasTitle'; value: string }
+	| { type: 'academyEnrolled' }
+	| { type: 'academyGraduated' }
+	| { type: 'academyDay'; value: number }
+	| { type: 'academyLessonReady' }
+	| { type: 'academyAllLessonsComplete' }
+	| { type: 'lessonCompleted'; value: string }
+	| { type: 'lessonNotCompleted'; value: string }
+	| { type: 'academyExamNotTaken' }
+	| { type: 'allOf'; conditions: DialogueCondition[] };
 
 export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
 
@@ -100,6 +116,7 @@ export interface DialogueNode {
 export interface DialogueTree {
 	startNode: string;
 	returnNode?: string;
+	conditionalStartNodes?: { condition: DialogueCondition; nodeId: string }[];
 	nodes: Record<string, DialogueNode>;
 }
 
@@ -123,6 +140,14 @@ export interface DialogueContext {
 	levelsCleared: number;
 	maxDungeonLevel: number;
 	startingLocation: StartingLocation;
+	playerTitles: string[];
+	academyEnrolled: boolean;
+	academyGraduated: boolean;
+	academyDay: number;
+	academyLessonReady: boolean;
+	academyAllLessonsComplete: boolean;
+	lessonsCompleted: string[];
+	academyExamTaken: boolean;
 }
 
 export interface ActiveDialogue {
@@ -178,6 +203,8 @@ export interface Entity {
 	attack: number;
 	statusEffects: StatusEffect[];
 	awareness?: EnemyAwareness;
+	/** Turn counter for special AI patterns (e.g., Exam Golem 3-turn cycle) */
+	turnCounter?: number;
 }
 
 export type TrapType = 'spike' | 'poison_dart' | 'alarm' | 'teleport';
@@ -332,6 +359,29 @@ export interface GameState {
 	completedQuestIds: string[];
 	failedQuestIds: string[];
 	stealth: StealthState;
+	academyState: AcademyState | null;
+	playerTitles: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Academy system
+// ---------------------------------------------------------------------------
+
+export interface AcademyState {
+	enrolled: boolean;
+	enrolledAtTurn: number;
+	lessonsCompleted: string[];
+	/** Index of the next lesson (0-5), or 6 if all complete */
+	nextLessonIndex: number;
+	/** Turn at which the next lesson becomes available */
+	nextLessonAvailableTurn: number;
+	examTaken: boolean;
+	examPassed: boolean;
+	examPart1Passed: boolean;
+	graduated: boolean;
+	isTeaching: boolean;
+	teachingSessions: number;
+	teachingCooldownTurn: number;
 }
 
 export interface BestiaryEntry {

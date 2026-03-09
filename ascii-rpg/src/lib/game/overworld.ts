@@ -124,6 +124,7 @@ const STARTING_REGION: Record<StartingLocation, RegionId> = {
 	village: 'greenweald',
 	tavern: 'hearthlands',
 	cave: 'ashlands',
+	academy: 'arcane_conservatory',
 };
 
 /** Terrain distribution weights per region (must sum to ~100) */
@@ -506,6 +507,7 @@ function placeSettlements(tiles: OverworldTile[][], regionSeeds: Map<RegionId, P
 		{ start: 'village', name: 'Willowmere', type: 'village' },
 		{ start: 'tavern', name: 'Crossroads Inn', type: 'town' },
 		{ start: 'cave', name: 'Goblin Cave', type: 'camp' },
+		{ start: 'academy', name: 'Arcane Academy', type: 'town' },
 	];
 
 	for (const def of startingDefs) {

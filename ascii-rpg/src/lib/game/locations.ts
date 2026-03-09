@@ -13,7 +13,8 @@ export interface LocationResult {
 export const STARTING_LOCATIONS: Record<StartingLocation, { label: string; difficulty: string; description: string }> = {
 	village: { label: 'VILLAGE', difficulty: 'Easy', description: 'Start at home with your parents' },
 	tavern: { label: 'TAVERN', difficulty: 'Medium', description: 'Start at an inn with rumors' },
-	cave: { label: 'CAVE', difficulty: 'Hard', description: 'Start as a goblin prisoner' }
+	cave: { label: 'CAVE', difficulty: 'Hard', description: 'Start as a goblin prisoner' },
+	academy: { label: 'ACADEMY', difficulty: 'Medium', description: 'Enroll at the Arcane Academy' }
 };
 
 function makeWallGrid(width: number, height: number): Tile[][] {
@@ -903,11 +904,82 @@ function generateKorthaven(width: number, height: number): LocationResult {
 	};
 }
 
+function generateAcademy(width: number, height: number): LocationResult {
+	const tiles = makeWallGrid(width, height);
+
+	// Open courtyard
+	fillRect(tiles, 1, 1, width - 2, height - 2, '.');
+
+	// Main hall (top center) — the great lecture hall
+	drawBuilding(tiles, 14, 1, 22, 7, 'south');
+
+	// Library wing (left)
+	drawBuilding(tiles, 2, 3, 10, 8, 'east');
+
+	// Alchemy tower (right)
+	drawBuilding(tiles, 38, 3, 10, 8, 'west');
+
+	// Student dormitory (bottom left)
+	drawBuilding(tiles, 2, 14, 14, 7, 'north');
+
+	// Practice arena (bottom right)
+	drawBuilding(tiles, 34, 14, 14, 7, 'north');
+
+	// Courtyard fountain (decorative walls in center)
+	fillRect(tiles, 22, 12, 6, 3, '#');
+	fillRect(tiles, 23, 13, 4, 1, '.');
+
+	// Potions in the alchemy tower
+	tiles[6][42] = '*';
+	tiles[6][44] = '*';
+
+	// Potion in the library
+	tiles[7][6] = '*';
+
+	// Dungeon entrance (practice dungeon beneath the arena)
+	tiles[17][40] = '>';
+
+	const playerPos = { x: 25, y: 10 };
+
+	const npcs: NPC[] = [
+		makeNPC(24, 4, 'A', '#ff0', 'Archmagus Veylen', [
+			'Welcome, new student! The autumn term begins today.',
+			'At this Academy, we forge both mind and spirit.',
+			'Study hard. The practice dungeon awaits when you are ready.'
+		], { hp: 3 }),
+		makeNPC(6, 6, 'L', '#8cf', 'Librarian Maren', [
+			'The library holds centuries of arcane knowledge.',
+			'Read carefully — some tomes bite back.',
+			'If you find any books in the dungeon, bring them to me.'
+		]),
+		makeNPC(42, 6, 'P', '#f8f', 'Professor Ignis', [
+			'Alchemy is the art of transformation!',
+			'Take those potions — you\'ll need them below.',
+			'The practice dungeon has real dangers. Don\'t be reckless.'
+		], { atk: 1 }),
+		makeNPC(8, 17, 'S', '#8f8', 'Fellow Student', [
+			'You\'re new too? I heard the practice dungeon is no joke.',
+			'The Archmagus says the deeper floors have actual monsters.',
+			'Good luck down there. I\'m still studying...'
+		])
+	];
+
+	return {
+		map: { width, height, tiles, secretWalls: new Set() },
+		playerPos,
+		npcs,
+		enemies: [],
+		initialHpFactor: 1.0,
+		welcomeMessage: 'The Arcane Academy. Term begins today! Explore the campus and descend into the practice dungeon when ready.'
+	};
+}
+
 export function generateStartingLocation(location: StartingLocation, width: number, height: number): LocationResult {
 	switch (location) {
 		case 'village': return generateVillage(width, height);
 		case 'tavern': return generateTavern(width, height);
 		case 'cave': return generateCave(width, height);
+		case 'academy': return generateAcademy(width, height);
 	}
 }
 

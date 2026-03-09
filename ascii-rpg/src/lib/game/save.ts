@@ -4,7 +4,7 @@ import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
 
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 18;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -70,6 +70,8 @@ interface SerializedState {
 	completedQuestIds?: string[];
 	failedQuestIds?: string[];
 	stealth?: GameState['stealth'];
+	academyState?: GameState['academyState'];
+	playerTitles?: string[];
 }
 
 interface SerializedCachedLocation {
@@ -196,6 +198,8 @@ export function serializeState(state: GameState): string {
 			completedQuestIds: state.completedQuestIds,
 			failedQuestIds: state.failedQuestIds,
 			stealth: state.stealth,
+			academyState: state.academyState,
+			playerTitles: state.playerTitles,
 		}
 	};
 	return JSON.stringify(data);
@@ -265,6 +269,8 @@ export function deserializeState(json: string): GameState {
 		completedQuestIds: s.completedQuestIds ?? [],
 		failedQuestIds: s.failedQuestIds ?? [],
 		stealth: s.stealth ?? { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
+		academyState: s.academyState ?? null,
+		playerTitles: s.playerTitles ?? [],
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

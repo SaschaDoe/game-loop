@@ -15,7 +15,7 @@
 	type GamePhase = 'intro' | 'creation' | 'playing';
 
 	const INTRO_LINES = [
-		'You stand before the entrance to the\nDungeon of Shadows.\n\nCold air rises from the depths below.',
+		'You stand before the entrance to\nSlop Fortress.\n\nCold air rises from the depths below.',
 		'A hooded figure emerges from the darkness.\n\n"Another brave soul, drawn to the depths..."',
 		'"Many have entered seeking fortune and glory.\nFew have returned to tell the tale."',
 		'"Before you descend, adventurer...\ntell me \u2014 who are you?"'
@@ -32,7 +32,7 @@
 		necromancer: 'NECROMANCER',
 		bard: 'BARD'
 	};
-	const LOCATIONS: StartingLocation[] = ['village', 'tavern', 'cave'];
+	const LOCATIONS: StartingLocation[] = ['village', 'tavern', 'cave', 'academy'];
 
 	let phase: GamePhase = $state('intro');
 	let introStep = $state(0);
@@ -344,14 +344,14 @@
 </script>
 
 <svelte:head>
-	<title>Dungeon of Shadows - ASCII RPG</title>
+	<title>Slop Fortress - ASCII RPG</title>
 </svelte:head>
 
 {#if phase === 'intro'}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="screen intro-screen" onclick={advanceIntro}>
-		<h1 class="game-title">DUNGEON OF SHADOWS</h1>
+		<h1 class="game-title">SLOP FORTRESS</h1>
 		<div class="intro-frame">
 			<pre class="intro-art">       #####
       ##   ##
@@ -471,7 +471,10 @@
 			{:else}
 				<span class="level">{state.level === 0 ? 'Starting Area' : `Dungeon: ${state.level}`}</span>
 			{/if}
-			<span class="char-level">Lv {state.characterLevel} {state.player.name}</span>
+			<span class="char-level">Lv {state.characterLevel} {state.player.name}{#if state.playerTitles.length > 0} <span class="player-title">[{state.playerTitles[state.playerTitles.length - 1]}]</span>{/if}</span>
+			{#if state.academyState?.enrolled}
+				<span class="academy-day">Lessons {state.academyState.lessonsCompleted.length}/6</span>
+			{/if}
 			{#if state.characterConfig.difficulty !== 'normal'}
 				<span class="difficulty difficulty-{state.characterConfig.difficulty}">{DIFFICULTY_DEFS[state.characterConfig.difficulty].label}</span>
 			{/if}
@@ -1134,6 +1137,17 @@
 
 	.char-level {
 		color: #af4;
+	}
+
+	.player-title {
+		color: #f8f;
+		font-size: 11px;
+	}
+
+	.academy-day {
+		color: #8cf;
+		font-size: 12px;
+		margin-left: 8px;
 	}
 
 	.status-effect {
