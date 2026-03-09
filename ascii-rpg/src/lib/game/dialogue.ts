@@ -5525,6 +5525,7 @@ const ARCHMAGUS_VEYLEN_DIALOGUE: DialogueTree = {
 	conditionalStartNodes: [
 		{ condition: { type: 'class', value: 'mage' }, nodeId: 'start_mage' },
 		{ condition: { type: 'academyGraduated' }, nodeId: 'start_graduated' },
+		{ condition: { type: 'academyEnrolled' }, nodeId: 'return' },
 	],
 	nodes: {
 		// ── Default start (non-mage, not yet enrolled) ──
