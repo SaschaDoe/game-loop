@@ -97,8 +97,8 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		manaCost: 5, cooldown: 6, targetType: 'direction',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'ice',
 	},
-	spell_inferno: {
-		id: 'spell_inferno', name: 'Inferno', school: 'elements', tier: 3,
+	spell_fireball: {
+		id: 'spell_fireball', name: 'Fireball', school: 'elements', tier: 3,
 		description: 'Unleash a devastating column of fire in a 3x3 area.',
 		effect: 'Deals 8 fire damage in area, applies burn (3 turns).',
 		manaCost: 10, cooldown: 8, targetType: 'area',
@@ -106,12 +106,20 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		statusEffect: { type: 'burn', duration: 3, potency: 2 },
 	},
 	spell_tempest: {
-		id: 'spell_tempest', name: 'Tempest', school: 'elements', tier: 3,
+		id: 'spell_tempest', name: 'Tempest', school: 'elements', tier: 4,
 		description: 'Summon a raging storm of ice and lightning.',
 		effect: 'Deals 6 damage in 5x5 area, freeze + stun (2 turns).',
 		manaCost: 14, cooldown: 12, targetType: 'self',
 		baseDamage: 6, baseHeal: 0, aoeRadius: 2, element: 'ice',
 		statusEffect: { type: 'freeze', duration: 2, potency: 0 },
+	},
+	spell_inferno: {
+		id: 'spell_inferno', name: 'Inferno', school: 'elements', tier: 5,
+		description: 'Unleash a cataclysmic firestorm across a wide area.',
+		effect: 'Deals 15 fire damage in 5x5 area. Affected tiles burn for 10 turns.',
+		manaCost: 20, cooldown: 15, targetType: 'area',
+		baseDamage: 15, baseHeal: 0, aoeRadius: 2, element: 'fire',
+		statusEffect: { type: 'burn', duration: 10, potency: 2 },
 	},
 
 	// ===== School of Enchantment =====
@@ -138,6 +146,14 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		manaCost: 4, cooldown: 3, targetType: 'single_enemy',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
 	},
+	spell_weapon_enchant: {
+		id: 'spell_weapon_enchant', name: 'Weapon Enchant', school: 'enchantment', tier: 2,
+		description: 'Imbue a weapon with arcane energy.',
+		effect: '+3 ATK for 10 turns.',
+		manaCost: 5, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+		selfBuff: { type: 'inspire', duration: 10, potency: 3 },
+	},
 	spell_reflective_shield: {
 		id: 'spell_reflective_shield', name: 'Reflective Shield', school: 'enchantment', tier: 3,
 		description: 'A shimmering barrier that returns damage to attackers.',
@@ -146,6 +162,23 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
 		selfBuff: { type: 'inspire', duration: 4, potency: 0 },
 		// Note: reflection logic handled specially in combat
+	},
+	spell_sanctum: {
+		id: 'spell_sanctum', name: 'Sanctum', school: 'enchantment', tier: 4,
+		description: 'Create a protective zone of arcane energy.',
+		effect: 'Allies in 3x3 area gain +5 shield and regeneration (3 HP/turn, 3 turns).',
+		manaCost: 12, cooldown: 10, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 1, element: 'arcane',
+		selfBuff: { type: 'regeneration', duration: 3, potency: 3 },
+	},
+	spell_absolute_ward: {
+		id: 'spell_absolute_ward', name: 'Absolute Ward', school: 'enchantment', tier: 5,
+		description: 'Conjure an impenetrable ward that absorbs incoming attacks.',
+		effect: 'Gain immunity to the next 3 hits from any source.',
+		manaCost: 18, cooldown: 20, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+		selfBuff: { type: 'inspire', duration: 20, potency: 3 },
+		// Note: charge-based immunity handled specially in combat
 	},
 
 	// ===== School of Restoration =====
@@ -160,8 +193,48 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		id: 'spell_cure', name: 'Cure', school: 'restoration', tier: 1,
 		description: 'Purge poison and disease from the body.',
 		effect: 'Removes poison and burn effects.',
-		manaCost: 3, cooldown: 4, targetType: 'self',
+		manaCost: 3, cooldown: 2, targetType: 'self',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'holy',
+	},
+	spell_bless: {
+		id: 'spell_bless', name: 'Bless', school: 'restoration', tier: 2,
+		description: 'Bestow a divine blessing that enhances all abilities.',
+		effect: '+2 to all attributes for 10 turns.',
+		manaCost: 6, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'holy',
+		selfBuff: { type: 'inspire', duration: 10, potency: 2 },
+	},
+	spell_regenerate: {
+		id: 'spell_regenerate', name: 'Regenerate', school: 'restoration', tier: 2,
+		description: 'Weave a sustained healing enchantment over the body.',
+		effect: 'Heal 3 HP per turn for 10 turns.',
+		manaCost: 5, cooldown: 6, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'holy',
+		selfBuff: { type: 'regeneration', duration: 10, potency: 3 },
+	},
+	spell_purify: {
+		id: 'spell_purify', name: 'Purify', school: 'restoration', tier: 3,
+		description: 'A powerful cleansing that removes all afflictions.',
+		effect: 'Removes ALL negative status effects. Immune to debuffs for 3 turns.',
+		manaCost: 8, cooldown: 10, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'holy',
+	},
+	spell_mass_heal: {
+		id: 'spell_mass_heal', name: 'Mass Heal', school: 'restoration', tier: 4,
+		description: 'Channel a wave of restorative energy to all nearby allies.',
+		effect: 'Heal 12 HP to self and all visible allies.',
+		manaCost: 14, cooldown: 12, targetType: 'self',
+		baseDamage: 0, baseHeal: 12, aoeRadius: 0, element: 'holy',
+		// Note: multi-target healing handled specially in executeSpell
+	},
+	spell_resurrection: {
+		id: 'spell_resurrection', name: 'Resurrection', school: 'restoration', tier: 5,
+		description: 'Precast a divine ward that defies death itself.',
+		effect: 'If you take lethal damage within 100 turns, revive at 50% HP instead.',
+		manaCost: 25, cooldown: 25, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'holy',
+		selfBuff: { type: 'regeneration', duration: 100, potency: 0 },
+		// Note: resurrection precast buff and rest-gated cooldown handled specially
 	},
 
 	// ===== School of Alchemy =====
@@ -196,13 +269,31 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		baseDamage: 0, baseHeal: 0, aoeRadius: 1, element: 'acid',
 		statusEffect: { type: 'poison', duration: 3, potency: 2 },
 	},
+	spell_stone_skin: {
+		id: 'spell_stone_skin', name: 'Stone Skin', school: 'alchemy', tier: 3,
+		description: 'Transmute the outer layer of skin into living stone.',
+		effect: '+5 damage reduction for 8 turns.',
+		manaCost: 8, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
+		selfBuff: { type: 'inspire', duration: 8, potency: 5 },
+		// Note: damage reduction handled specially in combat
+	},
 	spell_petrify: {
-		id: 'spell_petrify', name: 'Petrify', school: 'alchemy', tier: 3,
+		id: 'spell_petrify', name: 'Petrify', school: 'alchemy', tier: 4,
 		description: 'Turn an enemy partially to stone.',
 		effect: 'Stun one enemy for 5 turns.',
 		manaCost: 10, cooldown: 8, targetType: 'single_enemy',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
 		statusEffect: { type: 'stun', duration: 5, potency: 0 },
+	},
+	spell_philosophers_touch: {
+		id: 'spell_philosophers_touch', name: "Philosopher's Touch", school: 'alchemy', tier: 5,
+		description: 'The ultimate alchemical transmutation — restore the body to perfection.',
+		effect: 'Fully restore HP. Remove all debuffs. Invulnerable for 2 turns.',
+		manaCost: 30, cooldown: 25, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
+		selfBuff: { type: 'inspire', duration: 2, potency: 0 },
+		// Note: full HP restore, debuff removal, and rest-gated cooldown handled specially
 	},
 
 	// ===== School of Divination =====
@@ -234,31 +325,143 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		manaCost: 5, cooldown: 10, targetType: 'single_enemy',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
 	},
+	spell_enemy_analysis: {
+		id: 'spell_enemy_analysis', name: 'Enemy Analysis', school: 'divination', tier: 3,
+		description: 'Divine the strengths and weaknesses of a foe.',
+		effect: 'Display target full stats, weaknesses, and next action.',
+		manaCost: 4, cooldown: 3, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
+	},
+	spell_premonition: {
+		id: 'spell_premonition', name: 'Premonition', school: 'divination', tier: 4,
+		description: 'Glimpse the immediate future to evade incoming attacks.',
+		effect: 'Auto-dodge the next 2 incoming attacks.',
+		manaCost: 10, cooldown: 15, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
+		selfBuff: { type: 'inspire', duration: 20, potency: 2 },
+		// Note: charge-based dodge handled specially in combat
+	},
+	spell_astral_projection: {
+		id: 'spell_astral_projection', name: 'Astral Projection', school: 'divination', tier: 5,
+		description: 'Project your consciousness to see the entire map.',
+		effect: 'Reveal the entire current map for 3 turns. Cannot move or act while projecting.',
+		manaCost: 15, cooldown: 20, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
+		selfBuff: { type: 'stun', duration: 3, potency: 0 },
+		// Note: map reveal + self-immobilization handled specially
+	},
 
 	// ===== School of Conjuration =====
-	spell_summon_familiar: {
-		id: 'spell_summon_familiar', name: 'Summon Familiar', school: 'conjuration', tier: 1,
-		description: 'Summon a minor magical companion.',
-		effect: 'Summon a familiar that fights alongside you for 10 turns.',
-		manaCost: 5, cooldown: 15, targetType: 'self',
-		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
+	spell_summon_light: {
+		id: 'spell_summon_light', name: 'Summon Light', school: 'conjuration', tier: 1,
+		description: 'Conjure a hovering orb of light at a target tile.',
+		effect: 'Create a light source illuminating 3-tile radius for 10 turns.',
+		manaCost: 2, cooldown: 1, targetType: 'tile',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+	},
+	spell_phase_step: {
+		id: 'spell_phase_step', name: 'Phase Step', school: 'conjuration', tier: 1,
+		description: 'Blink through the fabric of space.',
+		effect: 'Teleport up to 5 tiles. Can pass through walls up to 1 tile thick.',
+		manaCost: 4, cooldown: 5, targetType: 'tile',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+	},
+	spell_phantom_image: {
+		id: 'spell_phantom_image', name: 'Phantom Image', school: 'conjuration', tier: 2,
+		description: 'Create a convincing illusory decoy.',
+		effect: 'Summon a decoy (3 HP) that draws enemy attacks for 8 turns.',
+		manaCost: 5, cooldown: 6, targetType: 'tile',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+	},
+	spell_conjure_weapon: {
+		id: 'spell_conjure_weapon', name: 'Conjure Weapon', school: 'conjuration', tier: 2,
+		description: 'Summon a spectral weapon from the aether.',
+		effect: '+3 ATK for 15 turns. Replaces current weapon temporarily.',
+		manaCost: 6, cooldown: 10, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+		selfBuff: { type: 'inspire', duration: 15, potency: 3 },
+	},
+	spell_summon_elemental: {
+		id: 'spell_summon_elemental', name: 'Summon Elemental', school: 'conjuration', tier: 3,
+		description: 'Call forth an elemental creature to fight by your side.',
+		effect: 'Summon an elemental ally (10 HP, 4 ATK) for 10 turns.',
+		manaCost: 12, cooldown: 15, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+	},
+	spell_dimensional_door: {
+		id: 'spell_dimensional_door', name: 'Dimensional Door', school: 'conjuration', tier: 4,
+		description: 'Tear open a doorway through space to any explored location.',
+		effect: 'Teleport to any previously explored tile on the current map.',
+		manaCost: 10, cooldown: 20, targetType: 'tile',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+	},
+	spell_grand_illusion: {
+		id: 'spell_grand_illusion', name: 'Grand Illusion', school: 'conjuration', tier: 5,
+		description: 'Fill the minds of all nearby enemies with phantom duplicates.',
+		effect: 'All enemies in sight become confused for 5 turns (50% misdirected attacks).',
+		manaCost: 18, cooldown: 15, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'arcane',
+		statusEffect: { type: 'stun', duration: 5, potency: 0 },
+		// Note: confusion (misdirected attacks) handled specially in AI
 	},
 
 	// ===== School of Shadow =====
+	spell_darkness: {
+		id: 'spell_darkness', name: 'Darkness', school: 'shadow', tier: 1,
+		description: 'Shroud a target in unnatural darkness.',
+		effect: 'Reduce target sight radius by 3 for 5 turns.',
+		manaCost: 2, cooldown: 3, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'shadow',
+		statusEffect: { type: 'blind', duration: 5, potency: 3 },
+	},
 	spell_shadow_bolt: {
 		id: 'spell_shadow_bolt', name: 'Shadow Bolt', school: 'shadow', tier: 1,
 		description: 'Hurl a bolt of condensed darkness.',
-		effect: 'Deals 5 shadow damage.',
-		manaCost: 4, cooldown: 2, targetType: 'single_enemy',
+		effect: 'Deals 5 shadow damage. Bypasses armor and shields.',
+		manaCost: 4, cooldown: 3, targetType: 'single_enemy',
 		baseDamage: 5, baseHeal: 0, aoeRadius: 0, element: 'shadow',
 	},
-	spell_life_tap: {
-		id: 'spell_life_tap', name: 'Life Tap', school: 'shadow', tier: 1,
-		description: 'Drain life force from an enemy.',
-		effect: 'Deals 3 damage, heals you for the amount dealt.',
-		manaCost: 3, cooldown: 3, targetType: 'single_enemy',
-		baseDamage: 3, baseHeal: 0, aoeRadius: 0, element: 'shadow',
-		// Life drain handled specially in executeSpell
+	spell_fear: {
+		id: 'spell_fear', name: 'Fear', school: 'shadow', tier: 2,
+		description: 'Project terrifying visions into the mind of a foe.',
+		effect: 'Fear one enemy for 3 turns. Feared enemies flee and cannot attack.',
+		manaCost: 6, cooldown: 6, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'shadow',
+		statusEffect: { type: 'stun', duration: 3, potency: 0 },
+		// Note: fear (flee behavior) handled specially in AI
+	},
+	spell_life_drain: {
+		id: 'spell_life_drain', name: 'Life Drain', school: 'shadow', tier: 2,
+		description: 'Siphon the life force from a nearby enemy.',
+		effect: 'Deals 8 shadow damage. Heal self for 50% of damage dealt.',
+		manaCost: 8, cooldown: 5, targetType: 'single_enemy',
+		baseDamage: 8, baseHeal: 0, aoeRadius: 0, element: 'shadow',
+		// Note: life drain healing handled specially in executeSpell
+	},
+	spell_shadow_cloak: {
+		id: 'spell_shadow_cloak', name: 'Shadow Cloak', school: 'shadow', tier: 3,
+		description: 'Wrap yourself in living shadows, becoming invisible.',
+		effect: 'Become invisible for 5 turns. Breaks on attack or taking damage.',
+		manaCost: 10, cooldown: 10, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'shadow',
+		selfBuff: { type: 'inspire', duration: 5, potency: 0 },
+		// Note: invisibility handled specially in AI and combat
+	},
+	spell_curse_of_weakness: {
+		id: 'spell_curse_of_weakness', name: 'Curse of Weakness', school: 'shadow', tier: 4,
+		description: 'Lay a withering curse that saps all strength.',
+		effect: 'All attributes reduced by 3 for 20 turns.',
+		manaCost: 12, cooldown: 12, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, element: 'shadow',
+		statusEffect: { type: 'curse', duration: 20, potency: 3 },
+	},
+	spell_soul_rip: {
+		id: 'spell_soul_rip', name: 'Soul Rip', school: 'shadow', tier: 5,
+		description: 'Tear the very soul from an enemy, dealing catastrophic damage.',
+		effect: 'Deals 30 shadow damage (ignores armor). If target dies, summon a spectral ally.',
+		manaCost: 25, cooldown: 20, targetType: 'single_enemy',
+		baseDamage: 30, baseHeal: 0, aoeRadius: 0, element: 'shadow',
+		// Note: spectral ally summoning handled specially in executeSpell
 	},
 };
 
@@ -419,9 +622,9 @@ export function executeSpell(
 				type: 'magic',
 			});
 
-			// Life Tap special: heal caster for damage dealt
-			if (spell.id === 'spell_life_tap') {
-				const heal = Math.min(dmg, caster.maxHp - caster.hp);
+			// Life Drain special: heal caster for 50% of damage dealt
+			if (spell.id === 'spell_life_drain') {
+				const heal = Math.min(Math.floor(dmg * 0.5), caster.maxHp - caster.hp);
 				caster.hp += heal;
 				result.healingDone += heal;
 				if (heal > 0) {

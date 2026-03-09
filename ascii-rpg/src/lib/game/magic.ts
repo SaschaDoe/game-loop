@@ -43,7 +43,7 @@ export const CLASS_PROFILES: Record<CharacterClass, ClassProfile> = {
 	warrior:     { suggestedArchetype: 'might',   startingAbility: 'whirlwind',   startingSpell: null,              armorProficiency: 'heavy',  description: 'A sturdy fighter with high endurance' },
 	paladin:     { suggestedArchetype: 'might',   startingAbility: 'holy_strike', startingSpell: null,              armorProficiency: 'heavy',  description: 'A holy knight of unwavering resolve' },
 	mage:        { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_firebolt',  armorProficiency: 'robes',  description: 'A scholar who wields arcane forces' },
-	necromancer: { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_life_tap',  armorProficiency: 'light',  description: 'A dark mage who commands death itself' },
+	necromancer: { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_shadow_bolt',  armorProficiency: 'light',  description: 'A dark mage who commands death itself' },
 	cleric:      { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_heal',      armorProficiency: 'medium', description: 'A divine servant who heals and protects' },
 	rogue:       { suggestedArchetype: 'finesse', startingAbility: 'smoke_bomb',  startingSpell: null,              armorProficiency: 'light',  description: 'A nimble adventurer with keen senses' },
 	ranger:      { suggestedArchetype: 'finesse', startingAbility: 'trap_sense',  startingSpell: null,              armorProficiency: 'medium', description: 'A wilderness tracker with sharp eyes' },

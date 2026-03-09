@@ -120,7 +120,7 @@ describe('Armor Casting Penalty', () => {
 	});
 
 	it('robes reduce cost by 10%', () => {
-		const spell = SPELL_CATALOG['spell_inferno']; // 10 mana
+		const spell = SPELL_CATALOG['spell_fireball']; // 10 mana
 		expect(effectiveManaCost(spell, 'robes')).toBe(9); // ceil(10 * 0.9) = 9
 	});
 });
