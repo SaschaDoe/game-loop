@@ -65,11 +65,14 @@ Sorting: 4-question philosophical ceremony. No wrong answers — choices reveal 
 
 ## Dependencies
 
-**Epic 79: Magic System** — The Academy's magic system is a subset of Epic 79. All base mechanics (attributes, mana, spell casting, alchemy, enchanting) are defined there. The Academy teaches:
-- 6 spells (Tier 1 only) from 4 of the 7 schools
+**Epic 79: Magic System** — The Academy's magic system is a subset of Epic 79. All base mechanics (archetypes, attributes, mana, spell casting, alchemy, enchanting) are defined there. The Academy teaches:
+- 8 shared spells (Tier 1–2) from 4 of the 7 schools + 1 house-specific spell (Tier 2–3)
 - 3 alchemy recipes
 - Basic enchantment concepts
-- Counter-spell awareness
+- Counter-spell awareness (with practice opportunities)
+- Additional spells available via library books (optional, cost skill points)
+
+**Note on archetypes:** Character stats come from the archetype (Arcane/Finesse/Might), not the class. A Might-archetype student at the Academy has minimal mana (~4 at level 1) and relies more on Q-key abilities, scrolls, potions, and alchemy. The Academy's class-aware dialogue acknowledges this. The 2× mana regen on campus helps but does not replace the fundamental archetype difference.
 
 See `79-magic-system/README.md` for the full magic system.
 

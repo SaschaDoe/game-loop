@@ -30,6 +30,8 @@ This document defines the spell casting UI, targeting system, damage calculation
 - [ ] Selecting a castable spell closes the menu and proceeds to targeting (US-MS-25) or immediate cast for self-targeting spells
 - [ ] If the player has no learned spells, pressing M displays the message `"You haven't learned any spells yet."` and does not open the menu
 - [ ] The menu is scrollable if the player has more spells than fit on screen
+- [ ] Spells display their effective mana cost after armor penalty: heavy armor +50%, medium armor +25%, light armor no change, robes -10%. Example: Firebolt (3 MP) in heavy armor shows as `"Firebolt (5 MP)"`. The Battlemage specialization (US-MS-59) removes medium armor penalty.
+- [ ] The first time the player learns a spell, a tutorial message appears: `"You have learned your first spell! Press M to open the spell menu, or assign it to a quick-cast slot (1-4)."`
 
 ---
 
@@ -122,7 +124,7 @@ This document defines the spell casting UI, targeting system, damage calculation
 - [ ] Overkill damage is wasted — excess damage beyond the target's remaining HP has no additional effect
 - [ ] Damage calculation order: baseDamage + spellPower bonus → elemental multiplier → magic resistance reduction → critical multiplier → floor → clamp to minimum 1
 - [ ] All damage values are floored to integers at the final step (no fractional HP)
-- [ ] Healing spells use a parallel formula: `healing = baseHeal + floor(spellPower / 4)` — not reduced by magic resistance
+- [ ] Healing spells use a parallel formula: `healing = baseHeal + floor(spellPower / 3)` — not reduced by magic resistance
 
 ---
 
@@ -188,6 +190,7 @@ This document defines the spell casting UI, targeting system, damage calculation
 - [ ] If the target dies from the direct damage, the status effect is not applied (no wasted effect on a corpse)
 - [ ] Message log for status effects: `"You cast Frost Lance! The Goblin takes 5 ice damage and is frozen!"`
 - [ ] Enemies can also apply these status effects to the player via their spells (US-MS-32)
+- [ ] **Hard cap on crowd control:** Stun, freeze, and fear effects have a maximum duration of 5 turns after all scaling (INT bonus, mastery passives, specialization). No entity can be stunned, frozen, or feared for more than 5 consecutive turns.
 
 ---
 
@@ -200,8 +203,10 @@ This document defines the spell casting UI, targeting system, damage calculation
 - [ ] The charging state is stored on the enemy entity (e.g., `channeling: { spellId: string, turnsLeft: number }`)
 - [ ] During the 1-turn charge window (the player's next turn), the player can attempt a counter-spell by casting any spell at the channeling enemy
 - [ ] Counter-spell success chance depends on the relationship between the player's spell and the enemy's spell:
-  - **Opposing element:** 100% counter success (Fire vs Ice, Ice vs Fire, Lightning vs Earth, Earth vs Lightning, Light vs Shadow, Shadow vs Light)
+  - **Opposing element** (fire vs ice, ice vs fire): 100% counter success
+  - **Opposing school** (Restoration vs Shadow): 90% counter success
   - **Same-school Dispel spell:** 80% counter success
+  - **Same-school other spell:** 60% counter success
   - **Any other spell cast at the channeling enemy:** 40% counter success
 - [ ] On counter success: the enemy's channeled spell is canceled (fizzles), the player's counter-spell consumes mana and starts cooldown normally, and the message log displays: `"Your [Spell] counters the [Enemy Spell]! The spell fizzles!"`
 - [ ] On counter failure: both spells resolve — the player's spell hits the enemy normally, and the enemy's channeled spell completes and hits the player on the enemy's turn. Message: `"Your [Spell] fails to counter the [Enemy Spell]!"`
@@ -232,11 +237,11 @@ This document defines the spell casting UI, targeting system, damage calculation
 
 | Monster        | Tier | ASCII | Color   | School    | Spells                                       | Behavior       |
 |---------------|------|-------|---------|-----------|----------------------------------------------|----------------|
-| Frost Imp      | 2    | `i`   | Cyan    | Elements  | Frost Shard (T1), Frost Lance (T3)           | Ranged kiter   |
+| Frost Imp      | 2    | `i`   | Cyan    | Elements  | Frost Lance (T1), Glacial Wall (T2)          | Ranged kiter   |
 | Fire Mage      | 2    | `m`   | Red     | Elements  | Firebolt (T1), Fireball (T3)                 | Ranged kiter   |
-| Shadow Priest  | 3    | `p`   | Magenta | Shadow    | Shadow Bolt (T1), Drain Life (T2), Void Blast (T4) | Ranged cautious |
-| Necromancer    | 3    | `n`   | Grey    | Necromancy| Bone Spike (T1), Raise Dead (T3), Death Coil (T4) | Stationary summoner |
-| Void Cultist   | 3    | `c`   | Purple  | Void      | Void Bolt (T2), Mind Fray (T3), Rift Tear (T5)    | Erratic caster |
+| Shadow Priest  | 3    | `p`   | Magenta | Shadow    | Shadow Bolt (T1), Life Drain (T2), Curse of Weakness (T4) | Ranged cautious |
+| Necromancer    | 3    | `n`   | Grey    | Necromancy| Life Tap (T1), Wither (T2), Raise Dead (T3)  | Stationary summoner |
+| Void Cultist   | 3    | `c`   | Purple  | Void      | Void Bolt (T1), Entropy (T3), Annihilation (T4) | Erratic caster |
 
 - [ ] Ranged kiter behavior: enemy tries to maintain distance (2-3 tiles from player), casts when in range, retreats if player closes in
 - [ ] Stationary summoner behavior: enemy stays in place and prioritizes casting; only moves if player is adjacent and enemy HP is low
@@ -272,6 +277,24 @@ This document defines the spell casting UI, targeting system, damage calculation
 
 ---
 
+### US-MS-33b: Innate Abilities (Q-Key Class Abilities)
+
+**As a** player, **I want** my class-specific Q-key abilities to coexist with the spell system, **so that** my class identity remains distinct even as I learn new spells.
+
+**Acceptance Criteria:**
+- [ ] Existing class abilities (Whirlwind, Teleport, Smoke Bomb, Holy Strike, Trap Sense, Inspire, etc.) become **innate abilities** — a category separate from spells
+- [ ] Innate abilities are activated by pressing Q (unchanged from current system)
+- [ ] Innate abilities do NOT cost mana — they use their existing cooldown-only system
+- [ ] Innate abilities also appear in the spell menu (M key) under a separate "Innate" section header, for discoverability
+- [ ] Innate abilities are NOT affected by: spellPower scaling, armor casting penalty, magic resistance, school mastery, counter-spells, or Ley Line modifiers
+- [ ] Innate abilities ARE affected by: their own cooldown timer (existing system), status effects that prevent actions (stun, freeze)
+- [ ] The quick-cast slots (1-4) are reserved for spells only — innate abilities stay on Q
+- [ ] Innate abilities cannot be unlearned, replaced, or overwritten
+- [ ] Classes that start with a spell instead of an ability (Mage, Necromancer, Cleric) do not have a Q-key ability — their Q key does nothing until they learn one through gameplay or it remains unused
+- [ ] Save/load preserves innate ability state (cooldown timers)
+
+---
+
 ## Data Structures
 
 ```typescript
@@ -304,6 +327,15 @@ spells?: Array<{
   weight: number;  // relative frequency
 }>;
 
+// Armor casting penalty (engine.ts)
+const ARMOR_CASTING_PENALTY: Record<string, number> = {
+  heavy:  1.50,  // +50% mana cost
+  medium: 1.25,  // +25% mana cost
+  light:  1.00,  // no change
+  robes:  0.90,  // -10% mana cost (bonus)
+};
+// Effective mana cost = ceil(spell.manaCost * ARMOR_CASTING_PENALTY[equippedArmorType])
+
 // Environmental effect (hazards.ts extension)
 interface EnvironmentalEffect {
   type: 'fire' | 'ice_floor' | 'ice_bridge' | 'ice_wall' | 'darkness_zone';
@@ -329,21 +361,49 @@ Enemy Spell Damage:
   2-5. same pipeline (elemental, resist, crit skipped for enemies, floor, clamp)
 
 Healing:
-  1. raw        = baseHeal + floor(spellPower / 4)
+  1. raw        = baseHeal + floor(spellPower / 3)
   2. final      = floor(raw)
   (no resistance, no crit)
+
+Physical Defense:
+  1. raw        = attacker.attack (STR + weaponBonus)
+  2. reduced    = max(1, raw - target.physicalDefense)
+  (armorValue + floor(VIT / 4))
 ```
 
-## Counter-Spell Element Pairs
+## Counter-Spell Pairs
 
-| Element A   | Opposes     |
-|-------------|-------------|
-| Fire        | Ice         |
-| Ice         | Fire        |
-| Lightning   | Earth       |
-| Earth       | Lightning   |
-| Light       | Shadow      |
-| Shadow      | Light       |
+Counter-spell success depends on the relationship between the counter-spell and the channeled spell:
+
+| Counter Method | Success Rate | Examples |
+|---|---|---|
+| **Opposing element** (fire-tagged vs ice-tagged, ice-tagged vs fire-tagged) | 100% | Frost Lance counters a fire spell; Firebolt counters an ice spell |
+| **Opposing school** (Restoration vs Shadow, Shadow vs Restoration) | 90% | Heal cast at a Shadow Priest channeling Life Drain |
+| **Dispel spell** (Enchantment school) | 80% | Dispel counters any school |
+| **Same-school spell** | 60% | Firebolt vs enemy Fireball |
+| **Any other spell** cast at the channeling enemy | 40% | Acid Splash vs enemy Frost Lance |
+
+Element tags exist within schools: fire, ice, lightning (Elements); acid (Alchemy); shadow (Shadow); holy (Restoration). Spells without an element tag use the "any other spell" rate.
+
+## Monster Elemental Properties
+
+Monsters have optional elemental weakness and resistance tags on their MonsterDef:
+
+| Monster Type | Weakness | Resistance | Rationale |
+|---|---|---|---|
+| Fire Imp, Fire Elemental | Ice | Fire | Fire creatures fear cold |
+| Ice Elemental, Frost creatures | Fire | Ice | Ice melts to fire |
+| Slime, Ooze | Lightning | Acid | Electrical shock disrupts ooze |
+| Skeleton, Undead | Holy (Restoration) | Shadow | Undead are weak to holy |
+| Golem, Construct | Lightning | Physical | Electrical disruption, armored body |
+| Ghost, Wraith | Shadow | Physical | Shadow touches the spirit; physical passes through |
+| Troll, Beast | Fire | — | Trolls fear fire (regen stopped) |
+| Metal-armored enemies | Lightning | — | Metal conducts |
+
+- Weakness: incoming damage of that element ×1.5
+- Resistance: incoming damage of that element ×0.5
+- Defined as optional fields on MonsterDef: `weakness?: string`, `resistance?: string`
+- Monster definitions in `monsters.ts` are updated to include these tags
 
 ## Implementation Notes
 

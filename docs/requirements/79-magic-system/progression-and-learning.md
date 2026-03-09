@@ -173,64 +173,45 @@ If a player learns a spell before meeting its tier requirements, the spell appea
 
 ### Description
 
-Each class has a magical profile defining starting spells, mastery XP multipliers per school, and learning restrictions:
+Magic progression is shaped by **archetype** (which determines raw magical capacity) and **class** (which determines affinities and restrictions):
 
-**Mage:**
-- Starts with 1 random Tier 1 spell from any main school.
-- +50% mastery XP in all main schools.
-- Can learn all main schools freely.
-- Natural path: Arcanist tradition (academic magic).
+**Archetype determines:**
+- Attributes and mana pool (defined in US-MS-01/US-MS-03) — Arcane has high mana, Finesse has moderate, Might has minimal
+- Archetypes do NOT restrict which spells can be learned — any archetype can learn any spell
 
-**Warrior:**
-- No starting spells.
-- −25% mastery XP in all schools.
-- Can learn Elements and Enchantment at normal learning cost. All other schools require 2× learning cost (double gold for NPC teachers, double study time for tomes).
-- Natural path: Battle magic (practical combat spells only).
+**Class determines:**
+- Starting spells/abilities (see US-MS-01 class profiles)
+- Mastery XP multipliers per school (how fast you improve in each school)
+- Equipment proficiency and armor casting penalty interaction
+- Specific restrictions (Paladin cannot learn Shadow or forbidden schools)
 
-**Rogue:**
-- No starting spells.
-- Normal mastery XP in Shadow and Conjuration. −25% in all other schools.
-- Natural path: Shadow magic and utility spells.
+**Class Mastery Affinities:**
 
-**Ranger:**
-- No starting spells.
-- +25% mastery XP in Elements (nature-themed spells) and Divination. Normal rate in all others.
-- Natural path: Primordialist tradition (Old Magic).
+| Class       | Boosted Schools (+50% XP)        | Boosted Schools (+25% XP)         | Restricted Schools |
+|-------------|----------------------------------|-----------------------------------|--------------------|
+| Mage        | All 7 main schools               | —                                 | —                  |
+| Necromancer | Shadow, Necromancy               | —                                 | —                  |
+| Cleric      | Restoration                      | Enchantment                       | Shadow, all forbidden (−50% XP) |
+| Warrior     | —                                | —                                 | — (no bonuses, no restrictions) |
+| Paladin     | —                                | Restoration, Enchantment          | **Cannot learn** Shadow or any forbidden school |
+| Rogue       | —                                | Shadow, Conjuration               | —                  |
+| Ranger      | —                                | Elements, Divination              | —                  |
+| Bard        | —                                | Enchantment, Conjuration          | —                  |
 
-**Cleric:**
-- Starts with Heal (Restoration Tier 1).
-- +50% mastery XP in Restoration. +25% in Enchantment. −50% in Shadow and all forbidden schools.
-- Natural path: Thaumaturge tradition (temple magic).
-
-**Paladin:**
-- No starting spells.
-- +25% mastery XP in Restoration and Enchantment.
-- **Cannot learn Shadow or any forbidden school** unless alignment shifts to dark (separate system).
-- Natural path: Holy magic (Restoration + Enchantment only).
-
-**Necromancer:**
-- Starts with Life Tap (Necromancy Tier 1).
-- +50% mastery XP in Shadow and Necromancy. −25% in Restoration.
-- Natural path: Forbidden magic specialist.
-
-**Bard:**
-- No starting spells.
-- +25% mastery XP in Enchantment and Conjuration. Normal rate in all other schools.
-- Natural path: Versatile magic (jack of all schools).
-
-Class restrictions are **soft gates** — any class can learn any spell from any main school (with varying effort), except Paladin's hard restriction on Shadow and forbidden schools.
+**Key design rules:**
+- Class restrictions are **soft gates** — any class can learn any spell from any main school (with varying effort), except Paladin's hard restriction on Shadow and forbidden schools.
+- A Might-archetype Warrior at the Academy has ~4 maxMana at level 1. They can cast 1 spell then must wait for regen. This is intentional — Might characters rely on Q-key abilities, scrolls, potions, and alchemy at the Academy. The class-aware dialogue acknowledges this.
+- An Arcane Warrior (unusual combo) has high mana but also has Warrior talents — a battle-mage build.
 
 ### Acceptance Criteria
 
-- [ ] A `CLASS_MAGIC_PROFILES` constant (or equivalent) defines starting spells, per-school XP multipliers, and learning cost multipliers for each of the 8 classes.
-- [ ] Character creation grants starting spells based on the class profile (Mage gets 1 random Tier 1 spell, Cleric gets Heal, Necromancer gets Life Tap, others get none).
-- [ ] School mastery XP gains are multiplied by the class-specific modifier before being applied.
-- [ ] Learning cost multipliers are applied when paying gold to NPC teachers and when calculating study time for tomes.
-- [ ] Paladin is hard-blocked from learning Shadow or forbidden-school spells: the learn option does not appear in dialogue, and spell scrolls/tomes for those schools display *"This magic is anathema to your oath."*
-- [ ] A Mage selecting Experimentation (US-MS-62) gains the +50% XP bonus on any resulting mastery XP.
-- [ ] The character creation screen or journal displays a brief description of the class's magical affinity.
-- [ ] A unit test confirms that a Warrior pays 2× gold for an NPC-taught Restoration spell compared to a Cleric.
-- [ ] A unit test confirms that a Paladin cannot learn a Shadow spell via any source.
+- [ ] A `CLASS_PROFILES` constant defines starting spells, per-school XP multipliers, and equipment proficiency for each of the 8 classes (attributes come from archetype, not class)
+- [ ] Character creation grants starting spells and abilities based on the class profile
+- [ ] School mastery XP gains are multiplied by the class-specific modifier before being applied
+- [ ] Paladin is hard-blocked from learning Shadow or forbidden-school spells: the learn option does not appear in dialogue, and spell scrolls/tomes for those schools display "This magic is anathema to your oath."
+- [ ] The character creation screen shows: (1) archetype selection with attribute preview, (2) class selection with suggested archetype highlighted, talent/equipment preview, and mastery affinity summary
+- [ ] A unit test confirms that a Mage gains 1.5× mastery XP in Elements compared to a Warrior
+- [ ] A unit test confirms that a Paladin cannot learn a Shadow spell via any source
 
 ---
 
@@ -286,7 +267,7 @@ Forbidden schools do not use the standard mastery tier system. There are no Novi
 
 | School | Cost per Spell Learned |
 |--------|----------------------|
-| Blood Magic | Permanently reduces maxHP by 3 |
+| Blood Magic | Permanently reduces maxHP by 2 |
 | Necromancy | Increases corruption score by 1 (visual changes accumulate: pale skin → sunken eyes → chill aura; NPCs react with fear/hostility) |
 | Void Magic | Permanently reduces maxSanity by 5 (sanity starts at WIL × 5) |
 | Chronomancy | Adds +10 to paradox baseline (random time glitches — turns skipped, monsters displaced — become more frequent) |
@@ -318,7 +299,7 @@ The player must explicitly confirm. Pressing N cancels the learning with no pena
 - [ ] When the player learns their 5th spell from a single forbidden school, the threshold event triggers with a dramatic message and the passive is permanently granted.
 - [ ] The character status panel shows active forbidden costs (e.g., "Corruption: 3", "Paradox: 20") and any threshold passives.
 - [ ] Save data includes all forbidden-magic state: corruption, paradox baseline, maxSanity reduction, maxHP reduction, soul gem reduction, and threshold flags.
-- [ ] A unit test confirms that learning a Blood Magic spell reduces maxHP by 3.
+- [ ] A unit test confirms that learning a Blood Magic spell reduces maxHP by 2.
 - [ ] A unit test confirms that the 5th Necromancy spell triggers the Undead Accord event.
 
 ---
@@ -333,12 +314,16 @@ The player must explicitly confirm. Pressing N cancels the learning with no pena
 
 The Academy (Epic 78) teaches a curated subset of the full magic system, focused on beginner-level spells from four schools:
 
-| School | Spells Taught | Tier |
-|--------|--------------|------|
-| Elements | Firebolt, Frost Lance | 1–2 |
-| Enchantment | Arcane Ward | 1 |
-| Alchemy | Acid Splash, Healing Mist + potion recipes | 1 |
-| Divination | True Sight, Reveal Secrets | 1 |
+| School | Spells Taught | Tier | Lesson |
+|--------|--------------|------|--------|
+| Elements | Firebolt | 1 | Lesson 1 |
+| Elements | Frost Lance | 1 | Lesson 4 |
+| Elements | Lightning Arc | 2 | Lesson 7 |
+| Enchantment | Arcane Ward | 1 | Lesson 3 |
+| Enchantment | Dispel | 2 | Lesson 7 |
+| Alchemy | Acid Splash + potion recipes | 1 | Lesson 5 |
+| Divination | True Sight, Reveal Secrets | 1 | Lesson 6 |
+| (House-specific) | Glacial Wall / Transmute Weapon / Reflective Shield / Foresight | 2–3 | Lesson 8 |
 
 Completing the Academy's 8-lesson curriculum brings the player to **Novice mastery** in these four schools — enough to cast Tier 1–2 spells but nowhere near Adept or Master.
 
@@ -353,7 +338,7 @@ To progress beyond Novice in any school, the player must leave the Academy and p
 
 ### Acceptance Criteria
 
-- [ ] Academy lessons grant exactly the spells listed above (Firebolt, Frost Lance, Arcane Ward, Acid Splash, Healing Mist, True Sight, Reveal Secrets) and no others.
+- [ ] Academy lessons grant exactly: Firebolt, Frost Lance, Lightning Arc, Arcane Ward, Dispel, Acid Splash, True Sight, Reveal Secrets (8 shared spells) + 1 house-specific spell in Lesson 8. Additional spells available via library books (optional, cost skill points).
 - [ ] Completing the full Academy curriculum results in Novice mastery in Elements, Enchantment, Alchemy, and Divination (with some mastery XP accumulated from classes, but not enough for Adept).
 - [ ] The Academy does not teach Restoration, Conjuration, Shadow, or any forbidden school spells.
 - [ ] Academy library book interactions provide lore text about Restoration, Conjuration, Shadow, and forbidden schools without teaching any spells.

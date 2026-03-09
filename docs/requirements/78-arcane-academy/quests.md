@@ -150,7 +150,7 @@ These quests trigger automatically as the school year progresses. Completing the
 4. The ward reacts to the player: vision of the Academy's founding, a flash of something ancient
 5. Return to the surface
 
-**Rewards:** +80 XP, major lore entry, the player gains a passive buff: "Ley Line Attunement" (+2 max mana permanently)
+**Rewards:** +80 XP, major lore entry, artifact: **Ley Line Shard** (equippable trinket, +2 max mana while held, +10% mana regen). The shard is a physical object, not a permanent stat change — it occupies an equipment slot.
 
 **Note:** This quest connects to larger game lore (the Original Seven, Ley Lines). It plants seeds for endgame content without resolving anything.
 

@@ -28,7 +28,7 @@ The Academy is an **Arcanist institution** that teaches 4 of the 7 arcane school
 | Lesson 7 (Advanced Combat) | Enchantment | Dispel | 2 | US-MS-18 |
 | Lesson 7 (Advanced Combat) | Elements | Lightning Arc | 2 | US-MS-17 |
 
-**Tier 2 (House-Specific — Lesson 8, one per student):**
+**House-Specific Spells (Lesson 8, one per student):**
 
 | House | School | Spell | Tier | Epic 79 Reference |
 |-------|--------|-------|------|-------------------|
@@ -36,6 +36,8 @@ The Academy is an **Arcanist institution** that teaches 4 of the 7 arcane school
 | Verdantia | Alchemy | Transmute Weapon | 2 | US-MS-19 |
 | Ironveil | Enchantment | Reflective Shield | 3 | US-MS-18 |
 | Glimmershade | Divination | Foresight | 2 | US-MS-19 |
+
+Note: Ironveil students receive Reflective Shield at Tier 3 — the only Tier 3 spell taught at the Academy, reflecting the Enchantment school's emphasis on mastery through precision. This is an exception; students must still reach Adept mastery to cast it independently after graduation.
 
 **Total: 10-11 spells per student** (8 shared + 1 house-specific + 2-3 from library books)
 
@@ -66,10 +68,9 @@ The following stories are Academy-specific additions that layer on top of Epic 7
 
 **Acceptance Criteria:**
 - Academy location has magic level = 4 (convergence) as defined in US-MS-54
-- While at the Academy: mana regeneration is 2× base rate (US-MS-04 location bonus)
-- On enrollment: permanent +5 maxMana bonus (the Ley Line attunes to you)
-- This bonus persists after leaving the Academy
+- While at the Academy: mana regeneration is 2× base rate (US-MS-04 location bonus) — this is a temporary location benefit, NOT a permanent stat change
 - HUD shows mana as defined in US-MS-06
+- **No permanent attribute or mana changes** from enrollment. The Academy's benefit is access to lessons, the library, the practice dungeon, and the 2× mana regen while on campus.
 
 ### US-AA-22: Learn Spells from Lessons
 **As a** student, **I learn** specific spells during Academy lessons that are permanently added to my spellbook, **so that** education has real mechanical value.

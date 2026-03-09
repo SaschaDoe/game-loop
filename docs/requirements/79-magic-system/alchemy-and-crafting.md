@@ -175,6 +175,12 @@ As a player, I want to find reagents throughout the world, so that I have a stea
 - [ ] Common reagents appear roughly 3x as often as uncommon, and 9x as often as rare
 - [ ] Reagents occupy inventory slots and can be picked up, dropped, and stored
 - [ ] All 11 existing reagent types are obtainable through at least one source
+- [ ] **Reagent Pouch:** A dedicated 8-slot container for reagents, separate from the main 12-slot inventory. Acquired at character creation (all characters start with one) or purchased from merchants.
+- [ ] Reagents auto-sort into the reagent pouch when picked up, if the pouch has space
+- [ ] If the reagent pouch is full, reagents go to main inventory as a fallback
+- [ ] The brewing menu reads from both the pouch and main inventory when checking ingredient availability
+- [ ] The reagent pouch is accessible via the inventory screen as a separate tab or section
+- [ ] The reagent pouch is included in save/load serialization
 
 ---
 

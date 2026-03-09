@@ -16,26 +16,37 @@ This document defines the core attribute system and mana resource system that al
 **As a** player, **I want** my character to have meaningful attributes that differ by class, **so that** my class choice affects how I interact with every system in the game.
 
 **Acceptance Criteria:**
+- [ ] Character creation has two steps: (1) choose an **archetype**, (2) choose a **class**
 - [ ] Entity has five new numeric fields: `str` (Strength), `int` (Intellect), `wil` (Willpower), `agi` (Agility), `vit` (Vitality)
-- [ ] Starting attribute values are assigned based on class at character creation:
+- [ ] Starting attribute values are assigned based on **archetype** at character creation:
 
-| Class       | STR | INT | WIL | AGI | VIT |
-|-------------|-----|-----|-----|-----|-----|
-| Warrior     |  14 |   8 |  10 |  10 |  12 |
-| Mage        |   6 |  16 |  14 |   8 |   8 |
-| Rogue       |   8 |  10 |   8 |  16 |  10 |
-| Ranger      |  10 |  10 |  10 |  14 |  10 |
-| Cleric      |   8 |  12 |  16 |   8 |  10 |
-| Paladin     |  14 |   8 |  14 |   6 |  12 |
-| Necromancer |   6 |  16 |  12 |   8 |   8 |
-| Bard        |   8 |  12 |  12 |  12 |  10 |
+| Archetype | STR | INT | WIL | AGI | VIT | Primary | Mana Modifier | Description |
+|-----------|-----|-----|-----|-----|-----|---------|---------------|-------------|
+| Arcane    |   6 |  16 |  14 |   8 |  10 | int     | 1.50          | Born to wield magic. High mana, strong spells, fragile body. |
+| Finesse   |   8 |  10 |   8 |  16 |  12 | agi     | 0.75          | Quick and precise. Some magic, excels at evasion and crits. |
+| Might     |  14 |   8 |  10 |  10 |  12 | str     | 0.25          | Raw physical power. Minimal mana — relies on steel, not spells. |
 
-- [ ] All starting attribute totals sum to 54 for every class (balanced point-buy)
-- [ ] On level up, the player's primary attribute (highest starting attribute for their class) gains +1 automatically
+- [ ] All archetypes sum to 54 attribute points (balanced)
+- [ ] **Classes provide talents, equipment, and affinities — NOT attributes or mana modifiers.** Class profiles:
+
+| Class       | Suggested Archetype | Starting Equipment        | Starting Ability (Q key) | Starting Spell     | Armor Proficiency |
+|-------------|--------------------|--------------------------|--------------------------|--------------------|-------------------|
+| Warrior     | Might              | Iron Sword, Shield        | Whirlwind                | —                  | Heavy             |
+| Paladin     | Might              | Mace, Shield              | Holy Strike              | —                  | Heavy             |
+| Mage        | Arcane             | Staff                     | —                        | 1 random T1 spell  | Robes             |
+| Necromancer | Arcane             | Dagger                    | —                        | Life Tap           | Light             |
+| Cleric      | Arcane             | Mace                      | —                        | Heal               | Medium            |
+| Rogue       | Finesse            | Twin Daggers              | Smoke Bomb               | —                  | Light             |
+| Ranger      | Finesse            | Bow, Dagger               | Trap Sense               | —                  | Medium            |
+| Bard        | Finesse            | Rapier, Lute              | Inspire                  | —                  | Light             |
+
+- [ ] Any class can be combined with any archetype (e.g., an Arcane Warrior is a battle-mage). The UI suggests default pairings but does not enforce them.
+- [ ] On level up, the player's primary attribute (determined by archetype) gains +1 automatically
 - [ ] On level up, the player receives +1 free attribute point to allocate to any attribute
-- [ ] Attribute values are stored on Entity and persisted in save files
+- [ ] Attributes are stored on Entity and persisted in save files
 - [ ] Monsters also have attributes (can be simplified — e.g., derived from their tier and level)
 - [ ] Attributes are validated: minimum value is 1, no maximum cap
+- [ ] **No permanent attribute or mana changes** come from enrollment, quest completion, or location bonuses. Only from: level-ups, equipped artifacts/equipment, and forbidden magic costs.
 
 ---
 
@@ -50,7 +61,8 @@ This document defines the core attribute system and mana resource system that al
 - [ ] `magicResist` is calculated as: `WIL + floor(INT / 4)` — incoming spell damage reduced by `magicResist`%, capped at 50%
 - [ ] `dodgeChance` is calculated as: `AGI * 0.5`% base (before equipment modifiers)
 - [ ] `critChance` is calculated as: `AGI * 0.3`% base (before equipment modifiers)
-- [ ] Derived stats are recalculated whenever attributes change (level up, buff, debuff, equipment)
+- [ ] `physicalDefense` is calculated as: `armorValue + floor(VIT / 4)` — incoming physical damage is reduced by this flat amount (minimum 1 damage always gets through)
+- [ ] Derived stats are recalculated whenever attributes change (level up, buff, debuff, equipment) — includes physicalDefense
 - [ ] The existing flat `hp`, `maxHp`, and `attack` fields on Entity become derived values — no game system sets them directly anymore
 - [ ] A `recalculateDerivedStats(entity)` function exists and is called after any attribute mutation
 - [ ] Save migration: existing saves without attributes get attributes reverse-calculated from their current HP and ATK values:
@@ -69,11 +81,10 @@ This document defines the core attribute system and mana resource system that al
 **Acceptance Criteria:**
 - [ ] Entity has two new numeric fields: `mana` and `maxMana`
 - [ ] Base `maxMana` is calculated as: `INT * 2 + (level * 3)`
-- [ ] Class modifier applied to maxMana after base calculation:
-  - Mage, Necromancer: +50% (multiply by 1.5, round down)
-  - Cleric, Bard: +25% (multiply by 1.25, round down)
-  - Warrior, Paladin: -25% (multiply by 0.75, round down)
-  - Rogue, Ranger: no modifier (1.0)
+- [ ] Archetype modifier applied to maxMana after base calculation:
+  - Arcane: ×1.50 (multiply by 1.5, round down)
+  - Finesse: ×0.75 (multiply by 0.75, round down)
+  - Might: ×0.25 (multiply by 0.25, round down)
 - [ ] Mana starts at maxMana when creating a new game
 - [ ] Mana is restored to maxMana on rest at inn or camp
 - [ ] Mana persists across level transitions (not reset on stairs)
@@ -99,6 +110,7 @@ This document defines the core attribute system and mana resource system that al
   - Normal locations: 1.0x regen rate
   - Dead zone (anti-magic area): 0x regen (no mana regeneration at all)
 - [ ] Resting at an inn or camp restores mana to full (maxMana) instantly
+- [ ] **Rest action:** Interact with a bed, campfire, or inn tile and choose "Rest" to spend 20 turns resting. Restores HP and mana to full. Cannot rest when enemies are within sight range. Rest can be interrupted by enemy approach (player is woken/alerted).
 - [ ] Mana Potion consumable: restores 10 mana immediately, cannot exceed maxMana
 - [ ] Mana regeneration functions identically in and out of combat (no special combat regen rules)
 - [ ] Regen is processed during the turn update loop alongside status effect ticks
@@ -208,6 +220,7 @@ interface Entity {
   // Derived stats (US-MS-02) — recalculated, not stored directly
   // maxHp: derived from VIT + level
   // attack: derived from STR + weapon
+  // physicalDefense: derived from armorValue + VIT
   spellPower: number;
   magicResist: number;
   dodgeChance: number;
@@ -227,20 +240,33 @@ interface AlternateResource {
   color: string;
 }
 
-// Class attribute definitions
-const CLASS_ATTRIBUTES: Record<string, {
+// Archetype definitions (replaces old CLASS_ATTRIBUTES)
+const ARCHETYPE_ATTRIBUTES: Record<string, {
   str: number; int: number; wil: number; agi: number; vit: number;
   primaryAttribute: 'str' | 'int' | 'wil' | 'agi' | 'vit';
   manaModifier: number;
 }> = {
-  warrior:     { str: 14, int:  8, wil: 10, agi: 10, vit: 12, primaryAttribute: 'str', manaModifier: 0.75 },
-  mage:        { str:  6, int: 16, wil: 14, agi:  8, vit:  8, primaryAttribute: 'int', manaModifier: 1.50 },
-  rogue:       { str:  8, int: 10, wil:  8, agi: 16, vit: 10, primaryAttribute: 'agi', manaModifier: 1.00 },
-  ranger:      { str: 10, int: 10, wil: 10, agi: 14, vit: 10, primaryAttribute: 'agi', manaModifier: 1.00 },
-  cleric:      { str:  8, int: 12, wil: 16, agi:  8, vit: 10, primaryAttribute: 'wil', manaModifier: 1.25 },
-  paladin:     { str: 14, int:  8, wil: 14, agi:  6, vit: 12, primaryAttribute: 'str', manaModifier: 0.75 },
-  necromancer: { str:  6, int: 16, wil: 12, agi:  8, vit:  8, primaryAttribute: 'int', manaModifier: 1.50 },
-  bard:        { str:  8, int: 12, wil: 12, agi: 12, vit: 10, primaryAttribute: 'int', manaModifier: 1.25 },
+  arcane:  { str:  6, int: 16, wil: 14, agi:  8, vit: 10, primaryAttribute: 'int', manaModifier: 1.50 },
+  finesse: { str:  8, int: 10, wil:  8, agi: 16, vit: 12, primaryAttribute: 'agi', manaModifier: 0.75 },
+  might:   { str: 14, int:  8, wil: 10, agi: 10, vit: 12, primaryAttribute: 'str', manaModifier: 0.25 },
+};
+
+// Class profiles — provide talents, equipment, and mastery affinity (NOT attributes)
+const CLASS_PROFILES: Record<string, {
+  suggestedArchetype: string;
+  startingAbility: string | null;    // Q-key innate ability
+  startingSpell: string | null;      // first learned spell
+  armorProficiency: 'robes' | 'light' | 'medium' | 'heavy';
+  masteryMultipliers: Partial<Record<string, number>>;  // school name → XP multiplier
+}> = {
+  warrior:     { suggestedArchetype: 'might',   startingAbility: 'whirlwind',   startingSpell: null,          armorProficiency: 'heavy',  masteryMultipliers: {} },
+  paladin:     { suggestedArchetype: 'might',   startingAbility: 'holy_strike', startingSpell: null,          armorProficiency: 'heavy',  masteryMultipliers: { restoration: 1.25, enchantment: 1.25 } },
+  mage:        { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'random_t1',   armorProficiency: 'robes',  masteryMultipliers: { elements: 1.5, enchantment: 1.5, restoration: 1.5, divination: 1.5, alchemy: 1.5, conjuration: 1.5, shadow: 1.5 } },
+  necromancer: { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_life_tap', armorProficiency: 'light', masteryMultipliers: { shadow: 1.5, necromancy: 1.5 } },
+  cleric:      { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_heal',  armorProficiency: 'medium', masteryMultipliers: { restoration: 1.5, enchantment: 1.25 } },
+  rogue:       { suggestedArchetype: 'finesse', startingAbility: 'smoke_bomb',  startingSpell: null,          armorProficiency: 'light',  masteryMultipliers: { shadow: 1.25, conjuration: 1.25 } },
+  ranger:      { suggestedArchetype: 'finesse', startingAbility: 'trap_sense',  startingSpell: null,          armorProficiency: 'medium', masteryMultipliers: { elements: 1.25, divination: 1.25 } },
+  bard:        { suggestedArchetype: 'finesse', startingAbility: 'inspire',     startingSpell: null,          armorProficiency: 'light',  masteryMultipliers: { enchantment: 1.25, conjuration: 1.25 } },
 };
 ```
 
@@ -254,8 +280,9 @@ const CLASS_ATTRIBUTES: Record<string, {
 | magicResist    | `WIL + floor(INT / 4)` (capped 50%)            | 14 + 4 = 18%                                      |
 | dodgeChance    | `AGI * 0.5`%                                    | 4.0%                                               |
 | critChance     | `AGI * 0.3`%                                    | 2.4%                                               |
+| physicalDefense | `armorValue + floor(VIT / 4)` | 0 + floor(8/4) = 2 (Mage, no armor) |
 | maxMana (base) | `INT * 2 + (level * 3)`                         | 32 + 3 = 35                                       |
-| maxMana (mod)  | `base * classModifier`                          | 35 * 1.5 = 52                                     |
+| maxMana (mod)  | `base * archetypeModifier`                          | 35 * 1.5 = 52 (Arcane)                              |
 | mana regen (base) | `+1 per 5 turns`                             | +1 every 5 turns                                   |
 | mana regen (INT) | `+1 per max(1, 20 - floor(INT/2)) turns`      | +1 every 12 turns                                  |
 
@@ -273,6 +300,7 @@ const CLASS_ATTRIBUTES: Record<string, {
 - `engine.ts` — derived stat calculation, level-up changes, mana regen in turn loop
 - `save.ts` — serialization, migration, version bump
 - `+page.svelte` — HUD changes (MP bar, attribute display, level-up UI)
+- `CharacterConfig` (types.ts) — add archetype field alongside class
 - `abilities.ts` — spells will consume mana (but spell definitions are in a separate epic)
 - Epic 29 (forbidden-magic) — depends on AlternateResource interface for Blood Points, Sanity, Soul Gems
 - Epic 52 (psychic-powers) — depends on AlternateResource interface for Psi Points

@@ -29,7 +29,7 @@ This epic defines the **complete magic system** for Aethermoor. All other epics 
 2. **One Foundation, Many Paths** — All magic shares the same attribute system, mana pool, and casting mechanics. Schools, traditions, and forbidden arts are layers on top.
 3. **Spells Are Tools, Not Decorations** — Every spell does something real in the game engine. No flavor-only spells.
 4. **Progressive Complexity** — Start with 1-2 spells and bump-to-attack. End with spell weaving, counter-spells, and ritual magic. The system grows with the player.
-5. **Class Agnostic** — Any class can learn magic (Warriors at the Academy, Rogues from scrolls). Mages are better at it, not the only ones who can do it.
+5. **Archetype-Driven, Class-Flavored** — The player's archetype (Arcane/Finesse/Might) determines raw magical capacity. Any class can learn magic, but Arcane archetypes have deep mana pools while Might archetypes have minimal mana and rely on scrolls and abilities. Classes add talents, equipment, and mastery affinities — not stats.
 
 ## Feature Areas
 
@@ -75,7 +75,9 @@ Forbidden schools are referenced in the Academy's restricted section and East Wi
 
 ## Dependencies (Code Changes Required)
 
-- **New:** Attribute system (STR/INT/WIL/AGI/VIT) on Entity
+- **New:** Archetype system (Arcane/Finesse/Might) on CharacterConfig — determines attributes and mana modifier
+- **Modify:** Character creation flow — archetype selection before class selection
+- **New:** Attribute system (STR/INT/WIL/AGI/VIT) on Entity, derived from archetype
 - **New:** `mana` / `maxMana` on Entity
 - **New:** `learnedSpells: string[]` on GameState
 - **New:** `spellCooldowns: Record<string, number>` on GameState
@@ -90,3 +92,18 @@ Forbidden schools are referenced in the Academy's restricted section and East Wi
 - **Modify:** `types.ts` — new fields on Entity and GameState
 - **Modify:** `save.ts` — persist new fields
 - **Modify:** HUD — mana bar, spell slots display
+
+## Implementation Priority
+
+The magic system is large. Implement in phases:
+
+| Phase | Systems | Why First |
+|-------|---------|-----------|
+| **Phase 1: Foundation** | Attributes (US-MS-01–02), Mana (US-MS-03–06), Archetype/Class creation | Everything else depends on these |
+| **Phase 2: Core Casting** | Spell menu (US-MS-23), Quick-cast (US-MS-24), Targeting (US-MS-25), Execution (US-MS-26), Damage calc (US-MS-27), Cooldowns (US-MS-28), Innate abilities (US-MS-33b) | Makes magic playable |
+| **Phase 3: Combat Depth** | AoE (US-MS-29), Status effects (US-MS-30), Counter-spells (US-MS-31), Enemy casters (US-MS-32), Armor penalty | Makes magic tactical |
+| **Phase 4: Academy** | All of Epic 78 | Requires Phase 1–3 to be meaningful |
+| **Phase 5: Crafting** | Alchemy (US-MS-34–42), Enchanting (US-MS-43–48), Reagent pouch | Independent of combat magic |
+| **Phase 6: World Magic** | Non-combat magic (US-MS-49–54), Rituals, Environmental interactions | Requires overworld/exploration systems |
+| **Phase 7: Progression** | Mastery (US-MS-56), Tiers (US-MS-57), Specialization (US-MS-59), Forbidden magic (US-MS-60), Spell research (US-MS-62) | Late-game systems |
+| **Phase 8: Advanced** | Teaching (US-MS-63), Alternate resources (US-MS-08), Epic 26/29/48/49/50/52/64/72/73 hooks | Post-launch extensions |

@@ -110,8 +110,8 @@ Each lesson teaches a **real game mechanic** — a spell, a recipe, a combat tec
   - Training golem despawns after 9 turns (3 cycles) regardless of HP
 - **Exam relevant:** The golem pattern IS the combat exam. Dispel and Lightning Arc give real tactical options for it.
 
-## US-AA-16: Lesson 8 — Advanced Techniques and Specialization (All Faculty)
-**As a** student, **I learn** one advanced spell from my house's school (Tier 2) and choose a specialization, **so that** I leave the Academy with real capability.
+## US-AA-16: Lesson 8 — Advanced Techniques and Academy Focus (All Faculty)
+**As a** student, **I learn** one advanced spell from my house's school (Tier 2) and choose an Academy Focus, **so that** I leave the Academy with real capability.
 
 **Acceptance Criteria:**
 - Day 26 (unlocks ~3 days after Lesson 7)
@@ -122,11 +122,12 @@ Each lesson teaches a **real game mechanic** — a spell, a recipe, a combat tec
   - **Ironveil (Ashveil):** `spell_reflective_shield` — Reflective Shield (reflect 50% melee damage 4 turns, 7 mana, 6 cd). "The best ward doesn't just protect. It punishes."
   - **Glimmershade (Maren):** `spell_foresight` — Foresight (+20% dodge 5 turns, 6 mana, 6 cd). "See what's coming. Then don't be there."
 - Players from ALL houses also hear a brief description of the other three spells (knowledge, not learning)
-- **Specialization choice** (stored, affects gameplay):
+- **Academy Focus** (minor perk, stored, affects gameplay — distinct from the Epic 79 Specialization system at level 10+):
   - Elements: +1 spell damage permanently
   - Alchemy: Potions brewed are +25% effective
   - Enchantment: Ward/shield durations +2 turns
   - Divination: +1 permanent sight radius
+- This is a minor Academy perk, NOT the same as the full Specialization system (US-MS-59) which becomes available at character level 10+. Both can coexist — Academy Focus stacks with Specialization bonuses.
 - Choice is stored but doesn't lock out any spells
 - Review covers: Health Potion recipe, elemental weaknesses, golem pattern, counter-spell reminder
 - "The exam begins in a few days. Study. Practice. Help each other."

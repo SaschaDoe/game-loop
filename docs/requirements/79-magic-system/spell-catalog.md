@@ -128,7 +128,7 @@ Complete spell definitions for all 12 schools (7 arcane + 5 forbidden). Each spe
 | `spell_corrosive_cloud` | Corrosive Cloud | 2 | 6 | 5 | 5 | 1 turn | Create a 3x3 poison cloud. All enemies in the area take 2 damage/turn for 3 turns (poison status). |
 | `spell_stone_skin` | Stone Skin | 3 | 8 | 8 | Self | 1 turn | Gain +5 damage reduction for 8 turns. Each incoming hit has its damage reduced by 5 (minimum 1 damage). |
 | `spell_petrify` | Petrify | 4 | 10 | 8 | 5 | 1 turn | Stun one enemy for 5 turns. Target turns to stone and cannot act. |
-| `spell_philosophers_touch` | Philosopher's Touch | 5 | 25 | 30 | Self | 1 turn | Fully restore HP to maximum. Remove all negative status effects. Gain invulnerability for 2 turns (take 0 damage from all sources). |
+| `spell_philosophers_touch` | Philosopher's Touch | 5 | 30 | Special | Self | 1 turn | Fully restore HP to maximum. Remove all negative status effects. Gain invulnerability for 2 turns (take 0 damage from all sources). Cooldown resets on rest only (cannot be recast until the player rests). |
 
 ### Acceptance Criteria
 
@@ -148,6 +148,8 @@ Complete spell definitions for all 12 schools (7 arcane + 5 forbidden). Each spe
 - [ ] Petrify reclassified from level 3 to Tier 4 (mana cost unchanged at 10).
 - [ ] Stone Skin damage reduction stacks with armor but each source applies independently.
 - [ ] Philosopher's Touch invulnerability is absolute (0 damage from all sources for 2 turns).
+- [ ] Philosopher's Touch cooldown is "rest-gated" — it resets only when the player performs a full rest (same mechanic as Resurrection). It cannot be recast mid-dungeon without resting.
+- [ ] Philosopher's Touch mana cost is 30 (up from 25 for other Tier 5 spells) to reflect its exceptional power.
 - [ ] All heal values listed are base heals (before spellPower scaling via healing formula).
 
 ---
@@ -163,7 +165,7 @@ Complete spell definitions for all 12 schools (7 arcane + 5 forbidden). Each spe
 | ID | Name | Tier | Mana | CD | Range | Cast | Effect |
 |----|------|------|------|----|-------|------|--------|
 | `spell_summon_light` | Summon Light | 1 | 2 | 1 | 6 | 1 turn | Create a light source at target visible tile. Lasts 10 turns. Illuminates a 3-tile radius (overrides fog of war for the area). |
-| `spell_phase_step` | Phase Step | 1 | 4 | 5 | 5 | 1 turn | Teleport to any visible floor tile within 5 tiles. Cannot teleport through walls or into occupied tiles. |
+| `spell_phase_step` | Phase Step | 1 | 4 | 5 | 5 | 1 turn | Teleport up to 5 tiles in a chosen direction. Can pass through walls up to 1 tile thick. Cannot teleport into occupied tiles or unexplored fog-of-war tiles. |
 | `spell_phantom_image` | Phantom Image | 2 | 5 | 6 | 4 | 1 turn | Create a decoy entity at target tile. Decoy has 3 HP, no attack, and attracts enemy attacks (enemies within 3 tiles target the decoy instead of the caster). Disappears when destroyed or after 8 turns. |
 | `spell_conjure_weapon` | Conjure Weapon | 2 | 6 | 10 | Self | 1 turn | Summon a spectral weapon granting +3 ATK for 15 turns. Replaces current weapon temporarily; original weapon returns when the spell expires. |
 | `spell_summon_elemental` | Summon Elemental | 3 | 12 | 15 | 3 | 1 turn | Summon an allied elemental creature on an adjacent tile. The elemental has 10 HP, 4 ATK, and acts independently on the caster's turn (moves toward and attacks the nearest enemy). Lasts 10 turns. Elemental type matches the caster's highest-ranked spell school (fire for Elements, etc.). |
@@ -191,7 +193,7 @@ Complete spell definitions for all 12 schools (7 arcane + 5 forbidden). Each spe
 - [ ] All 7 Conjuration spells defined with unique IDs.
 - [ ] All 7 Shadow spells defined with unique IDs.
 - [ ] Summon Light creates a temporary light entity that affects FOV calculations.
-- [ ] Phase Step validates target tile is visible, floor type, unoccupied, and within range.
+- [ ] Phase Step validates: target tile is floor type, unoccupied, explored or visible, within 5 tiles. Can pass through 1-tile-thick walls but not 2+ tile-thick walls.
 - [ ] Phantom Image creates an Entity with `isDecoy: true` flag; enemy AI prioritizes decoys.
 - [ ] Summon Elemental creates an allied Entity that uses basic chase-and-attack AI.
 - [ ] Elemental type/appearance varies based on caster's highest school rank.
@@ -279,7 +281,7 @@ Forbidden spells have no school rank requirement (they are self-taught from dark
 | `spell_soul_trap` | Soul Trap | 2 | 5 | 8 | 4 | 1 turn | Mark one enemy. If the marked enemy dies within 10 turns, gain 2 soul fragments instead of the normal 1. | 0 |
 | `spell_soul_transfer` | Soul Transfer | 3 | 8 | 10 | 4 | 1 turn | Swap current HP percentage with one target. If caster is at 30% HP and target is at 80% HP, caster goes to 80% and target goes to 30%. | 1 |
 | `spell_soul_shield` | Soul Shield | 3 | 6 | 8 | Self | 1 turn | Consume 1 soul fragment to create a 20 HP shield lasting 10 turns. The shield regenerates 2 HP/turn. | 1 |
-| `spell_soul_devour` | Soul Devour | 4 | 12 | 12 | 3 | 1 turn | Consume 2 soul fragments. Deal 20 damage to one enemy. Permanently gain +1 to a random attribute (STR, INT, WIL, AGI, or VIT). The attribute gain persists for the rest of the run. | 2 |
+| `spell_soul_devour` | Soul Devour | 4 | 12 | 12 | 3 | 1 turn | Consume 2 soul fragments. Deal 20 damage to one enemy. Permanently gain +1 to a random attribute (STR, INT, WIL, AGI, or VIT). Maximum +5 total attribute points from Soul Devour across all casts. | 2 |
 | `spell_soulless` | Soulless | 5 | 20 | 30 | Self | 1 turn | Consume 5 soul fragments. For 10 turns: immune to all status effects (positive and negative), +10 to all attributes, all attacks deal +10 bonus damage. When the effect ends, lose 3 from all attributes for 20 turns (soul exhaustion). | 5 |
 
 ### Acceptance Criteria
@@ -304,6 +306,7 @@ Forbidden spells have no school rank requirement (they are self-taught from dark
 - [ ] Paradox shadow-self copies actions with 1-turn delay; collapsing deals 10 fixed damage.
 - [ ] Soul Transfer swaps HP *percentages*, not absolute HP values.
 - [ ] Soul Devour permanent attribute gain is tracked and persists through level transitions.
+- [ ] Soul Devour attribute gains are capped at +5 total across all casts. A counter `soulDevourGains` on GameState tracks the total. Once 5 points have been gained, further casts deal damage but display: "Your soul cannot absorb any more power." and grant no attribute bonus.
 - [ ] All forbidden spells are tagged `forbidden: true` on SpellDef for UI filtering and side-effect triggering.
 
 ---

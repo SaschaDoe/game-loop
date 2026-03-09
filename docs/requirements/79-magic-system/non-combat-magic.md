@@ -18,14 +18,14 @@ This document covers all non-combat, utility, and environmental magic — spells
 **Acceptance Criteria:**
 
 **Divination — Sight and Detection:**
-- [ ] True Sight (Divination, Tier 2): when active, the player's sight radius increases by +3 tiles and hidden walls, secret doors, and invisible enemies within the expanded radius are revealed
+- [ ] True Sight (Divination, Tier 1): when active, the player's sight radius increases by +3 tiles and hidden walls, secret doors, and invisible enemies within the expanded radius are revealed
 - [ ] True Sight lasts 20 turns after casting; while active, secret walls render as a distinct character (e.g., `+` in a highlight color) instead of appearing as normal walls
-- [ ] Reveal Secrets (Divination, Tier 3): on cast, all traps and secret walls within a 5-tile Manhattan distance of the player are immediately revealed, bypassing the passive detection roll entirely
+- [ ] Reveal Secrets (Divination, Tier 1): on cast, all traps and secret walls within a 5-tile Manhattan distance of the player are immediately revealed, bypassing the passive detection roll entirely
 - [ ] Revealed traps show their type (spike, poison_dart, alarm, teleport) in the combat log message
 - [ ] Astral Projection (Divination, Tier 5): on cast, the entire current level's map is set to `explored` visibility state (as if the player had visited every tile), but the player cannot move, attack, or cast other spells for 3 turns
 - [ ] During Astral Projection, the player's character renders with a flickering effect (alternating between `@` and `.` each turn) to indicate the trance state
 - [ ] If the player takes damage during Astral Projection, the effect ends early but the explored tiles remain revealed
-- [ ] Scryer's Mark (Divination, Tier 3): targets one visible enemy; for 50 turns, that enemy's position is tracked through walls, displayed as a directional indicator on the edge of the visible map area (e.g., arrow character pointing toward the marked enemy)
+- [ ] Scryer's Mark (Divination, Tier 3): targets one visible enemy; for 20 turns, that enemy's position is tracked through walls, displayed as a directional indicator on the edge of the visible map area (e.g., arrow character pointing toward the marked enemy)
 - [ ] Scryer's Mark can only be active on one enemy at a time; casting it again replaces the previous mark
 
 **Conjuration — Movement:**
@@ -144,7 +144,7 @@ This document covers all non-combat, utility, and environmental magic — spells
 **Acceptance Criteria:**
 
 **Transportation Methods:**
-- [ ] Phase Step (Conjuration, Tier 1): short-range teleport up to 5 tiles in a cardinal direction; usable in and out of combat; costs 4 mana; blocked by thick walls (2+ tiles); cannot teleport into fog-of-war tiles; message: `"You step through folded space..."`
+- [ ] Phase Step (Conjuration, Tier 1): teleport up to 5 tiles in a chosen direction; can pass through walls up to 1 tile thick; usable in and out of combat; costs 4 mana; cannot teleport into occupied or unexplored tiles; message: `"You step through folded space..."`
 - [ ] Dimensional Door (Conjuration, Tier 4): teleport to any previously explored tile on the current dungeon level; out-of-combat only; costs 8 mana; the player selects a destination from a list of visited rooms or by cursor targeting on explored tiles; message: `"You step through folded space and emerge in a familiar place."`
 - [ ] Teleportation Circle (ritual, see US-MS-51): creates a permanent anchor on the current level; returning to the circle costs 5 mana and is instant (no casting time for the return trip); same-level only; message: `"The circle flares — you are pulled back to your anchor point."`
 - [ ] Town Portal scroll (crafted consumable): instantly teleports the player to the last visited town or safe zone; one-use item consumed on activation; the player's dungeon progress (level, map state, enemy positions) is preserved for return; cooldown: once per in-game day (100 turns); message: `"A shimmering portal opens — the familiar sounds of town welcome you back."`
@@ -166,12 +166,14 @@ This document covers all non-combat, utility, and environmental magic — spells
 **Acceptance Criteria:**
 
 **Weather Effects:**
+*Weather and time-of-day modifiers apply only in outdoor areas and overworld encounters. Inside dungeons and buildings, only the Ley Line magic level modifier applies. This keeps indoor combat (the majority of gameplay) to a manageable modifier stack: base → spellPower → elemental → magicResist → crit → Ley Line.*
 - [ ] Fire spells (Elements school, fire-tagged): -15% damage in rain weather; the combat log notes: `"The rain dampens your flames."`
 - [ ] Lightning spells (Elements school, lightning-tagged): +15% damage in rain weather; the combat log notes: `"The storm amplifies your lightning!"`
 - [ ] Ice spells (Elements school, ice-tagged): +15% damage in cold biomes (tundra, mountain peaks); the combat log notes: `"The bitter cold empowers your ice magic."`
 - [ ] Weather modifiers apply to both damage and healing values (e.g., a fire heal spell is also reduced in rain)
 
 **Time of Day Effects:**
+*Outdoor areas only. See note above.*
 - [ ] Divination and Shadow school spells: +15% effect (damage, duration, or range as appropriate) during night (turns 50-99 of each 100-turn day cycle)
 - [ ] Elements school spells: +15% effect during daytime (turns 0-49 of each 100-turn day cycle)
 - [ ] Time-of-day bonuses stack with weather bonuses (multiplicatively: 1.15 x 1.15 = 1.3225 maximum combined bonus)
