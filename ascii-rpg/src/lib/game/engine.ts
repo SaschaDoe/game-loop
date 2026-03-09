@@ -29,7 +29,8 @@ import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, comple
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, defaultMagicFields, getWeaponBonus, getArmorValue, getEquippedArmorWeight } from './magic';
 import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost, FORBIDDEN_SCHOOLS, createTerrainEffects, getLeyLineEffectModifier, getEnvironmentalModifier } from './spells';
 import type { ArmorWeight, ForbiddenSchool } from './spells';
-import { createEmptyMastery, getMasteryLevel, canCastTier, addMasteryXP } from './mastery';
+import { createEmptyMastery, getMasteryLevel, canCastTier, addMasteryXP, getAvailableSpecializations, checkForbiddenThreshold } from './mastery';
+import type { SchoolMastery } from './mastery';
 import { RITUAL_CATALOG, getRitualDef, hasReagents, getMissingReagents, consumeReagents, rollInterruption } from './rituals';
 import type { RitualDef } from './rituals';
 
@@ -195,6 +196,16 @@ function checkLevelUp(state: GameState): void {
 		if (manaGain > 0) msg += `, +${manaGain} MP`;
 		msg += ', +1 Skill Point.';
 		addMessage(state, msg, 'level_up');
+
+		// Offer specialization at level 10 if none chosen
+		if (state.characterLevel >= 10 && state.specialization === null && !state.pendingSpecialization) {
+			const specs = getAvailableSpecializations(state.characterLevel, state.schoolMastery as unknown as SchoolMastery, state.specialization);
+			if (specs.length > 0) {
+				state.pendingSpecialization = true;
+				addMessage(state, 'You may choose a specialization! Press 1-' + specs.length + ' to choose, Escape to skip.', 'level_up');
+			}
+		}
+
 		threshold = xpForLevel(state.characterLevel + 1);
 	}
 }
@@ -376,6 +387,13 @@ export function createGame(config?: CharacterConfig): GameState {
 		activeSummon: null,
 		scriedLevel: null,
 		terrainEffects: [],
+
+		// Class specialization
+		specialization: null,
+		pendingSpecialization: false,
+
+		// Forbidden magic passives
+		forbiddenPassives: [],
 	};
 
 	// Grant starting rituals for mages and necromancers
@@ -1911,6 +1929,13 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		activeSummon: null,
 		scriedLevel: null,
 		terrainEffects: [],
+
+		// Class specialization
+		specialization: null,
+		pendingSpecialization: false,
+
+		// Forbidden magic passives
+		forbiddenPassives: [],
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -2759,9 +2784,17 @@ function castSpellById(state: GameState, spellId: string): GameState {
 		return { ...state };
 	}
 
-	// Check mana
-	const armorWeight = getEquippedArmorWeight(state.equipment, CLASS_PROFILES[state.characterConfig.characterClass]);
-	const cost = effectiveManaCost(spell, armorWeight);
+	// Check mana — apply specialization bonuses to armor weight and cost
+	let armorWeight = getEquippedArmorWeight(state.equipment, CLASS_PROFILES[state.characterConfig.characterClass]);
+	// Battlemage: treat medium armor as light for mana cost
+	if (state.specialization === 'battlemage' && armorWeight === 'medium') {
+		armorWeight = 'light';
+	}
+	let cost = effectiveManaCost(spell, armorWeight);
+	// Archmage: -20% mana cost
+	if (state.specialization === 'archmage') {
+		cost = Math.max(1, Math.floor(cost * 0.8));
+	}
 	if ((state.player.mana ?? 0) < cost) {
 		addMessage(state, `Not enough mana! (need ${cost}, have ${state.player.mana ?? 0})`, 'warning');
 		return { ...state };
@@ -2909,6 +2942,16 @@ export function learnSpell(state: GameState, spellId: string): boolean {
 		state.quickCastSlots[emptySlot] = spellId;
 	}
 	addMessage(state, `You have learned ${spell.name}!`, 'magic');
+
+	// Check forbidden magic threshold
+	if ((FORBIDDEN_SCHOOLS as readonly string[]).includes(spell.school)) {
+		const threshold = checkForbiddenThreshold(state.learnedSpells, spell.school as ForbiddenSchool, SPELL_CATALOG as unknown as Record<string, { school: string }>);
+		if (threshold && !state.forbiddenPassives.includes(threshold.passiveName)) {
+			state.forbiddenPassives.push(threshold.passiveName);
+			addMessage(state, `Dark power awakens: ${threshold.passiveName} — ${threshold.description}`, 'magic');
+		}
+	}
+
 	return true;
 }
 
@@ -3345,6 +3388,23 @@ export function handleInput(state: GameState, key: string): GameState {
 			return { ...state };
 		}
 		return state; // Block other input during attribute allocation
+	}
+
+	// Specialization selection mode
+	if (state.pendingSpecialization) {
+		const specs = getAvailableSpecializations(state.characterLevel, state.schoolMastery as unknown as SchoolMastery, state.specialization);
+		const index = parseInt(key) - 1;
+		if (index >= 0 && index < specs.length) {
+			state.specialization = specs[index].id;
+			state.pendingSpecialization = false;
+			addMessage(state, `You have become a ${specs[index].name}! ${specs[index].description}`, 'level_up');
+			return { ...state };
+		}
+		if (key === 'Escape') {
+			state.pendingSpecialization = false; // skip for now
+			return { ...state };
+		}
+		return state;
 	}
 
 	// Open spell menu (M key)

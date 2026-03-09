@@ -92,6 +92,10 @@ interface SerializedState {
 	leyLineLevel?: number;
 	// Terrain effects from spells
 	terrainEffects?: GameState['terrainEffects'];
+	// Class specialization & forbidden passives
+	specialization?: string | null;
+	pendingSpecialization?: boolean;
+	forbiddenPassives?: string[];
 }
 
 interface SerializedCachedLocation {
@@ -230,6 +234,9 @@ export function serializeState(state: GameState): string {
 			forbiddenCosts: state.forbiddenCosts,
 			leyLineLevel: state.leyLineLevel,
 			terrainEffects: state.terrainEffects,
+			specialization: state.specialization,
+			pendingSpecialization: state.pendingSpecialization,
+			forbiddenPassives: state.forbiddenPassives,
 		}
 	};
 	return JSON.stringify(data);
@@ -323,6 +330,9 @@ export function deserializeState(json: string): GameState {
 		},
 		leyLineLevel: s.leyLineLevel ?? 0,
 		terrainEffects: s.terrainEffects ?? [],
+		specialization: s.specialization ?? null,
+		pendingSpecialization: s.pendingSpecialization ?? false,
+		forbiddenPassives: s.forbiddenPassives ?? [],
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

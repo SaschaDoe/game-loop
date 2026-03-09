@@ -216,3 +216,70 @@ export const MASTER_PASSIVES: Record<SpellSchool, PassiveBonus> = {
 	conjuration: { description: '+50% summon HP and damage',                 key: 'summon_stat_bonus',          value: 0.50 },
 	shadow:      { description: '2x damage from stealth',                    key: 'stealth_damage_multiplier',  value: 2.0 },
 };
+
+// ---------------------------------------------------------------------------
+// Class Specializations
+// ---------------------------------------------------------------------------
+
+export interface Specialization {
+	id: string;
+	name: string;
+	description: string;
+	requiredSchool?: MasterySchool;  // must be adept+ in this school
+	bonuses: string; // description of bonuses
+}
+
+export const SPECIALIZATIONS: Record<string, Specialization> = {
+	archmage:      { id: 'archmage',      name: 'Archmage',      description: '-20% spell mana cost',                                    bonuses: 'manaCostReduction' },
+	elementalist:  { id: 'elementalist',   name: 'Elementalist',  description: '+50% elemental damage',         requiredSchool: 'elements',    bonuses: 'elementDmgBonus' },
+	battlemage:    { id: 'battlemage',     name: 'Battlemage',    description: 'No armor penalty for medium',                             bonuses: 'armorPenaltyFree' },
+	healer:        { id: 'healer',         name: 'Healer',        description: '+50% healing output',           requiredSchool: 'restoration', bonuses: 'healBonus' },
+	shadowcaster:  { id: 'shadowcaster',   name: 'Shadowcaster',  description: '2x invisibility duration',     requiredSchool: 'shadow',      bonuses: 'stealthBonus' },
+	artificer:     { id: 'artificer',      name: 'Artificer',     description: '100% enchanting success',       requiredSchool: 'enchantment', bonuses: 'enchantSuccess' },
+	seer:          { id: 'seer',           name: 'Seer',          description: 'Permanent enemy analysis',      requiredSchool: 'divination',  bonuses: 'autoAnalysis' },
+};
+
+export function getAvailableSpecializations(
+	charLevel: number,
+	mastery: SchoolMastery,
+	currentSpec: string | null
+): Specialization[] {
+	if (currentSpec !== null) return []; // already specialized
+	if (charLevel < 10) return []; // must be level 10+
+
+	return Object.values(SPECIALIZATIONS).filter(spec => {
+		if (!spec.requiredSchool) return true; // no school requirement (archmage, battlemage)
+		const level = getMasteryLevel(mastery[spec.requiredSchool] ?? 0);
+		return level === 'adept' || level === 'master';
+	});
+}
+
+// ---------------------------------------------------------------------------
+// Forbidden Magic Threshold Events
+// ---------------------------------------------------------------------------
+
+export interface ForbiddenThreshold {
+	school: ForbiddenSchool;
+	spellCount: number; // triggers at 5
+	passiveName: string;
+	description: string;
+}
+
+export const FORBIDDEN_THRESHOLDS: ForbiddenThreshold[] = [
+	{ school: 'blood', spellCount: 5, passiveName: 'Blood Frenzy', description: 'Attacks heal 1 HP' },
+	{ school: 'necromancy', spellCount: 5, passiveName: 'Undead Accord', description: 'Undead enemies ignore you' },
+	{ school: 'void_magic', spellCount: 5, passiveName: 'Void Whisper', description: 'Periodically reveal nearby secrets' },
+	{ school: 'chronomancy', spellCount: 5, passiveName: 'Temporal Sense', description: 'Automatic trap awareness' },
+	{ school: 'soul', spellCount: 5, passiveName: 'Soul Sight', description: 'See all entities through walls' },
+];
+
+export function checkForbiddenThreshold(
+	learnedSpells: string[],
+	school: ForbiddenSchool,
+	spellCatalog: Record<string, { school: string }>
+): ForbiddenThreshold | null {
+	const count = learnedSpells.filter(id => spellCatalog[id]?.school === school).length;
+	const threshold = FORBIDDEN_THRESHOLDS.find(t => t.school === school);
+	if (threshold && count >= threshold.spellCount) return threshold;
+	return null;
+}

@@ -10,8 +10,13 @@ import {
 	ALL_SCHOOLS,
 	FORBIDDEN_SCHOOLS,
 	MASTERY_THRESHOLDS,
+	getAvailableSpecializations,
+	SPECIALIZATIONS,
+	checkForbiddenThreshold,
+	FORBIDDEN_THRESHOLDS,
 } from './mastery';
 import type { CharacterClass } from './types';
+import type { SchoolMastery } from './mastery';
 
 // ---------------------------------------------------------------------------
 // Mastery Level Thresholds
@@ -279,5 +284,102 @@ describe('Passive Bonuses', () => {
 
 	it('master shadow bonus is 2x stealth damage', () => {
 		expect(MASTER_PASSIVES.shadow.value).toBe(2.0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Class Specializations
+// ---------------------------------------------------------------------------
+
+describe('getAvailableSpecializations', () => {
+	it('returns empty array below level 10', () => {
+		const mastery = createEmptyMastery();
+		const result = getAvailableSpecializations(9, mastery, null);
+		expect(result).toEqual([]);
+	});
+
+	it('returns specializations at level 10 (archmage and battlemage have no school requirement)', () => {
+		const mastery = createEmptyMastery();
+		const result = getAvailableSpecializations(10, mastery, null);
+		// At minimum, archmage and battlemage should be available (no school requirement)
+		expect(result.length).toBeGreaterThanOrEqual(2);
+		expect(result.some(s => s.id === 'archmage')).toBe(true);
+		expect(result.some(s => s.id === 'battlemage')).toBe(true);
+	});
+
+	it('returns school-gated specializations when school is adept', () => {
+		const mastery = createEmptyMastery();
+		mastery.elements = 200; // adept threshold
+		const result = getAvailableSpecializations(10, mastery, null);
+		expect(result.some(s => s.id === 'elementalist')).toBe(true);
+	});
+
+	it('returns school-gated specializations when school is master', () => {
+		const mastery = createEmptyMastery();
+		mastery.restoration = 1000; // master threshold
+		const result = getAvailableSpecializations(10, mastery, null);
+		expect(result.some(s => s.id === 'healer')).toBe(true);
+	});
+
+	it('does not return school-gated specializations when school is novice', () => {
+		const mastery = createEmptyMastery();
+		mastery.elements = 50; // novice
+		const result = getAvailableSpecializations(10, mastery, null);
+		expect(result.some(s => s.id === 'elementalist')).toBe(false);
+	});
+
+	it('returns empty if already specialized', () => {
+		const mastery = createEmptyMastery();
+		mastery.elements = 200;
+		const result = getAvailableSpecializations(10, mastery, 'archmage');
+		expect(result).toEqual([]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Forbidden Magic Thresholds
+// ---------------------------------------------------------------------------
+
+describe('checkForbiddenThreshold', () => {
+	const mockCatalog: Record<string, { school: string }> = {
+		spell_b1: { school: 'blood' },
+		spell_b2: { school: 'blood' },
+		spell_b3: { school: 'blood' },
+		spell_b4: { school: 'blood' },
+		spell_b5: { school: 'blood' },
+		spell_b6: { school: 'blood' },
+		spell_n1: { school: 'necromancy' },
+		spell_e1: { school: 'elements' },
+	};
+
+	it('returns null below 5 spells of that school', () => {
+		const learned = ['spell_b1', 'spell_b2', 'spell_b3', 'spell_b4'];
+		const result = checkForbiddenThreshold(learned, 'blood', mockCatalog);
+		expect(result).toBeNull();
+	});
+
+	it('returns threshold at exactly 5 spells', () => {
+		const learned = ['spell_b1', 'spell_b2', 'spell_b3', 'spell_b4', 'spell_b5'];
+		const result = checkForbiddenThreshold(learned, 'blood', mockCatalog);
+		expect(result).not.toBeNull();
+		expect(result!.passiveName).toBe('Blood Frenzy');
+	});
+
+	it('returns threshold above 5 spells', () => {
+		const learned = ['spell_b1', 'spell_b2', 'spell_b3', 'spell_b4', 'spell_b5', 'spell_b6'];
+		const result = checkForbiddenThreshold(learned, 'blood', mockCatalog);
+		expect(result).not.toBeNull();
+	});
+
+	it('does not count spells from other schools', () => {
+		const learned = ['spell_b1', 'spell_b2', 'spell_b3', 'spell_b4', 'spell_n1', 'spell_e1'];
+		const result = checkForbiddenThreshold(learned, 'blood', mockCatalog);
+		expect(result).toBeNull(); // only 4 blood spells
+	});
+
+	it('returns null for school with no matching spells', () => {
+		const learned = ['spell_e1'];
+		const result = checkForbiddenThreshold(learned, 'necromancy', mockCatalog);
+		expect(result).toBeNull();
 	});
 });

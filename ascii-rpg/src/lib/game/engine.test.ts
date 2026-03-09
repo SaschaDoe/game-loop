@@ -112,6 +112,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		activeSummon: null,
 		scriedLevel: null,
 		terrainEffects: [],
+		specialization: null,
+		pendingSpecialization: false,
+		forbiddenPassives: [],
 		...overrides
 	};
 }

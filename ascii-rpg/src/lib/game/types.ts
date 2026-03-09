@@ -454,6 +454,13 @@ export interface GameState {
 
 	// Terrain effects from spells
 	terrainEffects: TerrainEffect[];
+
+	// Class specialization
+	specialization: string | null;
+	pendingSpecialization: boolean;
+
+	// Forbidden magic passives
+	forbiddenPassives: string[]; // e.g. ['Blood Frenzy', 'Temporal Sense']
 }
 
 // ---------------------------------------------------------------------------
