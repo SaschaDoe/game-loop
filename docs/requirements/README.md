@@ -89,3 +89,4 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 75-class-system | Warrior, mage, rogue class definitions |
 | 76-dragon-gameplay | Dragon encounters, dragon riding, dragonborn heritage |
 | 77-roguelike-elements | Procedural events, permutation modifiers, daily challenges |
+| 78-arcane-academy | Full magic school: 8 lessons, 4 spell schools, classmates, quests, campus, history |
