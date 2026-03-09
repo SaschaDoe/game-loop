@@ -1833,6 +1833,16 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 						if (reagentItem) containerItems.push({ ...reagentItem });
 					}
 
+					// 5% chance of a ritual tome (level 3+)
+					if (level >= 3 && rng.next() < 0.05) {
+						const tomeKeys = Object.keys(ITEM_CATALOG).filter(k => ITEM_CATALOG[k].teachesRitual);
+						if (tomeKeys.length > 0) {
+							const tomePick = tomeKeys[Math.floor(rng.next() * tomeKeys.length)];
+							const tome = ITEM_CATALOG[tomePick];
+							if (tome) containerItems.push({ ...tome });
+						}
+					}
+
 					const container: WorldContainer = {
 						id: `container_${level}_${ci}`,
 						pos: { x: cx, y: cy },
@@ -2587,6 +2597,17 @@ export function openContainer(state: GameState, containerId: string): GameState 
 export function useInventoryItem(state: GameState, index: number): GameState {
 	const item = state.inventory[index];
 	if (!item) return state;
+
+	// Ritual tomes — consume to learn ritual
+	if (item.teachesRitual) {
+		if (state.learnedRituals.includes(item.teachesRitual)) {
+			addMessage(state, `You already know this ritual.`, 'info');
+			return { ...state };
+		}
+		learnRitual(state, item.teachesRitual);
+		state.inventory[index] = null;
+		return { ...state };
+	}
 
 	if (item.type === 'book' && item.pages) {
 		state.activeBookReading = { bookId: item.id, currentPage: 0 };

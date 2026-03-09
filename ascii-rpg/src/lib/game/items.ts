@@ -38,6 +38,7 @@ export interface Item {
 	weaponEffect?: WeaponEffect;
 	setId?: string;
 	isArtifact?: boolean;
+	teachesRitual?: string;
 }
 
 export type ContainerSize = 'small' | 'medium' | 'big';
@@ -748,6 +749,38 @@ export const ITEM_CATALOG: Record<string, Item> = {
 	dreamleaf: {
 		id: 'dreamleaf', name: 'Dreamleaf', char: '"', color: '#c8f',
 		type: 'misc', description: 'Translucent leaves that curl into spirals when touched. Used in divination and dream-walking elixirs.',
+	},
+
+	// --- Ritual Tomes ---
+	tome_ward_of_protection: {
+		id: 'tome_ward_of_protection', name: 'Tome of Warding', char: '+', color: '#88f',
+		type: 'consumable', description: 'An ancient text describing the Ward of Protection ritual.',
+		teachesRitual: 'ritual_ward_of_protection',
+	},
+	tome_summoning_circle: {
+		id: 'tome_summoning_circle', name: 'Tome of Summoning', char: '+', color: '#f8f',
+		type: 'consumable', description: 'A forbidden text on summoning arcane familiars.',
+		teachesRitual: 'ritual_summoning_circle',
+	},
+	tome_scrying: {
+		id: 'tome_scrying', name: 'Tome of Scrying', char: '+', color: '#ff8',
+		type: 'consumable', description: 'Crystal-etched pages reveal the art of far-sight.',
+		teachesRitual: 'ritual_scrying',
+	},
+	tome_purification: {
+		id: 'tome_purification', name: 'Tome of Purification', char: '+', color: '#8f8',
+		type: 'consumable', description: 'Restoration texts from a forgotten healer-order.',
+		teachesRitual: 'ritual_purification',
+	},
+	tome_teleportation_circle: {
+		id: 'tome_teleportation_circle', name: 'Tome of Teleportation', char: '+', color: '#8ff',
+		type: 'consumable', description: 'Conjuration diagrams for anchoring spatial portals.',
+		teachesRitual: 'ritual_teleportation_circle',
+	},
+	tome_sealing: {
+		id: 'tome_sealing', name: 'Tome of Sealing', char: '+', color: '#a6a',
+		type: 'consumable', description: 'Shadow-bound pages describing the sealing of passages.',
+		teachesRitual: 'ritual_sealing',
 	},
 
 	// --- Arcane Conservatory: Potions & Elixirs ---
