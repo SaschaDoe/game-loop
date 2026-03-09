@@ -2607,6 +2607,14 @@ function castSpellById(state: GameState, spellId: string): GameState {
 		return { ...state };
 	}
 
+	// Area targeting: enter cursor mode
+	if (spell.targetType === 'area') {
+		state.spellTargeting = { spellId: spell.id, targetType: 'area', cursorPos: { ...state.player.pos } };
+		state.spellMenuOpen = false;
+		addMessage(state, `${spell.name}: Move cursor (WASD), Enter to cast, Escape to cancel.`, 'magic');
+		return { ...state };
+	}
+
 	// Fallback: cast on self
 	const result = executeSpell(spell, state.player, [], armorWeight);
 	for (const msg of result.messages) addMessage(state, msg.text, msg.type);
@@ -2736,6 +2744,36 @@ export function handleInput(state: GameState, key: string): GameState {
 					return { ...state };
 				}
 				const armorWeight = getEquippedArmorWeight(state.equipment, CLASS_PROFILES[state.characterConfig.characterClass]);
+
+				// Counter-spell check: if target is channeling, attempt to interrupt
+				if (target.channeling) {
+					const enemySpell = getSpellDef(target.channeling.spellId);
+					let counterChance = 0.40; // base: any spell
+					if (spell.school === enemySpell?.school) counterChance = 0.60;
+					if (spell.id === 'spell_dispel') counterChance = 0.80;
+					// Opposing elements
+					if ((spell.element === 'fire' && enemySpell?.element === 'ice') ||
+						(spell.element === 'ice' && enemySpell?.element === 'fire') ||
+						(spell.element === 'lightning' && enemySpell?.element === 'shadow') ||
+						(spell.element === 'holy' && enemySpell?.element === 'shadow')) {
+						counterChance = 1.0;
+					}
+
+					if (Math.random() < counterChance) {
+						target.channeling = null;
+						addMessage(state, `Your ${spell.name} counters ${target.name}'s ${enemySpell?.name ?? 'spell'}! It fizzles!`, 'magic');
+						// Consume mana and set cooldown
+						state.player.mana = (state.player.mana ?? 0) - effectiveManaCost(spell, armorWeight);
+						state.spellCooldowns[spell.id] = spell.cooldown;
+						state.spellTargeting = null;
+						moveEnemies(state);
+						return { ...state };
+					} else {
+						addMessage(state, `You failed to counter ${target.name}'s ${enemySpell?.name ?? 'spell'}!`, 'warning');
+						// Fall through to normal spell execution
+					}
+				}
+
 				const result = executeSpell(spell, state.player, [target], armorWeight);
 				for (const msg of result.messages) addMessage(state, msg.text, msg.type);
 				if (result.success) {
@@ -2746,6 +2784,48 @@ export function handleInput(state: GameState, key: string): GameState {
 
 			state.spellTargeting = null;
 			moveEnemies(state);
+			return { ...state };
+		}
+
+		if (targeting.targetType === 'area') {
+			if (key === 'Enter' || key === ' ') {
+				// Cast at cursor position
+				const cursorPos = targeting.cursorPos ?? state.player.pos;
+				const radius = spell.aoeRadius;
+				const targets = state.enemies.filter(e =>
+					Math.abs(e.pos.x - cursorPos.x) <= radius && Math.abs(e.pos.y - cursorPos.y) <= radius
+				);
+
+				const armorWeight = getEquippedArmorWeight(state.equipment, CLASS_PROFILES[state.characterConfig.characterClass]);
+				const charClass = state.characterConfig.characterClass;
+				const result = executeSpell(spell, state.player, targets, armorWeight);
+				for (const msg of result.messages) addMessage(state, msg.text, msg.type);
+				if (result.success) {
+					state.spellCooldowns[spell.id] = spell.cooldown;
+					handleSpellKills(state, result.killedEnemies);
+					state.schoolMastery = addMasteryXP(state.schoolMastery as any, spell.school as any, 5, charClass) as unknown as Record<string, number>;
+				}
+				state.spellTargeting = null;
+				moveEnemies(state);
+				return { ...state };
+			}
+
+			// Move cursor
+			let cdx = 0, cdy = 0;
+			if (key === 'w' || key === 'ArrowUp') cdy = -1;
+			else if (key === 's' || key === 'ArrowDown') cdy = 1;
+			else if (key === 'a' || key === 'ArrowLeft') cdx = -1;
+			else if (key === 'd' || key === 'ArrowRight') cdx = 1;
+			else return state;
+
+			const cursor = targeting.cursorPos ?? state.player.pos;
+			const newX = cursor.x + cdx;
+			const newY = cursor.y + cdy;
+			// Keep cursor within range (e.g., 8 tiles from player)
+			const maxRange = 8;
+			if (Math.abs(newX - state.player.pos.x) <= maxRange && Math.abs(newY - state.player.pos.y) <= maxRange) {
+				state.spellTargeting = { ...targeting, cursorPos: { x: newX, y: newY } };
+			}
 			return { ...state };
 		}
 		return state;

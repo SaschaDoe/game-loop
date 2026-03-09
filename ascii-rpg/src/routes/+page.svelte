@@ -54,6 +54,19 @@
 	let worldSeed = $state('');
 	let state: GameState = $state(createGame());
 	let grid = $derived(renderColored(state));
+
+	function aoeHighlight(x: number, y: number): string {
+		const t = state.spellTargeting;
+		if (!t || t.targetType !== 'area' || !t.cursorPos) return '';
+		const spell = getSpellDef(t.spellId);
+		const radius = spell?.aoeRadius ?? 0;
+		const cx = t.cursorPos.x;
+		const cy = t.cursorPos.y;
+		if (x === cx && y === cy) return 'background:#884;'; // cursor center
+		if (Math.abs(x - cx) <= radius && Math.abs(y - cy) <= radius) return 'background:#432;'; // affected area
+		return '';
+	}
+
 	let nameInput: HTMLInputElement;
 	let logExpanded = $state(false);
 	let journalOpen = $state(false);
@@ -531,7 +544,7 @@
 					: `${state.xp}/${xpForLevel(state.characterLevel + 1)} XP`}</span
 			>
 		</div>
-		<pre class="map">{#each grid as row, y}{#each row as cell}<span style="color:{cell.color}">{cell.char}</span>{/each}{#if y < grid.length - 1}
+		<pre class="map">{#each grid as row, y}{#each row as cell, x}<span style="color:{cell.color};{aoeHighlight(x, y)}">{cell.char}</span>{/each}{#if y < grid.length - 1}
 {/if}{/each}</pre>
 		<div class="combat-log-header">
 			<span class="log-title">Combat Log</span>
@@ -952,7 +965,11 @@
 	{#if state.spellTargeting}
 		<div class="targeting-overlay">
 			<div class="targeting-hint">
-				<span style="color:#ff8">{getSpellDef(state.spellTargeting.spellId)?.name ?? 'Spell'}: Choose direction (WASD) · ESC cancel</span>
+				{#if state.spellTargeting.targetType === 'area'}
+					<span style="color:#ff8">{getSpellDef(state.spellTargeting.spellId)?.name ?? 'Spell'}: Move cursor (WASD) · Enter to cast · ESC cancel</span>
+				{:else}
+					<span style="color:#ff8">{getSpellDef(state.spellTargeting.spellId)?.name ?? 'Spell'}: Choose direction (WASD) · ESC cancel</span>
+				{/if}
 			</div>
 		</div>
 	{/if}
