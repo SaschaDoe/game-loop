@@ -3312,10 +3312,19 @@ export function handleInput(state: GameState, key: string): GameState {
 			return { ...state };
 		}
 		if (key === 's' || key === 'ArrowDown') {
-			state.spellMenuCursor = Math.min(state.learnedSpells.length - 1, state.spellMenuCursor + 1);
+			state.spellMenuCursor = Math.min(state.learnedSpells.length + state.learnedRituals.length - 1, state.spellMenuCursor + 1);
 			return { ...state };
 		}
 		if (key === 'Enter' || key === ' ') {
+			if (state.spellMenuCursor >= state.learnedSpells.length) {
+				const ritualIdx = state.spellMenuCursor - state.learnedSpells.length;
+				const ritualId = state.learnedRituals[ritualIdx];
+				if (ritualId) {
+					beginRitual(state, ritualId);
+					return { ...state };
+				}
+				return state;
+			}
 			return castSpellFromMenu(state, state.spellMenuCursor);
 		}
 		return state;
@@ -4317,12 +4326,19 @@ export function renderColored(state: GameState): { char: string; color: string }
 			const isVisible = vis === Visibility.Visible;
 
 			if (state.player.pos.x === x && state.player.pos.y === y) {
-				const playerColor = effectColor(state.player) ?? state.player.color;
-				row.push({ char: '@', color: playerColor });
+				if (state.ritualChanneling && state.ritualChanneling.turnsRemaining > 0) {
+					const pulseChar = state.turnCount % 2 === 0 ? '@' : '*';
+					row.push({ char: pulseChar, color: '#c8f' });
+				} else {
+					const playerColor = effectColor(state.player) ?? state.player.color;
+					row.push({ char: '@', color: playerColor });
+				}
 			} else if (isVisible) {
 				const enemy = state.enemies.find((e) => e.pos.x === x && e.pos.y === y);
 				const npc = state.npcs.find((n) => n.pos.x === x && n.pos.y === y);
-				if (enemy) {
+				if (state.activeSummon && state.activeSummon.hp > 0 && state.activeSummon.pos.x === x && state.activeSummon.pos.y === y) {
+					row.push({ char: state.activeSummon.char, color: state.activeSummon.color });
+				} else if (enemy) {
 					const alertSym = enemy.awareness ? getAlertSymbol(enemy.awareness.alertState) : '';
 					const enemyColor = alertSym ? getAlertColor(enemy.awareness!.alertState) : (effectColor(enemy) ?? enemy.color);
 					row.push({ char: alertSym || enemy.char, color: enemyColor });
@@ -4356,10 +4372,17 @@ export function renderColored(state: GameState): { char: string; color: string }
 								const tChar = terrain.type === 'burning' ? '~' : terrain.type === 'frozen' ? '.' : '*';
 								const tColor = terrain.type === 'burning' ? '#f44' : terrain.type === 'frozen' ? '#0ff' : '#ff0';
 								row.push({ char: tChar, color: tColor });
+							} else if (state.teleportAnchors[state.level]?.x === x && state.teleportAnchors[state.level]?.y === y) {
+								row.push({ char: 'O', color: '#ff8' });
 							} else {
 								const tile = state.map.tiles[y][x];
 								const isSecret = state.detectedSecrets.has(key);
-								row.push({ char: tile, color: tileColor(tile, isSecret) });
+								const inWard = state.activeWards.some(w => Math.abs(x - w.center.x) <= w.radius && Math.abs(y - w.center.y) <= w.radius);
+								if (inWard && tile === '.') {
+									row.push({ char: tile, color: '#448' });
+								} else {
+									row.push({ char: tile, color: tileColor(tile, isSecret) });
+								}
 							}
 						}
 					}

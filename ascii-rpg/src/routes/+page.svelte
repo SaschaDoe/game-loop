@@ -11,6 +11,7 @@
 	import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES } from '$lib/game/magic';
 	import { SPELL_CATALOG, getSpellDef, effectiveManaCost, SPELL_SCHOOL_COLORS } from '$lib/game/spells';
 	import type { ArmorWeight } from '$lib/game/spells';
+	import { getRitualDef } from '$lib/game/rituals';
 
 	declare const __APP_VERSION__: string;
 	declare const __BUILD_NUMBER__: string;
@@ -504,6 +505,14 @@
 			{#if state.learnedSpells.length > 0 || (state.player.mana ?? 0) > 0}
 				<span class="mp" style="color: {(state.player.mana ?? 0) < (state.player.maxMana ?? 1) * 0.2 ? '#f80' : '#4488ff'}">MP: {state.player.mana ?? 0}/{state.player.maxMana ?? 0}</span>
 			{/if}
+			{#if state.ritualChanneling && state.ritualChanneling.turnsRemaining > 0}
+				{@const ch = state.ritualChanneling}
+				{@const ritual = getRitualDef(ch.ritualId)}
+				{@const done = ch.turnsTotal - ch.turnsRemaining}
+				{@const bar = '='.repeat(done) + '-'.repeat(ch.turnsRemaining)}
+				<span style="color:#c8f"> Ritual: [{bar}] {done}/{ch.turnsTotal}</span>
+				<span style="color:#888"> {ritual?.name ?? ''} (any key to continue, ESC cancel)</span>
+			{/if}
 			{#if state.leyLineLevel === 0}
 				<span class="ley-indicator" style="color: #f44">LEY: DEAD</span>
 			{:else if state.leyLineLevel === 1}
@@ -964,7 +973,30 @@
 						</div>
 					{/if}
 				{/each}
-				{#if state.learnedSpells.length === 0}
+				{#if state.learnedRituals.length > 0}
+					<div class="spell-entry" style="border-left: 3px solid #555; color: #888; pointer-events: none;">
+						<span class="spell-name">--- RITUALS ---</span>
+					</div>
+					{#each state.learnedRituals as ritualId, ri}
+						{@const ritual = getRitualDef(ritualId)}
+						{@const menuIdx = state.learnedSpells.length + ri}
+						{@const noMana = (state.player.mana ?? 0) < (ritual?.manaCost ?? 0)}
+						{#if ritual}
+							<div
+								class="spell-entry"
+								class:spell-selected={state.spellMenuCursor === menuIdx}
+								class:spell-disabled={noMana}
+								style="border-left: 3px solid {SPELL_SCHOOL_COLORS[ritual.school] ?? '#888'}"
+							>
+								<span class="spell-slot">   </span>
+								<span class="spell-name">{ritual.name}</span>
+								<span class="spell-cost" style="color:{noMana ? '#f44' : '#4488ff'}">{ritual.manaCost} MP</span>
+								<span class="spell-effect">{ritual.castTurns}T · {ritual.description}</span>
+							</div>
+						{/if}
+					{/each}
+				{/if}
+				{#if state.learnedSpells.length === 0 && state.learnedRituals.length === 0}
 					<p style="color:#666">No spells learned yet.</p>
 				{/if}
 				<div class="dialogue-hint">W/S navigate · ENTER cast · ESC close</div>
