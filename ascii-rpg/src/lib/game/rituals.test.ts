@@ -8,7 +8,9 @@ import {
 	consumeReagents,
 } from './rituals';
 import type { RitualDef } from './rituals';
-import { createGame, learnRitual, handleInput } from './engine';
+import { createGame, learnRitual, handleInput, useInventoryItem } from './engine';
+import { serializeState, deserializeState } from './save';
+import { ITEM_CATALOG } from './items';
 import type { GameState } from './types';
 
 // ---------------------------------------------------------------------------
@@ -225,5 +227,69 @@ describe('Ritual Integration', () => {
 			startingLocation: 'cave', worldSeed: 'test', archetype: 'might',
 		});
 		expect(state.learnedRituals).toEqual([]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Save/Load roundtrip
+// ---------------------------------------------------------------------------
+
+describe('Ritual Save/Load', () => {
+	it('roundtrips ritual state through serialize/deserialize', () => {
+		const state = createGame({
+			name: 'Test', characterClass: 'mage', difficulty: 'normal',
+			startingLocation: 'cave', worldSeed: 'test',
+		});
+		learnRitual(state, 'ritual_ward_of_protection');
+		learnRitual(state, 'ritual_scrying');
+		state.teleportAnchors[1] = { x: 5, y: 5 };
+		state.scriedLevel = 3;
+		state.activeWards.push({ center: { x: 10, y: 10 }, radius: 2, damage: 5, turnsRemaining: 30 });
+
+		const json = serializeState(state);
+		const restored = deserializeState(json);
+
+		expect(restored.learnedRituals).toContain('ritual_ward_of_protection');
+		expect(restored.learnedRituals).toContain('ritual_scrying');
+		expect(restored.teleportAnchors[1]).toEqual({ x: 5, y: 5 });
+		expect(restored.scriedLevel).toBe(3);
+		expect(restored.activeWards).toHaveLength(1);
+		expect(restored.activeWards[0].turnsRemaining).toBe(30);
+		expect(restored.ritualChanneling).toBeNull();
+		expect(restored.activeSummon).toBeNull();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Ritual Tome Usage
+// ---------------------------------------------------------------------------
+
+describe('Ritual Tome Usage', () => {
+	it('learning a ritual from a tome consumes it', () => {
+		const state = createGame({
+			name: 'Test', characterClass: 'mage', difficulty: 'normal',
+			startingLocation: 'cave', worldSeed: 'test',
+		});
+		const tome = { ...ITEM_CATALOG['tome_ward_of_protection'] };
+		state.inventory[0] = tome;
+
+		useInventoryItem(state, 0);
+
+		expect(state.learnedRituals).toContain('ritual_ward_of_protection');
+		expect(state.inventory[0]).toBeNull();
+	});
+
+	it('using a tome for already-known ritual does not consume it', () => {
+		const state = createGame({
+			name: 'Test', characterClass: 'mage', difficulty: 'normal',
+			startingLocation: 'cave', worldSeed: 'test',
+		});
+		learnRitual(state, 'ritual_ward_of_protection');
+		const tome = { ...ITEM_CATALOG['tome_ward_of_protection'] };
+		state.inventory[0] = tome;
+
+		useInventoryItem(state, 0);
+
+		expect(state.inventory[0]).not.toBeNull();
 	});
 });
