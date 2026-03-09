@@ -20,7 +20,7 @@ The Arcane Academy is a full magical education experience. Players enroll as stu
 |------|------|---------|
 | `enrollment-and-progression.md` | Enrollment, calendar, class schedule, graduation | US-AA-01 to US-AA-08 |
 | `curriculum-and-lessons.md` | 8 real lessons across 4 schools, spells learned, alchemy brewed | US-AA-09 to US-AA-20 |
-| `magic-system-integration.md` | Mana, spell casting, counter-spells, reagents, alchemy stations | US-AA-21 to US-AA-32 |
+| `magic-system-integration.md` | Academy-specific magic (references Epic 79 for base system) | US-AA-21 to US-AA-26 |
 | `classmates-and-relationships.md` | 4 key NPCs: Rod, Elara, Fenn, Dorian — friendship/rivalry arcs | US-AA-33 to US-AA-44 |
 | `quests.md` | Main quest chain (10) + side quests (8+) | US-AA-45 to US-AA-62 |
 | `campus-and-exploration.md` | Campus layout, sealed wing, ancient ward, library secrets | US-AA-63 to US-AA-72 |
@@ -29,7 +29,7 @@ The Arcane Academy is a full magical education experience. Players enroll as stu
 | `houses-and-sorting.md` | 4 houses, sorting ceremony, common rooms, house reps, house quests, house points | US-AA-89 to US-AA-95 |
 | `teachers-and-school-life.md` | Faculty deep dives, school rituals, meals, curfew, background students | US-AA-96 to US-AA-107 |
 
-**Total: 107 user stories**
+**Total: 101 user stories** (6 moved to Epic 79)
 
 ## Key NPCs
 
@@ -64,7 +64,18 @@ The Arcane Academy is a full magical education experience. Players enroll as stu
 Sorting: 4-question philosophical ceremony. No wrong answers — choices reveal temperament.
 
 ## Dependencies
-- Spell system (`spells.ts`) — currently catalog-only, needs combat integration
-- Alchemy system (`alchemy.ts`) — currently catalog-only, needs crafting integration
-- Items system (`items.ts`) — reagent items exist, need dungeon spawning
-- Mana pool — needs to be added to GameState
+
+**Epic 79: Magic System** — The Academy's magic system is a subset of Epic 79. All base mechanics (attributes, mana, spell casting, alchemy, enchanting) are defined there. The Academy teaches:
+- 6 spells (Tier 1 only) from 4 of the 7 schools
+- 3 alchemy recipes
+- Basic enchantment concepts
+- Counter-spell awareness
+
+See `79-magic-system/README.md` for the full magic system.
+
+**Code dependencies:**
+- Spell system (`spells.ts`) — expanded in Epic 79, used by Academy lessons
+- Alchemy system (`alchemy.ts`) — crafting mechanics in Epic 79, recipes taught at Academy
+- Items system (`items.ts`) — reagent items exist, potion effects fixed in Epic 79
+- Attribute system — new in Epic 79 (STR/INT/WIL/AGI/VIT)
+- Mana system — new in Epic 79 (mana/maxMana on Entity)

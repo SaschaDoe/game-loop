@@ -54,17 +54,46 @@ The Academy campus is a living, explorable space — not just a room with NPCs. 
 **As a** student, **I find and read** books in the library that contain lore, recipes, and spell knowledge, **so that** the library is mechanically rewarding to explore.
 
 **Acceptance Criteria:**
-- 8-12 readable books on library shelves:
+- 15+ readable books on library shelves, organized into three categories:
+
+**Lore Books (free to read, no skill point):**
   1. "A Brief History of the Arcane Academy" — founding story, Celestine Voss
   2. "Elemental Theory for Beginners" — reviews fire/ice/lightning weaknesses
-  3. "The Alchemy Compendium" — hints at recipes not yet learned
-  4. "Ward Construction: A Practical Guide" — enchantment lore
-  5. "Famous Graduates of the Academy" — list of notable alumni (some names connect to other game content)
-  6. "The Incident of Year 647" — sanitized official account of the East Wing explosion
-  7. "Ley Lines and Their Properties" — magic system lore from docs/lore/05
-  8. "A Student's Journal" (hidden in the alcove) — unsanitized account of the Incident
+  3. "Ward Construction: A Practical Guide" — enchantment lore
+  4. "Famous Graduates of the Academy" — list of notable alumni (some names connect to other game content)
+  5. "The Incident of Year 647" — sanitized official account of the East Wing explosion
+  6. "Ley Lines and Their Properties" — magic system lore from docs/lore/05
+  7. "A Student's Journal" (hidden in the alcove) — unsanitized account of the Incident
+  8. "Thaumaturgy: Healing Through Faith" — describes Restoration magic tradition (does NOT teach spells)
+  9. "On the Dangers of Summoning" — describes Conjuration theory (flavor, does NOT teach)
+  10. "The Shadow Arts: A Critical Analysis" (restricted section) — describes Shadow school academically
+
+**Recipe Books (free to read):**
+  11. "The Alchemy Compendium" — reading teaches `recipe_strength_elixir`
+  12. "Thornwick's Annotated Formulae" (Thornwick's office) — reading teaches `recipe_fire_resistance` and `recipe_frost_ward`
+
+**Spell Tomes (cost 1 skill point to learn — see US-MS-55):**
+  13. "Binding Circles: Theory and Practice" — teaches `spell_binding_circle` (Enchantment Tier 1, stun 1 enemy 3 turns). Available on the main library shelves.
+  14. "Healing Mist: A Transmuter's Guide" — teaches `spell_healing_mist` (Alchemy Tier 1, heal 6 HP). Available on main shelves.
+  15. "Scryer's Handbook" (rare books section) — teaches `spell_scryers_mark` (Divination Tier 2, track target through walls). Requires completing the Library Card quest (US-AA-50) for access.
+
 - Books use the existing `activeBookReading` system (page flip with A/D)
-- Some books contain recipes: reading "The Alchemy Compendium" teaches `recipe_strength_elixir`
+- Spell tomes: on finishing the last page, prompt appears: "Internalize this spell? (Costs 1 skill point)" Yes → learn spell. No → can return later.
+- If 0 skill points: "You understand the theory but can't yet focus it into a castable spell. Come back when you've grown." Book remains available.
+- Maren occasionally hints at which books are most useful: "The binding circles text is on the third shelf. Practical knowledge, if you have the focus for it."
+
+### US-AA-66b: Library as Spell Learning Hub
+**As a** student, **I use** the library as a place to learn spells from books, **so that** self-directed study complements classroom lessons.
+
+**Acceptance Criteria:**
+- Spell tomes in the library follow the book-learning mechanic from Epic 79 (US-MS-55): reading teaches the spell, costs 1 skill point, tome is not consumed
+- The library's 3 spell tomes provide spells from schools the Academy teaches but that aren't covered in lessons:
+  - Binding Circle (Enchantment T1) — a useful combat utility the lessons skip
+  - Healing Mist (Alchemy T1) — self-healing spell, complementing the potions curriculum
+  - Scryer's Mark (Divination T2) — advanced divination for dedicated students
+- These are OPTIONAL — a student can graduate without reading any of them
+- Maren tracks which books the player has read: "Ah, you've read the binding circles text. Good. That one saved my life once."
+- Elara has already read all three and references them in dialogue: "The Scryer's Handbook changed how I see magic. Have you read it?"
 
 ### US-AA-67: The Restricted Section
 **As a** graduate or permitted student, **I access** the restricted section for advanced books, **so that** deeper lore and spells are available.

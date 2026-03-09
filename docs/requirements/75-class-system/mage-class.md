@@ -1,5 +1,7 @@
 # Mage Class
 
+> **NOTE:** Mana formula, spell schools, spell weaving, and specializations are now defined in **Epic 79: Magic System** (`docs/requirements/79-magic-system/`). See `attributes-and-resources.md` for mana, `spell-schools.md` for schools, `progression-and-learning.md` for specializations and class-specific paths. This file retains the mage class flavor/identity; mechanical details defer to Epic 79.
+
 As a player, I want the mage class to have elemental specialization, spell weaving, and arcane research mechanics that reward intelligent spell selection, so that mages feel cerebral and powerful.
 
 ## Details

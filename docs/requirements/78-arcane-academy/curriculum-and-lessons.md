@@ -57,57 +57,80 @@ Each lesson teaches a **real game mechanic** — a spell, a recipe, a combat tec
 - Teaches the concept of **counter-spells**: casting the opposing element while an enemy is casting negates their spell
 
 ## US-AA-13: Lesson 5 — Advanced Alchemy (Professor Thornwick)
-**As a** student, **I learn** the Antidote recipe and the Mana Potion recipe, **so that** I can brew curative and restorative potions.
+**As a** student, **I learn** the Antidote recipe, the Mana Potion recipe, and the Acid Splash spell, **so that** I can brew curative potions and use transmutation in combat.
 
 **Acceptance Criteria:**
 - Day 16 (unlocks ~4 days after Lesson 4)
 - Thornwick teaches two recipes:
   - Universal Antidote: Mandrake Root + Starfern (cures poison)
   - Mana Potion: Arcane Dust + Moonwater Vial (restores mana)
-- **Practical component:** Brew one of the two potions (player chooses which)
+- Thornwick also introduces combat transmutation: "Alchemy isn't just potions. Watch."
+  - Player learns `spell_acid_splash` (3 damage + -1 ATK 3 turns, Alchemy school Tier 1)
+  - "Conjured acid from raw reagent energy. The School of Alchemy has teeth."
+- **Practical component:** Brew one of the two potions (player chooses which), then cast Acid Splash at a practice dummy
 - Ingredients provided for the tutorial brew
 - Thornwick discusses the Philosopher's Draught as the pinnacle: "Five ingredients, added in order. Mandrake Root LAST or the solution crystallizes."
 - Elara asks about combining alchemy with enchantment. Thornwick gets uncomfortable.
 - **Exam relevant:** Ingredient knowledge tested
 
 ## US-AA-14: Lesson 6 — Divination Introduction (Librarian Maren)
-**As a** student, **I learn** the True Sight spell from the Librarian, **so that** I can see through darkness and illusion.
+**As a** student, **I learn** True Sight and Reveal Secrets from the Librarian, **so that** I can see through darkness, illusion, and hidden dangers.
 
 **Acceptance Criteria:**
 - Day 19 (unlocks ~3 days after Lesson 5)
 - Maren teaches in the library, not a classroom. "Divination isn't about power. It's about seeing what's already there."
 - **Practical component:** Cast True Sight, then search a prepared area of the library for hidden messages
 - Player learns `spell_true_sight` (+3 sight radius for 10 turns, reveals hidden)
-- Maren hints at the restricted section: "Some books don't want to be found. True Sight helps."
+- Maren then teaches detection: "Sight shows you what IS. But some things hide. You have to reach out and feel for them."
+- Player learns `spell_reveal_secrets` (detect traps + secrets in 5-tile radius, Divination Tier 1)
+- **Practical component 2:** Cast Reveal Secrets in a corridor near the library — detects a hidden bookshelf passage (lore flavor, leads to a small alcove with a minor item)
+- Maren hints at the restricted section: "Some books don't want to be found. True Sight helps. Reveal Secrets helps more."
 - Elara is suspiciously excited about this lesson
 - Fenn whispers: "Maren taught herself divination. Self-taught. Think about what that means."
 
-## US-AA-15: Lesson 7 — Golem Patterns and Construct Combat (Professor Ignis)
-**As a** student, **I learn** the Exam Golem's 3-turn attack cycle, **so that** I can survive the combat portion of the final exam.
+## US-AA-15: Lesson 7 — Advanced Combat and Dispelling (Professors Ignis & Ashveil)
+**As a** student, **I learn** the Dispel spell, the Lightning Arc spell, and the Exam Golem's attack pattern, **so that** I have Tier 2 combat options and can survive the final exam.
 
 **Acceptance Criteria:**
 - Day 23 (unlocks ~4 days after Lesson 6)
-- Professor Ignis teaches the 3-turn cycle: Charge (1-2 dmg), Charge (1-2 dmg), BLAST (8-12 dmg)
-- "The blast has melee range only. On every third turn, RETREAT one tile."
-- **Practical component:** Face a weakened training golem (10 HP, same pattern, reduced damage). Practice the retreat timing.
-- Training golem despawns after 9 turns (3 cycles) regardless of HP
-- The lesson teaches through gameplay, not just dialogue
-- **Exam relevant:** This IS the combat exam pattern
+- **Part 1 — Ashveil teaches Dispel (Enchantment Tier 2):**
+  - "Wards protect. But sometimes the enemy has wards too. Dispel strips them away."
+  - Player learns `spell_dispel` (remove all status effects from 1 target, 4 mana, 3 cd)
+  - "Dispel also works as a counter-spell against ANY school — not just opposing elements. Remember that."
+  - **Practical:** Ashveil casts a shield on a training dummy. Player must Dispel it, then destroy the dummy.
+- **Part 2 — Ignis teaches Lightning Arc (Elements Tier 2):**
+  - "Fire and ice are opposites. Lightning is something else — it hits EVERYTHING nearby."
+  - Player learns `spell_lightning_arc` (3 damage to up to 3 adjacent enemies, 6 mana, 4 cd)
+  - **Practical:** Three training dummies placed adjacent. Player casts Lightning Arc to hit all three.
+  - Rod: "Wait, it just jumps between them?! That's AMAZING." (tries it, hits himself somehow)
+- **Part 3 — Ignis teaches the Exam Golem pattern:**
+  - 3-turn cycle: Charge (1-2 dmg), Charge (1-2 dmg), BLAST (8-12 dmg)
+  - "The blast has melee range only. On every third turn, RETREAT one tile. Or cast a ranged spell from safety."
+  - **Practical:** Face a weakened training golem (10 HP, same pattern, reduced damage). Practice the retreat timing.
+  - Training golem despawns after 9 turns (3 cycles) regardless of HP
+- **Exam relevant:** The golem pattern IS the combat exam. Dispel and Lightning Arc give real tactical options for it.
 
-## US-AA-16: Lesson 8 — Final Review and Specialization (All Faculty)
-**As a** student, **I attend** the final review session and optionally choose a school to specialize in, **so that** I'm prepared for the exam and have a sense of identity.
+## US-AA-16: Lesson 8 — Advanced Techniques and Specialization (All Faculty)
+**As a** student, **I learn** one advanced spell from my house's school (Tier 2) and choose a specialization, **so that** I leave the Academy with real capability.
 
 **Acceptance Criteria:**
 - Day 26 (unlocks ~3 days after Lesson 7)
-- All four professors present in the Great Hall
-- Review covers: Health Potion recipe, elemental weaknesses, golem pattern, ward casting
-- **Specialization choice** (optional, flavor + small bonus):
-  - Elements: +1 spell damage
-  - Alchemy: Potions heal +2 more
-  - Enchantment: Wards last 2 more turns
+- All four professors present in the Great Hall for the final combined lesson
+- **House-specific advanced spell (Tier 2):** Each professor teaches one advanced spell to students of their house:
+  - **Pyraclaw (Ignis):** `spell_glacial_wall` — Glacial Wall (3-tile ice barrier 5 turns, 5 mana, 6 cd). "Fire teaches you to destroy. But a true elementalist also controls the battlefield."
+  - **Verdantia (Thornwick):** `spell_transmute_weapon` — Transmute Weapon (+2 ATK 5 turns, 5 mana, 6 cd). "You can change the nature of things. Start with your blade."
+  - **Ironveil (Ashveil):** `spell_reflective_shield` — Reflective Shield (reflect 50% melee damage 4 turns, 7 mana, 6 cd). "The best ward doesn't just protect. It punishes."
+  - **Glimmershade (Maren):** `spell_foresight` — Foresight (+20% dodge 5 turns, 6 mana, 6 cd). "See what's coming. Then don't be there."
+- Players from ALL houses also hear a brief description of the other three spells (knowledge, not learning)
+- **Specialization choice** (stored, affects gameplay):
+  - Elements: +1 spell damage permanently
+  - Alchemy: Potions brewed are +25% effective
+  - Enchantment: Ward/shield durations +2 turns
   - Divination: +1 permanent sight radius
 - Choice is stored but doesn't lock out any spells
+- Review covers: Health Potion recipe, elemental weaknesses, golem pattern, counter-spell reminder
 - "The exam begins in a few days. Study. Practice. Help each other."
+- Dorian: "Finally, something worth learning." Elara: *quietly studies all four spell descriptions*
 
 ---
 

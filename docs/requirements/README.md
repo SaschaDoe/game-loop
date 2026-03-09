@@ -90,3 +90,4 @@ Each subfolder represents an **epic** (a large feature area). Inside each epic f
 | 76-dragon-gameplay | Dragon encounters, dragon riding, dragonborn heritage |
 | 77-roguelike-elements | Procedural events, permutation modifiers, daily challenges |
 | 78-arcane-academy | Full magic school: 8 lessons, 4 spell schools, classmates, quests, campus, history |
+| 79-magic-system | **Single source of truth for all magic:** attributes, mana, 7 schools + 5 forbidden, spell catalog, casting, alchemy, enchanting, progression |

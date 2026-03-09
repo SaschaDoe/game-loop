@@ -221,7 +221,7 @@ These quests trigger automatically as the school year progresses. Completing the
 **Trigger:** Day 18 (choose which professor to help based on who you've impressed most)
 
 **Variants:**
-- **Ignis:** Help him test a new fire spell variant. Risk of explosion. Reward: learn `spell_lightning_arc` early.
+- **Ignis:** Help him test a new fire spell variant. Risk of explosion. Reward: learn `spell_fireball` early (Elements Tier 3 — the only Tier 3 spell teachable at the Academy).
 - **Thornwick:** Help tend the greenhouse. His plants are VERY unusual. Reward: 3 rare reagents + greenhouse lore.
 - **Ashveil:** Help her test a ward on the Sealed East Wing door. The ward fights back. Reward: Enchantment specialization bonus.
 - **Maren:** Help catalog ancient texts. One of them is in a language you don't know... yet. Reward: Deepscript rumor or lore.
@@ -245,3 +245,45 @@ These quests trigger automatically as the school year progresses. Completing the
 **Rewards:** +150 XP, Aldric's Grimoire (unique item), cross-school spell theory (late-game content hook), Elara's permanent friendship (she becomes available as a companion in the overworld)
 
 **Note:** This is endgame Academy content. It connects to the core lore twist (the Ascended's true nature) without resolving it.
+
+---
+
+## Library Quest Chain
+
+### US-AA-108: "The Lost Collection"
+**As a** student who has earned Maren's trust, **I help** the Librarian recover legendary spell tomes that have been lost, stolen, or hidden over the centuries, **so that** the library's knowledge is restored and I learn powerful spells along the way.
+
+**Trigger:** Day 10+ AND Library Card quest (US-AA-50) completed AND at least 2 library books read. Maren approaches: "You've been reading. I mean really reading, not just turning pages to look busy. I need someone who reads like that. The library is... incomplete."
+
+**Overview:** This is a multi-stage side quest spanning the entire school year. Maren reveals that the Academy library once held dozens of spell tomes, but over the centuries many were lost — stolen by expelled students, hidden by paranoid professors, carried off by graduates who never returned them, or deliberately concealed to keep dangerous knowledge from spreading. She has a list. She's been looking for decades. Now she has help.
+
+**Stage 1: "The Overdue Returns" (Day 10-15)**
+1. Maren gives the player a list of 3 books she knows are somewhere on campus
+2. **"Elemental Convergence" (Ignis's office):** Hidden behind a loose brick where Ignis hides his void-flame notes. Find by examining his office during class time when he's in the Great Hall. Ignis didn't steal it — it was already there when he arrived. Returning it: Maren reads a passage aloud. Teaches `spell_healing_mist` if not already known (Alchemy T1), or `spell_weapon_enchant` if already known (Enchantment T2, +3 ATK 10 turns).
+3. **"Thornwick's Private Formulary" (Greenhouse, locked cabinet):** Thornwick borrowed it 30 years ago and "forgot." Confront Thornwick or pick the lock. He blushes: "I was going to return it. I just... wanted to check one more thing. For thirty years." Teaches `recipe_invisibility` (alchemy recipe).
+4. **"The Warden's Manual" (Practice dungeon, floor 3):** A former student took it for dungeon practice and died. The book is in a skeleton's hands on floor 3. Teaches `spell_binding_circle` if not already known (Enchantment T1), or `spell_foresight` if already known (Divination T2).
+
+**Rewards (Stage 1):** +60 XP, Maren friendship +2, 1-2 spells depending on what you already know, Maren unlocks the rare books section for you.
+
+**Stage 2: "The Restricted Recovery" (Day 16-22)**
+1. Maren reveals that 2 spell tomes were deliberately placed in dangerous locations to keep them "safe"
+2. **"Principles of Counter-Magic" (Sub-basement, near the ancient ward):** This book was placed near the ward centuries ago as part of the protective layer. Taking it weakens the secondary ward slightly — Maren knows this and agonizes. She ultimately agrees the knowledge is worth more in students' hands than locked in stone. Teaches `spell_reflective_shield` if not already known (Enchantment T3), or teaches `spell_dispel` if not already known (Enchantment T2). If player knows both: teaches the unique `recipe_fortification` recipe.
+3. **"Dreaming and Seeing: Advanced Divination" (Glimmershade common room, hidden in the scrying pool's pedestal):** Lumi notices you searching. If Glimmershade house: she helps freely. If another house: she tests you with a riddle first. "What do you see when you close your eyes but refuse to sleep?" (Answer: "The truth" or "What's really there" or any honest philosophical answer — Lumi is flexible.) Teaches `spell_scryers_mark` if not already known (Divination T2), or `spell_enemy_analysis` (Divination T3, see target's full stats/weaknesses).
+
+**Rewards (Stage 2):** +80 XP, Maren friendship +3, 1-2 spells, lore about the Academy's protective measures, Lumi friendship +1
+
+**Stage 3: "The Legendary Tome" (Day 23+ or post-graduation)**
+1. Maren reveals the library's greatest loss: **"Celestine's Primer"** — the founder's personal spell book, containing spells from ALL four Academy schools at Tier 2-3. It was last seen 200 years ago, the night of the Incident.
+2. Maren believes it's in the Sealed East Wing. It cannot be recovered until post-graduation (US-AA-62).
+3. If the player has already completed the East Wing quest: Maren asks them to return to the wing with her guidance (a shorter delve, different rooms accessed). The Primer is found in Aldric's study — he was reading it when the experiment went wrong.
+4. If not yet graduated: Maren notes it in the player's journal as a future goal. "When you're ready. The book has waited two centuries. It can wait a little longer."
+5. **Celestine's Primer** is a unique spell tome that teaches ONE spell the player doesn't already know, chosen from: `spell_fireball` (Elements T3), `spell_sanctum` (Enchantment T4), `spell_stone_skin` (Alchemy T3), `spell_premonition` (Divination T4). Costs 2 skill points (legendary tome). The book also contains Celestine's personal notes — deep lore about why she founded the Academy and what she was truly protecting.
+
+**Rewards (Stage 3):** +120 XP, Maren friendship max, 1 high-tier spell (T3-T4), Celestine's Primer (readable lore item), title: "Keeper of the Collection"
+
+**Quest Design Notes:**
+- Each stage is self-contained — completing Stage 1 feels rewarding even if Stage 2 is never started
+- Books found during this quest teach spells the player doesn't already know (if they've learned the primary option through other means, a secondary option is offered)
+- The 1 skill point cost for book-learning (see US-MS-55) applies to all spell tomes found in this quest — the quest rewards the BOOKS, the player still pays the skill point to learn
+- Maren's dialogue evolves as you return books: from formal librarian to genuine warmth. By Stage 3 she treats you as a fellow keeper of knowledge, not a student.
+- Fenn comments on the quest at each stage: Stage 1: "You're running errands for the librarian? That's either very boring or very interesting. With Maren, probably both." Stage 2: "You're going WHERE for a BOOK? Libraries are supposed to be safe!" Stage 3: "Celestine's actual spell book. Do you understand what that IS? That's... that's history. Actual history. In your hands."

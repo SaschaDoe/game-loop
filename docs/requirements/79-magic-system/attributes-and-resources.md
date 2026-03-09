@@ -1,0 +1,279 @@
+# Attributes and Resources
+
+This document defines the core attribute system and mana resource system that all magic in the game depends on. It introduces five primary attributes to replace the current flat HP/ATK model, derives all combat and magic stats from those attributes, and establishes mana as the universal spellcasting resource. These systems are prerequisites for every other magic epic — spellcasting, schools of magic, forbidden magic, and psychic powers all build on the foundations defined here.
+
+**Epic:** 79 — Magic System
+**Stories:** US-MS-01 through US-MS-08
+**Dependencies:** Entity type (types.ts), CLASS_BONUSES (engine.ts), HUD (character-status-panel), save system (save.ts)
+**Depended on by:** 04-combat-system/magic-spells, 29-forbidden-magic, 52-psychic-powers, 78-arcane-academy
+
+---
+
+## User Stories
+
+### US-MS-01: Core Attributes
+
+**As a** player, **I want** my character to have meaningful attributes that differ by class, **so that** my class choice affects how I interact with every system in the game.
+
+**Acceptance Criteria:**
+- [ ] Entity has five new numeric fields: `str` (Strength), `int` (Intellect), `wil` (Willpower), `agi` (Agility), `vit` (Vitality)
+- [ ] Starting attribute values are assigned based on class at character creation:
+
+| Class       | STR | INT | WIL | AGI | VIT |
+|-------------|-----|-----|-----|-----|-----|
+| Warrior     |  14 |   8 |  10 |  10 |  12 |
+| Mage        |   6 |  16 |  14 |   8 |   8 |
+| Rogue       |   8 |  10 |   8 |  16 |  10 |
+| Ranger      |  10 |  10 |  10 |  14 |  10 |
+| Cleric      |   8 |  12 |  16 |   8 |  10 |
+| Paladin     |  14 |   8 |  14 |   6 |  12 |
+| Necromancer |   6 |  16 |  12 |   8 |   8 |
+| Bard        |   8 |  12 |  12 |  12 |  10 |
+
+- [ ] All starting attribute totals sum to 54 for every class (balanced point-buy)
+- [ ] On level up, the player's primary attribute (highest starting attribute for their class) gains +1 automatically
+- [ ] On level up, the player receives +1 free attribute point to allocate to any attribute
+- [ ] Attribute values are stored on Entity and persisted in save files
+- [ ] Monsters also have attributes (can be simplified — e.g., derived from their tier and level)
+- [ ] Attributes are validated: minimum value is 1, no maximum cap
+
+---
+
+### US-MS-02: Derived Stats
+
+**As a** player, **I want** my HP, attack power, and other combat stats to derive from my attributes, **so that** investing in attributes feels impactful and my build choices matter.
+
+**Acceptance Criteria:**
+- [ ] `maxHp` is calculated as: `10 + (VIT * 3) + (level * floor(VIT / 5))`
+- [ ] Physical `attack` is calculated as: `STR + weaponBonus` (weaponBonus defaults to 0 when no weapon equipped)
+- [ ] `spellPower` is calculated as: `INT + floor(WIL / 3)` — used to scale all spell damage and healing
+- [ ] `magicResist` is calculated as: `WIL + floor(INT / 4)` — incoming spell damage reduced by `magicResist`%, capped at 50%
+- [ ] `dodgeChance` is calculated as: `AGI * 0.5`% base (before equipment modifiers)
+- [ ] `critChance` is calculated as: `AGI * 0.3`% base (before equipment modifiers)
+- [ ] Derived stats are recalculated whenever attributes change (level up, buff, debuff, equipment)
+- [ ] The existing flat `hp`, `maxHp`, and `attack` fields on Entity become derived values — no game system sets them directly anymore
+- [ ] A `recalculateDerivedStats(entity)` function exists and is called after any attribute mutation
+- [ ] Save migration: existing saves without attributes get attributes reverse-calculated from their current HP and ATK values:
+  - VIT is estimated from maxHp: `VIT = round((maxHp - 10) / 3)` (clamping to reasonable range 6-18)
+  - STR is estimated from attack: `STR = attack` (assuming no weapon bonus in old saves)
+  - INT, WIL, AGI default to 10 for migrated saves
+- [ ] Save version is incremented for the new attribute fields
+- [ ] All existing combat calculations continue to work — physical damage still uses `attack`, monsters still have meaningful HP
+
+---
+
+### US-MS-03: Mana Pool
+
+**As a** player, **I want** a mana pool that fuels my spellcasting, **so that** I must manage my magical resources strategically rather than casting unlimited spells.
+
+**Acceptance Criteria:**
+- [ ] Entity has two new numeric fields: `mana` and `maxMana`
+- [ ] Base `maxMana` is calculated as: `INT * 2 + (level * 3)`
+- [ ] Class modifier applied to maxMana after base calculation:
+  - Mage, Necromancer: +50% (multiply by 1.5, round down)
+  - Cleric, Bard: +25% (multiply by 1.25, round down)
+  - Warrior, Paladin: -25% (multiply by 0.75, round down)
+  - Rogue, Ranger: no modifier (1.0)
+- [ ] Mana starts at maxMana when creating a new game
+- [ ] Mana is restored to maxMana on rest at inn or camp
+- [ ] Mana persists across level transitions (not reset on stairs)
+- [ ] Mana is included in save/load serialization
+- [ ] If the player has zero learned spells, mana fields still exist on Entity but the HUD hides the MP bar (see US-MS-06)
+- [ ] On learning the first spell, the MP bar becomes visible without requiring any manual toggle
+- [ ] maxMana recalculates on level up (player may gain mana capacity mid-dungeon)
+- [ ] Current mana is clamped to maxMana after recalculation (never exceeds max)
+
+---
+
+### US-MS-04: Mana Regeneration
+
+**As a** player, **I want** mana to regenerate over time, **so that** I can recover from extended spellcasting without needing to constantly find consumables.
+
+**Acceptance Criteria:**
+- [ ] Base mana regeneration: +1 mana every 5 turns
+- [ ] INT bonus regeneration: +1 mana every `max(1, 20 - floor(INT / 2))` turns (higher INT = faster regen; at INT 16, regen every 12 turns; at INT 40, regen every 1 turn)
+- [ ] Base regen and INT bonus regen are tracked with separate turn counters and stack additively
+- [ ] Location-based regen multiplier applied to total regen amount:
+  - Ley Line convergence (Arcane Academy): 2.0x regen rate
+  - Near a Ley Line (within the Academy's region or marked tiles): 1.5x regen rate
+  - Normal locations: 1.0x regen rate
+  - Dead zone (anti-magic area): 0x regen (no mana regeneration at all)
+- [ ] Resting at an inn or camp restores mana to full (maxMana) instantly
+- [ ] Mana Potion consumable: restores 10 mana immediately, cannot exceed maxMana
+- [ ] Mana regeneration functions identically in and out of combat (no special combat regen rules)
+- [ ] Regen is processed during the turn update loop alongside status effect ticks
+- [ ] Regen does not occur when the player is dead or stunned
+
+---
+
+### US-MS-05: Mana Overload (Insufficient Mana)
+
+**As a** player, **I want** clear feedback when I lack mana to cast a spell, **so that** I understand the resource constraint and can plan accordingly.
+
+**Acceptance Criteria:**
+- [ ] If `mana < spellCost`, the spell cannot be cast
+- [ ] Attempting to cast with insufficient mana displays the message: `"Not enough mana! (need X, have Y)"` where X is the spell's cost and Y is current mana
+- [ ] The insufficient-mana message uses a distinct message type (e.g., `'warning'`) for color-coding in the combat log
+- [ ] In the spell selection menu, spells with cost > current mana are visually greyed out (dimmed text or grey color)
+- [ ] Greyed-out spells can still be selected (to show the "not enough mana" message) but do NOT consume the player's turn
+- [ ] Spells that the player has enough mana for show their cost in the menu: `"Fireball (8 MP)"`
+- [ ] There is no HP-to-mana conversion in the base system (this is reserved for Blood Magic in epic 29-forbidden-magic)
+- [ ] If the player has exactly enough mana (mana == spellCost), the spell casts successfully and mana drops to 0
+
+---
+
+### US-MS-06: Mana Display in HUD
+
+**As a** player, **I want** to see my mana alongside my health in the HUD, **so that** I can monitor my spellcasting resources at a glance.
+
+**Acceptance Criteria:**
+- [ ] The HUD displays an MP bar alongside the existing HP bar in the format: `"HP: 25/30 | MP: 15/20"`
+- [ ] The MP bar uses blue color (#4488ff) to visually distinguish it from the HP bar
+- [ ] The MP bar is only displayed when the player has learned at least 1 spell OR has mana > 0
+- [ ] If the player has no learned spells and mana equals 0, the MP bar is hidden entirely (shows only HP)
+- [ ] The MP bar shows current mana / max mana as integers
+- [ ] When a mana potion is consumed, the MP bar flashes briefly (CSS animation, ~300ms highlight) to draw attention to the mana gain
+- [ ] On small screens (mobile/compact layout), the MP bar uses a compact format: `"MP:15/20"` (no spaces)
+- [ ] The MP bar updates immediately when mana changes (casting, regen, potion) — no stale display
+- [ ] When mana drops below 20% of maxMana, the MP bar text changes to a warning color (e.g., red or orange) to signal low resources
+
+---
+
+### US-MS-07: Attribute Display
+
+**As a** player, **I want** to see my attributes and derived stats in the character panel, **so that** I understand my character's strengths and can make informed build decisions.
+
+**Acceptance Criteria:**
+- [ ] The character status panel displays all 5 core attributes with their current values: STR, INT, WIL, AGI, VIT
+- [ ] Attributes are displayed with abbreviated labels (e.g., `"STR: 14  INT: 8  WIL: 10  AGI: 10  VIT: 12"`)
+- [ ] Derived stats are shown below attributes: spellPower, magicResist, critChance (%), dodgeChance (%)
+- [ ] Derived stats display their calculated values (e.g., `"Spell Power: 19  Magic Resist: 18%  Crit: 4.8%  Dodge: 5.0%"`)
+- [ ] On hover or inspect (keyboard shortcut), each derived stat shows a tooltip/breakdown explaining its calculation (e.g., `"Spell Power: 16 (INT) + 3 (WIL/3) = 19"`)
+- [ ] Temporary attribute modifiers (buffs/debuffs) are shown in a different color: green for bonuses, red for penalties
+- [ ] The level-up screen shows the automatic +1 primary attribute gain and presents a selection UI for the free +1 allocation
+- [ ] The free attribute point allocation on level-up shows the current value of each attribute and previews the new derived stats when hovering over a choice
+- [ ] Attribute allocation is confirmed before being applied (no accidental misclicks)
+- [ ] If the player levels up mid-combat, attribute allocation is deferred until combat ends
+
+---
+
+### US-MS-08: Alternate Magic Resources (Hooks for Other Epics)
+
+**As a** developer, **I want** a well-defined interface for alternate magic resources, **so that** future epics (forbidden magic, psychic powers) can add new resource types without restructuring the core system.
+
+**Acceptance Criteria:**
+- [ ] An `AlternateResource` interface is defined in types.ts with the following shape:
+  ```typescript
+  interface AlternateResource {
+    id: string;              // unique identifier (e.g., 'blood_points', 'sanity')
+    name: string;            // display name
+    current: number;         // current value
+    max: number;             // maximum value
+    regenRate: number;       // per-turn regeneration (can be 0 or negative)
+    depletionEffect: string; // effect ID triggered when resource hits 0
+    color: string;           // HUD display color
+  }
+  ```
+- [ ] Entity has an optional `alternateResources: AlternateResource[]` field (empty array by default)
+- [ ] The following resource templates are documented as reference specifications (NOT implemented — just defined as comments or a design doc section):
+  - **Blood Points:** `max = VIT * 3`, regenRate = 0, depletionEffect = `'death'` — casting drains HP equal to spell cost; referenced by epic 29-forbidden-magic
+  - **Sanity:** `max = WIL * 5`, regenRate = +1 per 100 turns, depletionEffect = `'madness'` — lost on void spell cast, low sanity causes hallucinations; referenced by epic 29-forbidden-magic
+  - **Psi Points:** `max = (INT + WIL) * 2`, regenRate = 0 (recovered via meditation action), depletionEffect = `'psychic_burnout'` — powers psychic abilities; referenced by epic 52-psychic-powers
+  - **Soul Gems:** discrete items, NOT a pool — `max` represents inventory count, consumed on use, depletionEffect = `'none'`; referenced by epic 29-forbidden-magic
+- [ ] The HUD rendering logic supports displaying additional resource bars from `alternateResources` (but no resources are added by this epic)
+- [ ] The save/load system serializes and deserializes `alternateResources` correctly
+- [ ] Adding a new alternate resource requires no changes to the core engine — only the epic-specific module needs to push to the array
+- [ ] Unit tests verify the AlternateResource interface: creation, serialization round-trip, and depletion effect triggering
+
+---
+
+## Data Structures
+
+```typescript
+// New fields on Entity (types.ts)
+interface Entity {
+  // ... existing fields ...
+
+  // Core attributes (US-MS-01)
+  str: number;    // Strength — physical damage
+  int: number;    // Intellect — spell power, mana pool, mana regen
+  wil: number;    // Willpower — magic resist, spell power secondary, sanity
+  agi: number;    // Agility — dodge, crit, initiative
+  vit: number;    // Vitality — max HP, blood magic pool
+
+  // Mana (US-MS-03)
+  mana: number;
+  maxMana: number;
+
+  // Derived stats (US-MS-02) — recalculated, not stored directly
+  // maxHp: derived from VIT + level
+  // attack: derived from STR + weapon
+  spellPower: number;
+  magicResist: number;
+  dodgeChance: number;
+  critChance: number;
+
+  // Alternate resources (US-MS-08)
+  alternateResources: AlternateResource[];
+}
+
+interface AlternateResource {
+  id: string;
+  name: string;
+  current: number;
+  max: number;
+  regenRate: number;
+  depletionEffect: string;
+  color: string;
+}
+
+// Class attribute definitions
+const CLASS_ATTRIBUTES: Record<string, {
+  str: number; int: number; wil: number; agi: number; vit: number;
+  primaryAttribute: 'str' | 'int' | 'wil' | 'agi' | 'vit';
+  manaModifier: number;
+}> = {
+  warrior:     { str: 14, int:  8, wil: 10, agi: 10, vit: 12, primaryAttribute: 'str', manaModifier: 0.75 },
+  mage:        { str:  6, int: 16, wil: 14, agi:  8, vit:  8, primaryAttribute: 'int', manaModifier: 1.50 },
+  rogue:       { str:  8, int: 10, wil:  8, agi: 16, vit: 10, primaryAttribute: 'agi', manaModifier: 1.00 },
+  ranger:      { str: 10, int: 10, wil: 10, agi: 14, vit: 10, primaryAttribute: 'agi', manaModifier: 1.00 },
+  cleric:      { str:  8, int: 12, wil: 16, agi:  8, vit: 10, primaryAttribute: 'wil', manaModifier: 1.25 },
+  paladin:     { str: 14, int:  8, wil: 14, agi:  6, vit: 12, primaryAttribute: 'str', manaModifier: 0.75 },
+  necromancer: { str:  6, int: 16, wil: 12, agi:  8, vit:  8, primaryAttribute: 'int', manaModifier: 1.50 },
+  bard:        { str:  8, int: 12, wil: 12, agi: 12, vit: 10, primaryAttribute: 'int', manaModifier: 1.25 },
+};
+```
+
+## Formulas Quick Reference
+
+| Derived Stat   | Formula                                         | Example (Mage L1, INT 16, WIL 14, AGI 8, VIT 8) |
+|----------------|------------------------------------------------|---------------------------------------------------|
+| maxHp          | `10 + (VIT * 3) + (level * floor(VIT / 5))`   | 10 + 24 + (1 * 1) = 35                            |
+| attack         | `STR + weaponBonus`                             | 6 + 0 = 6                                         |
+| spellPower     | `INT + floor(WIL / 3)`                          | 16 + 4 = 20                                       |
+| magicResist    | `WIL + floor(INT / 4)` (capped 50%)            | 14 + 4 = 18%                                      |
+| dodgeChance    | `AGI * 0.5`%                                    | 4.0%                                               |
+| critChance     | `AGI * 0.3`%                                    | 2.4%                                               |
+| maxMana (base) | `INT * 2 + (level * 3)`                         | 32 + 3 = 35                                       |
+| maxMana (mod)  | `base * classModifier`                          | 35 * 1.5 = 52                                     |
+| mana regen (base) | `+1 per 5 turns`                             | +1 every 5 turns                                   |
+| mana regen (INT) | `+1 per max(1, 20 - floor(INT/2)) turns`      | +1 every 12 turns                                  |
+
+## Implementation Notes
+
+- **Backward compatibility:** The transition from flat stats to derived stats must not break existing combat. Run the full test suite after implementation to verify.
+- **Monster attributes:** Monsters can use simplified attributes derived from their tier and level rather than full 5-attribute spreads. A helper function `monsterAttributes(tier, level)` should generate reasonable defaults.
+- **Performance:** `recalculateDerivedStats()` will be called frequently. Keep it a simple arithmetic function with no allocations.
+- **Save migration:** Bump SAVE_VERSION. Old saves without attributes get reverse-calculated values. Test migration with saves from the current version.
+- **Turn counter for regen:** Use modular arithmetic (`turnCount % interval === 0`) rather than decrementing counters, to avoid drift.
+
+## Dependencies
+
+- `types.ts` — Entity interface changes
+- `engine.ts` — derived stat calculation, level-up changes, mana regen in turn loop
+- `save.ts` — serialization, migration, version bump
+- `+page.svelte` — HUD changes (MP bar, attribute display, level-up UI)
+- `abilities.ts` — spells will consume mana (but spell definitions are in a separate epic)
+- Epic 29 (forbidden-magic) — depends on AlternateResource interface for Blood Points, Sanity, Soul Gems
+- Epic 52 (psychic-powers) — depends on AlternateResource interface for Psi Points
+- Epic 78 (arcane-academy) — Academy location provides Ley Line convergence mana regen bonus
