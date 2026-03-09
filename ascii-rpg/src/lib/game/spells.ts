@@ -10,7 +10,11 @@ import { applyEffect, hasEffect } from './status-effects';
 // Schools & Tiers
 // ---------------------------------------------------------------------------
 
-export type SpellSchool = 'elements' | 'enchantment' | 'restoration' | 'divination' | 'alchemy' | 'conjuration' | 'shadow';
+export type SpellSchool = 'elements' | 'enchantment' | 'restoration' | 'divination' | 'alchemy' | 'conjuration' | 'shadow'
+	| 'blood' | 'necromancy' | 'void_magic' | 'chronomancy' | 'soul';
+
+export type ForbiddenSchool = 'blood' | 'necromancy' | 'void_magic' | 'chronomancy' | 'soul';
+export const FORBIDDEN_SCHOOLS: ForbiddenSchool[] = ['blood', 'necromancy', 'void_magic', 'chronomancy', 'soul'];
 
 export type SpellTier = 1 | 2 | 3 | 4 | 5;
 
@@ -22,6 +26,11 @@ export const SPELL_SCHOOL_NAMES: Record<SpellSchool, string> = {
 	alchemy: 'School of Alchemy',
 	conjuration: 'School of Conjuration',
 	shadow: 'School of Shadow',
+	blood: 'Blood Magic',
+	necromancy: 'School of Necromancy',
+	void_magic: 'Void Magic',
+	chronomancy: 'Chronomancy',
+	soul: 'Soul Magic',
 };
 
 export const SPELL_SCHOOL_COLORS: Record<SpellSchool, string> = {
@@ -32,6 +41,11 @@ export const SPELL_SCHOOL_COLORS: Record<SpellSchool, string> = {
 	alchemy: '#8ff',
 	conjuration: '#f8f',
 	shadow: '#a6a',
+	blood: '#c00',
+	necromancy: '#696',
+	void_magic: '#609',
+	chronomancy: '#cc6',
+	soul: '#6cf',
 };
 
 // ---------------------------------------------------------------------------
@@ -60,6 +74,10 @@ export interface SpellDef {
 	aoeRadius: number;
 	/** Element type for counter-spell system */
 	element?: 'fire' | 'ice' | 'lightning' | 'arcane' | 'acid' | 'holy' | 'shadow';
+	/** HP cost (used by blood magic spells instead of mana) */
+	hpCost?: number;
+	/** Whether this spell belongs to a forbidden school */
+	isForbidden?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -462,6 +480,289 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 		manaCost: 25, cooldown: 20, targetType: 'single_enemy',
 		baseDamage: 30, baseHeal: 0, aoeRadius: 0, element: 'shadow',
 		// Note: spectral ally summoning handled specially in executeSpell
+	},
+
+	// ===== Blood Magic (Forbidden) =====
+	spell_blood_bolt: {
+		id: 'spell_blood_bolt', name: 'Blood Bolt', school: 'blood', tier: 1,
+		description: 'Compress your own blood into a deadly projectile.',
+		effect: 'Costs 5 HP. Deals 6 shadow damage.',
+		manaCost: 0, hpCost: 5, cooldown: 2, targetType: 'single_enemy',
+		baseDamage: 6, baseHeal: 0, aoeRadius: 0, element: 'shadow', isForbidden: true,
+	},
+	spell_blood_shield: {
+		id: 'spell_blood_shield', name: 'Blood Shield', school: 'blood', tier: 1,
+		description: 'Sacrifice blood to weave a regenerative ward.',
+		effect: 'Costs 8 HP. Regenerate 3 HP/turn for 5 turns.',
+		manaCost: 0, hpCost: 8, cooldown: 5, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'regeneration', duration: 5, potency: 3 },
+	},
+	spell_hemorrhage: {
+		id: 'spell_hemorrhage', name: 'Hemorrhage', school: 'blood', tier: 2,
+		description: 'Rupture the blood vessels of your foe.',
+		effect: 'Costs 8 HP. Deals 7 damage + burn 2/turn for 3 turns.',
+		manaCost: 0, hpCost: 8, cooldown: 4, targetType: 'single_enemy',
+		baseDamage: 7, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'burn', duration: 3, potency: 2 },
+	},
+	spell_sanguine_whip: {
+		id: 'spell_sanguine_whip', name: 'Sanguine Whip', school: 'blood', tier: 2,
+		description: 'Lash out with a tendril of living blood that siphons life.',
+		effect: 'Costs 10 HP. Deals 8 damage. Heals for 50% of damage dealt.',
+		manaCost: 0, hpCost: 10, cooldown: 5, targetType: 'single_enemy',
+		baseDamage: 8, baseHeal: 0, aoeRadius: 0, element: 'shadow', isForbidden: true,
+		// Note: life drain healing handled like spell_life_drain in executeSpell
+	},
+	spell_blood_pact: {
+		id: 'spell_blood_pact', name: 'Blood Pact', school: 'blood', tier: 3,
+		description: 'Seal a pact in blood, empowering your strikes.',
+		effect: 'Costs 12 HP. +5 ATK for 8 turns.',
+		manaCost: 0, hpCost: 12, cooldown: 12, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'inspire', duration: 8, potency: 5 },
+	},
+	spell_crimson_tide: {
+		id: 'spell_crimson_tide', name: 'Crimson Tide', school: 'blood', tier: 4,
+		description: 'Unleash a wave of boiling blood in all directions.',
+		effect: 'Costs 18 HP. Deals 10 damage to all enemies in radius 2.',
+		manaCost: 0, hpCost: 18, cooldown: 15, targetType: 'self',
+		baseDamage: 10, baseHeal: 0, aoeRadius: 2, element: 'shadow', isForbidden: true,
+	},
+	spell_heart_stop: {
+		id: 'spell_heart_stop', name: 'Heart Stop', school: 'blood', tier: 5,
+		description: 'Reach into a foe\'s chest with blood magic and stop their heart.',
+		effect: 'Costs 25 HP. Deals 40 damage to a single target.',
+		manaCost: 0, hpCost: 25, cooldown: 20, targetType: 'single_enemy',
+		baseDamage: 40, baseHeal: 0, aoeRadius: 0, element: 'shadow', isForbidden: true,
+	},
+
+	// ===== School of Necromancy (Forbidden) =====
+	spell_necro_life_tap: {
+		id: 'spell_necro_life_tap', name: 'Life Tap', school: 'necromancy', tier: 1,
+		description: 'Convert life force into raw magical energy.',
+		effect: 'Costs 5 HP. Gain 8 mana.',
+		manaCost: 0, hpCost: 5, cooldown: 3, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		// Note: mana gain handled specially in engine
+	},
+	spell_bone_shield: {
+		id: 'spell_bone_shield', name: 'Bone Shield', school: 'necromancy', tier: 1,
+		description: 'Summon a whirling barrier of bones.',
+		effect: 'Regenerate 2 HP/turn for 6 turns.',
+		manaCost: 4, cooldown: 5, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'regeneration', duration: 6, potency: 2 },
+	},
+	spell_corpse_explosion: {
+		id: 'spell_corpse_explosion', name: 'Corpse Explosion', school: 'necromancy', tier: 2,
+		description: 'Detonate necrotic energy in a burst around you.',
+		effect: 'Deals 8 damage to all enemies in radius 1.',
+		manaCost: 6, cooldown: 6, targetType: 'self',
+		baseDamage: 8, baseHeal: 0, aoeRadius: 1, isForbidden: true,
+	},
+	spell_wither: {
+		id: 'spell_wither', name: 'Wither', school: 'necromancy', tier: 2,
+		description: 'Drain the vitality from a living creature.',
+		effect: 'Curse: -2 ATK for 6 turns.',
+		manaCost: 7, cooldown: 5, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'curse', duration: 6, potency: 2 },
+	},
+	spell_raise_dead: {
+		id: 'spell_raise_dead', name: 'Raise Dead', school: 'necromancy', tier: 3,
+		description: 'Reanimate a fallen creature to fight for you.',
+		effect: '+3 ATK for 10 turns (undead ally concept).',
+		manaCost: 10, cooldown: 15, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'inspire', duration: 10, potency: 3 },
+	},
+	spell_plague_cloud: {
+		id: 'spell_plague_cloud', name: 'Plague Cloud', school: 'necromancy', tier: 4,
+		description: 'Release a cloud of pestilence that rots all living things.',
+		effect: 'Poison all enemies in radius 2 (3 dmg/turn for 4 turns).',
+		manaCost: 14, cooldown: 12, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 2, isForbidden: true,
+		statusEffect: { type: 'poison', duration: 4, potency: 3 },
+	},
+	spell_army_of_dead: {
+		id: 'spell_army_of_dead', name: 'Army of the Dead', school: 'necromancy', tier: 5,
+		description: 'Raise an entire army of skeletal warriors.',
+		effect: 'Stun all enemies in radius 3 for 3 turns.',
+		manaCost: 25, cooldown: 25, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 3, isForbidden: true,
+		statusEffect: { type: 'stun', duration: 3, potency: 0 },
+	},
+
+	// ===== Void Magic (Forbidden) =====
+	spell_void_bolt: {
+		id: 'spell_void_bolt', name: 'Void Bolt', school: 'void_magic', tier: 1,
+		description: 'Hurl a bolt of pure nothingness.',
+		effect: 'Deals 7 damage.',
+		manaCost: 3, cooldown: 2, targetType: 'single_enemy',
+		baseDamage: 7, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+	},
+	spell_null_zone: {
+		id: 'spell_null_zone', name: 'Null Zone', school: 'void_magic', tier: 2,
+		description: 'Create a zone where reality unravels.',
+		effect: 'Stun all enemies in radius 1 for 2 turns.',
+		manaCost: 6, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 1, isForbidden: true,
+		statusEffect: { type: 'stun', duration: 2, potency: 0 },
+	},
+	spell_void_step: {
+		id: 'spell_void_step', name: 'Void Step', school: 'void_magic', tier: 2,
+		description: 'Step through the void to another location.',
+		effect: 'Teleport in a direction.',
+		manaCost: 5, cooldown: 4, targetType: 'direction',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+	},
+	spell_entropy: {
+		id: 'spell_entropy', name: 'Entropy', school: 'void_magic', tier: 3,
+		description: 'Accelerate the decay of all things.',
+		effect: 'Curse: -3 ATK for 8 turns.',
+		manaCost: 8, cooldown: 7, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'curse', duration: 8, potency: 3 },
+	},
+	spell_void_gaze: {
+		id: 'spell_void_gaze', name: 'Void Gaze', school: 'void_magic', tier: 3,
+		description: 'Lock eyes with the void — and force your enemy to do the same.',
+		effect: 'Deals 5 damage + stun 2 turns.',
+		manaCost: 10, cooldown: 8, targetType: 'single_enemy',
+		baseDamage: 5, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'stun', duration: 2, potency: 0 },
+	},
+	spell_annihilation: {
+		id: 'spell_annihilation', name: 'Annihilation', school: 'void_magic', tier: 4,
+		description: 'Erase a target from existence with concentrated void energy.',
+		effect: 'Deals 25 damage to a single target.',
+		manaCost: 16, cooldown: 12, targetType: 'single_enemy',
+		baseDamage: 25, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+	},
+	spell_void_shield: {
+		id: 'spell_void_shield', name: 'Void Shield', school: 'void_magic', tier: 5,
+		description: 'Wrap yourself in a barrier of nothingness.',
+		effect: 'Regenerate 5 HP/turn + inspire +3 ATK for 8 turns.',
+		manaCost: 20, cooldown: 20, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'regeneration', duration: 8, potency: 5 },
+		// Note: also applies inspire +3 ATK for 8 turns, handled in engine
+	},
+
+	// ===== Chronomancy (Forbidden) =====
+	spell_haste: {
+		id: 'spell_haste', name: 'Haste', school: 'chronomancy', tier: 1,
+		description: 'Accelerate your own timeline.',
+		effect: '+2 ATK for 6 turns.',
+		manaCost: 4, cooldown: 5, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'inspire', duration: 6, potency: 2 },
+	},
+	spell_slow: {
+		id: 'spell_slow', name: 'Slow', school: 'chronomancy', tier: 1,
+		description: 'Decelerate an enemy\'s timeline to a crawl.',
+		effect: 'Stun for 2 turns.',
+		manaCost: 3, cooldown: 4, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'stun', duration: 2, potency: 0 },
+	},
+	spell_temporal_sense: {
+		id: 'spell_temporal_sense', name: 'Temporal Sense', school: 'chronomancy', tier: 2,
+		description: 'Perceive time flowing around you, revealing hidden threats.',
+		effect: 'Sight buff (concept).',
+		manaCost: 5, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		// Note: sight buff handled specially
+	},
+	spell_rewind: {
+		id: 'spell_rewind', name: 'Rewind', school: 'chronomancy', tier: 3,
+		description: 'Reverse your personal timeline to undo recent wounds.',
+		effect: 'Heal 15 HP.',
+		manaCost: 10, cooldown: 10, targetType: 'self',
+		baseDamage: 0, baseHeal: 15, aoeRadius: 0, isForbidden: true,
+	},
+	spell_age: {
+		id: 'spell_age', name: 'Age', school: 'chronomancy', tier: 3,
+		description: 'Accelerate time around an enemy, aging them rapidly.',
+		effect: 'Curse: -3 ATK for 10 turns.',
+		manaCost: 12, cooldown: 10, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'curse', duration: 10, potency: 3 },
+	},
+	spell_time_stop: {
+		id: 'spell_time_stop', name: 'Time Stop', school: 'chronomancy', tier: 4,
+		description: 'Freeze time for everything but yourself.',
+		effect: 'Stun all enemies in radius 3 for 2 turns.',
+		manaCost: 15, cooldown: 18, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 3, isForbidden: true,
+		statusEffect: { type: 'stun', duration: 2, potency: 0 },
+	},
+	spell_paradox: {
+		id: 'spell_paradox', name: 'Paradox', school: 'chronomancy', tier: 5,
+		description: 'Create a temporal paradox that empowers and heals you.',
+		effect: '+5 ATK + regenerate 4 HP/turn for 10 turns.',
+		manaCost: 20, cooldown: 25, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'inspire', duration: 10, potency: 5 },
+		// Note: also applies regeneration 4/turn for 10 turns, handled in engine
+	},
+
+	// ===== Soul Magic (Forbidden) =====
+	spell_soul_sight: {
+		id: 'spell_soul_sight', name: 'Soul Sight', school: 'soul', tier: 1,
+		description: 'See the souls of all nearby creatures.',
+		effect: 'Sight buff (concept).',
+		manaCost: 3, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		// Note: sight buff handled specially
+	},
+	spell_soul_rend: {
+		id: 'spell_soul_rend', name: 'Soul Rend', school: 'soul', tier: 2,
+		description: 'Tear at the very essence of a creature.',
+		effect: 'Deals 10 shadow damage.',
+		manaCost: 6, cooldown: 4, targetType: 'single_enemy',
+		baseDamage: 10, baseHeal: 0, aoeRadius: 0, element: 'shadow', isForbidden: true,
+	},
+	spell_soul_trap: {
+		id: 'spell_soul_trap', name: 'Soul Trap', school: 'soul', tier: 2,
+		description: 'Ensnare a fragment of the enemy\'s soul.',
+		effect: 'Curse: -1 ATK for 8 turns.',
+		manaCost: 5, cooldown: 6, targetType: 'single_enemy',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		statusEffect: { type: 'curse', duration: 8, potency: 1 },
+	},
+	spell_soul_transfer: {
+		id: 'spell_soul_transfer', name: 'Soul Transfer', school: 'soul', tier: 3,
+		description: 'Channel stolen soul energy to mend your wounds.',
+		effect: 'Heal 12 HP.',
+		manaCost: 8, cooldown: 8, targetType: 'self',
+		baseDamage: 0, baseHeal: 12, aoeRadius: 0, isForbidden: true,
+	},
+	spell_soul_shield: {
+		id: 'spell_soul_shield', name: 'Soul Shield', school: 'soul', tier: 3,
+		description: 'Form a barrier of captured soul energy.',
+		effect: 'Regenerate 3 HP/turn for 8 turns.',
+		manaCost: 6, cooldown: 10, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'regeneration', duration: 8, potency: 3 },
+	},
+	spell_soul_devour: {
+		id: 'spell_soul_devour', name: 'Soul Devour', school: 'soul', tier: 4,
+		description: 'Consume the soul essence of the fallen to empower yourself.',
+		effect: '+3 ATK for 15 turns.',
+		manaCost: 12, cooldown: 18, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'inspire', duration: 15, potency: 3 },
+	},
+	spell_soulless: {
+		id: 'spell_soulless', name: 'Soulless', school: 'soul', tier: 5,
+		description: 'Transcend mortality by severing your own soul\'s limitations.',
+		effect: '+5 ATK + regenerate 5 HP/turn for 12 turns.',
+		manaCost: 20, cooldown: 30, targetType: 'self',
+		baseDamage: 0, baseHeal: 0, aoeRadius: 0, isForbidden: true,
+		selfBuff: { type: 'inspire', duration: 12, potency: 5 },
+		// Note: also applies regeneration 5/turn for 12 turns, handled in engine
 	},
 };
 

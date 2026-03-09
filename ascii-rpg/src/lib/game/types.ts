@@ -412,6 +412,17 @@ export interface GameState {
 	pendingAttributePoint: boolean;
 	/** Targeting mode for spells that need a direction/position */
 	spellTargeting: SpellTargetingState | null;
+
+	// Mastery & Forbidden magic (Epic 79 extended)
+	schoolMastery: Record<string, number>;
+	forbiddenCosts: {
+		corruption: number;
+		paradoxBaseline: number;
+		maxHpLost: number;
+		sanityLost: number;
+		soulCapLost: number;
+	};
+	leyLineLevel: number;
 }
 
 // ---------------------------------------------------------------------------

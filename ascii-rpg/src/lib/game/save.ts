@@ -3,8 +3,9 @@ import type { Item, Equipment, WorldContainer } from './items';
 import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
+import { createEmptyMastery } from './mastery';
 
-export const SAVE_VERSION = 19;
+export const SAVE_VERSION = 20;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -79,6 +80,16 @@ interface SerializedState {
 	manaRegenBaseCounter?: number;
 	manaRegenIntCounter?: number;
 	pendingAttributePoint?: boolean;
+	// Mastery & Forbidden magic
+	schoolMastery?: Record<string, number>;
+	forbiddenCosts?: {
+		corruption: number;
+		paradoxBaseline: number;
+		maxHpLost: number;
+		sanityLost: number;
+		soulCapLost: number;
+	};
+	leyLineLevel?: number;
 }
 
 interface SerializedCachedLocation {
@@ -213,6 +224,9 @@ export function serializeState(state: GameState): string {
 			manaRegenBaseCounter: state.manaRegenBaseCounter,
 			manaRegenIntCounter: state.manaRegenIntCounter,
 			pendingAttributePoint: state.pendingAttributePoint,
+			schoolMastery: state.schoolMastery,
+			forbiddenCosts: state.forbiddenCosts,
+			leyLineLevel: state.leyLineLevel,
 		}
 	};
 	return JSON.stringify(data);
@@ -296,6 +310,15 @@ export function deserializeState(json: string): GameState {
 		spellMenuCursor: 0,
 		pendingAttributePoint: s.pendingAttributePoint ?? false,
 		spellTargeting: null,
+		schoolMastery: s.schoolMastery ?? (createEmptyMastery() as unknown as Record<string, number>),
+		forbiddenCosts: s.forbiddenCosts ?? {
+			corruption: 0,
+			paradoxBaseline: 0,
+			maxHpLost: 0,
+			sanityLost: 0,
+			soulCapLost: 0,
+		},
+		leyLineLevel: s.leyLineLevel ?? 0,
 	};
 
 	// Regenerate world from seed and restore explored/discovered state

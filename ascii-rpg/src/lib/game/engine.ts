@@ -27,8 +27,9 @@ import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn,
 import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, completeLesson, passExamPart1, passExam, canTeach, completeTeachingSession, isLessonReady, allLessonsComplete } from './academy';
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, defaultMagicFields, getWeaponBonus, getArmorValue, getEquippedArmorWeight } from './magic';
-import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost } from './spells';
-import type { ArmorWeight } from './spells';
+import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost, FORBIDDEN_SCHOOLS } from './spells';
+import type { ArmorWeight, ForbiddenSchool } from './spells';
+import { createEmptyMastery, getMasteryLevel, canCastTier, addMasteryXP } from './mastery';
 
 const MAP_W = 50;
 const MAP_H = 24;
@@ -353,6 +354,17 @@ export function createGame(config?: CharacterConfig): GameState {
 		spellMenuCursor: 0,
 		pendingAttributePoint: false,
 		spellTargeting: null,
+
+		// Mastery & Forbidden magic
+		schoolMastery: createEmptyMastery() as unknown as Record<string, number>,
+		forbiddenCosts: {
+			corruption: 0,
+			paradoxBaseline: 0,
+			maxHpLost: 0,
+			sanityLost: 0,
+			soulCapLost: 0,
+		},
+		leyLineLevel: 0,
 	};
 
 	// Academy initialization
@@ -2545,6 +2557,26 @@ function castSpellById(state: GameState, spellId: string): GameState {
 		return { ...state };
 	}
 
+	// Tier gating check
+	const schoolXP = state.schoolMastery[spell.school] ?? 0;
+	const masteryLvl = getMasteryLevel(schoolXP);
+	if (!canCastTier(spell.tier, masteryLvl, state.characterLevel, spell.isForbidden ?? false)) {
+		addMessage(state, `Your ${spell.school} mastery is too low to cast ${spell.name} (tier ${spell.tier}).`, 'warning');
+		return { ...state };
+	}
+
+	// HP cost check (blood magic)
+	if (spell.hpCost && spell.hpCost > 0) {
+		if (state.player.hp <= spell.hpCost) {
+			addMessage(state, `Not enough HP! (need >${spell.hpCost}, have ${state.player.hp})`, 'warning');
+			return { ...state };
+		}
+		state.player.hp -= spell.hpCost;
+		addMessage(state, `You sacrifice ${spell.hpCost} HP to cast ${spell.name}.`, 'damage_taken');
+	}
+
+	const charClass = state.characterConfig.characterClass;
+
 	// Self-targeting spells cast immediately
 	if (spell.targetType === 'self') {
 		// AoE self-centered: hit all enemies in radius
@@ -2560,6 +2592,7 @@ function castSpellById(state: GameState, spellId: string): GameState {
 		if (result.success) {
 			state.spellCooldowns[spell.id] = spell.cooldown;
 			handleSpellKills(state, result.killedEnemies);
+			state.schoolMastery = addMasteryXP(state.schoolMastery as any, spell.school as any, 5, charClass) as unknown as Record<string, number>;
 		}
 		state.spellMenuOpen = false;
 		moveEnemies(state);
@@ -2577,7 +2610,10 @@ function castSpellById(state: GameState, spellId: string): GameState {
 	// Fallback: cast on self
 	const result = executeSpell(spell, state.player, [], armorWeight);
 	for (const msg of result.messages) addMessage(state, msg.text, msg.type);
-	if (result.success) state.spellCooldowns[spell.id] = spell.cooldown;
+	if (result.success) {
+		state.spellCooldowns[spell.id] = spell.cooldown;
+		state.schoolMastery = addMasteryXP(state.schoolMastery as any, spell.school as any, 5, charClass) as unknown as Record<string, number>;
+	}
 	state.spellMenuOpen = false;
 	moveEnemies(state);
 	return { ...state };
@@ -2603,13 +2639,50 @@ export function assignQuickCast(state: GameState, slot: number, spellId: string)
 export function learnSpell(state: GameState, spellId: string): boolean {
 	if (state.learnedSpells.includes(spellId)) return false;
 	if (!SPELL_CATALOG[spellId]) return false;
+
+	const spell = SPELL_CATALOG[spellId];
+	const charClass = state.characterConfig.characterClass;
+
+	// Paladin block: cannot learn shadow or any forbidden school
+	if (charClass === 'paladin' && (spell.school === 'shadow' || (FORBIDDEN_SCHOOLS as readonly string[]).includes(spell.school))) {
+		addMessage(state, `Your paladin oath forbids learning ${spell.name}!`, 'warning');
+		return false;
+	}
+
+	// Forbidden learning costs
+	if (spell.isForbidden) {
+		switch (spell.school) {
+			case 'blood':
+				state.forbiddenCosts.maxHpLost += 2;
+				state.player.maxHp = Math.max(1, state.player.maxHp - 2);
+				if (state.player.hp > state.player.maxHp) state.player.hp = state.player.maxHp;
+				addMessage(state, 'Learning blood magic costs you 2 max HP.', 'damage_taken');
+				break;
+			case 'necromancy':
+				state.forbiddenCosts.corruption += 1;
+				addMessage(state, 'Necromantic knowledge corrupts your soul. (Corruption +1)', 'warning');
+				break;
+			case 'void_magic':
+				state.forbiddenCosts.sanityLost += 5;
+				addMessage(state, 'Void knowledge erodes your sanity. (Sanity lost +5)', 'warning');
+				break;
+			case 'chronomancy':
+				state.forbiddenCosts.paradoxBaseline += 10;
+				addMessage(state, 'Temporal knowledge raises your paradox baseline. (+10)', 'warning');
+				break;
+			case 'soul':
+				state.forbiddenCosts.soulCapLost += 1;
+				addMessage(state, 'Soul magic diminishes your spiritual capacity. (Soul cap -1)', 'warning');
+				break;
+		}
+	}
+
 	state.learnedSpells.push(spellId);
 	// Auto-assign to first empty quick-cast slot
 	const emptySlot = state.quickCastSlots.indexOf(null);
 	if (emptySlot !== -1) {
 		state.quickCastSlots[emptySlot] = spellId;
 	}
-	const spell = SPELL_CATALOG[spellId];
 	addMessage(state, `You have learned ${spell.name}!`, 'magic');
 	return true;
 }

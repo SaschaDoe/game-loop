@@ -11,7 +11,7 @@ import type { SpellSchool } from './spells';
 // ---------------------------------------------------------------------------
 
 /** Forbidden spell schools — dark magic that bypasses normal tier gating */
-export type ForbiddenSchool = 'blood' | 'necromancy' | 'void' | 'chronomancy' | 'soul';
+export type ForbiddenSchool = 'blood' | 'necromancy' | 'void_magic' | 'chronomancy' | 'soul';
 
 /** All spell schools (arcane + forbidden) tracked by the mastery system */
 export type MasterySchool = SpellSchool | ForbiddenSchool;
@@ -19,10 +19,10 @@ export type MasterySchool = SpellSchool | ForbiddenSchool;
 /** All school identifiers for iteration */
 export const ALL_SCHOOLS: MasterySchool[] = [
 	'elements', 'enchantment', 'restoration', 'divination', 'alchemy', 'conjuration', 'shadow',
-	'blood', 'necromancy', 'void', 'chronomancy', 'soul',
+	'blood', 'necromancy', 'void_magic', 'chronomancy', 'soul',
 ];
 
-export const FORBIDDEN_SCHOOLS: ForbiddenSchool[] = ['blood', 'necromancy', 'void', 'chronomancy', 'soul'];
+export const FORBIDDEN_SCHOOLS: ForbiddenSchool[] = ['blood', 'necromancy', 'void_magic', 'chronomancy', 'soul'];
 
 // ---------------------------------------------------------------------------
 // Mastery Levels
@@ -74,42 +74,42 @@ export const CLASS_MASTERY_MULTIPLIERS: Record<CharacterClass, Record<MasterySch
 	mage: {
 		elements: 1.5, enchantment: 1.5, restoration: 1.5, divination: 1.5,
 		alchemy: 1.5, conjuration: 1.5, shadow: 1.5,
-		blood: 1.5, necromancy: 1.5, void: 1.5, chronomancy: 1.5, soul: 1.5,
+		blood: 1.5, necromancy: 1.5, void_magic: 1.5, chronomancy: 1.5, soul: 1.5,
 	},
 	necromancer: {
 		elements: 1.0, enchantment: 1.0, restoration: 1.0, divination: 1.0,
 		alchemy: 1.0, conjuration: 1.0, shadow: 1.5,
-		blood: 1.0, necromancy: 1.5, void: 1.0, chronomancy: 1.0, soul: 1.0,
+		blood: 1.0, necromancy: 1.5, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
 	cleric: {
 		elements: 1.0, enchantment: 1.25, restoration: 1.5, divination: 1.0,
 		alchemy: 1.0, conjuration: 1.0, shadow: 1.0,
-		blood: 0.5, necromancy: 0.5, void: 0.5, chronomancy: 0.5, soul: 0.5,
+		blood: 0.5, necromancy: 0.5, void_magic: 0.5, chronomancy: 0.5, soul: 0.5,
 	},
 	bard: {
 		elements: 1.0, enchantment: 1.25, restoration: 1.0, divination: 1.0,
 		alchemy: 1.0, conjuration: 1.25, shadow: 1.0,
-		blood: 1.0, necromancy: 1.0, void: 1.0, chronomancy: 1.0, soul: 1.0,
+		blood: 1.0, necromancy: 1.0, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
 	ranger: {
 		elements: 1.25, enchantment: 1.0, restoration: 1.0, divination: 1.25,
 		alchemy: 1.0, conjuration: 1.0, shadow: 1.0,
-		blood: 1.0, necromancy: 1.0, void: 1.0, chronomancy: 1.0, soul: 1.0,
+		blood: 1.0, necromancy: 1.0, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
 	rogue: {
 		elements: 1.0, enchantment: 1.0, restoration: 1.0, divination: 1.0,
 		alchemy: 1.0, conjuration: 1.25, shadow: 1.25,
-		blood: 1.0, necromancy: 1.0, void: 1.0, chronomancy: 1.0, soul: 1.0,
+		blood: 1.0, necromancy: 1.0, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
 	warrior: {
 		elements: 1.0, enchantment: 1.0, restoration: 1.0, divination: 1.0,
 		alchemy: 1.0, conjuration: 1.0, shadow: 1.0,
-		blood: 1.0, necromancy: 1.0, void: 1.0, chronomancy: 1.0, soul: 1.0,
+		blood: 1.0, necromancy: 1.0, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
 	paladin: {
 		elements: 1.0, enchantment: 1.0, restoration: 1.0, divination: 1.0,
 		alchemy: 1.0, conjuration: 1.0, shadow: 1.0,
-		blood: 1.0, necromancy: 1.0, void: 1.0, chronomancy: 1.0, soul: 1.0,
+		blood: 1.0, necromancy: 1.0, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
 };
 
