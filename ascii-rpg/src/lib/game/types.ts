@@ -340,6 +340,19 @@ export interface SpellTargetingState {
 	cursorPos?: Position;
 }
 
+export interface RitualChannelingState {
+	ritualId: string;
+	turnsRemaining: number;
+	turnsTotal: number;
+}
+
+export interface WardZone {
+	center: Position;
+	radius: number;
+	damage: number;
+	turnsRemaining: number;
+}
+
 export interface GameState {
 	player: Entity;
 	enemies: Entity[];
@@ -408,6 +421,14 @@ export interface GameState {
 	pendingAttributePoint: boolean;
 	/** Targeting mode for spells that need a direction/position */
 	spellTargeting: SpellTargetingState | null;
+
+	// Ritual system (US-MS-51)
+	learnedRituals: string[];
+	ritualChanneling: RitualChannelingState | null;
+	activeWards: WardZone[];
+	teleportAnchors: Record<number, Position>;  // dungeon level → anchor position
+	activeSummon: Entity | null;
+	scriedLevel: number | null;
 }
 
 // ---------------------------------------------------------------------------
