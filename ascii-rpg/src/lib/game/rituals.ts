@@ -21,7 +21,7 @@ export interface RitualDef {
 	name: string;
 	school: SpellSchool;
 	description: string;
-	channelingTurns: number;
+	castTurns: number;
 	reagents: ReagentCost[];
 	manaCost: number;
 	effectType: RitualEffectType;
@@ -37,7 +37,7 @@ export const RITUAL_CATALOG: Record<string, RitualDef> = {
 		name: 'Ward of Protection',
 		school: 'enchantment',
 		description: 'Inscribe a protective ward on the ground that damages enemies who enter.',
-		channelingTurns: 3,
+		castTurns: 3,
 		reagents: [{ itemId: 'arcane_dust', quantity: 3 }],
 		manaCost: 12,
 		effectType: 'ward',
@@ -47,7 +47,7 @@ export const RITUAL_CATALOG: Record<string, RitualDef> = {
 		name: 'Summoning Circle',
 		school: 'conjuration',
 		description: 'Draw a summoning circle to call forth an arcane ally.',
-		channelingTurns: 5,
+		castTurns: 5,
 		reagents: [
 			{ itemId: 'arcane_dust', quantity: 2 },
 			{ itemId: 'moonwater_vial', quantity: 1 },
@@ -60,7 +60,7 @@ export const RITUAL_CATALOG: Record<string, RitualDef> = {
 		name: 'Scrying Ritual',
 		school: 'divination',
 		description: 'Peer through the veil to reveal a dungeon level.',
-		channelingTurns: 3,
+		castTurns: 3,
 		reagents: [
 			{ itemId: 'moonwater_vial', quantity: 1 },
 			{ itemId: 'dreamleaf', quantity: 1 },
@@ -73,7 +73,7 @@ export const RITUAL_CATALOG: Record<string, RitualDef> = {
 		name: 'Purification Ritual',
 		school: 'restoration',
 		description: 'Cleanse an area of corruption and negative effects.',
-		channelingTurns: 4,
+		castTurns: 4,
 		reagents: [
 			{ itemId: 'starfern', quantity: 2 },
 			{ itemId: 'moonwater_vial', quantity: 1 },
@@ -86,7 +86,7 @@ export const RITUAL_CATALOG: Record<string, RitualDef> = {
 		name: 'Teleportation Circle',
 		school: 'conjuration',
 		description: 'Anchor a teleportation circle to this dungeon level.',
-		channelingTurns: 5,
+		castTurns: 5,
 		reagents: [
 			{ itemId: 'arcane_dust', quantity: 3 },
 			{ itemId: 'lightning_shard', quantity: 1 },
@@ -99,7 +99,7 @@ export const RITUAL_CATALOG: Record<string, RitualDef> = {
 		name: 'Sealing Ritual',
 		school: 'shadow',
 		description: 'Seal a passage or doorway with dark binding magic.',
-		channelingTurns: 4,
+		castTurns: 4,
 		reagents: [
 			{ itemId: 'void_salt', quantity: 1 },
 			{ itemId: 'arcane_dust', quantity: 2 },

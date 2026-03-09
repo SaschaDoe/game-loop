@@ -33,7 +33,7 @@ describe('Ritual Catalog', () => {
 			expect(ritual.name).toBeTruthy();
 			expect(ritual.school).toBeTruthy();
 			expect(ritual.description).toBeTruthy();
-			expect(ritual.channelingTurns).toBeGreaterThan(0);
+			expect(ritual.castTurns).toBeGreaterThan(0);
 			expect(ritual.reagents.length).toBeGreaterThan(0);
 			expect(ritual.manaCost).toBeGreaterThan(0);
 			expect(ritual.effectType).toBeTruthy();
