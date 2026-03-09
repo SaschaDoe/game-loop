@@ -28,6 +28,7 @@ import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, completeLesson, passExamPart1, passExam, canTeach, completeTeachingSession, isLessonReady, allLessonsComplete } from './academy';
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, defaultMagicFields, getWeaponBonus, getArmorValue, getEquippedArmorWeight } from './magic';
 import { SPELL_CATALOG, getSpellDef, executeSpell, tickManaRegen, tickSpellCooldowns, effectiveManaCost } from './spells';
+import { RITUAL_CATALOG, getRitualDef, hasReagents, getMissingReagents, consumeReagents, rollInterruption } from './rituals';
 import type { ArmorWeight } from './spells';
 
 const MAP_W = 50;
@@ -353,6 +354,12 @@ export function createGame(config?: CharacterConfig): GameState {
 		spellMenuCursor: 0,
 		pendingAttributePoint: false,
 		spellTargeting: null,
+		learnedRituals: [],
+		ritualChanneling: null,
+		activeWards: [],
+		teleportAnchors: {},
+		activeSummon: null,
+		scriedLevel: null,
 	};
 
 	// Academy initialization
@@ -403,6 +410,12 @@ export function createGame(config?: CharacterConfig): GameState {
 	if (classProfile.startingSpell && SPELL_CATALOG[classProfile.startingSpell]) {
 		state.learnedSpells.push(classProfile.startingSpell);
 		state.quickCastSlots[0] = classProfile.startingSpell;
+	}
+
+	// Grant starting rituals for testing (TODO: replace with discovery system)
+	if (state.characterConfig.characterClass === 'mage' || state.characterConfig.characterClass === 'necromancer') {
+		state.learnedRituals.push('ritual_ward_of_protection');
+		state.learnedRituals.push('ritual_scrying');
 	}
 
 	// Apply starting location HP factor (cave start = 60%)
@@ -1846,6 +1859,12 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		spellMenuCursor: 0,
 		pendingAttributePoint: false,
 		spellTargeting: null,
+		learnedRituals: [],
+		ritualChanneling: null,
+		activeWards: [],
+		teleportAnchors: {},
+		activeSummon: null,
+		scriedLevel: null,
 	};
 	for (const enemy of state.enemies) {
 		recordSeen(state.bestiary, enemy);
@@ -2540,6 +2559,16 @@ export function learnSpell(state: GameState, spellId: string): boolean {
 	}
 	const spell = SPELL_CATALOG[spellId];
 	addMessage(state, `You have learned ${spell.name}!`, 'magic');
+	return true;
+}
+
+/** Teach the player a ritual */
+export function learnRitual(state: GameState, ritualId: string): boolean {
+	if (state.learnedRituals.includes(ritualId)) return false;
+	if (!RITUAL_CATALOG[ritualId]) return false;
+	state.learnedRituals.push(ritualId);
+	const ritual = RITUAL_CATALOG[ritualId];
+	addMessage(state, `You have learned the ritual: ${ritual.name}!`, 'magic');
 	return true;
 }
 
