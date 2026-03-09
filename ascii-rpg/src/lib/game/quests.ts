@@ -899,7 +899,7 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 			{ id: 'ac_alch101_collect1', description: 'Collect starfern', type: 'collect', target: 'starfern', required: 2 },
 			{ id: 'ac_alch101_collect2', description: 'Collect mandrake root', type: 'collect', target: 'mandrake_root', required: 2 },
 		],
-		rewards: { xp: 120, hp: 2, items: ['mana_potion'] },
+		rewards: { xp: 120, hp: 2, items: ['mana_potion'], learnRitual: 'ritual_purification' },
 		giverNpcName: 'Professor Bramwell Thornwick',
 		regionId: 'arcane_conservatory',
 		isMainQuest: false,
@@ -1081,7 +1081,7 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 			{ id: 'ac_tunnels_explore', description: 'Explore the school tunnels', type: 'explore', target: 'school_tunnels', required: 1 },
 			{ id: 'ac_tunnels_kill', description: 'Kill spiders in the tunnels', type: 'kill', target: 'Spider', required: 4 },
 		],
-		rewards: { xp: 180, hp: 2 },
+		rewards: { xp: 180, hp: 2, learnRitual: 'ritual_teleportation_circle' },
 		regionId: 'arcane_conservatory',
 		isMainQuest: false,
 	},
@@ -1346,6 +1346,13 @@ export function completeQuest(state: GameState, questId: string): { success: boo
 		if (!state.heardStories.includes(r.story.id)) {
 			state.heardStories.push(r.story.id);
 			messages.push(`New story unlocked: ${r.story.title}`);
+		}
+	}
+	if (r.learnRitual) {
+		if (!state.learnedRituals.includes(r.learnRitual)) {
+			state.learnedRituals.push(r.learnRitual);
+			const ritualName = r.learnRitual.replace('ritual_', '').replace(/_/g, ' ');
+			messages.push(`Ritual learned: ${ritualName}!`);
 		}
 	}
 

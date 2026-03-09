@@ -517,6 +517,7 @@ export interface QuestReward {
 	items?: string[];
 	rumor?: Rumor;
 	story?: Story;
+	learnRitual?: string;
 }
 
 export interface Quest {
