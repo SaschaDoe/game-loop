@@ -59,6 +59,7 @@ export interface DialogueEffect {
 	startTeaching?: boolean;
 	completeTeaching?: 'correct' | 'wrong';
 	addTitle?: string;
+	learnRitual?: string;
 	completeLesson?: string;
 }
 

@@ -4146,6 +4146,10 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			state.knownLanguages = [...state.knownLanguages, option.onSelect.learnLanguage];
 			addMessage(state, `Language learned: ${option.onSelect.learnLanguage}! You can now understand speakers of this tongue.`, 'discovery');
 		}
+		// Learn rituals from dialogue
+		if (option.onSelect.learnRitual) {
+			learnRitual(state, option.onSelect.learnRitual);
+		}
 		// Collect stories
 		if (option.onSelect.story && !state.heardStories.includes(option.onSelect.story.id)) {
 			state.heardStories = [...state.heardStories, option.onSelect.story.id];
