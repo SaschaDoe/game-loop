@@ -418,6 +418,7 @@ export function createGame(config?: CharacterConfig): GameState {
 		paladin:     { equip: [['leftHand', 'paladin_sword'], ['rightHand', 'tower_shield'], ['head', 'plate_helm']], inventory: ['health_potion'] },
 		necromancer: { equip: [['leftHand', 'bone_staff'], ['back', 'death_shroud']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
 		bard:        { equip: [['leftHand', 'rapier'], ['rightHand', 'lute'], ['head', 'fancy_hat']], inventory: ['health_potion', 'bread', 'water_flask'] },
+		adept:       { equip: [['leftHand', 'mage_staff'], ['body', 'cloth_robe']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
 	};
 	const startingGear = CLASS_STARTING_ITEMS[cfg.characterClass];
 	for (const [slot, itemId] of startingGear.equip) {
@@ -2036,6 +2037,7 @@ export const DODGE_CHANCE: Record<CharacterClass, number> = {
 	paladin: 0.05,
 	necromancer: 0.12,
 	bard: 0.18,
+	adept: 0.10,
 };
 
 export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
@@ -2047,6 +2049,7 @@ export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
 	paladin: 3,
 	necromancer: 0,
 	bard: 0,
+	adept: 0,
 };
 
 export const PUSH_CHANCE: Record<CharacterClass, number> = {
@@ -2058,6 +2061,7 @@ export const PUSH_CHANCE: Record<CharacterClass, number> = {
 	paladin: 0.80,
 	necromancer: 0.20,
 	bard: 0.25,
+	adept: 0.25,
 };
 
 const ENVIRONMENTAL_KILL_BONUS = 1.5;

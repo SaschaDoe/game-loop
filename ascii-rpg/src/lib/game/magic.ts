@@ -48,6 +48,7 @@ export const CLASS_PROFILES: Record<CharacterClass, ClassProfile> = {
 	rogue:       { suggestedArchetype: 'finesse', startingAbility: 'smoke_bomb',  startingSpell: null,              armorProficiency: 'light',  description: 'A nimble adventurer with keen senses' },
 	ranger:      { suggestedArchetype: 'finesse', startingAbility: 'trap_sense',  startingSpell: null,              armorProficiency: 'medium', description: 'A wilderness tracker with sharp eyes' },
 	bard:        { suggestedArchetype: 'finesse', startingAbility: 'inspire',     startingSpell: null,              armorProficiency: 'light',  description: 'A charming performer whose songs shape fate' },
+	adept:       { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_summon_light', armorProficiency: 'robes',  description: 'A dedicated student of the arcane arts, brimming with untapped potential' },
 };
 
 // ---------------------------------------------------------------------------

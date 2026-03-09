@@ -228,6 +228,45 @@ export class GameDriver {
 		return this;
 	}
 
+	// ==================== DIALOGUE HELPERS ====================
+
+	/** Close any active dialogue */
+	closeDialog(): this {
+		this.state.activeDialogue = null;
+		return this;
+	}
+
+	/** Get the NPC text of the current dialogue node */
+	get dialogText(): string {
+		if (!this.state.activeDialogue) return '';
+		const node = this.state.activeDialogue.tree.nodes[this.state.activeDialogue.currentNodeId];
+		return node?.npcText ?? '';
+	}
+
+	/** Get current dialogue node ID */
+	get dialogNodeId(): string | null {
+		return this.state.activeDialogue?.currentNodeId ?? null;
+	}
+
+	/** Teleport adjacent to an NPC and walk into them to open dialogue */
+	talkTo(npcName: string): this {
+		this.killAll(); // clear enemies that might block dialogue
+		const npc = this.state.npcs.find(n => n.name.toLowerCase() === npcName.toLowerCase());
+		if (!npc) return this;
+		// Teleport one tile west of NPC, then walk east into them
+		this.teleport(npc.pos.x - 1, npc.pos.y);
+		this.key('d');
+		return this;
+	}
+
+	// ==================== TIME ====================
+
+	/** Advance game time by n turns (fast-forward without processing each turn) */
+	advanceTurns(n: number): this {
+		this.state.turnCount += n;
+		return this;
+	}
+
 	// ==================== INSPECT (private) ====================
 
 	private _inspect(target: string): void {

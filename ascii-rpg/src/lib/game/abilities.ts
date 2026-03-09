@@ -58,6 +58,12 @@ export const ABILITY_DEFS: Record<CharacterClass, AbilityDef> = {
 		cooldown: 12,
 		key: 'q'
 	},
+	adept: {
+		name: 'Mana Surge',
+		description: 'Channel raw mana to restore 5 mana instantly',
+		cooldown: 10,
+		key: 'q'
+	},
 };
 
 export interface AbilityResult {
@@ -250,6 +256,15 @@ function bardInspiringSong(state: GameState): AbilityResult {
 	};
 }
 
+function adeptManaSurge(state: GameState): AbilityResult {
+	const restored = Math.min(5, (state.player.maxMana ?? 0) - (state.player.mana ?? 0));
+	state.player.mana = (state.player.mana ?? 0) + restored;
+	return {
+		messages: [{ text: `You channel raw mana, restoring ${restored} mana!`, type: 'magic' }],
+		used: true
+	};
+}
+
 export function useAbility(state: GameState): AbilityResult {
 	if (state.abilityCooldown > 0) {
 		const def = ABILITY_DEFS[state.characterConfig.characterClass];
@@ -276,6 +291,8 @@ export function useAbility(state: GameState): AbilityResult {
 			return necromancerDrainLife(state);
 		case 'bard':
 			return bardInspiringSong(state);
+		case 'adept':
+			return adeptManaSurge(state);
 	}
 }
 
