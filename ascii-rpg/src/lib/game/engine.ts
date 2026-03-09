@@ -4400,8 +4400,15 @@ export function renderColored(state: GameState): { char: string; color: string }
 					row.push({ char: state.activeSummon.char, color: state.activeSummon.color });
 				} else if (enemy) {
 					const alertSym = enemy.awareness ? getAlertSymbol(enemy.awareness.alertState) : '';
-					const enemyColor = alertSym ? getAlertColor(enemy.awareness!.alertState) : (effectColor(enemy) ?? enemy.color);
-					row.push({ char: alertSym || enemy.char, color: enemyColor });
+					const isChanneling = !!(enemy.channeling && enemy.channeling.turnsLeft > 0);
+					if (isChanneling) {
+						// Channeling enemies pulse yellow with their char
+						const pulseChar = state.turnCount % 2 === 0 ? enemy.char : '!';
+						row.push({ char: pulseChar, color: '#ff0' });
+					} else {
+						const enemyColor = alertSym ? getAlertColor(enemy.awareness!.alertState) : (effectColor(enemy) ?? enemy.color);
+						row.push({ char: alertSym || enemy.char, color: enemyColor });
+					}
 				} else if (npc) {
 					row.push({ char: npc.char, color: npcMoodColor(npc) });
 				} else if (getChestAt(state.chests, x, y)) {

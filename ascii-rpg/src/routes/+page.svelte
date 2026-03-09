@@ -9,9 +9,11 @@
 	import { deleteSave } from '$lib/game/save';
 	import { SLOT_DISPLAY, INVENTORY_SIZE, type EquipmentSlot } from '$lib/game/items';
 	import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES } from '$lib/game/magic';
-	import { SPELL_CATALOG, getSpellDef, effectiveManaCost, SPELL_SCHOOL_COLORS } from '$lib/game/spells';
-	import type { ArmorWeight } from '$lib/game/spells';
+	import { SPELL_CATALOG, getSpellDef, effectiveManaCost, SPELL_SCHOOL_COLORS, SPELL_SCHOOL_NAMES } from '$lib/game/spells';
+	import type { ArmorWeight, SpellSchool } from '$lib/game/spells';
 	import { getRitualDef } from '$lib/game/rituals';
+	import { getMasteryLevel, MASTERY_THRESHOLDS, SPECIALIZATIONS, canCastTier } from '$lib/game/mastery';
+	import type { MasteryLevel } from '$lib/game/mastery';
 
 	declare const __APP_VERSION__: string;
 	declare const __BUILD_NUMBER__: string;
@@ -66,6 +68,32 @@
 		if (x === cx && y === cy) return 'background:#884;'; // cursor center
 		if (Math.abs(x - cx) <= radius && Math.abs(y - cy) <= radius) return 'background:#432;'; // affected area
 		return '';
+	}
+
+	function masteryProgressText(xp: number): string {
+		const level = getMasteryLevel(xp);
+		if (level === 'master') return 'Master';
+		const nextLevel: MasteryLevel = level === 'none' ? 'novice' : level === 'novice' ? 'adept' : 'master';
+		const nextThreshold = MASTERY_THRESHOLDS[nextLevel];
+		const levelLabel = level.charAt(0).toUpperCase() + level.slice(1);
+		const nextLabel = nextLevel.charAt(0).toUpperCase() + nextLevel.slice(1);
+		return `${levelLabel} · ${xp}/${nextThreshold} XP to ${nextLabel}`;
+	}
+
+	function getGroupedSpells(learnedSpells: string[]): { school: SpellSchool; entries: { id: string; spell: NonNullable<ReturnType<typeof getSpellDef>>; flatIndex: number }[] }[] {
+		const groups: Record<string, { id: string; spell: NonNullable<ReturnType<typeof getSpellDef>>; flatIndex: number }[]> = {};
+		const schoolOrder: string[] = [];
+		for (let i = 0; i < learnedSpells.length; i++) {
+			const spellId = learnedSpells[i];
+			const spell = getSpellDef(spellId);
+			if (!spell) continue;
+			if (!groups[spell.school]) {
+				groups[spell.school] = [];
+				schoolOrder.push(spell.school);
+			}
+			groups[spell.school].push({ id: spellId, spell, flatIndex: i });
+		}
+		return schoolOrder.map(s => ({ school: s as SpellSchool, entries: groups[s] }));
 	}
 
 	let nameInput: HTMLInputElement;
@@ -505,6 +533,9 @@
 			{#if state.learnedSpells.length > 0 || (state.player.mana ?? 0) > 0}
 				<span class="mp" style="color: {(state.player.mana ?? 0) < (state.player.maxMana ?? 1) * 0.2 ? '#f80' : '#4488ff'}">MP: {state.player.mana ?? 0}/{state.player.maxMana ?? 0}</span>
 			{/if}
+			{#if state.specialization}
+				<span class="spec-indicator" style="color:#c8f">SPEC: {SPECIALIZATIONS[state.specialization]?.name ?? state.specialization}</span>
+			{/if}
 			{#if state.ritualChanneling && state.ritualChanneling.turnsRemaining > 0}
 				{@const ch = state.ritualChanneling}
 				{@const ritual = getRitualDef(ch.ritualId)}
@@ -548,6 +579,11 @@
 			{#each state.player.statusEffects as effect}
 				<span class="status-effect status-{effect.type}">{effect.type} ({effect.duration})</span>
 			{/each}
+			{#if state.forbiddenPassives && state.forbiddenPassives.length > 0}
+				{#each state.forbiddenPassives as passive}
+					<span class="forbidden-passive" style="color:#a44;font-size:11px">{passive}</span>
+				{/each}
+			{/if}
 		</div>
 		<div class="xp-bar-container">
 			<div
@@ -949,29 +985,45 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="spell-menu" onclick={(e) => e.stopPropagation()}>
 				<h3 class="spell-menu-title">SPELLS (M to close)</h3>
-				{#each state.learnedSpells as spellId, i}
-					{@const spell = getSpellDef(spellId)}
-					{@const onCd = (state.spellCooldowns[spellId] ?? 0) > 0}
-					{@const armorWeight = CLASS_PROFILES[state.characterConfig.characterClass]?.armorProficiency ?? 'light'}
-					{@const cost = spell ? effectiveManaCost(spell, armorWeight) : 0}
-					{@const noMana = (state.player.mana ?? 0) < cost}
-					{@const slotIdx = state.quickCastSlots.indexOf(spellId)}
-					{#if spell}
+				{@const grouped = getGroupedSpells(state.learnedSpells)}
+				{@const armorWeight = CLASS_PROFILES[state.characterConfig.characterClass]?.armorProficiency ?? 'light'}
+				{#each grouped as group}
+					{@const schoolXp = state.schoolMastery?.[group.school] ?? 0}
+					{@const schoolLevel = getMasteryLevel(schoolXp)}
+					<div class="spell-school-header" style="color:{SPELL_SCHOOL_COLORS[group.school] ?? '#888'}">
+						── {SPELL_SCHOOL_NAMES[group.school] ?? group.school} ({masteryProgressText(schoolXp)}) ──
+					</div>
+					{#each group.entries as entry}
+						{@const spell = entry.spell}
+						{@const onCd = (state.spellCooldowns[entry.id] ?? 0) > 0}
+						{@const cost = effectiveManaCost(spell, armorWeight)}
+						{@const isForbidden = spell.isForbidden ?? false}
+						{@const noMana = isForbidden ? false : (state.player.mana ?? 0) < cost}
+						{@const tierLocked = !canCastTier(spell.tier, schoolLevel, state.characterLevel, isForbidden)}
+						{@const slotIdx = state.quickCastSlots.indexOf(entry.id)}
 						<div
 							class="spell-entry"
-							class:spell-selected={state.spellMenuCursor === i}
-							class:spell-disabled={onCd || noMana}
+							class:spell-selected={state.spellMenuCursor === entry.flatIndex}
+							class:spell-disabled={onCd || noMana || tierLocked}
 							style="border-left: 3px solid {SPELL_SCHOOL_COLORS[spell.school] ?? '#888'}"
 						>
 							<span class="spell-slot">{slotIdx >= 0 ? `[${slotIdx + 1}]` : '   '}</span>
+							<span class="spell-tier" style="color:#888">T{spell.tier}</span>
 							<span class="spell-name">{spell.name}</span>
-							<span class="spell-cost" style="color:{noMana ? '#f44' : '#4488ff'}">{cost} MP</span>
+							{#if isForbidden && spell.hpCost}
+								<span class="spell-cost" style="color:#f44">{spell.hpCost} HP</span>
+							{:else}
+								<span class="spell-cost" style="color:{noMana ? '#f44' : '#4488ff'}">{cost} MP</span>
+							{/if}
 							{#if onCd}
-								<span class="spell-cd" style="color:#f80">CD:{state.spellCooldowns[spellId]}</span>
+								<span class="spell-cd" style="color:#f80">CD:{state.spellCooldowns[entry.id]}</span>
+							{/if}
+							{#if tierLocked}
+								<span class="spell-cd" style="color:#f44">[LOCKED]</span>
 							{/if}
 							<span class="spell-effect">{spell.effect}</span>
 						</div>
-					{/if}
+					{/each}
 				{/each}
 				{#if state.learnedRituals.length > 0}
 					<div class="spell-entry" style="border-left: 3px solid #555; color: #888; pointer-events: none;">
@@ -2172,6 +2224,25 @@
 		margin: 0 0 8px 0;
 		font-size: 14px;
 		text-align: center;
+	}
+	.spell-school-header {
+		font-size: 11px;
+		font-weight: bold;
+		padding: 6px 8px 2px 8px;
+		margin-top: 4px;
+		letter-spacing: 1px;
+	}
+	.spell-tier {
+		font-size: 10px;
+		min-width: 20px;
+	}
+	.spec-indicator {
+		font-size: 12px;
+		font-weight: bold;
+		letter-spacing: 1px;
+	}
+	.forbidden-passive {
+		white-space: nowrap;
 	}
 	.spell-entry {
 		display: flex;

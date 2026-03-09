@@ -3,6 +3,7 @@ import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, monsterA
 import { SPELL_CATALOG, calculateSpellDamage, calculateSpellHealing, effectiveManaCost, executeSpell, getLeyLineEffectModifier, getEnvironmentalModifier, createTerrainEffects } from './spells';
 import type { SpellDef } from './spells';
 import type { Entity, CharacterArchetype } from './types';
+import { canCastTier, createEmptyMastery, addMasteryXP, getAvailableSpecializations, getMasteryLevel, checkForbiddenThreshold } from './mastery';
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
 	return {
@@ -323,5 +324,166 @@ describe('Terrain Effects from Spells', () => {
 		};
 		const effects = createTerrainEffects(mockSpell, { x: 1, y: 1 });
 		expect(effects).toHaveLength(0);
+	});
+});
+
+// =====================================================================
+// Integration Tests
+// =====================================================================
+
+describe('Integration: Tier Gating', () => {
+	it('blocks tier 3 spell with novice mastery', () => {
+		// Novice mastery (XP 1-199), charLevel 5
+		expect(canCastTier(3, 'novice', 5)).toBe(false);
+	});
+
+	it('allows tier 3 spell with adept mastery', () => {
+		expect(canCastTier(3, 'adept', 5)).toBe(true);
+	});
+
+	it('blocks tier 4 spell without sufficient level', () => {
+		// Adept but only level 5 — tier 4 requires adept AND level 10+
+		expect(canCastTier(4, 'adept', 5)).toBe(false);
+	});
+
+	it('allows tier 4 spell with adept mastery and level 10', () => {
+		expect(canCastTier(4, 'adept', 10)).toBe(true);
+	});
+
+	it('blocks tier 5 spell without master mastery', () => {
+		expect(canCastTier(5, 'adept', 20)).toBe(false);
+	});
+
+	it('allows tier 5 spell with master mastery and level 15', () => {
+		expect(canCastTier(5, 'master', 15)).toBe(true);
+	});
+});
+
+describe('Integration: Forbidden Magic', () => {
+	it('forbidden spells bypass tier requirements', () => {
+		// Tier 5 spell with no mastery and level 1, but isForbidden = true
+		expect(canCastTier(5, 'none', 1, true)).toBe(true);
+	});
+
+	it('forbidden spells bypass all tier levels', () => {
+		expect(canCastTier(3, 'none', 1, true)).toBe(true);
+		expect(canCastTier(4, 'none', 1, true)).toBe(true);
+	});
+});
+
+describe('Integration: Mastery XP', () => {
+	it('addMasteryXP applies mage multiplier', () => {
+		const mastery = createEmptyMastery();
+		const updated = addMasteryXP(mastery, 'elements', 10, 'mage');
+		expect(updated.elements).toBe(15); // 10 * 1.5
+	});
+
+	it('addMasteryXP applies cleric forbidden penalty', () => {
+		const mastery = createEmptyMastery();
+		const updated = addMasteryXP(mastery, 'blood', 10, 'cleric');
+		expect(updated.blood).toBe(5); // 10 * 0.5
+	});
+
+	it('addMasteryXP applies warrior neutral multiplier', () => {
+		const mastery = createEmptyMastery();
+		const updated = addMasteryXP(mastery, 'elements', 10, 'warrior');
+		expect(updated.elements).toBe(10); // 10 * 1.0
+	});
+
+	it('addMasteryXP does not mutate original mastery', () => {
+		const mastery = createEmptyMastery();
+		const updated = addMasteryXP(mastery, 'elements', 10, 'mage');
+		expect(mastery.elements).toBe(0);
+		expect(updated.elements).toBe(15);
+	});
+
+	it('getMasteryLevel returns correct levels', () => {
+		expect(getMasteryLevel(0)).toBe('none');
+		expect(getMasteryLevel(1)).toBe('novice');
+		expect(getMasteryLevel(199)).toBe('novice');
+		expect(getMasteryLevel(200)).toBe('adept');
+		expect(getMasteryLevel(999)).toBe('adept');
+		expect(getMasteryLevel(1000)).toBe('master');
+	});
+});
+
+describe('Integration: Specializations', () => {
+	it('no specializations below level 10', () => {
+		const mastery = createEmptyMastery();
+		const specs = getAvailableSpecializations(5, mastery, null);
+		expect(specs.length).toBe(0);
+	});
+
+	it('archmage available at level 10 without school requirement', () => {
+		const mastery = createEmptyMastery();
+		const specs = getAvailableSpecializations(10, mastery, null);
+		expect(specs.some(s => s.id === 'archmage')).toBe(true);
+	});
+
+	it('battlemage available at level 10 without school requirement', () => {
+		const mastery = createEmptyMastery();
+		const specs = getAvailableSpecializations(10, mastery, null);
+		expect(specs.some(s => s.id === 'battlemage')).toBe(true);
+	});
+
+	it('elementalist requires adept elements mastery', () => {
+		const mastery = createEmptyMastery();
+		mastery.elements = 200; // adept threshold
+		const specs = getAvailableSpecializations(10, mastery, null);
+		expect(specs.some(s => s.id === 'elementalist')).toBe(true);
+	});
+
+	it('elementalist not available without elements mastery', () => {
+		const mastery = createEmptyMastery();
+		const specs = getAvailableSpecializations(10, mastery, null);
+		expect(specs.some(s => s.id === 'elementalist')).toBe(false);
+	});
+
+	it('healer requires adept restoration mastery', () => {
+		const mastery = createEmptyMastery();
+		mastery.restoration = 200;
+		const specs = getAvailableSpecializations(10, mastery, null);
+		expect(specs.some(s => s.id === 'healer')).toBe(true);
+	});
+
+	it('no specializations if already specialized', () => {
+		const mastery = createEmptyMastery();
+		mastery.elements = 1000; // master
+		const specs = getAvailableSpecializations(10, mastery, 'archmage');
+		expect(specs.length).toBe(0);
+	});
+});
+
+describe('Integration: Forbidden Thresholds', () => {
+	it('no threshold below 5 spells', () => {
+		const result = checkForbiddenThreshold(['spell_blood_bolt', 'spell_blood_shield'], 'blood', SPELL_CATALOG);
+		expect(result).toBeNull();
+	});
+
+	it('threshold triggers at 5 blood spells', () => {
+		// Create a list with 5 blood school spells
+		const bloodSpells = Object.keys(SPELL_CATALOG).filter(id => SPELL_CATALOG[id].school === 'blood');
+		// Ensure we have at least 5 blood spells
+		expect(bloodSpells.length).toBeGreaterThanOrEqual(5);
+		const fiveBlood = bloodSpells.slice(0, 5);
+		const result = checkForbiddenThreshold(fiveBlood, 'blood', SPELL_CATALOG);
+		expect(result).not.toBeNull();
+		expect(result!.passiveName).toBe('Blood Frenzy');
+	});
+
+	it('threshold triggers for necromancy at 5 spells', () => {
+		const necroSpells = Object.keys(SPELL_CATALOG).filter(id => SPELL_CATALOG[id].school === 'necromancy');
+		expect(necroSpells.length).toBeGreaterThanOrEqual(5);
+		const fiveNecro = necroSpells.slice(0, 5);
+		const result = checkForbiddenThreshold(fiveNecro, 'necromancy', SPELL_CATALOG);
+		expect(result).not.toBeNull();
+		expect(result!.passiveName).toBe('Undead Accord');
+	});
+
+	it('non-matching school spells do not count', () => {
+		// Use fire spells but check blood threshold
+		const fireSpells = Object.keys(SPELL_CATALOG).filter(id => SPELL_CATALOG[id].school === 'elements').slice(0, 5);
+		const result = checkForbiddenThreshold(fireSpells, 'blood', SPELL_CATALOG);
+		expect(result).toBeNull();
 	});
 });
