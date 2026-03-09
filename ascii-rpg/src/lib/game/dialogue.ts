@@ -5020,6 +5020,7 @@ export const SERAPHINA_DIALOGUE: DialogueTree = {
 				opt('Tell me about the ward that predates the school.', 'ancient_ward', '#c8f'),
 				opt('Is enchantment an art or a science?', 'enchantment_art', '#ff4'),
 				opt('[Mage] I want to study advanced ward techniques.', 'advanced_wards', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('I heard you know ancient ward rituals beyond the classroom.', 'ritual_ward_teaching', '#a8f', { showIf: { type: 'academyEnrolled' } }),
 				opt('I need to leave.', 'farewell', '#0ff'),
 			]
 		),
@@ -5088,6 +5089,13 @@ export const SERAPHINA_DIALOGUE: DialogueTree = {
 			'*She studies you with those measuring grey eyes, and for a long moment says nothing.* You have potential. Raw, undisciplined, but genuine. Most mages treat wards as defensive afterthoughts. You seem to understand they are the foundation of all structured magic. *She produces a small silver disc inscribed with ward-notation so fine it resembles fingerprints.* Take this. A ward-template of my own design — seven layers, self-repairing, with a contradiction core. Wear it and study the patterns. When you can read every layer, come back. I will teach you the eighth.',
 			[
 				opt('Thank you, Professor. I\'ll study it carefully.', 'return', '#4f4', { onSelect: { hp: 2, message: 'Professor Ashveil gives you a ward-template disc. Its protective enchantment settles over you like a second skin. +2 HP' } }),
+			]
+		),
+		ritual_ward_teaching: node('ritual_ward_teaching',
+			'*Seraphina pauses mid-inscription. For the first time, she sets her stylus down without finishing a line.* Ancient ward rituals. You ask about techniques I have not taught in years — not because they are forbidden, but because they require a discipline most students lack. *She opens the locked drawer again and produces a sheaf of diagrams covered in layered ward-notation.* The Ward of Protection is not a simple barrier. It is a STATEMENT — written in the language of reality itself — that declares a space inviolable. The ritual binds your intent into the ward\'s architecture. It requires reagents, concentration, and absolute precision. One error and the ward collapses. Or worse, inverts.',
+			[
+				opt('Teach me the Ward of Protection ritual.', 'return', '#a8f', { onSelect: { learnRitual: 'ritual_ward_of_protection', message: 'Professor Ashveil walks you through the ritual\'s geometric inscriptions, reagent placement, and the precise incantation that binds them together. You have learned the Ward of Protection ritual.' }, once: true }),
+				opt('I need to prepare first.', 'return', '#0ff'),
 			]
 		),
 		farewell: node('farewell',
@@ -5235,6 +5243,7 @@ export const MIRAEL_DIALOGUE: DialogueTree = {
 				opt('How does pattern reading work?', 'pattern_reading', '#ff4'),
 				opt('Why do divination students go mad?', 'madness', '#ff4'),
 				opt('[Arcane Script] I can read the old notation on your charts.', 'arcane_insight', '#a8f', { showIf: { type: 'knowsLanguage', value: 'Arcane Script' } }),
+				opt('I sense I am ready to learn deeper scrying techniques.', 'ritual_scrying_teaching', '#a8f', { showIf: { type: 'minCharLevel', value: 3 } }),
 				opt('I need to leave.', 'farewell', '#0ff'),
 			]
 		),
@@ -5310,6 +5319,13 @@ export const MIRAEL_DIALOGUE: DialogueTree = {
 			'*She turns sharply, her milky eyes wide.* You can read Arcane Script? *She pulls you to a star chart covered in notation that shimmers and rearranges itself as you watch.* These charts are written in the old notation — the mathematical language the Original Seven used to describe the structure of reality. Most scholars treat it as decorative. But you... you can READ it. *She points to a sequence of symbols.* This passage describes a resonance pattern — the specific frequency at which a mortal soul can interface with a divine throne. It is, essentially, the mathematical description of the Ascension itself. The formula the seven mortals used to steal divine power. *She grabs your arm.* If you can read this, then you can understand HOW they did it. And if you understand how they did it... you can understand how to UNDO it.',
 			[
 				opt('The formula for the Ascension. In mathematical notation.', 'return', '#c8f', { onSelect: { message: 'Mirael releases your arm. "Guard this knowledge. The Veiled Hand has killed for less. The Archmage has buried for less. And the gods themselves... well. They have done worse than either for the crime of understanding."' } }),
+			]
+		),
+		ritual_scrying_teaching: node('ritual_scrying_teaching',
+			'*Mirael turns slowly, her milky eyes widening as if seeing something new in you.* Your power has grown. I can feel it — the causal threads around you are thicker now, more numerous. You are ready. *She pulls a star chart from beneath the others and spreads it across the table. The constellations on it move.* Scrying as taught in the classroom is observation. What I offer you is something older — a ritual that tears a window in the veil between here and elsewhere. It requires reagents to anchor the connection. Without them, you would be adrift in the astral plane. With them, you see what you need to see.',
+			[
+				opt('Teach me the Scrying ritual.', 'return', '#a8f', { onSelect: { learnRitual: 'ritual_scrying', message: 'Professor Dawnwhisper guides your mind through the astral anchoring sequence, showing you how to bind reagents into a scrying focus. You have learned the Scrying ritual.' }, once: true }),
+				opt('I need more time to prepare.', 'return', '#0ff'),
 			]
 		),
 		farewell: node('farewell',
@@ -5754,6 +5770,59 @@ const PROFESSOR_IGNIS_ACADEMY_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── UNDERDEPTHS: DEEP SCHOLAR ───
+
+const DEEP_SCHOLAR_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'return',
+	nodes: {
+		start: node('start',
+			'*A figure hunched over a stone tablet looks up. Their eyes have adapted to the dark — pale, luminous, seeing spectra you cannot. Deepscript glyphs crawl across their skin like living tattoos.* You carry surface light in your veins. It blinds you to what matters. The Void Monolith predates all civilizations above. I study what your scholars have forgotten — or were made to forget.',
+			[
+				opt('What do you study down here?', 'deepscript', '#ff4'),
+				opt('What is the Void Monolith?', 'monolith', '#c8f'),
+				opt('I should go.', 'farewell', '#0ff'),
+			]
+		),
+		return: node('return',
+			'*The Deep Scholar does not look up from their tablet. Their stylus scratches symbols that rearrange themselves after being written.* The deep remembers what the surface buries. You return seeking knowledge. Good. Ignorance is the only true darkness.',
+			[
+				opt('Tell me about Deepscript.', 'deepscript', '#ff4'),
+				opt('What have you learned from the Monolith?', 'monolith', '#c8f'),
+				opt('I seek ancient binding knowledge.', 'ritual_sealing_teaching', '#a8f', { showIf: { type: 'minCharLevel', value: 5 } }),
+				opt('I must leave.', 'farewell', '#0ff'),
+			]
+		),
+		deepscript: node('deepscript',
+			'*They hold up the tablet. The symbols on it shift as you watch, rearranging into patterns that tug at the edges of comprehension.* Deepscript is not merely language — it reshapes thought. Reading it changes the reader. The glyphs encode not words but RELATIONSHIPS — the binding forces between things. How stone holds to stone. How will holds to flesh. How a seal holds what it contains. *They trace a glyph and it glows briefly.* The civilizations that wrote this understood something fundamental: all of reality is a web of bindings. Break the right binding and mountains fall. Forge a new one and you can seal away anything — even a god.',
+			[
+				opt('Seal away a god?', 'monolith', '#c8f'),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		monolith: node('monolith',
+			'*Their pale eyes gleam.* The Void Monolith is the oldest structure in the known world. It predates the Ascension by millennia. Its surface is covered in Deepscript so dense it takes years to read a single face. *They lean closer.* I have spent eleven years on the eastern face alone. It describes a sealing technique — a way to bind forces so completely that even divine intervention cannot break the seal. The Original Seven used this technique. The Ascended gods fear it. *They tap the tablet.* True sight comes in darkness, surface-dweller. Down here, away from the gods\' light, the truth is written on every wall.',
+			[
+				opt('What is this sealing technique?', 'ritual_sealing_teaching', '#a8f', { showIf: { type: 'minCharLevel', value: 5 } }),
+				opt('Back to other topics.', 'return', '#0ff'),
+			]
+		),
+		ritual_sealing_teaching: node('ritual_sealing_teaching',
+			'*The Deep Scholar studies you with those pale, luminous eyes for a long time. Then they nod slowly.* You have walked far enough into darkness to understand what I offer. The Sealing ritual is the oldest binding technique known — carved into the Monolith by hands that predate mortal memory. It requires reagents of specific resonance to anchor the seal. Without them, the binding unravels. With them... *They press their palm against the tablet and the Deepscript glows.* With them, you can lock away anything. A creature. A power. A truth. The seal holds until the caster releases it — or until the world itself ends.',
+			[
+				opt('Teach me the Sealing ritual.', 'return', '#a8f', { onSelect: { learnRitual: 'ritual_sealing', message: 'The Deep Scholar presses the glowing tablet against your hands. Ancient Deepscript burns cold into your memory — the geometry of absolute binding. You have learned the Sealing ritual.' }, once: true }),
+				opt('I am not ready for this.', 'return', '#0ff'),
+			]
+		),
+		farewell: node('farewell',
+			'*They return to their tablet without ceremony. The Deepscript crawls across their skin, pulsing faintly in the dark.* Light is a crutch. Come back when you are ready to see without it.',
+			[
+				opt('[Leave conversation]', '__exit__', '#0ff'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -5779,4 +5848,5 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Archmage Aldric Voss': ARCHMAGE_VOSS_DIALOGUE,
 	'Archmagus Veylen': ARCHMAGUS_VEYLEN_DIALOGUE,
 	'Professor Ignis': PROFESSOR_IGNIS_ACADEMY_DIALOGUE,
+	'Deep Scholar': DEEP_SCHOLAR_DIALOGUE,
 };
