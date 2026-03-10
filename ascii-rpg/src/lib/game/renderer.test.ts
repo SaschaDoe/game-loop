@@ -329,7 +329,7 @@ describe('renderLocationColored', () => {
 
 	it('shows terrain effects (burning)', () => {
 		const state = makeTestState({
-			terrainEffects: [{ pos: { x: 1, y: 1 }, type: 'burning', turnsLeft: 3, casterIsPlayer: true }]
+			terrainEffects: [{ pos: { x: 1, y: 1 }, type: 'burning', duration: 3, damagePerTurn: 1 }]
 		});
 		const grid = renderLocationColored(state);
 		expect(grid[1][1].char).toBe('~');
@@ -338,7 +338,7 @@ describe('renderLocationColored', () => {
 
 	it('shows terrain effects (frozen)', () => {
 		const state = makeTestState({
-			terrainEffects: [{ pos: { x: 1, y: 1 }, type: 'frozen', turnsLeft: 3, casterIsPlayer: true }]
+			terrainEffects: [{ pos: { x: 1, y: 1 }, type: 'frozen', duration: 3, damagePerTurn: 1 }]
 		});
 		const grid = renderLocationColored(state);
 		expect(grid[1][1].char).toBe('.');
@@ -348,7 +348,7 @@ describe('renderLocationColored', () => {
 	it('shows ritual channeling pulse on even turn', () => {
 		const state = makeTestState({
 			turnCount: 4, // even
-			ritualChanneling: { ritualId: 'test', turnsRemaining: 3, casterPos: { x: 5, y: 5 } }
+			ritualChanneling: { ritualId: 'test', turnsRemaining: 3, turnsTotal: 3 }
 		});
 		const grid = renderLocationColored(state);
 		// Even turn: char '@', color '#c8f'
@@ -359,7 +359,7 @@ describe('renderLocationColored', () => {
 	it('shows ritual channeling pulse on odd turn', () => {
 		const state = makeTestState({
 			turnCount: 3, // odd
-			ritualChanneling: { ritualId: 'test', turnsRemaining: 3, casterPos: { x: 5, y: 5 } }
+			ritualChanneling: { ritualId: 'test', turnsRemaining: 3, turnsTotal: 3 }
 		});
 		const grid = renderLocationColored(state);
 		// Odd turn: char '*', color '#c8f'
@@ -369,7 +369,7 @@ describe('renderLocationColored', () => {
 
 	it('shows player with status effect color override', () => {
 		const state = makeTestState();
-		state.player.statusEffects = [{ type: 'poison', turns: 3, damage: 1 }];
+		state.player.statusEffects = [{ type: 'poison', duration: 3, potency: 1 }];
 		const grid = renderLocationColored(state);
 		expect(grid[5][5].char).toBe('@');
 		expect(grid[5][5].color).toBe('#00ff00'); // poison color
@@ -425,7 +425,7 @@ describe('renderLocationColored', () => {
 
 	it('shows terrain effects dimmed in explored-but-not-visible area', () => {
 		const state = makeTestState({
-			terrainEffects: [{ pos: { x: 0, y: 0 }, type: 'burning', turnsLeft: 3, casterIsPlayer: true }]
+			terrainEffects: [{ pos: { x: 0, y: 0 }, type: 'burning', duration: 3, damagePerTurn: 1 }]
 		});
 		state.visibility[0][0] = Visibility.Explored;
 		const grid = renderLocationColored(state);

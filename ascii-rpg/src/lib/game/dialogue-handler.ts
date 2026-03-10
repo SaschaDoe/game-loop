@@ -80,6 +80,7 @@ export const SOCIAL_CLASS_BONUS: Record<CharacterClass, Record<SocialSkill, numb
 	paladin:     { persuade: 2, intimidate: 3, deceive: -3 },
 	necromancer: { persuade: -1, intimidate: 4, deceive: 2 },
 	bard:        { persuade: 4, intimidate: -1, deceive: 3 },
+	adept:       { persuade: 2, intimidate: 1, deceive: 0 },
 };
 
 export function rollSocialCheck(check: SocialCheck, state: GameState): { success: boolean; roll: number; bonus: number; total: number } {

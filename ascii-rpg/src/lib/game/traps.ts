@@ -151,6 +151,7 @@ export const DISARM_CHANCE: Record<CharacterClass, number> = {
 	paladin: 0.45,
 	necromancer: 0.30,
 	bard: 0.45,
+	adept: 0.55,
 };
 
 export interface DisarmResult {

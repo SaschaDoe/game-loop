@@ -62,6 +62,7 @@ const FLEE_CHANCE: Record<CharacterClass, number> = {
 	paladin: 0.40,
 	necromancer: 0.55,
 	bard: 0.65,
+	adept: 0.60,
 };
 
 // ── Interfaces ──

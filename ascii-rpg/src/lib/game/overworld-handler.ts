@@ -1,4 +1,4 @@
-import type { GameState, GameMap, Entity, Position, NPC, NPCMood, CachedLocationState } from './types';
+import type { GameState, GameMap, Entity, Position, NPC, NPCMood, CachedLocationState, Difficulty } from './types';
 import type { WorldMap, OverworldTile, Settlement, DungeonEntrance, PointOfInterest, RegionId } from './overworld';
 import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, REGION_DEFS } from './overworld';
 import { addMessage, effectiveSightRadius, detectAdjacentSecrets, processAchievements, checkLevelUp } from './engine-utils';
@@ -673,7 +673,7 @@ export function enterSettlement(state: GameState, settlement: Settlement): void 
 }
 
 /** Enter a dungeon from the overworld. Uses newLevel from engine.ts via the provided factory. */
-export function enterDungeon(state: GameState, dungeon: DungeonEntrance, newLevelFn: (level: number, difficulty: string, worldSeed: string) => GameState): void {
+export function enterDungeon(state: GameState, dungeon: DungeonEntrance, newLevelFn: (level: number, difficulty?: Difficulty, worldSeed?: string) => GameState): void {
 	// Region danger level offsets the starting dungeon level
 	const regionDef = REGION_DEFS[dungeon.region as RegionId];
 	const dangerOffset = regionDef ? Math.max(0, regionDef.dangerLevel - 1) : 0;
@@ -881,7 +881,7 @@ export function handleOverworldInput(
 	state: GameState,
 	key: string,
 	createGameFn: (config?: any) => GameState,
-	newLevelFn: (level: number, difficulty: string, worldSeed: string) => GameState,
+	newLevelFn: (level: number, difficulty?: Difficulty, worldSeed?: string) => GameState,
 ): GameState {
 	if (state.gameOver) {
 		if (key === 'r') return createGameFn(state.characterConfig);

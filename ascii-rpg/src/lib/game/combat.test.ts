@@ -322,7 +322,7 @@ describe('attemptPush', () => {
 		const state = makeTestState();
 		const enemy = makeEnemy(6, 5, { hp: 1 });
 		state.enemies = [enemy];
-		state.hazards = [{ pos: { x: 7, y: 5 }, type: 'lava', duration: -1 }];
+		state.hazards = [{ pos: { x: 7, y: 5 }, type: 'lava' }];
 
 		const result = attemptPush(state, enemy, 1, 0);
 		expect(result.pushed).toBe(true);
@@ -400,7 +400,7 @@ describe('moveEnemies', () => {
 		// Enemy standing on lava with very low HP
 		const enemy = makeEnemy(3, 3, { hp: 1, maxHp: 5 });
 		state.enemies = [enemy];
-		state.hazards = [{ pos: { x: 3, y: 3 }, type: 'lava', duration: -1 }];
+		state.hazards = [{ pos: { x: 3, y: 3 }, type: 'lava' }];
 
 		moveEnemies(state);
 		// Enemy should be dead from lava and removed

@@ -84,6 +84,7 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	paladin: { hp: 5, atk: 0, sight: -1, description: 'A holy knight of unwavering resolve' },
 	necromancer: { hp: -3, atk: 2, sight: 1, description: 'A dark mage who commands death itself' },
 	bard: { hp: 0, atk: 0, sight: 1, description: 'A charming performer whose songs shape fate' },
+	adept: { hp: 0, atk: 0, sight: 1, description: 'A disciplined practitioner of inner power' },
 };
 
 const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', archetype: 'might', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
