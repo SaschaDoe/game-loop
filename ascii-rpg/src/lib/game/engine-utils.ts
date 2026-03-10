@@ -9,7 +9,6 @@ import { sightModifier, getTimePhase } from './day-night';
 import { getEquipmentBonuses } from './items';
 import { getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
-import { RITUAL_CATALOG, getRitualDef, rollInterruption, consumeReagents } from './rituals';
 import type { WorldMap } from './overworld';
 
 const MOOD_RECOVERY_TURNS = 20;
@@ -165,23 +164,6 @@ export function tickNpcMoods(state: GameState) {
 	}
 }
 
-export function learnRitual(state: GameState, ritualId: string): boolean {
-	if (state.learnedRituals.includes(ritualId)) return false;
-	if (!RITUAL_CATALOG[ritualId]) return false;
-
-	// Talent point cost
-	if (state.skillPoints <= 0) {
-		addMessage(state, 'You need a talent point to learn this ritual!', 'warning');
-		return false;
-	}
-
-	state.skillPoints--;
-	state.learnedRituals.push(ritualId);
-	const ritual = RITUAL_CATALOG[ritualId];
-	addMessage(state, `You have learned the ritual: ${ritual.name}!`, 'magic');
-	return true;
-}
-
 export function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: number): void {
 	for (let dy = -radius; dy <= radius; dy++) {
 		for (let dx = -radius; dx <= radius; dx++) {
@@ -195,47 +177,4 @@ export function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: n
 	}
 }
 
-/** Tick terrain effects: apply damage to entities standing on them, decrement durations */
-export function tickTerrainEffects(state: GameState): void {
-	if (!state.terrainEffects) return;
-
-	for (const effect of state.terrainEffects) {
-		if (effect.damagePerTurn > 0) {
-			// Damage player if standing on it
-			if (state.player.pos.x === effect.pos.x && state.player.pos.y === effect.pos.y) {
-				state.player.hp -= effect.damagePerTurn;
-				addMessage(state, `You take ${effect.damagePerTurn} damage from ${effect.type} ground!`, 'damage_taken');
-			}
-			// Damage enemies standing on it
-			for (const enemy of state.enemies) {
-				if (enemy.pos.x === effect.pos.x && enemy.pos.y === effect.pos.y) {
-					enemy.hp -= effect.damagePerTurn;
-					if (enemy.hp <= 0) {
-						addMessage(state, `${enemy.name} is killed by ${effect.type} ground!`, 'magic');
-					}
-				}
-			}
-		}
-		effect.duration--;
-	}
-
-	state.terrainEffects = state.terrainEffects.filter(e => e.duration > 0);
-}
-
-/** Check for ritual interrupt when player takes damage */
-export function checkRitualInterrupt(state: GameState, _damageAmount: number): void {
-	if (!state.ritualChanneling || state.ritualChanneling.turnsRemaining <= 0) return;
-
-	const ritual = getRitualDef(state.ritualChanneling.ritualId);
-	if (rollInterruption()) {
-		// Interrupted — consume mana + reagents
-		if (ritual) {
-			state.player.mana = (state.player.mana ?? 0) - ritual.manaCost;
-			consumeReagents(state.inventory, ritual);
-		}
-		state.ritualChanneling = null;
-		addMessage(state, 'Your concentration shatters — the ritual fails!', 'damage_taken');
-	} else {
-		addMessage(state, 'You hold your focus despite the blow!', 'magic');
-	}
-}
+// tickTerrainEffects, checkRitualInterrupt, and learnRitual have moved to ./spell-handler.ts

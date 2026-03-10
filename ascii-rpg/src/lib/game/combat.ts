@@ -1,6 +1,7 @@
 import type { GameState, Entity, Position, MessageType, CharacterClass } from './types';
 import { Visibility } from './types';
-import { addMessage, handlePlayerDeath, isBlocked, xpReward, applyXpMultiplier, checkLevelUp, processAchievements, tickEntityEffects, tryDropLoot, tickNpcMoods, tickTerrainEffects, checkRitualInterrupt } from './engine-utils';
+import { addMessage, handlePlayerDeath, isBlocked, xpReward, applyXpMultiplier, checkLevelUp, processAchievements, tickEntityEffects, tryDropLoot, tickNpcMoods } from './engine-utils';
+import { tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
 import { hasEffect, applyEffect } from './status-effects';
 import { getSkillBonuses } from './skills';
 import { tickAbilityCooldown } from './abilities';

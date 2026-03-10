@@ -1,5 +1,6 @@
 import type { GameState, Entity, CharacterClass, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
-import { addMessage, handlePlayerDeath, relocateNpc, learnRitual, revealOverworldArea } from './engine-utils';
+import { addMessage, handlePlayerDeath, relocateNpc, revealOverworldArea } from './engine-utils';
+import { learnRitual } from './spell-handler';
 import { enrollAtAcademy, completeLesson, completeTeachingSession, getAcademyDay, isLessonReady, allLessonsComplete } from './academy';
 import type { WorldMap } from './overworld';
 
