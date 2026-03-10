@@ -5859,6 +5859,77 @@ const DEEP_SCHOLAR_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── FARMER EDRIC (Hearthlands — Blighted Harvest quest) ───
+
+const FARMER_EDRIC_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	returnNode: 'investigation_done',
+	nodes: {
+		start: node('start',
+			'Thank the gods, a traveler! Please, I need help. Something is wrong with my farm — the crops grow twisted overnight, the well water makes people see things. My daughter drank from it and she has been feverish for days.',
+			[
+				opt('Tell me more about what is happening.', 'symptoms', '#ff8'),
+				opt('I will look into it. [Accept: Blighted Harvest]', 'quest_accepted', '#4f4', { onSelect: { acceptQuest: 'blighted_harvest' } }),
+				opt('I cannot help right now.', '__exit__', '#888'),
+			]
+		),
+		symptoms: node('symptoms',
+			'The crops in the west field — they grow twice as fast as normal. But they are wrong. Twisted stalks, glowing at night. And the well... my neighbor drew water last week and saw visions of seven figures in a ring of fire. He will not go near it now.',
+			[
+				opt('Seven figures? What did he see exactly?', 'vision_detail', '#c8f'),
+				opt('I will investigate your farm.', 'help_request', '#4f4'),
+				opt('Goodbye.', '__exit__', '#888'),
+			]
+		),
+		vision_detail: node('vision_detail',
+			'He said they stood in a circle of light — seven of them, wearing masks. One was weeping. He could not tell if it was a memory or a prophecy. He has not slept well since.',
+			[
+				opt('I will help you. [Accept: Blighted Harvest]', 'quest_accepted', '#4f4', { onSelect: { acceptQuest: 'blighted_harvest' } }),
+				opt('Interesting. I will look into this.', 'help_request', '#ff8'),
+			]
+		),
+		help_request: node('help_request',
+			'Please, anything you can do. I do not understand magic, but whatever is beneath my field is poisoning everything it touches.',
+			[
+				opt('[Accept: Blighted Harvest]', 'quest_accepted', '#4f4', { onSelect: { acceptQuest: 'blighted_harvest' } }),
+				opt('I need to prepare first. I will return.', '__exit__', '#888'),
+			]
+		),
+		quest_accepted: node('quest_accepted',
+			'Thank you! The farm is just west of here. You will see the field — the crops that glow at night. The well is in the center of the yard. Please, help my daughter.',
+			[
+				opt('I will do what I can.', '__exit__', '#4f4'),
+			]
+		),
+		investigation_done: node('investigation_done',
+			'Did you find anything? What is causing this?',
+			[
+				opt('A ley line runs directly under your farm. Raw magical energy is bleeding through.', 'ley_explained', '#4ff'),
+			]
+		),
+		ley_explained: node('ley_explained',
+			'A ley line? I have heard the scholars speak of such things, but I never imagined one ran beneath my field. Can you stop it? Can you make it safe?',
+			[
+				opt('[Ward the Well] (Requires: Ward of Protection)', 'ward_well', '#88f', { showIf: { type: 'hasRitual', value: 'ward_of_protection' } }),
+				opt('[Redirect the Flow] (Requires: Ley Line knowledge)', 'redirect_flow', '#4ff', { showIf: { type: 'questCompleted', value: 'threads_of_power' } }),
+				opt('I need to find a way to help. I will return.', '__exit__', '#888'),
+			]
+		),
+		ward_well: node('ward_well',
+			'You trace protective sigils around the well. The water stills, losing its eerie shimmer. The farm girl sips cautiously — no visions. Edric weeps with relief.',
+			[
+				opt('The well should be safe now.', '__exit__', '#4f4', { onSelect: { message: 'The well is safe, but the crops still grow strangely. Farmer Edric gives you a vial of the old well water as thanks.' } }),
+			]
+		),
+		redirect_flow: node('redirect_flow',
+			'Drawing on your knowledge of ley lines, you channel the energy around the farm. The glow fades from the crops. The well water runs clear. Even the livestock return to graze.',
+			[
+				opt('Your farm should recover now.', '__exit__', '#4f4', { onSelect: { message: 'The farm is restored. Farmer Edric gives you a vial of the old well water — the last of its power, safely contained.' } }),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -5885,4 +5956,5 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Archmagus Veylen': ARCHMAGUS_VEYLEN_DIALOGUE,
 	'Professor Ignis': PROFESSOR_IGNIS_ACADEMY_DIALOGUE,
 	'Deep Scholar': DEEP_SCHOLAR_DIALOGUE,
+	'Farmer Edric': FARMER_EDRIC_DIALOGUE,
 };
