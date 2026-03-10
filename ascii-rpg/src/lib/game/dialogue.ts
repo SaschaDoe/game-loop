@@ -4893,6 +4893,7 @@ export const IGNIS_DIALOGUE: DialogueTree = {
 				opt('How did you get those scars?', 'scars_story', '#ff4'),
 				opt('What\'s your teaching philosophy?', 'teaching_philosophy', '#ff4'),
 				opt('[Mage] I want to push my elemental mastery further.', 'advanced_elements', '#84f', { showIf: { type: 'class', value: 'mage' } }),
+				opt('Tell me about the ley lines.', 'ley_lines_intro', '#4ff', { showIf: { type: 'academyEnrolled' } }),
 				opt('I need to go.', 'farewell', '#0ff'),
 			]
 		),
@@ -4985,6 +4986,41 @@ export const IGNIS_DIALOGUE: DialogueTree = {
 			'*He studies you with the appraising eye of a teacher who has seen a thousand students.* You have the spark — I can see it in how you channel. Most mages treat elements as ammunition. You treat them as allies. That is the difference between a spellcaster and an elementalist. *He pulls out a small, multi-faceted crystal.* Take this. A resonance shard. It will attune to your dominant element over time and amplify your connection to it. Consider it a... scholarship. *He winks.* Just don\'t tell the Archmage. He has opinions about giving students tools that help them exceed the curriculum.',
 			[
 				opt('Thank you, Professor. I won\'t waste it.', 'return', '#4f4', { onSelect: { atk: 1, message: 'Professor Ignis gives you a resonance shard. Your elemental affinity sharpens. +1 ATK' } }),
+			]
+		),
+		ley_lines_intro: node('ley_lines_intro',
+			'The Academy was built here for a reason. Two great ley lines — rivers of raw mana flowing through the earth — cross beneath our very feet. I want you to see them for yourself.',
+			[
+				opt('How do I see them?', 'ley_teach_truesight', '#4ff'),
+				opt('What are ley lines exactly?', 'ley_explanation', '#ff8'),
+				opt('Maybe later.', 'return', '#888'),
+			]
+		),
+		ley_explanation: node('ley_explanation',
+			'Ley lines are currents of pure magical energy that flow through the earth like underground rivers. Where they run, magic is stronger — spells hit harder, mana regenerates faster. And where two lines cross... that is a convergence. The most powerful magical focus in the world.',
+			[
+				opt('Teach me to see them.', 'ley_teach_truesight', '#4ff'),
+				opt('Back to other topics.', 'return', '#888'),
+			]
+		),
+		ley_teach_truesight: node('ley_teach_truesight',
+			'The School of Divination has a spell called True Sight. It pierces illusion and reveals hidden things — including the ley lines themselves. Here, I will teach it to you.',
+			[
+				opt('[Learn True Sight]', 'ley_quest_start', '#4ff', { onSelect: { learnSpell: 'spell_true_sight', message: 'Prof. Ignis traces a sigil in the air. Knowledge floods your mind. You have learned True Sight!' } }),
+				opt('I already know True Sight.', 'ley_quest_start', '#888', { showIf: { type: 'hasSpell', value: 'spell_true_sight' } }),
+			]
+		),
+		ley_quest_start: node('ley_quest_start',
+			'Good. Now for the practical lesson. Go to the center of the academy grounds — the convergence point. Cast True Sight there and observe. Then walk outward along one of the ley lines until the glow dims. Finally, return to the convergence and feel the power restore you.',
+			[
+				opt('[Accept: Threads of Power]', 'ley_quest_accepted', '#4f4', { onSelect: { acceptQuest: 'threads_of_power' } }),
+				opt('I will do this later.', 'return', '#888'),
+			]
+		),
+		ley_quest_accepted: node('ley_quest_accepted',
+			'Take your time. Observe carefully. When you return, I will have something for you — a book that explains the deeper theory behind what you will see.',
+			[
+				opt('Thank you, Professor.', 'return', '#4ff'),
 			]
 		),
 		farewell: node('farewell',
