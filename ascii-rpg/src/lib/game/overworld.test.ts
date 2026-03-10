@@ -509,3 +509,21 @@ describe('ley line generation', () => {
 		}
 	});
 });
+
+describe('Thornfield Farm placement', () => {
+	it('places Thornfield Farm on the W-E ley line in hearthlands', () => {
+		const world = generateWorld('test-seed');
+		const farm = world.settlements.find(s => s.name === 'Thornfield Farm');
+		expect(farm).toBeDefined();
+		expect(farm!.region).toBe('hearthlands');
+		// Farm should be on or very near the W-E ley line
+		const weY = world.leyLines.westEast[farm!.pos.x];
+		expect(Math.abs(farm!.pos.y - weY)).toBeLessThanOrEqual(0); // exactly on the line
+	});
+
+	it('Thornfield Farm is a village settlement', () => {
+		const world = generateWorld('test-seed');
+		const farm = world.settlements.find(s => s.name === 'Thornfield Farm');
+		expect(farm!.type).toBe('village');
+	});
+});

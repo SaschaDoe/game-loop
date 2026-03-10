@@ -468,6 +468,40 @@ export function generateWorld(worldSeed: string, width: number = WORLD_W, height
 	// 10b. Generate ley lines crossing at the academy
 	const leyLines = generateLeyLines(tiles, settlements, width, height, rng);
 
+	// 10c. Place Thornfield Farm on the W-E ley line in hearthlands
+	const hearthCenter = regionSeeds.get('hearthlands');
+	if (hearthCenter && leyLines) {
+		// Search along the W-E ley line within hearthlands
+		let farmPos: Position | null = null;
+		for (let dx = 0; dx < 40; dx++) {
+			for (const sign of [1, -1]) {
+				const tx = hearthCenter.x + dx * sign;
+				if (tx >= 5 && tx < width - 5) {
+					const ty = leyLines.westEast[tx];
+					if (ty >= 5 && ty < height - 5 &&
+						tiles[ty]?.[tx]?.region === 'hearthlands' &&
+						!tiles[ty][tx].locationId &&
+						settlements.every(s => Math.abs(s.pos.x - tx) + Math.abs(s.pos.y - ty) > 10)) {
+						farmPos = { x: tx, y: ty };
+						break;
+					}
+				}
+			}
+			if (farmPos) break;
+		}
+		if (farmPos) {
+			const farmId = `settlement_${settlements.length}`;
+			settlements.push({
+				id: farmId,
+				name: 'Thornfield Farm',
+				region: 'hearthlands',
+				pos: farmPos,
+				type: 'village',
+			});
+			tiles[farmPos.y][farmPos.x].locationId = farmId;
+		}
+	}
+
 	// 11. Place points of interest (after roads, so we can avoid them)
 	const pois = placePOIs(tiles, regionSeeds, settlements, width, height, rng);
 
