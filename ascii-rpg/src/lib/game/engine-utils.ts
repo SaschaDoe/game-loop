@@ -9,6 +9,8 @@ import { sightModifier, getTimePhase } from './day-night';
 import { getEquipmentBonuses } from './items';
 import { getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
+import { RITUAL_CATALOG } from './rituals';
+import type { WorldMap } from './overworld';
 
 const MOOD_RECOVERY_TURNS = 20;
 
@@ -158,6 +160,36 @@ export function tickNpcMoods(state: GameState) {
 				npc.mood = 'neutral';
 				npc.moodTurns = 0;
 				addMessage(state, `${npc.name} seems to have calmed down.`, 'npc');
+			}
+		}
+	}
+}
+
+export function learnRitual(state: GameState, ritualId: string): boolean {
+	if (state.learnedRituals.includes(ritualId)) return false;
+	if (!RITUAL_CATALOG[ritualId]) return false;
+
+	// Talent point cost
+	if (state.skillPoints <= 0) {
+		addMessage(state, 'You need a talent point to learn this ritual!', 'warning');
+		return false;
+	}
+
+	state.skillPoints--;
+	state.learnedRituals.push(ritualId);
+	const ritual = RITUAL_CATALOG[ritualId];
+	addMessage(state, `You have learned the ritual: ${ritual.name}!`, 'magic');
+	return true;
+}
+
+export function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: number): void {
+	for (let dy = -radius; dy <= radius; dy++) {
+		for (let dx = -radius; dx <= radius; dx++) {
+			if (dx * dx + dy * dy > radius * radius) continue;
+			const wx = pos.x + dx;
+			const wy = pos.y + dy;
+			if (wx >= 0 && wy >= 0 && wx < worldMap.width && wy < worldMap.height) {
+				worldMap.explored[wy][wx] = true;
 			}
 		}
 	}
