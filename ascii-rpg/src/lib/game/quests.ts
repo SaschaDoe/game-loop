@@ -1196,6 +1196,44 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 		regionId: 'arcane_conservatory',
 		isMainQuest: false,
 	},
+
+	// ===================================================================
+	// LEY LINE QUESTS
+	// ===================================================================
+	threads_of_power: {
+		id: 'threads_of_power',
+		title: 'Threads of Power',
+		description: 'Prof. Ignis wants you to experience the ley lines firsthand. Cast True Sight at the convergence, walk the line, then return to feel the full power of the crossing point.',
+		objectives: [
+			{ id: 'tp_cast_truesight', description: 'Cast True Sight at the academy convergence', type: 'explore', target: 'convergence_truesight', required: 1 },
+			{ id: 'tp_walk_line', description: 'Walk along a ley line to observe the Strong zone', type: 'explore', target: 'leyline_strong', required: 1 },
+			{ id: 'tp_return_convergence', description: 'Return to the convergence and restore your mana', type: 'explore', target: 'convergence_restore', required: 1 },
+		],
+		rewards: {
+			xp: 100,
+			items: ['book_ley_lines'],
+		},
+		giverNpcName: 'Prof. Ignis',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	blighted_harvest: {
+		id: 'blighted_harvest',
+		title: 'Blighted Harvest',
+		description: 'A farmer in the Hearthlands reports strange happenings — crops twisting overnight, well water causing visions. Something unnatural runs through his land.',
+		objectives: [
+			{ id: 'bh_investigate', description: 'Investigate the farm with True Sight or Reveal Secrets', type: 'explore', target: 'farm_investigate', required: 1 },
+			{ id: 'bh_resolve', description: 'Ward the well or redirect the ley line', type: 'explore', target: 'farm_resolve', required: 1 },
+		],
+		rewards: {
+			xp: 200,
+			items: ['ley_water_vial'],
+		},
+		giverNpcName: 'Farmer Edric',
+		regionId: 'hearthlands',
+		isMainQuest: false,
+	},
 };
 
 // ---------------------------------------------------------------------------

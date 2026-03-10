@@ -121,8 +121,8 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 describe('QUEST_CATALOG', () => {
 	const allDefs = Object.values(QUEST_CATALOG);
 
-	it('has the expected number of quests (5 main + 55 side = 60)', () => {
-		expect(Object.keys(QUEST_CATALOG).length).toBe(60);
+	it('has the expected number of quests (5 main + 57 side = 62)', () => {
+		expect(Object.keys(QUEST_CATALOG).length).toBe(62);
 	});
 
 	it('every quest has a valid id that matches its catalog key', () => {
@@ -172,7 +172,7 @@ describe('QUEST_CATALOG', () => {
 		const mainQuests = allDefs.filter((d) => d.isMainQuest);
 		const sideQuests = allDefs.filter((d) => !d.isMainQuest);
 		expect(mainQuests.length).toBe(5);
-		expect(sideQuests.length).toBe(55);
+		expect(sideQuests.length).toBe(57);
 	});
 
 	it('main quests form a prerequisite chain', () => {
@@ -668,9 +668,9 @@ describe('getAvailableQuests', () => {
 	it('returns all available quests when no filters are provided', () => {
 		const state = makeTestState();
 		const available = getAvailableQuests(state);
-		// Only non-prerequisite quests should be available: side quests without prereqs (46) + main_01 (no prereq) = 47
+		// Only non-prerequisite quests should be available: side quests without prereqs (48) + main_01 (no prereq) = 49
 		// main_02-05, side_kort_crown, side_eg_beast, and 7 arcane_conservatory prereq quests are excluded
-		expect(available.length).toBe(47);
+		expect(available.length).toBe(49);
 	});
 
 	it('returns quests filtered by both NPC name and region', () => {
@@ -678,5 +678,38 @@ describe('getAvailableQuests', () => {
 		const available = getAvailableQuests(state, 'Druid Fen', 'greenweald');
 		expect(available.length).toBe(1);
 		expect(available[0].id).toBe('side_gw_elder');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Ley line quests
+// ---------------------------------------------------------------------------
+
+describe('ley line quests', () => {
+	it('has threads_of_power quest definition', () => {
+		expect(QUEST_CATALOG['threads_of_power']).toBeDefined();
+		expect(QUEST_CATALOG['threads_of_power'].title).toBe('Threads of Power');
+		expect(QUEST_CATALOG['threads_of_power'].objectives).toHaveLength(3);
+		expect(QUEST_CATALOG['threads_of_power'].isMainQuest).toBe(false);
+	});
+
+	it('has blighted_harvest quest definition', () => {
+		expect(QUEST_CATALOG['blighted_harvest']).toBeDefined();
+		expect(QUEST_CATALOG['blighted_harvest'].title).toBe('Blighted Harvest');
+		expect(QUEST_CATALOG['blighted_harvest'].objectives).toHaveLength(2);
+	});
+
+	it('can accept threads_of_power', () => {
+		const state = makeTestState();
+		const result = acceptQuest(state, 'threads_of_power');
+		expect(result.success).toBe(true);
+		expect(state.quests[0].title).toBe('Threads of Power');
+	});
+
+	it('can accept blighted_harvest', () => {
+		const state = makeTestState();
+		const result = acceptQuest(state, 'blighted_harvest');
+		expect(result.success).toBe(true);
+		expect(state.quests[0].title).toBe('Blighted Harvest');
 	});
 });
