@@ -442,6 +442,10 @@ export interface GameState {
 		soulCapLost: number;
 	};
 	leyLineLevel: number;
+	/** Remaining turns of True Sight ley line vision (reveals ley lines on overworld) */
+	trueSightActive: number;
+	/** Tile keys ("x,y") with ley lines revealed by Reveal Secrets this turn */
+	revealedLeyLineTiles: Set<string>;
 
 	// Ritual system (Epic 79)
 	learnedRituals: string[];

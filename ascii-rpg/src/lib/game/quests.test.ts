@@ -98,6 +98,8 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 		schoolMastery: {},
 		forbiddenCosts: { corruption: 0, paradoxBaseline: 0, maxHpLost: 0, sanityLost: 0, soulCapLost: 0 },
 		leyLineLevel: 0,
+		trueSightActive: 0,
+		revealedLeyLineTiles: new Set(),
 		learnedRituals: [],
 		ritualChanneling: null,
 		activeWards: [],

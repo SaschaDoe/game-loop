@@ -1000,6 +1000,18 @@ export function handleOverworldInput(
 
 	state.turnCount += moveCost;
 
+	// Tick True Sight duration
+	if (state.trueSightActive > 0) {
+		state.trueSightActive--;
+		if (state.trueSightActive === 0) {
+			addMessage(state, 'Your True Sight fades.', 'info');
+		}
+	}
+	// Clear Reveal Secrets one-shot tiles each movement
+	if (state.revealedLeyLineTiles?.size > 0) {
+		state.revealedLeyLineTiles = new Set();
+	}
+
 	// Tick academy notifications on overworld
 	const academyOWMsgs = tickAcademy(state);
 	for (const msg of academyOWMsgs) state.messages.push(msg);
@@ -1102,6 +1114,17 @@ export function renderOverworldColored(state: GameState): { char: string; color:
 				const roadColor = isNearPlayer ? '#ca8' : '#654';
 				row.push({ char: roadChar, color: roadColor });
 				continue;
+			}
+
+			// Ley line color overlay (True Sight or Reveal Secrets)
+			if (tile.leyLine && isNearPlayer) {
+				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`));
+				if (leyVisible) {
+					const display = TERRAIN_DISPLAY[tile.terrain];
+					const leyColor = tile.leyLine === 'convergence' ? '#fc4' : tile.leyLine === 'core' ? '#4ff' : '#2aa';
+					row.push({ char: display.char, color: leyColor });
+					continue;
+				}
 			}
 
 			// Terrain

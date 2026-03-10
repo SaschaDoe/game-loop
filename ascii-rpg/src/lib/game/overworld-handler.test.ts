@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getLeyLineLevelForTile, exitToOverworld, handleOverworldInput } from './overworld-handler';
+import { getLeyLineLevelForTile, exitToOverworld, handleOverworldInput, renderOverworldColored } from './overworld-handler';
 import type { OverworldTile, WorldMap } from './overworld';
 import type { GameState } from './types';
 import { Visibility } from './types';
@@ -116,6 +116,8 @@ function makeOverworldState(overrides?: Partial<GameState>): GameState {
 		schoolMastery: {},
 		forbiddenCosts: { corruption: 0, paradoxBaseline: 0, maxHpLost: 0, sanityLost: 0, soulCapLost: 0 },
 		leyLineLevel: 2,
+		trueSightActive: 0,
+		revealedLeyLineTiles: new Set(),
 		learnedRituals: [],
 		ritualChanneling: null,
 		activeWards: [],
@@ -294,5 +296,148 @@ describe('handleOverworldInput convergence mana restore', () => {
 		});
 		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
 		expect(result.player.mana).toBe(3);
+	});
+});
+
+// ── True Sight tick-down on overworld movement ──
+
+describe('trueSightActive tick-down on overworld movement', () => {
+	const noopCreate = () => makeOverworldState();
+	const noopNewLevel = () => makeOverworldState();
+
+	it('decrements trueSightActive by 1 on movement', () => {
+		const worldMap = makeSmallWorldMap();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 5,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.trueSightActive).toBe(4);
+	});
+
+	it('shows fade message when trueSightActive reaches 0', () => {
+		const worldMap = makeSmallWorldMap();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 1,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.trueSightActive).toBe(0);
+		expect(result.messages.some(m => m.text.includes('True Sight fades'))).toBe(true);
+	});
+
+	it('does not decrement trueSightActive when already 0', () => {
+		const worldMap = makeSmallWorldMap();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 0,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.trueSightActive).toBe(0);
+	});
+});
+
+// ── revealedLeyLineTiles clears on movement ──
+
+describe('revealedLeyLineTiles clears on movement', () => {
+	const noopCreate = () => makeOverworldState();
+	const noopNewLevel = () => makeOverworldState();
+
+	it('clears revealedLeyLineTiles on movement', () => {
+		const worldMap = makeSmallWorldMap();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			revealedLeyLineTiles: new Set(['3,3', '4,4']),
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.revealedLeyLineTiles.size).toBe(0);
+	});
+});
+
+// ── renderOverworldColored ley line visibility ──
+
+describe('renderOverworldColored ley line tinting', () => {
+	it('shows ley line color when trueSightActive > 0', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core' });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+		});
+		const grid = renderOverworldColored(state);
+		// The player is at (2,2) which renders as '@'. Ley line tile is also at (2,2).
+		// Check an adjacent ley line tile — set one up manually.
+		// Actually, center tile is player '@', so test a tile near but not on the player.
+		// Let's place a ley line on tile (1,2) instead.
+		worldMap.tiles[2][1] = { terrain: 'grass', region: 'hearthlands', leyLine: 'core' };
+		const grid2 = renderOverworldColored(state);
+		// Tile (1,2) relative to viewport: player at (2,2), viewport centered on player.
+		// With a 5x5 world, camX=2, camY=2, startX=2-halfW, startY=2-halfH.
+		// halfW depends on OVERWORLD_VIEWPORT_W. Let's just search the grid for the expected color.
+		const flatCells = grid2.flat();
+		const coreCells = flatCells.filter(c => c.color === '#4ff');
+		expect(coreCells.length).toBeGreaterThan(0);
+	});
+
+	it('shows convergence ley line as gold', () => {
+		const worldMap = makeSmallWorldMap();
+		worldMap.tiles[2][1] = { terrain: 'grass', region: 'hearthlands', leyLine: 'convergence' };
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 3,
+		});
+		const grid = renderOverworldColored(state);
+		const flatCells = grid.flat();
+		const convergenceCells = flatCells.filter(c => c.color === '#fc4');
+		expect(convergenceCells.length).toBeGreaterThan(0);
+	});
+
+	it('shows aura ley line as teal', () => {
+		const worldMap = makeSmallWorldMap();
+		worldMap.tiles[2][1] = { terrain: 'grass', region: 'hearthlands', leyLine: 'aura' };
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 3,
+		});
+		const grid = renderOverworldColored(state);
+		const flatCells = grid.flat();
+		const auraCells = flatCells.filter(c => c.color === '#2aa');
+		expect(auraCells.length).toBeGreaterThan(0);
+	});
+
+	it('does not show ley line color when trueSightActive is 0 and no revealed tiles', () => {
+		const worldMap = makeSmallWorldMap();
+		worldMap.tiles[2][1] = { terrain: 'grass', region: 'hearthlands', leyLine: 'core' };
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			revealedLeyLineTiles: new Set(),
+		});
+		const grid = renderOverworldColored(state);
+		const flatCells = grid.flat();
+		const coreCells = flatCells.filter(c => c.color === '#4ff');
+		expect(coreCells.length).toBe(0);
+	});
+
+	it('shows ley line color for tiles in revealedLeyLineTiles', () => {
+		const worldMap = makeSmallWorldMap();
+		worldMap.tiles[2][1] = { terrain: 'grass', region: 'hearthlands', leyLine: 'core' };
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			revealedLeyLineTiles: new Set(['1,2']),
+		});
+		const grid = renderOverworldColored(state);
+		const flatCells = grid.flat();
+		const coreCells = flatCells.filter(c => c.color === '#4ff');
+		expect(coreCells.length).toBeGreaterThan(0);
 	});
 });

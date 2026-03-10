@@ -319,14 +319,14 @@ export const SPELL_CATALOG: Record<string, SpellDef> = {
 	spell_true_sight: {
 		id: 'spell_true_sight', name: 'True Sight', school: 'divination', tier: 1,
 		description: 'Pierce through darkness and illusion.',
-		effect: '+3 sight radius for 10 turns. Reveals hidden enemies.',
+		effect: '+3 sight radius for 10 turns. Reveals hidden enemies and ley lines.',
 		manaCost: 3, cooldown: 5, targetType: 'self',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
 	},
 	spell_reveal_secrets: {
 		id: 'spell_reveal_secrets', name: 'Reveal Secrets', school: 'divination', tier: 1,
 		description: 'Sense hidden passages and traps nearby.',
-		effect: 'Detects all traps and secrets in 5-tile radius.',
+		effect: 'Detects all traps, secrets, and ley lines in 5-tile radius.',
 		manaCost: 4, cooldown: 8, targetType: 'self',
 		baseDamage: 0, baseHeal: 0, aoeRadius: 0,
 	},

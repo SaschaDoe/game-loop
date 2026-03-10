@@ -274,6 +274,30 @@ function castSpellById(state: GameState, spellId: string): GameState {
 			for (const target of targets) {
 				applyTerrainEffectsFromSpell(state, spell, target.pos);
 			}
+			// True Sight: activate ley line vision on overworld
+			if (spell.id === 'spell_true_sight') {
+				state.trueSightActive = 10;
+			}
+			// Reveal Secrets: ping nearby ley line tiles
+			if (spell.id === 'spell_reveal_secrets' && state.locationMode === 'overworld' && state.worldMap) {
+				const worldMap = state.worldMap as any;
+				const pos = state.overworldPos!;
+				state.revealedLeyLineTiles = new Set();
+				for (let dy = -5; dy <= 5; dy++) {
+					for (let dx = -5; dx <= 5; dx++) {
+						const tx = pos.x + dx;
+						const ty = pos.y + dy;
+						if (tx >= 0 && ty >= 0 && tx < worldMap.width && ty < worldMap.height) {
+							if (worldMap.tiles[ty][tx].leyLine) {
+								state.revealedLeyLineTiles.add(`${tx},${ty}`);
+							}
+						}
+					}
+				}
+				if (state.revealedLeyLineTiles.size > 0) {
+					addMessage(state, 'You sense streams of magical energy flowing through the earth!', 'magic');
+				}
+			}
 		}
 		state.spellMenuOpen = false;
 		moveEnemies(state);

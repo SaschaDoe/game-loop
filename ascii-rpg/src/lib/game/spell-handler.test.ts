@@ -112,6 +112,8 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		schoolMastery: {},
 		forbiddenCosts: { corruption: 0, paradoxBaseline: 0, maxHpLost: 0, sanityLost: 0, soulCapLost: 0 },
 		leyLineLevel: 2,
+		trueSightActive: 0,
+		revealedLeyLineTiles: new Set(),
 		learnedRituals: [],
 		ritualChanneling: null,
 		activeWards: [],
@@ -542,5 +544,160 @@ describe('handleSpellMenu', () => {
 
 		handleSpellMenu(state, 'ArrowDown');
 		expect(state.spellMenuCursor).toBe(1);
+	});
+});
+
+// ── True Sight activates trueSightActive ──
+
+describe('True Sight ley line vision', () => {
+	it('sets trueSightActive to 10 when True Sight is cast', () => {
+		const state = makeTestState({
+			learnedSpells: ['spell_true_sight'],
+			spellMenuOpen: true,
+			spellMenuCursor: 0,
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+			leyLineLevel: 2,
+		});
+		const result = handleSpellMenu(state, 'Enter');
+		expect(result.trueSightActive).toBe(10);
+	});
+});
+
+// ── Reveal Secrets populates revealedLeyLineTiles ──
+
+describe('Reveal Secrets ley line detection', () => {
+	it('populates revealedLeyLineTiles with nearby ley line positions', () => {
+		const width = 15;
+		const height = 15;
+		const tiles: any[][] = Array.from({ length: height }, () =>
+			Array.from({ length: width }, () => ({ terrain: 'grass', region: 'hearthlands' })),
+		);
+		// Place ley line tiles near player position (7,7)
+		tiles[7][8] = { terrain: 'grass', region: 'hearthlands', leyLine: 'core' };
+		tiles[6][7] = { terrain: 'grass', region: 'hearthlands', leyLine: 'aura' };
+		tiles[10][10] = { terrain: 'grass', region: 'hearthlands', leyLine: 'convergence' };
+
+		const worldMap = {
+			width,
+			height,
+			tiles,
+			regions: [],
+			settlements: [],
+			dungeonEntrances: [],
+			roads: [],
+			pois: [],
+			explored: Array.from({ length: height }, () => Array.from({ length: width }, () => true)),
+			leyLines: { northSouth: [], westEast: [] },
+		};
+
+		const state = makeTestState({
+			learnedSpells: ['spell_reveal_secrets'],
+			spellMenuOpen: true,
+			spellMenuCursor: 0,
+			locationMode: 'overworld' as const,
+			worldMap: worldMap as any,
+			overworldPos: { x: 7, y: 7 },
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+			leyLineLevel: 2,
+		});
+		const result = handleSpellMenu(state, 'Enter');
+		// Tiles at (8,7) and (7,6) are within 5-tile radius; (10,10) is also within 5 tiles
+		expect(result.revealedLeyLineTiles.has('8,7')).toBe(true);
+		expect(result.revealedLeyLineTiles.has('7,6')).toBe(true);
+		expect(result.revealedLeyLineTiles.has('10,10')).toBe(true);
+	});
+
+	it('shows magic message when ley lines are found', () => {
+		const width = 15;
+		const height = 15;
+		const tiles: any[][] = Array.from({ length: height }, () =>
+			Array.from({ length: width }, () => ({ terrain: 'grass', region: 'hearthlands' })),
+		);
+		tiles[7][8] = { terrain: 'grass', region: 'hearthlands', leyLine: 'core' };
+
+		const worldMap = {
+			width,
+			height,
+			tiles,
+			regions: [],
+			settlements: [],
+			dungeonEntrances: [],
+			roads: [],
+			pois: [],
+			explored: Array.from({ length: height }, () => Array.from({ length: width }, () => true)),
+			leyLines: { northSouth: [], westEast: [] },
+		};
+
+		const state = makeTestState({
+			learnedSpells: ['spell_reveal_secrets'],
+			spellMenuOpen: true,
+			spellMenuCursor: 0,
+			locationMode: 'overworld' as const,
+			worldMap: worldMap as any,
+			overworldPos: { x: 7, y: 7 },
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+			leyLineLevel: 2,
+		});
+		const result = handleSpellMenu(state, 'Enter');
+		expect(result.messages.some(m => m.text.includes('streams of magical energy'))).toBe(true);
+	});
+
+	it('does not populate revealedLeyLineTiles when not in overworld', () => {
+		const state = makeTestState({
+			learnedSpells: ['spell_reveal_secrets'],
+			spellMenuOpen: true,
+			spellMenuCursor: 0,
+			locationMode: 'location' as const,
+			worldMap: null,
+			overworldPos: null,
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+			leyLineLevel: 2,
+		});
+		const result = handleSpellMenu(state, 'Enter');
+		expect(result.revealedLeyLineTiles.size).toBe(0);
 	});
 });

@@ -215,6 +215,8 @@ export function createGame(config?: CharacterConfig): GameState {
 			soulCapLost: 0,
 		},
 		leyLineLevel: 2,
+		trueSightActive: 0,
+		revealedLeyLineTiles: new Set(),
 
 		// Ritual system
 		learnedRituals: [],
@@ -582,6 +584,8 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 			soulCapLost: 0,
 		},
 		leyLineLevel: 2,
+		trueSightActive: 0,
+		revealedLeyLineTiles: new Set(),
 
 		// Ritual system
 		learnedRituals: [],
