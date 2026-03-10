@@ -18,22 +18,24 @@ Each school has five spell tiers and three mastery levels (Novice, Adept, Master
 
 Spells can be learned from seven distinct sources, each with its own flavour and requirements:
 
-1. **Academy Lessons** (Epic 78): The structured curriculum teaches 4–6 spells across 8 lessons. This is the gentlest on-ramp for players new to magic. Attending lessons grants spells automatically upon completion.
+**All spell learning costs 1 talent point** (the unified progression currency). You must both find the source AND have a talent point available. Starting spells from character creation are free.
 
-2. **NPC Teachers**: Certain NPCs teach specific spells through dialogue. Requirements vary — some demand reputation or friendship levels, others ask for gold, and others require a completed quest. Examples: temple priests teach Restoration spells; Primordialist druids teach nature-themed Elements spells; Runeweaver artisans teach Enchantment.
+1. **Academy Lessons** (Epic 78): The structured curriculum teaches 4–6 spells across 8 lessons. Each spell learned **costs 1 talent point**. If the player has 0 talent points, the lesson completes but the spell is not learned: *"You understand the theory but can't internalize the spell yet. Return when you've gained more experience."*
+
+2. **NPC Teachers**: Certain NPCs teach specific spells through dialogue. Requirements vary — some demand reputation or friendship levels, others ask for gold, and others require a completed quest. Learning the spell **costs 1 talent point**. Examples: temple priests teach Restoration spells; Primordialist druids teach nature-themed Elements spells; Runeweaver artisans teach Enchantment.
 
 3. **Spell Scrolls**: Found as loot in dungeons, chests, and enemy drops. Reading a spell scroll presents a choice:
-   - **Learn** the spell permanently (scroll is consumed, costs 1 skill point).
-   - **Save** the scroll for a one-shot emergency cast later (scroll is consumed on cast, no skill point needed).
+   - **Learn** the spell permanently (scroll is consumed, **costs 1 talent point**).
+   - **Save** the scroll for a one-shot emergency cast later (scroll is consumed on cast, no talent point needed).
    A scroll cannot do both — the player must choose.
 
-4. **Spell Tomes**: Found in libraries, dungeons, and shops. Reading a tome teaches the spell permanently, but **costs 1 skill point** to internalize the knowledge. The tome is **not consumed** — it can be traded, sold, or given to an NPC after reading. If the player has 0 skill points: "You read the words but can't focus the knowledge into a spell. You need more experience." (The book remains usable later when a skill point is available.)
+4. **Spell Tomes**: Found in libraries, dungeons, and shops. Reading a tome teaches the spell permanently, **costs 1 talent point** to internalize the knowledge. The tome is **not consumed** — it can be traded, sold, or given to an NPC after reading. If the player has 0 talent points: *"You read the words but can't focus the knowledge into a spell. You need more experience."* (The book remains usable later when a talent point is available.)
 
-5. **Quest Rewards**: Some quests grant spells directly as part of their resolution. For example: *"The grateful mage teaches you Firebolt."* The quest log or dialogue should telegraph the reward where appropriate.
+5. **Quest Rewards**: Some quests grant spells as part of their resolution, **costing 1 talent point**. For example: *"The grateful mage teaches you Firebolt."* If 0 talent points, the spell teaching is deferred: the NPC offers to teach later when the player has a talent point.
 
-6. **Experimentation** (Mage class only): At a Ley Line nexus, a Mage can spend 50 mana + 10 turns to attempt to discover a random spell from a school in which they have Novice or higher mastery. Base success rate: 30%. Failure: mana is spent, player takes small backlash damage. See US-MS-62 for full details.
+6. **Experimentation** (Mage class only): At a Ley Line nexus, a Mage can spend 50 mana + 10 turns + **1 talent point** to attempt to discover a random spell from a school in which they have Novice or higher mastery. Base success rate: 30%. Failure: mana is spent, player takes small backlash damage, **talent point is NOT consumed on failure**. See US-MS-62 for full details.
 
-7. **Forbidden Sources**: Each forbidden school has its own discovery path:
+7. **Forbidden Sources**: Each forbidden school has its own discovery path. Learning forbidden spells **costs 1 talent point** in addition to the permanent forbidden cost:
    - Blood Magic — learned from Blood Singer NPCs or dark texts found in hidden locations.
    - Necromancy — learned in crypts, ossuaries, and death-touched areas.
    - Void Magic — learned at Void Scars and from the whispers that emanate from them.
@@ -42,17 +44,17 @@ Spells can be learned from seven distinct sources, each with its own flavour and
 
 ### Acceptance Criteria
 
-- [ ] A `learnSpell(state, spellId, source)` function (or equivalent) adds the spell to `state.learnedSpells` and emits the message *"You have learned [Spell Name]!"*.
-- [ ] If the player already knows the spell, the function emits *"You already know this spell."* and makes no changes.
-- [ ] Academy lessons call `learnSpell` with `source: 'academy'` upon lesson completion.
-- [ ] NPC teachers call `learnSpell` with `source: 'npc'` when dialogue conditions are met (reputation, gold, quest flags checked before the option appears).
-- [ ] Spell scrolls present a two-option dialogue: "Learn this spell (1 skill point)" / "Save for later". Learning consumes the scroll, deducts 1 skill point, and calls `learnSpell` with `source: 'scroll'`. Option is greyed out if 0 skill points. Saving keeps the scroll as a usable item.
-- [ ] Spell tomes call `learnSpell` with `source: 'tome'`, deduct 1 skill point, and remain in the player's inventory after use. If 0 skill points, display message and do not teach the spell.
-- [ ] Quest rewards call `learnSpell` with `source: 'quest'` as part of quest completion logic.
-- [ ] Experimentation is gated to the Mage class and requires a Ley Line nexus tile, 50+ mana, and Novice+ mastery in the target school.
-- [ ] Forbidden sources are gated to their respective locations/NPCs and present a permanent-cost warning before teaching (see US-MS-60).
+- [ ] A `learnSpell(state, spellId)` function adds the spell to `state.learnedSpells`, **deducts 1 talent point** (`state.skillPoints--`), and emits *"You have learned [Spell Name]!"*.
+- [ ] If the player has 0 talent points, `learnSpell` returns false and emits *"You need a talent point to learn this spell!"* without making changes.
+- [ ] If the player already knows the spell, the function emits *"You already know this spell."* and makes no changes (no talent point deducted).
+- [ ] Starting spells from character creation (CLASS_PROFILES.startingSpell) are granted free — they bypass the talent point check.
+- [ ] All other spell sources (academy, NPC, scroll, tome, quest, experimentation, forbidden) cost 1 talent point.
+- [ ] Spell scrolls present a two-option dialogue: "Learn this spell (1 talent point)" / "Save for later". Learning consumes the scroll, deducts 1 talent point, and calls `learnSpell`. Option is greyed out if 0 talent points.
+- [ ] Spell tomes call `learnSpell`, deducting 1 talent point. Tome remains in inventory. If 0 talent points, display message and do not teach.
+- [ ] Forbidden sources present a permanent-cost warning AND talent point cost before teaching (see US-MS-60).
 - [ ] The spell menu updates immediately when a new spell is learned.
 - [ ] A unit test confirms that learning the same spell twice does not create a duplicate entry.
+- [ ] A unit test confirms that learning a spell with 0 talent points fails.
 
 ---
 

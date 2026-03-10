@@ -41,12 +41,12 @@ This document defines the core attribute system and mana resource system that al
 | Bard        | Finesse            | Rapier, Lute              | Inspire                  | —                  | Light             |
 
 - [ ] Any class can be combined with any archetype (e.g., an Arcane Warrior is a battle-mage). The UI suggests default pairings but does not enforce them.
-- [ ] On level up, the player's primary attribute (determined by archetype) gains +1 automatically
-- [ ] On level up, the player receives +1 free attribute point to allocate to any attribute
+- [ ] **Attributes are fixed at character creation** (determined by archetype). They do NOT change on level-up.
+- [ ] Attributes can only change through: equipped artifacts/equipment, enchantments, environmental effects (shrine blessings, rest bonuses), and forbidden magic costs.
+- [ ] On level-up, the player receives +1 talent point only (no attribute changes).
 - [ ] Attributes are stored on Entity and persisted in save files
 - [ ] Monsters also have attributes (can be simplified — e.g., derived from their tier and level)
 - [ ] Attributes are validated: minimum value is 1, no maximum cap
-- [ ] **No permanent attribute or mana changes** come from enrollment, quest completion, or location bonuses. Only from: level-ups, equipped artifacts/equipment, and forbidden magic costs.
 
 ---
 
@@ -55,7 +55,7 @@ This document defines the core attribute system and mana resource system that al
 **As a** player, **I want** my HP, attack power, and other combat stats to derive from my attributes, **so that** investing in attributes feels impactful and my build choices matter.
 
 **Acceptance Criteria:**
-- [ ] `maxHp` is calculated as: `10 + (VIT * 3) + (level * floor(VIT / 5))`
+- [ ] `maxHp` is calculated as: `10 + (VIT * 3)` (level does not contribute — HP scales with VIT from gear/effects)
 - [ ] Physical `attack` is calculated as: `STR + weaponBonus` (weaponBonus defaults to 0 when no weapon equipped)
 - [ ] `spellPower` is calculated as: `INT + floor(WIL / 3)` — used to scale all spell damage and healing
 - [ ] `magicResist` is calculated as: `WIL + floor(INT / 4)` — incoming spell damage reduced by `magicResist`%, capped at 50%
@@ -80,7 +80,7 @@ This document defines the core attribute system and mana resource system that al
 
 **Acceptance Criteria:**
 - [ ] Entity has two new numeric fields: `mana` and `maxMana`
-- [ ] Base `maxMana` is calculated as: `INT * 2 + (level * 3)`
+- [ ] Base `maxMana` is calculated as: `INT * 2` (level does not contribute — mana scales with INT from gear/effects)
 - [ ] Archetype modifier applied to maxMana after base calculation:
   - Arcane: ×1.50 (multiply by 1.5, round down)
   - Finesse: ×0.75 (multiply by 0.75, round down)
@@ -91,7 +91,7 @@ This document defines the core attribute system and mana resource system that al
 - [ ] Mana is included in save/load serialization
 - [ ] If the player has zero learned spells, mana fields still exist on Entity but the HUD hides the MP bar (see US-MS-06)
 - [ ] On learning the first spell, the MP bar becomes visible without requiring any manual toggle
-- [ ] maxMana recalculates on level up (player may gain mana capacity mid-dungeon)
+- [ ] maxMana recalculates when INT changes (from equipment, enchantments, etc.)
 - [ ] Current mana is clamped to maxMana after recalculation (never exceeds max)
 
 ---
@@ -162,10 +162,8 @@ This document defines the core attribute system and mana resource system that al
 - [ ] Derived stats display their calculated values (e.g., `"Spell Power: 19  Magic Resist: 18%  Crit: 4.8%  Dodge: 5.0%"`)
 - [ ] On hover or inspect (keyboard shortcut), each derived stat shows a tooltip/breakdown explaining its calculation (e.g., `"Spell Power: 16 (INT) + 3 (WIL/3) = 19"`)
 - [ ] Temporary attribute modifiers (buffs/debuffs) are shown in a different color: green for bonuses, red for penalties
-- [ ] The level-up screen shows the automatic +1 primary attribute gain and presents a selection UI for the free +1 allocation
-- [ ] The free attribute point allocation on level-up shows the current value of each attribute and previews the new derived stats when hovering over a choice
-- [ ] Attribute allocation is confirmed before being applied (no accidental misclicks)
-- [ ] If the player levels up mid-combat, attribute allocation is deferred until combat ends
+- [ ] The level-up screen shows "+1 Talent Point" (no attribute allocation — attributes are fixed)
+- [ ] Attributes only change when equipping/unequipping gear or receiving enchantments/effects
 
 ---
 
@@ -218,7 +216,7 @@ interface Entity {
   maxMana: number;
 
   // Derived stats (US-MS-02) — recalculated, not stored directly
-  // maxHp: derived from VIT + level
+  // maxHp: derived from VIT only (no level component)
   // attack: derived from STR + weapon
   // physicalDefense: derived from armorValue + VIT
   spellPower: number;
@@ -272,17 +270,17 @@ const CLASS_PROFILES: Record<string, {
 
 ## Formulas Quick Reference
 
-| Derived Stat   | Formula                                         | Example (Mage L1, INT 16, WIL 14, AGI 8, VIT 8) |
+| Derived Stat   | Formula                                         | Example (Mage, INT 16, WIL 14, AGI 8, VIT 8) |
 |----------------|------------------------------------------------|---------------------------------------------------|
-| maxHp          | `10 + (VIT * 3) + (level * floor(VIT / 5))`   | 10 + 24 + (1 * 1) = 35                            |
+| maxHp          | `10 + (VIT * 3)`                               | 10 + 24 = 34                                      |
 | attack         | `STR + weaponBonus`                             | 6 + 0 = 6                                         |
 | spellPower     | `INT + floor(WIL / 3)`                          | 16 + 4 = 20                                       |
 | magicResist    | `WIL + floor(INT / 4)` (capped 50%)            | 14 + 4 = 18%                                      |
 | dodgeChance    | `AGI * 0.5`%                                    | 4.0%                                               |
 | critChance     | `AGI * 0.3`%                                    | 2.4%                                               |
 | physicalDefense | `armorValue + floor(VIT / 4)` | 0 + floor(8/4) = 2 (Mage, no armor) |
-| maxMana (base) | `INT * 2 + (level * 3)`                         | 32 + 3 = 35                                       |
-| maxMana (mod)  | `base * archetypeModifier`                          | 35 * 1.5 = 52 (Arcane)                              |
+| maxMana (base) | `INT * 2`                                       | 32                                                 |
+| maxMana (mod)  | `base * archetypeModifier`                      | 32 * 1.5 = 48 (Arcane)                             |
 | mana regen (base) | `+1 per 5 turns`                             | +1 every 5 turns                                   |
 | mana regen (INT) | `+1 per max(1, 20 - floor(INT/2)) turns`      | +1 every 12 turns                                  |
 
