@@ -339,6 +339,30 @@ describe('serializeState / deserializeState round-trip', () => {
 		const data = JSON.parse(json);
 		expect(data.version).toBe(SAVE_VERSION);
 	});
+
+	it('round-trips trueSightActive', () => {
+		const state = makeTestState({ trueSightActive: 7 });
+		const restored = deserializeState(serializeState(state));
+		expect(restored.trueSightActive).toBe(7);
+	});
+
+	it('defaults trueSightActive to 0 for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.trueSightActive;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.trueSightActive).toBe(0);
+	});
+
+	it('does not persist revealedLeyLineTiles (transient)', () => {
+		const state = makeTestState();
+		state.revealedLeyLineTiles.add('3,4');
+		state.revealedLeyLineTiles.add('5,6');
+		const restored = deserializeState(serializeState(state));
+		expect(restored.revealedLeyLineTiles).toBeInstanceOf(Set);
+		expect(restored.revealedLeyLineTiles.size).toBe(0);
+	});
 });
 
 describe('deserializeState error handling', () => {

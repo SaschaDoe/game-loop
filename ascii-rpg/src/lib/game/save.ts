@@ -89,6 +89,7 @@ interface SerializedState {
 		soulCapLost: number;
 	};
 	leyLineLevel?: number;
+	trueSightActive?: number;
 	// Terrain effects from spells
 	terrainEffects?: GameState['terrainEffects'];
 	// Class specialization & forbidden passives
@@ -238,6 +239,7 @@ export function serializeState(state: GameState): string {
 			schoolMastery: state.schoolMastery,
 			forbiddenCosts: state.forbiddenCosts,
 			leyLineLevel: state.leyLineLevel,
+			trueSightActive: state.trueSightActive ?? 0,
 			terrainEffects: state.terrainEffects,
 			specialization: state.specialization,
 			pendingSpecialization: state.pendingSpecialization,
@@ -339,6 +341,8 @@ export function deserializeState(json: string): GameState {
 			soulCapLost: 0,
 		},
 		leyLineLevel: s.leyLineLevel ?? 0,
+		trueSightActive: s.trueSightActive ?? 0,
+		revealedLeyLineTiles: new Set(),  // transient, not persisted
 		terrainEffects: s.terrainEffects ?? [],
 		specialization: s.specialization ?? null,
 		pendingSpecialization: s.pendingSpecialization ?? false,
