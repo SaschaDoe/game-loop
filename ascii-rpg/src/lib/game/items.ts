@@ -32,7 +32,7 @@ export interface Item {
 	slot?: EquipmentSlot;
 	stats?: ItemStats;
 	pages?: string[];
-	consumeEffect?: { hp?: number; hunger?: number; thirst?: number };
+	consumeEffect?: { hp?: number; hunger?: number; thirst?: number; mana?: number };
 	rarity?: ItemRarity;
 	enchantments?: Enchantment[];
 	weaponEffect?: WeaponEffect;
@@ -871,5 +871,17 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		id: 'alchemist_boots', name: "Alchemist's Boots", char: 'L', color: '#a84',
 		type: 'equipment', description: 'Acid-resistant leather with reinforced soles. Essential in Professor Thornwick\'s laboratory.',
 		slot: 'leftFoot', stats: { hp: 1, noiseReduction: 5 }, rarity: 'uncommon',
+	},
+
+	// --- Ley Line Items ---
+	ley_water_vial: {
+		id: 'ley_water_vial',
+		name: 'Ley Water Vial',
+		char: '!',
+		color: '#4ff',
+		type: 'consumable',
+		description: 'Water drawn from a well over a ley line. Restores mana but clouds the mind with strange visions.',
+		consumeEffect: { mana: 15, hp: -3 },
+		rarity: 'rare',
 	},
 };

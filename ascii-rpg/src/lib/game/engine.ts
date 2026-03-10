@@ -675,8 +675,12 @@ export function useInventoryItem(state: GameState, index: number): GameState {
 
 	if (item.type === 'consumable' && item.consumeEffect) {
 		if (item.consumeEffect.hp) {
-			state.player.hp = Math.min(state.player.maxHp, state.player.hp + item.consumeEffect.hp);
-			addMessage(state, `Used ${item.name}. +${item.consumeEffect.hp} HP.`, 'healing');
+			state.player.hp = Math.max(1, Math.min(state.player.maxHp, state.player.hp + item.consumeEffect.hp));
+			if (item.consumeEffect.hp > 0) {
+				addMessage(state, `Used ${item.name}. +${item.consumeEffect.hp} HP.`, 'healing');
+			} else {
+				addMessage(state, `Used ${item.name}. ${item.consumeEffect.hp} HP.`, 'damage_taken');
+			}
 		}
 		if (item.consumeEffect.hunger) {
 			state.hunger = Math.min(100, state.hunger + item.consumeEffect.hunger);
@@ -685,6 +689,15 @@ export function useInventoryItem(state: GameState, index: number): GameState {
 		if (item.consumeEffect.thirst) {
 			state.thirst = Math.min(100, state.thirst + item.consumeEffect.thirst);
 			addMessage(state, `Drank ${item.name}. Thirst restored.`, 'info');
+		}
+		if (item.consumeEffect.mana) {
+			const maxMana = state.player.maxMana ?? 0;
+			const currentMana = state.player.mana ?? 0;
+			const restored = Math.min(item.consumeEffect.mana, maxMana - currentMana);
+			state.player.mana = Math.min(maxMana, currentMana + item.consumeEffect.mana);
+			if (restored > 0) {
+				addMessage(state, `${item.name} restored ${restored} mana.`, 'info');
+			}
 		}
 		state.inventory[index] = null;
 		return { ...state };
