@@ -5918,13 +5918,13 @@ const FARMER_EDRIC_DIALOGUE: DialogueTree = {
 		ward_well: node('ward_well',
 			'You trace protective sigils around the well. The water stills, losing its eerie shimmer. The farm girl sips cautiously — no visions. Edric weeps with relief.',
 			[
-				opt('The well should be safe now.', '__exit__', '#4f4', { onSelect: { message: 'The well is safe, but the crops still grow strangely. Farmer Edric gives you a vial of the old well water as thanks.' } }),
+				opt('The well should be safe now.', '__exit__', '#4f4', { onSelect: { message: 'The well is safe, but the crops still grow strangely. Farmer Edric gives you a vial of the old well water as thanks.', completeQuest: 'blighted_harvest' } }),
 			]
 		),
 		redirect_flow: node('redirect_flow',
 			'Drawing on your knowledge of ley lines, you channel the energy around the farm. The glow fades from the crops. The well water runs clear. Even the livestock return to graze.',
 			[
-				opt('Your farm should recover now.', '__exit__', '#4f4', { onSelect: { message: 'The farm is restored. Farmer Edric gives you a vial of the old well water — the last of its power, safely contained.' } }),
+				opt('Your farm should recover now.', '__exit__', '#4f4', { onSelect: { message: 'The farm is restored. Farmer Edric gives you a vial of the old well water — the last of its power, safely contained.', completeQuest: 'blighted_harvest' } }),
 			]
 		),
 	}

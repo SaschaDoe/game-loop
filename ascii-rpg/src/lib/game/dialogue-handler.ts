@@ -3,7 +3,7 @@ import { addMessage, handlePlayerDeath, relocateNpc } from './engine-utils';
 import { revealOverworldArea } from './overworld-handler';
 import { learnRitual } from './spell-handler';
 import { SPELL_CATALOG } from './spells';
-import { acceptQuest } from './quests';
+import { acceptQuest, completeQuest } from './quests';
 import { enrollAtAcademy, completeLesson, completeTeachingSession, getAcademyDay, isLessonReady, allLessonsComplete } from './academy';
 import type { WorldMap } from './overworld';
 
@@ -257,6 +257,20 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			const questResult = acceptQuest(state, option.onSelect.acceptQuest);
 			if (questResult.success) {
 				addMessage(state, questResult.message, 'discovery');
+			}
+		}
+		// Complete quest from dialogue
+		if (option.onSelect.completeQuest) {
+			const quest = state.quests.find(q => q.id === option.onSelect.completeQuest && q.status === 'active');
+			if (quest) {
+				// Mark all objectives as complete
+				quest.objectives.forEach(o => { o.current = o.required; o.completed = true; });
+				const result = completeQuest(state, option.onSelect.completeQuest!);
+				if (result.success) {
+					for (const msg of result.messages) {
+						addMessage(state, msg, 'discovery');
+					}
+				}
 			}
 		}
 		if (option.onSelect.startExam) {

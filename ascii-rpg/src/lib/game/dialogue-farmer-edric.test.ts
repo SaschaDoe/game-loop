@@ -70,6 +70,16 @@ describe('Farmer Edric dialogue tree', () => {
 		expect(redirect.options[0].onSelect?.message).toContain('farm is restored');
 	});
 
+	it('ward_well option should complete blighted_harvest quest', () => {
+		const ward = tree.nodes['ward_well'];
+		expect(ward.options[0].onSelect?.completeQuest).toBe('blighted_harvest');
+	});
+
+	it('redirect_flow option should complete blighted_harvest quest', () => {
+		const redirect = tree.nodes['redirect_flow'];
+		expect(redirect.options[0].onSelect?.completeQuest).toBe('blighted_harvest');
+	});
+
 	it('all nodes should have valid nextNode references', () => {
 		for (const [nodeId, n] of Object.entries(tree.nodes)) {
 			for (const option of n.options) {

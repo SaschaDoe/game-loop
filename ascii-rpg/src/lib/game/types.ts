@@ -63,6 +63,7 @@ export interface DialogueEffect {
 	completeLesson?: string;
 	learnSpell?: string;    // spell ID to teach (free, no talent point cost)
 	acceptQuest?: string;   // quest ID to start
+	completeQuest?: string; // quest ID to complete (all objectives marked done)
 }
 
 export type DialogueCondition =

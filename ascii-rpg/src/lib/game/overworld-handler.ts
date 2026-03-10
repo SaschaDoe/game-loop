@@ -917,6 +917,32 @@ export function trackLeyLineQuestProgress(state: GameState): void {
 	}
 }
 
+/** Track Blighted Harvest quest objectives based on player proximity to Thornfield Farm. */
+export function trackBlightedHarvestProgress(state: GameState): void {
+	const quest = state.quests.find(q => q.id === 'blighted_harvest' && q.status === 'active');
+	if (!quest) return;
+
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos;
+	if (!pos || state.locationMode !== 'overworld') return;
+
+	// Check if player is at or inside Thornfield Farm
+	const farm = worldMap.settlements.find(s => s.name === 'Thornfield Farm');
+	if (!farm) return;
+
+	const nearFarm = Math.abs(pos.x - farm.pos.x) <= 2 && Math.abs(pos.y - farm.pos.y) <= 2;
+	const insideFarm = state.currentLocationId === farm.id;
+
+	if ((nearFarm || insideFarm) && (state.trueSightActive > 0 || (state.revealedLeyLineTiles?.size ?? 0) > 0)) {
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate');
+		if (obj && !obj.completed) {
+			obj.current = 1;
+			obj.completed = true;
+			addMessage(state, 'Through your magical sight, you see it clearly — a brilliant stream of energy runs directly through the field and under the well.', 'magic');
+		}
+	}
+}
+
 // ── Exit to Overworld ──
 
 /** Return to the overworld from a location. */
@@ -997,6 +1023,23 @@ export function handleOverworldInput(
 
 	// Track Threads of Power quest objectives (after mana restore, before True Sight tick-down)
 	trackLeyLineQuestProgress(state);
+	trackBlightedHarvestProgress(state);
+
+	// Ley line flavor text (when visible via True Sight)
+	if (state.trueSightActive > 0 && (targetTile.leyLine === 'core' || targetTile.leyLine === 'convergence')) {
+		const LEY_FLAVOR: Partial<Record<string, string>> = {
+			farmland: 'The crops grow unnaturally tall here, fed by unseen energy.',
+			forest: 'The trees hum faintly, leaves trembling without wind.',
+			grass: 'The ground pulses with faint warmth beneath your feet.',
+			rock: 'Veins of light trace through the stone.',
+			water: 'The surface shimmers with an inner glow.',
+			sand: 'The sand grains glitter with arcane residue.',
+			snow: 'The snow melts in thin lines, revealing warm earth beneath.',
+			swamp: 'The murky water glows faintly from below.',
+		};
+		const flavor = LEY_FLAVOR[targetTile.terrain] ?? 'You sense raw magical energy flowing through this place.';
+		addMessage(state, flavor, 'magic');
+	}
 
 	// Region transition announcement
 	if (nextRegion !== prevRegion) {

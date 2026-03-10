@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getLeyLineLevelForTile, exitToOverworld, handleOverworldInput, renderOverworldColored, trackLeyLineQuestProgress } from './overworld-handler';
+import { getLeyLineLevelForTile, exitToOverworld, handleOverworldInput, renderOverworldColored, trackLeyLineQuestProgress, trackBlightedHarvestProgress } from './overworld-handler';
 import type { OverworldTile, WorldMap } from './overworld';
 import type { GameState, Quest } from './types';
 import { Visibility } from './types';
@@ -709,5 +709,249 @@ describe('trackLeyLineQuestProgress', () => {
 		trackLeyLineQuestProgress(state);
 		const obj = quest.objectives.find(o => o.id === 'tp_cast_truesight')!;
 		expect(obj.completed).toBe(false);
+	});
+});
+
+// ── trackBlightedHarvestProgress ──
+
+/** Create a Blighted Harvest quest in active state. */
+function makeBlightedHarvestQuest(): Quest {
+	return {
+		id: 'blighted_harvest',
+		title: 'Blighted Harvest',
+		description: 'Investigate the strange happenings at Thornfield Farm.',
+		status: 'active',
+		objectives: [
+			{ id: 'bh_investigate', description: 'Investigate the farm with True Sight or Reveal Secrets', type: 'explore', target: 'farm_investigate', current: 0, required: 1, completed: false },
+			{ id: 'bh_resolve', description: 'Ward the well or redirect the ley line', type: 'explore', target: 'farm_resolve', current: 0, required: 1, completed: false },
+		],
+		rewards: { xp: 200, items: ['ley_water_vial'] },
+		giverNpcName: 'Farmer Edric',
+		regionId: 'hearthlands',
+		isMainQuest: false,
+		turnAccepted: 0,
+	};
+}
+
+/** Create a small world map with Thornfield Farm settlement at a given position. */
+function makeWorldMapWithFarm(farmPos: { x: number; y: number } = { x: 2, y: 2 }): WorldMap {
+	const wm = makeSmallWorldMap();
+	wm.settlements.push({
+		id: 'thornfield_farm',
+		name: 'Thornfield Farm',
+		region: 'hearthlands',
+		pos: farmPos,
+		type: 'farm',
+	});
+	return wm;
+}
+
+describe('trackBlightedHarvestProgress', () => {
+	it('does nothing when quest is not active', () => {
+		const worldMap = makeWorldMapWithFarm();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+			quests: [],
+		});
+		trackBlightedHarvestProgress(state);
+		expect(state.messages.every(m => !m.text.includes('magical sight'))).toBe(true);
+	});
+
+	it('completes bh_investigate when near farm with True Sight active', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 3,
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(true);
+		expect(obj.current).toBe(1);
+		expect(state.messages.some(m => m.text.includes('magical sight'))).toBe(true);
+	});
+
+	it('completes bh_investigate when near farm with Reveal Secrets pinged tiles', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 3, y: 2 },
+			trueSightActive: 0,
+			revealedLeyLineTiles: new Set(['2,2', '3,3']),
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(true);
+	});
+
+	it('completes bh_investigate when within 2 tiles of farm', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 4, y: 2 },  // 2 tiles away on x axis
+			trueSightActive: 1,
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(true);
+	});
+
+	it('does not complete bh_investigate when too far from farm', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 0, y: 0 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 4, y: 4 },  // far from farm at 0,0
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(false);
+	});
+
+	it('does not complete bh_investigate without True Sight or Reveal Secrets', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			revealedLeyLineTiles: new Set(),
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(false);
+	});
+
+	it('does not re-complete already completed bh_investigate', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		quest.objectives[0].completed = true;
+		quest.objectives[0].current = 1;
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		const msgCountBefore = state.messages.length;
+		trackBlightedHarvestProgress(state);
+		expect(state.messages.filter(m => m.text.includes('magical sight')).length).toBe(0);
+	});
+
+	it('completes bh_investigate when inside farm location', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 0, y: 0 },  // far from farm on overworld
+			currentLocationId: 'thornfield_farm',
+			trueSightActive: 3,
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(true);
+	});
+
+	it('does nothing when not in overworld mode', () => {
+		const worldMap = makeWorldMapWithFarm({ x: 2, y: 2 });
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			locationMode: 'location' as any,
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(false);
+	});
+
+	it('does nothing when Thornfield Farm settlement is missing', () => {
+		const worldMap = makeSmallWorldMap();  // no farm settlement
+		const quest = makeBlightedHarvestQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		trackBlightedHarvestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'bh_investigate')!;
+		expect(obj.completed).toBe(false);
+	});
+});
+
+// ── Ley line terrain flavor text ──
+
+describe('handleOverworldInput ley line flavor text', () => {
+	const noopCreate = () => makeOverworldState();
+	const noopNewLevel = () => makeOverworldState();
+
+	it('shows ley line flavor text when walking on core tile with True Sight', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core', terrain: 'farmland' });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 5,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.messages.some(m => m.text.includes('unnaturally tall'))).toBe(true);
+	});
+
+	it('shows flavor text on convergence tile with True Sight', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence', terrain: 'forest' });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 3,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.messages.some(m => m.text.includes('trees hum faintly'))).toBe(true);
+	});
+
+	it('shows generic flavor when terrain has no specific text', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core', terrain: 'mud' as any });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 5,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.messages.some(m => m.text.includes('raw magical energy'))).toBe(true);
+	});
+
+	it('does not show flavor text without True Sight', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core', terrain: 'grass' });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 0,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.messages.every(m => !m.text.includes('ground pulses'))).toBe(true);
+	});
+
+	it('does not show flavor text on aura tiles', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'aura', terrain: 'grass' });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 1, y: 2 },
+			trueSightActive: 5,
+		});
+		const result = handleOverworldInput(state, 'd', noopCreate, noopNewLevel);
+		expect(result.messages.every(m => !m.text.includes('ground pulses') && !m.text.includes('raw magical energy'))).toBe(true);
 	});
 });
