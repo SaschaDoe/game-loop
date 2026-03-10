@@ -260,12 +260,13 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 			}
 		}
 		// Complete quest from dialogue
-		if (option.onSelect.completeQuest) {
-			const quest = state.quests.find(q => q.id === option.onSelect.completeQuest && q.status === 'active');
+		if (option.onSelect?.completeQuest) {
+			const questId = option.onSelect.completeQuest;
+			const quest = state.quests.find(q => q.id === questId && q.status === 'active');
 			if (quest) {
 				// Mark all objectives as complete
 				quest.objectives.forEach(o => { o.current = o.required; o.completed = true; });
-				const result = completeQuest(state, option.onSelect.completeQuest!);
+				const result = completeQuest(state, questId);
 				if (result.success) {
 					for (const msg of result.messages) {
 						addMessage(state, msg, 'discovery');

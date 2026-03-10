@@ -741,7 +741,7 @@ function makeWorldMapWithFarm(farmPos: { x: number; y: number } = { x: 2, y: 2 }
 		name: 'Thornfield Farm',
 		region: 'hearthlands',
 		pos: farmPos,
-		type: 'farm',
+		type: 'village',
 	});
 	return wm;
 }

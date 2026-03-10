@@ -474,8 +474,8 @@ export function generateWorld(worldSeed: string, width: number = WORLD_W, height
 		// Search along the W-E ley line within hearthlands
 		let farmPos: Position | null = null;
 		for (let dx = 0; dx < 40; dx++) {
-			for (const sign of [1, -1]) {
-				const tx = hearthCenter.x + dx * sign;
+			for (const sign of [1, -1] as const) {
+				const tx: number = hearthCenter.x + dx * sign;
 				if (tx >= 5 && tx < width - 5) {
 					const ty = leyLines.westEast[tx];
 					if (ty >= 5 && ty < height - 5 &&
