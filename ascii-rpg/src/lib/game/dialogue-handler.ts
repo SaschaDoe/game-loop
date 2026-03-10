@@ -2,6 +2,8 @@ import type { GameState, Entity, CharacterClass, NPC, NPCMood, DialogueContext, 
 import { addMessage, handlePlayerDeath, relocateNpc } from './engine-utils';
 import { revealOverworldArea } from './overworld-handler';
 import { learnRitual } from './spell-handler';
+import { SPELL_CATALOG } from './spells';
+import { acceptQuest } from './quests';
 import { enrollAtAcademy, completeLesson, completeTeachingSession, getAcademyDay, isLessonReady, allLessonsComplete } from './academy';
 import type { WorldMap } from './overworld';
 
@@ -35,6 +37,10 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		academyAllLessonsComplete: allLessonsComplete(state),
 		lessonsCompleted: state.academyState?.lessonsCompleted ?? [],
 		academyExamTaken: state.academyState?.examTaken ?? false,
+		learnedSpells: state.learnedSpells,
+		learnedRituals: state.learnedRituals,
+		activeQuestIds: state.quests.filter(q => q.status === 'active').map(q => q.id),
+		completedQuestIds: state.completedQuestIds,
 	};
 }
 
@@ -67,6 +73,10 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'lessonCompleted': return ctx.lessonsCompleted.includes(cond.value);
 		case 'lessonNotCompleted': return !ctx.lessonsCompleted.includes(cond.value);
 		case 'academyExamNotTaken': return !ctx.academyExamTaken;
+		case 'hasSpell': return ctx.learnedSpells.includes(cond.value);
+		case 'hasRitual': return ctx.learnedRituals.includes(cond.value);
+		case 'hasQuest': return ctx.activeQuestIds.includes(cond.value);
+		case 'questCompleted': return ctx.completedQuestIds.includes(cond.value);
 		case 'allOf': return cond.conditions.every(c => checkCondition(c, ctx));
 	}
 }
@@ -230,6 +240,24 @@ export function handleDialogueChoice(state: GameState, optionIndex: number): Gam
 		if (option.onSelect.addTitle && !state.playerTitles.includes(option.onSelect.addTitle)) {
 			state.playerTitles.push(option.onSelect.addTitle);
 			addMessage(state, `Title earned: ${option.onSelect.addTitle}!`, 'discovery');
+		}
+		// Teach spells from dialogue (free — no talent point cost)
+		if (option.onSelect.learnSpell) {
+			const spellId = option.onSelect.learnSpell;
+			if (!state.learnedSpells.includes(spellId)) {
+				state.learnedSpells.push(spellId);
+				// Auto-assign to first empty quick-cast slot
+				const emptySlot = state.quickCastSlots.indexOf(null);
+				if (emptySlot !== -1) state.quickCastSlots[emptySlot] = spellId;
+				addMessage(state, `Spell learned: ${SPELL_CATALOG[spellId]?.name ?? spellId}!`, 'magic');
+			}
+		}
+		// Accept quest from dialogue
+		if (option.onSelect.acceptQuest) {
+			const questResult = acceptQuest(state, option.onSelect.acceptQuest);
+			if (questResult.success) {
+				addMessage(state, questResult.message, 'discovery');
+			}
 		}
 		if (option.onSelect.startExam) {
 			// Spawn exam golem in the arena area

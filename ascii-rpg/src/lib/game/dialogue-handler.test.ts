@@ -159,6 +159,10 @@ function makeDialogueContext(overrides?: Partial<DialogueContext>): DialogueCont
 		academyAllLessonsComplete: false,
 		lessonsCompleted: [],
 		academyExamTaken: false,
+		learnedSpells: [],
+		learnedRituals: [],
+		activeQuestIds: [],
+		completedQuestIds: [],
 		...overrides,
 	};
 }
@@ -765,6 +769,138 @@ describe('closeDialogue', () => {
 		});
 		const result = closeDialogue(state);
 		expect(result).not.toBe(state);
+	});
+});
+
+describe('dialogue effect: learnSpell', () => {
+	function makeDialogueState(options: any[], overrides?: Partial<GameState>) {
+		const npc = makeNpc({ name: 'Elder' });
+		const state = makeTestState({
+			npcs: [npc],
+			activeDialogue: {
+				tree: {
+					startNode: 'start',
+					nodes: {
+						start: {
+							id: 'start',
+							npcText: 'Hello traveler',
+							options,
+						},
+						next: {
+							id: 'next',
+							npcText: 'Interesting...',
+							options: [{ text: 'Bye', nextNode: '__exit__' }],
+						},
+					},
+				},
+				currentNodeId: 'start',
+				npcName: 'Elder',
+				npcChar: 'N',
+				npcColor: '#888',
+				visitedNodes: new Set<string>(),
+				givenItems: false,
+				mood: 'neutral' as NPCMood,
+				context: makeDialogueContext(),
+			},
+			...overrides,
+		});
+		return state;
+	}
+
+	it('teaches a spell for free via dialogue', () => {
+		const state = makeDialogueState([
+			{ text: 'Teach me', nextNode: 'next', onSelect: { learnSpell: 'spell_firebolt' } },
+		]);
+		const result = handleDialogueChoice(state, 0);
+		expect(result.learnedSpells).toContain('spell_firebolt');
+		expect(result.messages.some(m => m.text.includes('Spell learned'))).toBe(true);
+	});
+
+	it('does not duplicate already-known spells', () => {
+		const state = makeDialogueState([
+			{ text: 'Teach me', nextNode: 'next', onSelect: { learnSpell: 'spell_firebolt' } },
+		], { learnedSpells: ['spell_firebolt'] });
+		const result = handleDialogueChoice(state, 0);
+		expect(result.learnedSpells.filter(s => s === 'spell_firebolt')).toHaveLength(1);
+	});
+
+	it('auto-assigns to first empty quick-cast slot', () => {
+		const state = makeDialogueState([
+			{ text: 'Teach me', nextNode: 'next', onSelect: { learnSpell: 'spell_firebolt' } },
+		], { quickCastSlots: ['spell_heal', null, null, null] });
+		const result = handleDialogueChoice(state, 0);
+		expect(result.quickCastSlots[1]).toBe('spell_firebolt');
+	});
+});
+
+describe('dialogue effect: acceptQuest', () => {
+	function makeDialogueState(options: any[], overrides?: Partial<GameState>) {
+		const npc = makeNpc({ name: 'Elder' });
+		const state = makeTestState({
+			npcs: [npc],
+			activeDialogue: {
+				tree: {
+					startNode: 'start',
+					nodes: {
+						start: {
+							id: 'start',
+							npcText: 'Hello traveler',
+							options,
+						},
+						next: {
+							id: 'next',
+							npcText: 'Interesting...',
+							options: [{ text: 'Bye', nextNode: '__exit__' }],
+						},
+					},
+				},
+				currentNodeId: 'start',
+				npcName: 'Elder',
+				npcChar: 'N',
+				npcColor: '#888',
+				visitedNodes: new Set<string>(),
+				givenItems: false,
+				mood: 'neutral' as NPCMood,
+				context: makeDialogueContext(),
+			},
+			...overrides,
+		});
+		return state;
+	}
+
+	it('starts a quest via dialogue', () => {
+		const state = makeDialogueState([
+			{ text: 'Accept quest', nextNode: 'next', onSelect: { acceptQuest: 'main_01_whispers' } },
+		]);
+		const result = handleDialogueChoice(state, 0);
+		expect(result.quests.some(q => q.id === 'main_01_whispers')).toBe(true);
+		expect(result.messages.some(m => m.text.includes('Quest accepted'))).toBe(true);
+	});
+});
+
+describe('dialogue conditions: hasSpell/hasRitual/hasQuest/questCompleted', () => {
+	it('hasSpell returns true when spell is learned', () => {
+		const ctx = makeDialogueContext({ learnedSpells: ['spell_firebolt'] });
+		expect(checkCondition({ type: 'hasSpell', value: 'spell_firebolt' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'hasSpell', value: 'spell_heal' }, ctx)).toBe(false);
+	});
+
+	it('hasRitual returns true when ritual is learned', () => {
+		const ctx = makeDialogueContext({ learnedRituals: ['ritual_ward'] });
+		expect(checkCondition({ type: 'hasRitual', value: 'ritual_ward' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'hasRitual', value: 'ritual_summon' }, ctx)).toBe(false);
+	});
+
+	it('hasQuest returns true when quest is active', () => {
+		const ctx = makeDialogueContext({ activeQuestIds: ['main_01_whispers'] });
+		expect(checkCondition({ type: 'hasQuest', value: 'main_01_whispers' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'hasQuest', value: 'side_01' }, ctx)).toBe(false);
+	});
+
+	it('questCompleted returns true when quest is done', () => {
+		const ctx = makeDialogueContext({ completedQuestIds: ['main_01_whispers'] });
+		expect(checkCondition({ type: 'questCompleted', value: 'main_01_whispers' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'questCompleted', value: 'side_01' }, ctx)).toBe(false);
 	});
 });
 

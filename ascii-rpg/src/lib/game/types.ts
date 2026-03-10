@@ -61,6 +61,8 @@ export interface DialogueEffect {
 	addTitle?: string;
 	learnRitual?: string;
 	completeLesson?: string;
+	learnSpell?: string;    // spell ID to teach (free, no talent point cost)
+	acceptQuest?: string;   // quest ID to start
 }
 
 export type DialogueCondition =
@@ -91,6 +93,10 @@ export type DialogueCondition =
 	| { type: 'lessonCompleted'; value: string }
 	| { type: 'lessonNotCompleted'; value: string }
 	| { type: 'academyExamNotTaken' }
+	| { type: 'hasSpell'; value: string }
+	| { type: 'hasRitual'; value: string }
+	| { type: 'hasQuest'; value: string }
+	| { type: 'questCompleted'; value: string }
 	| { type: 'allOf'; conditions: DialogueCondition[] };
 
 export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
@@ -156,6 +162,10 @@ export interface DialogueContext {
 	academyAllLessonsComplete: boolean;
 	lessonsCompleted: string[];
 	academyExamTaken: boolean;
+	learnedSpells: string[];
+	learnedRituals: string[];
+	activeQuestIds: string[];
+	completedQuestIds: string[];
 }
 
 export interface ActiveDialogue {
