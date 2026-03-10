@@ -553,7 +553,7 @@ function generateLeyLines(
 			}
 		}
 		// Core on the line itself (overrides aura, but not convergence)
-		if (!tiles[y][cx].leyLine) {
+		if (tiles[y][cx].leyLine !== 'convergence') {
 			tiles[y][cx].leyLine = 'core';
 		}
 	}
@@ -570,7 +570,7 @@ function generateLeyLines(
 			}
 		}
 		// Core on the line itself (overrides aura, but not convergence)
-		if (!tiles[cy][x].leyLine) {
+		if (tiles[cy][x].leyLine !== 'convergence') {
 			tiles[cy][x].leyLine = 'core';
 		}
 	}
