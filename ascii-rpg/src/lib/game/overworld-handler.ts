@@ -848,6 +848,18 @@ export function discoverPOI(state: GameState, poi: PointOfInterest): void {
 	}
 }
 
+// ── Ley Line Level Helper ──
+
+/** Map an overworld tile's leyLine property to the corresponding ley line power level (0-4). */
+export function getLeyLineLevelForTile(tile: OverworldTile): number {
+	switch (tile.leyLine) {
+		case 'convergence': return 4;
+		case 'core': return 3;
+		case 'aura': return 2;
+		default: return 2; // Normal background level
+	}
+}
+
 // ── Exit to Overworld ──
 
 /** Return to the overworld from a location. */
@@ -869,7 +881,9 @@ export function exitToOverworld(state: GameState): GameState {
 	state.chests = [];
 	state.lootDrops = [];
 	state.landmarks = [];
-	state.leyLineLevel = 2; // Overworld: normal ley line level
+	const worldMap = state.worldMap as WorldMap;
+	const currentTile = worldMap.tiles[state.overworldPos!.y]?.[state.overworldPos!.x];
+	state.leyLineLevel = currentTile ? getLeyLineLevelForTile(currentTile) : 2;
 	addMessage(state, 'You return to the overworld.', 'info');
 	return { ...state };
 }
@@ -914,6 +928,15 @@ export function handleOverworldInput(
 	// Move on overworld
 	state.overworldPos = { x: nx, y: ny };
 	revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(targetTile));
+
+	// Update ley line level based on tile
+	state.leyLineLevel = getLeyLineLevelForTile(targetTile);
+
+	// Instant mana restore at convergence points
+	if (targetTile.leyLine === 'convergence' && (state.player.mana ?? 0) < (state.player.maxMana ?? 0)) {
+		state.player.mana = state.player.maxMana ?? 0;
+		addMessage(state, 'Power floods through you as you cross the ley line convergence. Mana fully restored!', 'magic');
+	}
 
 	// Region transition announcement
 	if (nextRegion !== prevRegion) {
