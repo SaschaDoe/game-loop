@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getLeyLineLevelForTile, exitToOverworld, handleOverworldInput, renderOverworldColored } from './overworld-handler';
+import { getLeyLineLevelForTile, exitToOverworld, handleOverworldInput, renderOverworldColored, trackLeyLineQuestProgress } from './overworld-handler';
 import type { OverworldTile, WorldMap } from './overworld';
-import type { GameState } from './types';
+import type { GameState, Quest } from './types';
 import { Visibility } from './types';
 
 // ── Minimal helpers ──
@@ -439,5 +439,275 @@ describe('renderOverworldColored ley line tinting', () => {
 		const flatCells = grid.flat();
 		const coreCells = flatCells.filter(c => c.color === '#4ff');
 		expect(coreCells.length).toBeGreaterThan(0);
+	});
+});
+
+// ── trackLeyLineQuestProgress ──
+
+/** Create a Threads of Power quest in active state. */
+function makeThreadsOfPowerQuest(): Quest {
+	return {
+		id: 'threads_of_power',
+		title: 'Threads of Power',
+		description: 'Experience the ley lines firsthand.',
+		status: 'active',
+		objectives: [
+			{ id: 'tp_cast_truesight', description: 'Cast True Sight at the convergence', type: 'explore', target: 'convergence_truesight', current: 0, required: 1, completed: false },
+			{ id: 'tp_walk_line', description: 'Walk a ley line core tile', type: 'explore', target: 'leyline_strong', current: 0, required: 1, completed: false },
+			{ id: 'tp_return_convergence', description: 'Return to convergence with full mana', type: 'explore', target: 'convergence_restore', current: 0, required: 1, completed: false },
+		],
+		rewards: { xp: 100 },
+		giverNpcName: 'Prof. Ignis',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		turnAccepted: 0,
+	};
+}
+
+describe('trackLeyLineQuestProgress', () => {
+	it('does nothing when quest is not active', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+			quests: [],
+		});
+		trackLeyLineQuestProgress(state);
+		// No crash, no messages added about quest
+		expect(state.messages.every(m => !m.text.includes('erupts with light'))).toBe(true);
+	});
+
+	it('completes objective 1 when on convergence with True Sight active', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 3,
+			quests: [quest],
+		});
+		trackLeyLineQuestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'tp_cast_truesight')!;
+		expect(obj.completed).toBe(true);
+		expect(obj.current).toBe(1);
+		expect(state.messages.some(m => m.text.includes('erupts with light'))).toBe(true);
+	});
+
+	it('does not complete objective 1 without True Sight', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			quests: [quest],
+		});
+		trackLeyLineQuestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'tp_cast_truesight')!;
+		expect(obj.completed).toBe(false);
+	});
+
+	it('does not complete objective 1 on a non-convergence tile', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core' });
+		const quest = makeThreadsOfPowerQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		trackLeyLineQuestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'tp_cast_truesight')!;
+		expect(obj.completed).toBe(false);
+	});
+
+	it('completes objective 2 when on core tile with True Sight active', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core' });
+		const quest = makeThreadsOfPowerQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 2,
+			quests: [quest],
+		});
+		trackLeyLineQuestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'tp_walk_line')!;
+		expect(obj.completed).toBe(true);
+		expect(obj.current).toBe(1);
+		expect(state.messages.some(m => m.text.includes('glow dims but persists'))).toBe(true);
+	});
+
+	it('does not complete objective 2 without True Sight', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'core' });
+		const quest = makeThreadsOfPowerQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			quests: [quest],
+		});
+		trackLeyLineQuestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'tp_walk_line')!;
+		expect(obj.completed).toBe(false);
+	});
+
+	it('completes objective 3 when on convergence with full mana and objectives 1+2 done', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		// Pre-complete objectives 1 and 2
+		quest.objectives[0].completed = true;
+		quest.objectives[0].current = 1;
+		quest.objectives[1].completed = true;
+		quest.objectives[1].current = 1;
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			quests: [quest],
+			completedQuestIds: [],
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+		});
+		trackLeyLineQuestProgress(state);
+		const obj3 = quest.objectives.find(o => o.id === 'tp_return_convergence')!;
+		expect(obj3.completed).toBe(true);
+		expect(obj3.current).toBe(1);
+		expect(state.messages.some(m => m.text.includes('Academy was built here'))).toBe(true);
+	});
+
+	it('does not complete objective 3 when mana is not full', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		quest.objectives[0].completed = true;
+		quest.objectives[0].current = 1;
+		quest.objectives[1].completed = true;
+		quest.objectives[1].current = 1;
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			quests: [quest],
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 5,
+				maxMana: 20,
+			},
+		});
+		trackLeyLineQuestProgress(state);
+		const obj3 = quest.objectives.find(o => o.id === 'tp_return_convergence')!;
+		expect(obj3.completed).toBe(false);
+	});
+
+	it('does not complete objective 3 when objectives 1+2 are not done', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		// Only objective 1 done
+		quest.objectives[0].completed = true;
+		quest.objectives[0].current = 1;
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			quests: [quest],
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+		});
+		trackLeyLineQuestProgress(state);
+		const obj3 = quest.objectives.find(o => o.id === 'tp_return_convergence')!;
+		expect(obj3.completed).toBe(false);
+	});
+
+	it('auto-completes quest when all objectives are done', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		// Pre-complete objectives 1 and 2
+		quest.objectives[0].completed = true;
+		quest.objectives[0].current = 1;
+		quest.objectives[1].completed = true;
+		quest.objectives[1].current = 1;
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 0,
+			quests: [quest],
+			completedQuestIds: [],
+			player: {
+				pos: { x: 5, y: 5 },
+				char: '@',
+				color: '#ff0',
+				name: 'Hero',
+				hp: 20,
+				maxHp: 20,
+				attack: 10,
+				statusEffects: [],
+				mana: 20,
+				maxMana: 20,
+			},
+		});
+		trackLeyLineQuestProgress(state);
+		// Quest should be completed
+		expect(quest.status).toBe('completed');
+		expect(state.completedQuestIds).toContain('threads_of_power');
+		expect(state.messages.some(m => m.text.includes('Quest completed'))).toBe(true);
+	});
+
+	it('does not re-complete already completed objectives', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		quest.objectives[0].completed = true;
+		quest.objectives[0].current = 1;
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		const msgCountBefore = state.messages.length;
+		trackLeyLineQuestProgress(state);
+		// Should not add the "erupts with light" message again
+		expect(state.messages.filter(m => m.text.includes('erupts with light')).length).toBe(0);
+	});
+
+	it('does nothing when not in overworld mode', () => {
+		const worldMap = makeSmallWorldMap({ leyLine: 'convergence' });
+		const quest = makeThreadsOfPowerQuest();
+		const state = makeOverworldState({
+			worldMap,
+			overworldPos: { x: 2, y: 2 },
+			locationMode: 'location' as any,
+			trueSightActive: 5,
+			quests: [quest],
+		});
+		trackLeyLineQuestProgress(state);
+		const obj = quest.objectives.find(o => o.id === 'tp_cast_truesight')!;
+		expect(obj.completed).toBe(false);
 	});
 });

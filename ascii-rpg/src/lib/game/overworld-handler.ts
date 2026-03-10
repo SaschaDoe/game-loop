@@ -17,7 +17,7 @@ import { tickAcademy, createAcademyState } from './academy';
 import { difficultySpawnCount, applyDifficultyToEnemy } from './difficulty';
 import { ITEM_CATALOG, addToInventory, createEmptyInventory, createEmptyEquipment, type WorldContainer, type Item } from './items';
 import { BOOK_CATALOG, getAllBookIds } from './books';
-import { updateQuestProgress } from './quests';
+import { updateQuestProgress, completeQuest } from './quests';
 import { createDefaultStats } from './achievements';
 import { createEmptyMastery } from './mastery';
 import { getTimePhase, phaseName, sightModifier } from './day-night';
@@ -138,6 +138,7 @@ export const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'M', color: '#da4', name: 'Merchant', dialogue: ['Trade is the lifeblood of the Hearthlands.', 'The roads have become dangerous — bandits everywhere.', 'I hear the King\'s Stones hold ancient magic.'], mood: 'friendly' },
 		{ char: 'G', color: '#8a4', name: 'Guard Captain', dialogue: ['Keep your weapons sheathed within town walls.', 'We\'ve had reports of strange creatures on the roads.', 'The Old Watchtower was abandoned years ago. Haunted, they say.'], gives: { hp: 2 }, mood: 'neutral' },
 		{ char: 'B', color: '#fa8', name: 'Wandering Bard', dialogue: ['Seven thrones sit in shadow deep, where stolen gods their vigil keep...', 'It\'s just a song, friend. Nobody takes it seriously. Well, almost nobody.', 'I collect stories from every region. The ones that match across borders — those are the true ones.'], mood: 'friendly' },
+		{ char: 'F', color: '#a84', name: 'Farmer Edric', dialogue: ['Something is wrong with my land... the crops, the well... please, can you help?'], mood: 'afraid' },
 	],
 	frostpeak: [
 		{ char: 'D', color: '#8df', name: 'Dwarven Smith', dialogue: ['These mountains hold iron that sings when struck.', 'The frozen halls above... even we dare not enter.', 'Take this — you\'ll need warmth where you\'re going.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -860,6 +861,62 @@ export function getLeyLineLevelForTile(tile: OverworldTile): number {
 	}
 }
 
+// ── Ley Line Quest Tracking ──
+
+/** Track Threads of Power quest objectives based on player position and state. */
+export function trackLeyLineQuestProgress(state: GameState): void {
+	const quest = state.quests.find(q => q.id === 'threads_of_power' && q.status === 'active');
+	if (!quest) return;
+
+	const worldMap = state.worldMap as WorldMap;
+	const pos = state.overworldPos;
+	if (!pos || state.locationMode !== 'overworld') return;
+	const tile = worldMap.tiles[pos.y]?.[pos.x];
+	if (!tile) return;
+
+	// Objective 1: Cast True Sight at convergence
+	if (tile.leyLine === 'convergence' && state.trueSightActive > 0) {
+		const obj = quest.objectives.find(o => o.id === 'tp_cast_truesight');
+		if (obj && !obj.completed) {
+			obj.current = 1;
+			obj.completed = true;
+			addMessage(state, 'The ground erupts with light. Two brilliant streams of energy cross beneath you, stretching to the horizon.', 'magic');
+		}
+	}
+
+	// Objective 2: Walk the line (core tile, with True Sight active)
+	if (tile.leyLine === 'core' && state.trueSightActive > 0) {
+		const obj = quest.objectives.find(o => o.id === 'tp_walk_line');
+		if (obj && !obj.completed) {
+			obj.current = 1;
+			obj.completed = true;
+			addMessage(state, 'The glow dims but persists — the ley line continues, weaker but steady.', 'magic');
+		}
+	}
+
+	// Objective 3: Return to convergence with full mana (after objectives 1 and 2 done)
+	if (tile.leyLine === 'convergence' && (state.player.mana ?? 0) >= (state.player.maxMana ?? 1)) {
+		const obj1 = quest.objectives.find(o => o.id === 'tp_cast_truesight');
+		const obj2 = quest.objectives.find(o => o.id === 'tp_walk_line');
+		const obj3 = quest.objectives.find(o => o.id === 'tp_return_convergence');
+		if (obj3 && !obj3.completed && obj1?.completed && obj2?.completed) {
+			obj3.current = 1;
+			obj3.completed = true;
+			addMessage(state, 'Now you understand why the Academy was built here. The convergence is the finest place to study magic.', 'magic');
+		}
+	}
+
+	// Auto-complete quest if all objectives done
+	if (quest.objectives.every(o => o.completed)) {
+		const result = completeQuest(state, 'threads_of_power');
+		if (result.success) {
+			for (const msg of result.messages) {
+				addMessage(state, msg, 'discovery');
+			}
+		}
+	}
+}
+
 // ── Exit to Overworld ──
 
 /** Return to the overworld from a location. */
@@ -937,6 +994,9 @@ export function handleOverworldInput(
 		state.player.mana = state.player.maxMana ?? 0;
 		addMessage(state, 'Power floods through you as you cross the ley line convergence. Mana fully restored!', 'magic');
 	}
+
+	// Track Threads of Power quest objectives (after mana restore, before True Sight tick-down)
+	trackLeyLineQuestProgress(state);
 
 	// Region transition announcement
 	if (nextRegion !== prevRegion) {
