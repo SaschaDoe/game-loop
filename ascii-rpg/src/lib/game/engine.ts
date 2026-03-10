@@ -1,10 +1,10 @@
-import type { GameState, GameMap, Entity, Position, MessageType, CharacterClass, CharacterArchetype, CharacterConfig, Difficulty, ActiveDialogue, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck, LocationMode, CachedLocationState, AttributeName } from './types';
+import type { GameState, Entity, Position, CharacterClass, CharacterConfig, Difficulty, NPC } from './types';
 import { Visibility } from './types';
 import { generateMap, getSpawnPositions } from './map';
 import { createRng, randomSeedString, hashSeed } from './seeded-random';
 import { createVisibilityGrid, updateVisibility } from './fov';
-import { applyEffect, hasEffect, tickEffects } from './status-effects';
-import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, RARE_SPAWN_CHANCE, MONSTER_DEFS } from './monsters';
+import { applyEffect, hasEffect } from './status-effects';
+import { createMonster, createRareMonster, pickMonsterDef, pickBossDef, isBossLevel, RARE_SPAWN_CHANCE } from './monsters';
 import { placeTraps, getTrapAt, detectAdjacentTraps, triggerTrap, disarmTrap, searchForTraps } from './traps';
 import { useAbility, ABILITY_DEFS } from './abilities';
 import { placeHazards } from './hazards';
@@ -12,28 +12,27 @@ import { applyDifficultyToEnemy, difficultySpawnCount, isPermadeath } from './di
 import { placeChests, getChestAt, openChest } from './chests';
 import { generateStartingLocation } from './locations';
 import { NPC_DIALOGUE_TREES } from './dialogue';
-import { rollLootDrop, getLootAt, pickupLoot } from './loot';
+import { getLootAt, pickupLoot } from './loot';
 import { placeLandmarks, getLandmarkDef, getAdjacentLandmarks, examineLandmark } from './landmarks';
 import { shortRest, longRest } from './rest';
-import { checkAchievements, getAchievement, createDefaultStats } from './achievements';
+import { createDefaultStats } from './achievements';
 import { recordSeen } from './bestiary';
 import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
-import { tickTime, getTimePhase, sightModifier, phaseName } from './day-night';
+import { tickTime, getTimePhase } from './day-night';
 import { generateWorld, type WorldMap } from './overworld';
 import { createEmptyInventory, createEmptyEquipment, addToInventory, removeFromInventory, equipItem, unequipItem, addToContainer, removeFromContainer, getEquipmentBonuses, type WorldContainer, type Item, type EquipmentSlot, ITEM_CATALOG } from './items';
 import { BOOK_CATALOG, getAllBookIds } from './books';
-import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn, generateNoise, initializeAwareness } from './stealth';
+import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn, generateNoise } from './stealth';
 import { updateQuestProgress, checkTimedQuests } from './quests';
-import { createAcademyState, getAcademyDay, tickAcademy, enrollAtAcademy, completeLesson, passExamPart1, canTeach, completeTeachingSession, isLessonReady, allLessonsComplete } from './academy';
-import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, defaultMagicFields, getWeaponBonus, getArmorValue } from './magic';
+import { createAcademyState, tickAcademy } from './academy';
+import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, getWeaponBonus, getArmorValue } from './magic';
 import { SPELL_CATALOG } from './spells';
 import { createEmptyMastery, getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
 import { addMessage, handlePlayerDeath, isBlocked, detectAdjacentSecrets, processAchievements, xpForLevel, effectiveSightRadius, checkLevelUp } from './engine-utils';
-import { buildDialogueContext, checkCondition, rollSocialCheck, SOCIAL_SKILL_DISPLAY, handleDialogueChoice, canDetectLies, MOOD_DISPLAY, garbleText, closeDialogue, SOCIAL_CLASS_BONUS } from './dialogue-handler';
+import { buildDialogueContext, checkCondition } from './dialogue-handler';
 import { renderLocationColored } from './renderer';
-import { moveEnemies, attemptPush, attemptFlee, processKill, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, ENVIRONMENTAL_KILL_BONUS } from './combat';
-import type { PushResult } from './combat';
+import { moveEnemies, attemptPush, attemptFlee, processKill, ENVIRONMENTAL_KILL_BONUS } from './combat';
 import { handleSpellTargeting, handleRitualChanneling, handleSpellMenu, quickCast, assignQuickCast as _assignQuickCast, learnSpell as _learnSpell, learnRitual } from './spell-handler';
 import {
 	handleOverworldInput as _handleOverworldInput,
@@ -42,14 +41,7 @@ import {
 	revealOverworldArea,
 	getOverworldSightRadius,
 	cacheCurrentLocation,
-	restoreFromCache,
-	locationCacheKey,
-	discoverPOI,
-	dangerDisplay,
-	getOverworldInfo,
 	renderOverworldColored,
-	renderWorldMap,
-	getWaypointIndicator,
 } from './overworld-handler';
 
 const MAP_W = 50;
@@ -301,8 +293,6 @@ export function createGame(config?: CharacterConfig): GameState {
 }
 
 const DEFAULT_SIGHT_RADIUS = 8;
-
-// Overworld constants, helpers, rendering, and handlers are now in ./overworld-handler.ts
 
 
 interface DungeonNPCDef {
@@ -622,9 +612,6 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 	return state;
 }
 
-// moveEnemies, attemptPush, attemptFlee, processKill, DODGE_CHANCE, BLOCK_REDUCTION,
-// PUSH_CHANCE, ENVIRONMENTAL_KILL_BONUS are now in ./combat.ts
-
 /** Get adjacent container (within 1 tile of player) */
 export function getAdjacentContainer(state: GameState): WorldContainer | null {
 	const { x, y } = state.player.pos;
@@ -784,12 +771,6 @@ export function getActiveBook(state: GameState): Item | null {
 		?? null;
 }
 
-// ---------------------------------------------------------------------------
-// Terrain effects from spells
-// ---------------------------------------------------------------------------
-
-/** Apply terrain effects from a spell at the given position, handling element cancellation */
-// Spell/ritual functions are now in ./spell-handler.ts
 export { _assignQuickCast as assignQuickCast, _learnSpell as learnSpell };
 
 export function handleInput(state: GameState, key: string): GameState {
@@ -1486,9 +1467,9 @@ export function renderColored(state: GameState): { char: string; color: string }
 }
 
 export { xpForLevel, xpReward, effectiveSightRadius, addMessage, isBlocked, handlePlayerDeath, checkLevelUp, applyXpMultiplier, processAchievements, detectAdjacentSecrets, tryDropLoot, tickEntityEffects, relocateNpc, tickNpcMoods } from './engine-utils';
-export { learnRitual, tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
+export { learnRitual, handleSpellTargeting, handleRitualChanneling, handleSpellMenu, tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
 export { buildDialogueContext, checkCondition, rollSocialCheck, SOCIAL_SKILL_DISPLAY, handleDialogueChoice, canDetectLies, MOOD_DISPLAY, npcMoodColor, garbleText, closeDialogue, SOCIAL_CLASS_BONUS } from './dialogue-handler';
 export { render, dimColor, renderLocationColored } from './renderer';
 export { moveEnemies, attemptPush, attemptFlee, processKill, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, ENVIRONMENTAL_KILL_BONUS } from './combat';
 export type { PushResult } from './combat';
-export { exitToOverworld, dangerDisplay, getOverworldInfo, renderOverworldColored, renderWorldMap, getWaypointIndicator, discoverPOI, revealOverworldArea, spawnRegionalNPCs, getOverworldSightRadius, cacheCurrentLocation, restoreFromCache, locationCacheKey } from './overworld-handler';
+export { handleOverworldInput, exitToOverworld, dangerDisplay, getOverworldInfo, renderOverworldColored, renderWorldMap, getWaypointIndicator, discoverPOI, revealOverworldArea, spawnRegionalNPCs, getOverworldSightRadius, cacheCurrentLocation, restoreFromCache, locationCacheKey } from './overworld-handler';
