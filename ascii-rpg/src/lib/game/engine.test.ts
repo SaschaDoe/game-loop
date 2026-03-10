@@ -120,9 +120,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 }
 
 describe('xpForLevel', () => {
-	it('returns 70 XP for level 2 (first level-up)', () => {
-		// xpForLevel(2) = floor(50 * 1.4^(2-1)) = floor(70) = 70
-		expect(xpForLevel(2)).toBe(70);
+	it('returns 37 XP for level 2 (first level-up)', () => {
+		// xpForLevel(2) = floor(25 * 1.5^(2-1)) = floor(37.5) = 37
+		expect(xpForLevel(2)).toBe(37);
 	});
 
 	it('increases exponentially with each level', () => {
@@ -131,7 +131,7 @@ describe('xpForLevel', () => {
 		const l4 = xpForLevel(4);
 		expect(l3).toBeGreaterThan(l2);
 		expect(l4).toBeGreaterThan(l3);
-		expect(l3 / l2).toBeCloseTo(1.4, 1);
+		expect(l3 / l2).toBeCloseTo(1.5, 1);
 	});
 
 	it('returns integer values', () => {
@@ -1656,8 +1656,8 @@ describe('skill tree integration', () => {
 	it('awards 1 skill point on level up', () => {
 		const state = makeTestState({ xp: 0, characterLevel: 1, skillPoints: 0 });
 		state.enemies = [makeEnemy(6, 5, { hp: 1, maxHp: 1 })];
-		// xpForLevel(2) = floor(50 * 1.4^1) = 70, xpReward = 5 + 1*2 + 1 = 8
-		state.xp = 65;
+		// xpForLevel(2) = floor(25 * 1.5^1) = 37, xpReward = 5 + 1*2 + 1 = 8
+		state.xp = 30;
 		const result = handleInput(state, 'd');
 		expect(result.characterLevel).toBe(2);
 		expect(result.skillPoints).toBe(1);

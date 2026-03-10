@@ -141,7 +141,8 @@ function processAchievements(state: GameState): void {
 }
 
 export function xpForLevel(level: number): number {
-	return Math.floor(50 * Math.pow(1.4, level - 1));
+	// Fast early levels, steep late-game: crossover with old curve around level 11
+	return Math.floor(25 * Math.pow(1.5, level - 1));
 }
 
 export function xpReward(enemy: Entity, dungeonLevel: number): number {
