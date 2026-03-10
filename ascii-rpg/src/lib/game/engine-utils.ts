@@ -9,8 +9,6 @@ import { sightModifier, getTimePhase } from './day-night';
 import { getEquipmentBonuses } from './items';
 import { getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
-import type { WorldMap } from './overworld';
-
 const MOOD_RECOVERY_TURNS = 20;
 
 export function addMessage(state: GameState, msg: string, type: MessageType = 'info') {
@@ -164,17 +162,5 @@ export function tickNpcMoods(state: GameState) {
 	}
 }
 
-export function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: number): void {
-	for (let dy = -radius; dy <= radius; dy++) {
-		for (let dx = -radius; dx <= radius; dx++) {
-			if (dx * dx + dy * dy > radius * radius) continue;
-			const wx = pos.x + dx;
-			const wy = pos.y + dy;
-			if (wx >= 0 && wy >= 0 && wx < worldMap.width && wy < worldMap.height) {
-				worldMap.explored[wy][wx] = true;
-			}
-		}
-	}
-}
-
+// revealOverworldArea has moved to ./overworld-handler.ts
 // tickTerrainEffects, checkRitualInterrupt, and learnRitual have moved to ./spell-handler.ts
