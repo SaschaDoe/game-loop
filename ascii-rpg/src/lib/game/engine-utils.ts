@@ -9,7 +9,7 @@ import { sightModifier, getTimePhase } from './day-night';
 import { getEquipmentBonuses } from './items';
 import { getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
-import { RITUAL_CATALOG } from './rituals';
+import { RITUAL_CATALOG, getRitualDef, rollInterruption, consumeReagents } from './rituals';
 import type { WorldMap } from './overworld';
 
 const MOOD_RECOVERY_TURNS = 20;
@@ -192,5 +192,50 @@ export function revealOverworldArea(worldMap: WorldMap, pos: Position, radius: n
 				worldMap.explored[wy][wx] = true;
 			}
 		}
+	}
+}
+
+/** Tick terrain effects: apply damage to entities standing on them, decrement durations */
+export function tickTerrainEffects(state: GameState): void {
+	if (!state.terrainEffects) return;
+
+	for (const effect of state.terrainEffects) {
+		if (effect.damagePerTurn > 0) {
+			// Damage player if standing on it
+			if (state.player.pos.x === effect.pos.x && state.player.pos.y === effect.pos.y) {
+				state.player.hp -= effect.damagePerTurn;
+				addMessage(state, `You take ${effect.damagePerTurn} damage from ${effect.type} ground!`, 'damage_taken');
+			}
+			// Damage enemies standing on it
+			for (const enemy of state.enemies) {
+				if (enemy.pos.x === effect.pos.x && enemy.pos.y === effect.pos.y) {
+					enemy.hp -= effect.damagePerTurn;
+					if (enemy.hp <= 0) {
+						addMessage(state, `${enemy.name} is killed by ${effect.type} ground!`, 'magic');
+					}
+				}
+			}
+		}
+		effect.duration--;
+	}
+
+	state.terrainEffects = state.terrainEffects.filter(e => e.duration > 0);
+}
+
+/** Check for ritual interrupt when player takes damage */
+export function checkRitualInterrupt(state: GameState, _damageAmount: number): void {
+	if (!state.ritualChanneling || state.ritualChanneling.turnsRemaining <= 0) return;
+
+	const ritual = getRitualDef(state.ritualChanneling.ritualId);
+	if (rollInterruption()) {
+		// Interrupted — consume mana + reagents
+		if (ritual) {
+			state.player.mana = (state.player.mana ?? 0) - ritual.manaCost;
+			consumeReagents(state.inventory, ritual);
+		}
+		state.ritualChanneling = null;
+		addMessage(state, 'Your concentration shatters — the ritual fails!', 'damage_taken');
+	} else {
+		addMessage(state, 'You hold your focus despite the blow!', 'magic');
 	}
 }
