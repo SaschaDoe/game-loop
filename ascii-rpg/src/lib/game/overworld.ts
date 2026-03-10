@@ -26,6 +26,7 @@ export interface OverworldTile {
 	road?: RoadType;
 	signpost?: boolean;
 	locationId?: string;
+	leyLine?: 'core' | 'aura' | 'convergence';
 }
 
 export interface Region {
@@ -82,6 +83,10 @@ export interface WorldMap {
 	roads: Road[];
 	pois: PointOfInterest[];
 	explored: boolean[][];
+	leyLines: {
+		northSouth: number[]; // x-coordinate per y-row
+		westEast: number[];   // y-coordinate per x-column
+	};
 }
 
 // ── Constants ──
@@ -460,6 +465,9 @@ export function generateWorld(worldSeed: string, width: number = WORLD_W, height
 	// 10. Generate road network connecting settlements
 	const roads = generateRoads(tiles, settlements, width, height, rng);
 
+	// 10b. Generate ley lines crossing at the academy
+	const leyLines = generateLeyLines(tiles, settlements, width, height, rng);
+
 	// 11. Place points of interest (after roads, so we can avoid them)
 	const pois = placePOIs(tiles, regionSeeds, settlements, width, height, rng);
 
@@ -468,7 +476,106 @@ export function generateWorld(worldSeed: string, width: number = WORLD_W, height
 		Array.from({ length: width }, () => false)
 	);
 
-	return { width, height, tiles, regions, settlements, dungeonEntrances, roads, pois, explored };
+	return { width, height, tiles, regions, settlements, dungeonEntrances, roads, pois, explored, leyLines };
+}
+
+// ── Ley Line Generation ──
+
+/**
+ * Generate two ley lines (N-S and W-E) that cross at the Arcane Academy.
+ * Each line wobbles organically (±1 per step) using the seeded RNG.
+ * Tiles are marked: convergence (3×3 around academy), core (on the line), aura (2 tiles each side).
+ */
+function generateLeyLines(
+	tiles: OverworldTile[][],
+	settlements: Settlement[],
+	width: number,
+	height: number,
+	rng: SeededRandom,
+): { northSouth: number[]; westEast: number[] } {
+	// Find the academy position as the crossing point
+	const academy = settlements.find(s => s.name === 'Arcane Academy');
+	const crossX = academy ? academy.pos.x : Math.floor(width / 2);
+	const crossY = academy ? academy.pos.y : Math.floor(height / 2);
+
+	// Generate N-S line: one x per y-row, wobbling from crossX
+	const northSouth: number[] = new Array(height);
+	northSouth[crossY] = crossX;
+	// Walk upward from crossing
+	for (let y = crossY - 1; y >= 0; y--) {
+		const prev = northSouth[y + 1];
+		const wobble = rng.nextRange(-1, 1);
+		northSouth[y] = Math.max(0, Math.min(width - 1, prev + wobble));
+	}
+	// Walk downward from crossing
+	for (let y = crossY + 1; y < height; y++) {
+		const prev = northSouth[y - 1];
+		const wobble = rng.nextRange(-1, 1);
+		northSouth[y] = Math.max(0, Math.min(width - 1, prev + wobble));
+	}
+
+	// Generate W-E line: one y per x-column, wobbling from crossY
+	const westEast: number[] = new Array(width);
+	westEast[crossX] = crossY;
+	// Walk leftward from crossing
+	for (let x = crossX - 1; x >= 0; x--) {
+		const prev = westEast[x + 1];
+		const wobble = rng.nextRange(-1, 1);
+		westEast[x] = Math.max(0, Math.min(height - 1, prev + wobble));
+	}
+	// Walk rightward from crossing
+	for (let x = crossX + 1; x < width; x++) {
+		const prev = westEast[x - 1];
+		const wobble = rng.nextRange(-1, 1);
+		westEast[x] = Math.max(0, Math.min(height - 1, prev + wobble));
+	}
+
+	// Mark convergence zone: 3×3 around the academy
+	for (let dy = -1; dy <= 1; dy++) {
+		for (let dx = -1; dx <= 1; dx++) {
+			const tx = crossX + dx;
+			const ty = crossY + dy;
+			if (tx >= 0 && tx < width && ty >= 0 && ty < height) {
+				tiles[ty][tx].leyLine = 'convergence';
+			}
+		}
+	}
+
+	// Mark N-S line: core on the line, aura 1-2 tiles each side
+	for (let y = 0; y < height; y++) {
+		const cx = northSouth[y];
+		// Aura first (so core can override)
+		for (let offset = -2; offset <= 2; offset++) {
+			if (offset === 0) continue; // skip core position
+			const ax = cx + offset;
+			if (ax >= 0 && ax < width && !tiles[y][ax].leyLine) {
+				tiles[y][ax].leyLine = 'aura';
+			}
+		}
+		// Core on the line itself (overrides aura, but not convergence)
+		if (!tiles[y][cx].leyLine) {
+			tiles[y][cx].leyLine = 'core';
+		}
+	}
+
+	// Mark W-E line: core on the line, aura 1-2 tiles each side
+	for (let x = 0; x < width; x++) {
+		const cy = westEast[x];
+		// Aura first (so core can override)
+		for (let offset = -2; offset <= 2; offset++) {
+			if (offset === 0) continue;
+			const ay = cy + offset;
+			if (ay >= 0 && ay < height && !tiles[ay][x].leyLine) {
+				tiles[ay][x].leyLine = 'aura';
+			}
+		}
+		// Core on the line itself (overrides aura, but not convergence)
+		if (!tiles[cy][x].leyLine) {
+			tiles[cy][x].leyLine = 'core';
+		}
+	}
+
+	return { northSouth, westEast };
 }
 
 // ── Transition Zones ──

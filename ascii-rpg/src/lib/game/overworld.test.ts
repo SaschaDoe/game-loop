@@ -432,3 +432,80 @@ describe('explored grid', () => {
 		}
 	});
 });
+
+describe('ley line generation', () => {
+	it('generates ley line data on world map', () => {
+		const world = getTestWorld();
+		expect(world.leyLines).toBeDefined();
+		expect(world.leyLines.northSouth.length).toBe(world.height);
+		expect(world.leyLines.westEast.length).toBe(world.width);
+		// All coordinates should be within map bounds
+		for (const x of world.leyLines.northSouth) {
+			expect(x).toBeGreaterThanOrEqual(0);
+			expect(x).toBeLessThan(world.width);
+		}
+		for (const y of world.leyLines.westEast) {
+			expect(y).toBeGreaterThanOrEqual(0);
+			expect(y).toBeLessThan(world.height);
+		}
+	});
+
+	it('marks academy tiles as convergence', () => {
+		const world = getTestWorld();
+		const academy = world.settlements.find(s => s.name === 'Arcane Academy')!;
+		expect(academy).toBeDefined();
+		// The academy tile itself should be convergence
+		expect(world.tiles[academy.pos.y][academy.pos.x].leyLine).toBe('convergence');
+		// The 3x3 area around the academy should all be convergence
+		for (let dy = -1; dy <= 1; dy++) {
+			for (let dx = -1; dx <= 1; dx++) {
+				const tx = academy.pos.x + dx;
+				const ty = academy.pos.y + dy;
+				if (tx >= 0 && tx < world.width && ty >= 0 && ty < world.height) {
+					expect(world.tiles[ty][tx].leyLine).toBe('convergence');
+				}
+			}
+		}
+	});
+
+	it('marks core tiles along N-S line', () => {
+		const world = getTestWorld();
+		const academy = world.settlements.find(s => s.name === 'Arcane Academy')!;
+		// Pick a y-row far from the academy (at least 10 rows away)
+		const testY = academy.pos.y > world.height / 2
+			? Math.max(0, academy.pos.y - 20)
+			: Math.min(world.height - 1, academy.pos.y + 20);
+		const coreX = world.leyLines.northSouth[testY];
+		expect(world.tiles[testY][coreX].leyLine).toBe('core');
+	});
+
+	it('marks aura tiles adjacent to core', () => {
+		const world = getTestWorld();
+		const academy = world.settlements.find(s => s.name === 'Arcane Academy')!;
+		// Pick a y-row far from the academy
+		const testY = academy.pos.y > world.height / 2
+			? Math.max(0, academy.pos.y - 20)
+			: Math.min(world.height - 1, academy.pos.y + 20);
+		const coreX = world.leyLines.northSouth[testY];
+		// 1-2 tiles away from core should be aura
+		for (const offset of [-2, -1, 1, 2]) {
+			const ax = coreX + offset;
+			if (ax >= 0 && ax < world.width) {
+				expect(world.tiles[testY][ax].leyLine).toBe('aura');
+			}
+		}
+		// 3+ tiles away should be undefined (no ley line) unless it's another ley line
+		for (const offset of [-3, 3]) {
+			const ax = coreX + offset;
+			if (ax >= 0 && ax < world.width) {
+				// Could be undefined or belong to the W-E line, so check it's NOT aura
+				// unless it happens to be on the W-E line
+				const weY = world.leyLines.westEast[ax];
+				const isOnWELine = Math.abs(weY - testY) <= 2;
+				if (!isOnWELine) {
+					expect(world.tiles[testY][ax].leyLine).toBeUndefined();
+				}
+			}
+		}
+	});
+});
