@@ -106,7 +106,6 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		manaRegenIntCounter: 0,
 		spellMenuOpen: false,
 		spellMenuCursor: 0,
-		pendingAttributePoint: false,
 		spellTargeting: null,
 		schoolMastery: {},
 		forbiddenCosts: { corruption: 0, paradoxBaseline: 0, maxHpLost: 0, sanityLost: 0, soulCapLost: 0 },

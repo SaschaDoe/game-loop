@@ -168,35 +168,10 @@ function checkLevelUp(state: GameState): void {
 		state.xp -= threshold;
 		state.characterLevel++;
 
-		// Auto-increment primary attribute based on archetype
-		const archetypeKey = state.characterConfig.archetype ?? CLASS_PROFILES[state.characterConfig.characterClass].suggestedArchetype;
-		const archetype = ARCHETYPE_ATTRIBUTES[archetypeKey];
-		const primaryAttr = archetype.primaryAttribute;
-		state.player[primaryAttr] = (state.player[primaryAttr] ?? 10) + 1;
-
-		// Grant pending free attribute point
-		state.pendingAttributePoint = true;
-
+		// Only reward: +1 talent point (no stat changes)
 		state.skillPoints++;
 
-		// Recalculate derived stats (captures new VIT→maxHp, STR→attack, etc.)
-		const prevMaxHp = state.player.maxHp;
-		const prevMaxMana = state.player.maxMana ?? 0;
-		const weaponBonus = getWeaponBonus(state.equipment);
-		const armorValue = getArmorValue(state.equipment);
-		recalculateDerivedStats(state.player, state.characterLevel, armorValue, weaponBonus, archetype.manaModifier);
-
-		const hpGain = state.player.maxHp - prevMaxHp;
-		const manaGain = (state.player.maxMana ?? 0) - prevMaxMana;
-		// Restore the HP/mana we gained
-		state.player.hp += Math.max(0, hpGain);
-		state.player.mana = (state.player.mana ?? 0) + Math.max(0, manaGain);
-
-		let msg = `Level up! Level ${state.characterLevel}. +1 ${primaryAttr.toUpperCase()}, +1 free point`;
-		if (hpGain > 0) msg += `, +${hpGain} HP`;
-		if (manaGain > 0) msg += `, +${manaGain} MP`;
-		msg += ', +1 Skill Point.';
-		addMessage(state, msg, 'level_up');
+		addMessage(state, `Level up! Level ${state.characterLevel}. +1 Talent Point.`, 'level_up');
 
 		// Offer specialization at level 10 if none chosen
 		if (state.characterLevel >= 10 && state.specialization === null && !state.pendingSpecialization) {
@@ -366,7 +341,6 @@ export function createGame(config?: CharacterConfig): GameState {
 		manaRegenIntCounter: 0,
 		spellMenuOpen: false,
 		spellMenuCursor: 0,
-		pendingAttributePoint: false,
 		spellTargeting: null,
 
 		// Mastery & Forbidden magic
@@ -434,7 +408,7 @@ export function createGame(config?: CharacterConfig): GameState {
 	// Calculate derived stats from archetype attributes + equipment
 	const weaponBonus = getWeaponBonus(state.equipment);
 	const armorValue = getArmorValue(state.equipment);
-	recalculateDerivedStats(state.player, state.characterLevel, armorValue, weaponBonus, archetype.manaModifier);
+	recalculateDerivedStats(state.player, armorValue, weaponBonus, archetype.manaModifier);
 	state.player.hp = state.player.maxHp; // Start at full HP
 	state.player.mana = state.player.maxMana; // Start at full mana
 
@@ -1928,7 +1902,6 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		manaRegenIntCounter: 0,
 		spellMenuOpen: false,
 		spellMenuCursor: 0,
-		pendingAttributePoint: false,
 		spellTargeting: null,
 
 		// Mastery & Forbidden magic
@@ -2928,10 +2901,16 @@ export function assignQuickCast(state: GameState, slot: number, spellId: string)
 	return { ...state };
 }
 
-/** Export: teach the player a spell */
+/** Export: teach the player a spell (costs 1 talent point) */
 export function learnSpell(state: GameState, spellId: string): boolean {
 	if (state.learnedSpells.includes(spellId)) return false;
 	if (!SPELL_CATALOG[spellId]) return false;
+
+	// Talent point cost
+	if (state.skillPoints <= 0) {
+		addMessage(state, 'You need a talent point to learn this spell!', 'warning');
+		return false;
+	}
 
 	const spell = SPELL_CATALOG[spellId];
 	const charClass = state.characterConfig.characterClass;
@@ -2970,6 +2949,7 @@ export function learnSpell(state: GameState, spellId: string): boolean {
 		}
 	}
 
+	state.skillPoints--;
 	state.learnedSpells.push(spellId);
 	// Auto-assign to first empty quick-cast slot
 	const emptySlot = state.quickCastSlots.indexOf(null);
@@ -2990,10 +2970,18 @@ export function learnSpell(state: GameState, spellId: string): boolean {
 	return true;
 }
 
-/** Teach the player a ritual */
+/** Teach the player a ritual (costs 1 talent point) */
 export function learnRitual(state: GameState, ritualId: string): boolean {
 	if (state.learnedRituals.includes(ritualId)) return false;
 	if (!RITUAL_CATALOG[ritualId]) return false;
+
+	// Talent point cost
+	if (state.skillPoints <= 0) {
+		addMessage(state, 'You need a talent point to learn this ritual!', 'warning');
+		return false;
+	}
+
+	state.skillPoints--;
 	state.learnedRituals.push(ritualId);
 	const ritual = RITUAL_CATALOG[ritualId];
 	addMessage(state, `You have learned the ritual: ${ritual.name}!`, 'magic');
@@ -3406,23 +3394,6 @@ export function handleInput(state: GameState, key: string): GameState {
 			return castSpellFromMenu(state, state.spellMenuCursor);
 		}
 		return state;
-	}
-
-	// Attribute allocation mode
-	if (state.pendingAttributePoint) {
-		const attrMap: Record<string, AttributeName> = { '1': 'str', '2': 'int', '3': 'wil', '4': 'agi', '5': 'vit' };
-		if (attrMap[key]) {
-			const attr = attrMap[key];
-			state.player[attr] = (state.player[attr] ?? 10) + 1;
-			state.pendingAttributePoint = false;
-			const weaponBonus = getWeaponBonus(state.equipment);
-			const armorValue = getArmorValue(state.equipment);
-			const archetype = ARCHETYPE_ATTRIBUTES[state.characterConfig.archetype ?? CLASS_PROFILES[state.characterConfig.characterClass].suggestedArchetype];
-			recalculateDerivedStats(state.player, state.characterLevel, armorValue, weaponBonus, archetype.manaModifier);
-			addMessage(state, `+1 ${attr.toUpperCase()} allocated! (now ${state.player[attr]})`, 'level_up');
-			return { ...state };
-		}
-		return state; // Block other input during attribute allocation
 	}
 
 	// Specialization selection mode

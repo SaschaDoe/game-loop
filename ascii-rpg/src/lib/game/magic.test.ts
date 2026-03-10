@@ -32,49 +32,49 @@ describe('Archetype System', () => {
 });
 
 describe('Derived Stats', () => {
-	it('calculates maxHp from VIT and level', () => {
+	it('calculates maxHp from VIT only (no level component)', () => {
 		const entity = makeEntity({ vit: 10 });
-		recalculateDerivedStats(entity, 1, 0, 0, 1.0);
-		// maxHp = 10 + (10 * 3) + (1 * floor(10/5)) = 10 + 30 + 2 = 42
-		expect(entity.maxHp).toBe(42);
+		recalculateDerivedStats(entity, 0, 0, 1.0);
+		// maxHp = 10 + (10 * 3) = 40
+		expect(entity.maxHp).toBe(40);
 	});
 
 	it('calculates attack from STR + weapon bonus', () => {
 		const entity = makeEntity({ str: 14 });
-		recalculateDerivedStats(entity, 1, 0, 3, 1.0);
+		recalculateDerivedStats(entity, 0, 3, 1.0);
 		expect(entity.attack).toBe(14 + 3);
 	});
 
 	it('calculates spellPower from INT + WIL/3', () => {
 		const entity = makeEntity({ int: 16, wil: 14 });
-		recalculateDerivedStats(entity, 1, 0, 0, 1.5);
+		recalculateDerivedStats(entity, 0, 0, 1.5);
 		// spellPower = 16 + floor(14/3) = 16 + 4 = 20
 		expect(entity.spellPower).toBe(20);
 	});
 
 	it('calculates magicResist capped at 50%', () => {
 		const entity = makeEntity({ wil: 40, int: 40 });
-		recalculateDerivedStats(entity, 1, 0, 0, 1.0);
+		recalculateDerivedStats(entity, 0, 0, 1.0);
 		expect(entity.magicResist).toBe(50);
 	});
 
-	it('calculates maxMana with archetype modifier', () => {
+	it('calculates maxMana with archetype modifier (no level component)', () => {
 		const entity = makeEntity({ int: 16 });
-		recalculateDerivedStats(entity, 1, 0, 0, 1.5);
-		// maxMana = floor((16*2 + 1*3) * 1.5) = floor(35 * 1.5) = 52
-		expect(entity.maxMana).toBe(52);
+		recalculateDerivedStats(entity, 0, 0, 1.5);
+		// maxMana = floor(16 * 2 * 1.5) = 48
+		expect(entity.maxMana).toBe(48);
 	});
 
 	it('Might archetype gets minimal mana', () => {
 		const entity = makeEntity({ int: 8 });
-		recalculateDerivedStats(entity, 1, 0, 0, 0.25);
-		// maxMana = floor((8*2 + 1*3) * 0.25) = floor(19 * 0.25) = 4
+		recalculateDerivedStats(entity, 0, 0, 0.25);
+		// maxMana = floor(8 * 2 * 0.25) = 4
 		expect(entity.maxMana).toBe(4);
 	});
 
 	it('calculates physicalDefense from armor + VIT', () => {
 		const entity = makeEntity({ vit: 12 });
-		recalculateDerivedStats(entity, 1, 5, 0, 1.0);
+		recalculateDerivedStats(entity, 5, 0, 1.0);
 		// physicalDefense = 5 + floor(12/4) = 5 + 3 = 8
 		expect(entity.physicalDefense).toBe(8);
 	});

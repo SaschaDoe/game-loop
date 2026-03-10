@@ -269,12 +269,6 @@ class AdeptAI {
 	playOneTurn(): string {
 		const s = this.game.state;
 
-		// Handle pending attribute point (INT for adept/mage)
-		if (s.pendingAttributePoint) {
-			this.game.key('2'); // allocate to INT
-			return 'allocate_int';
-		}
-
 		// Handle pending specialization
 		if (s.pendingSpecialization) {
 			this.game.key('Escape'); // skip for now
@@ -442,7 +436,6 @@ class AdeptAI {
 		// Clean up: kill stragglers, clear blocking states
 		this.game.killAll();
 		this.game.state.player.statusEffects = [];
-		this.game.state.pendingAttributePoint = false;
 		this.game.state.pendingSpecialization = false;
 		this.game.state.spellMenuOpen = false;
 		this.game.state.spellTargeting = null;

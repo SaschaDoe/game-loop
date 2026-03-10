@@ -59,15 +59,15 @@ export const CLASS_PROFILES: Record<CharacterClass, ClassProfile> = {
  * Recalculate all derived stats on an entity from its base attributes.
  * Call after any attribute change (level up, buff, equipment change).
  */
-export function recalculateDerivedStats(entity: Entity, level: number, armorValue: number = 0, weaponBonus: number = 0, archetypeMod?: number): void {
+export function recalculateDerivedStats(entity: Entity, armorValue: number = 0, weaponBonus: number = 0, archetypeMod?: number): void {
 	const vit = entity.vit ?? 10;
 	const str = entity.str ?? 10;
 	const int = entity.int ?? 10;
 	const wil = entity.wil ?? 10;
 	const agi = entity.agi ?? 10;
 
-	// maxHp = 10 + (VIT * 3) + (level * floor(VIT / 5))
-	entity.maxHp = 10 + (vit * 3) + (level * Math.floor(vit / 5));
+	// maxHp = 10 + (VIT * 3) — purely attribute-driven, no level component
+	entity.maxHp = 10 + (vit * 3);
 
 	// attack = STR + weaponBonus
 	entity.attack = str + weaponBonus;
@@ -87,9 +87,9 @@ export function recalculateDerivedStats(entity: Entity, level: number, armorValu
 	// physicalDefense = armorValue + floor(VIT / 4)
 	entity.physicalDefense = armorValue + Math.floor(vit / 4);
 
-	// maxMana = (INT * 2 + level * 3) * archetypeModifier
+	// maxMana = INT * 2 * archetypeModifier — purely attribute-driven
 	if (archetypeMod !== undefined) {
-		entity.maxMana = Math.floor((int * 2 + level * 3) * archetypeMod);
+		entity.maxMana = Math.floor(int * 2 * archetypeMod);
 	}
 
 	// Clamp HP and mana to max

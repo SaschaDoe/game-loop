@@ -100,7 +100,6 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		manaRegenIntCounter: 0,
 		spellMenuOpen: false,
 		spellMenuCursor: 0,
-		pendingAttributePoint: false,
 		spellTargeting: null,
 		schoolMastery: {},
 		forbiddenCosts: { corruption: 0, paradoxBaseline: 0, maxHpLost: 0, sanityLost: 0, soulCapLost: 0 },
@@ -240,30 +239,17 @@ describe('Level-up', () => {
 		expect(result.characterLevel).toBe(2);
 	});
 
-	it('increases maxHp on level-up', () => {
+	it('does not change maxHp on level-up (stats are fixed)', () => {
 		const threshold = xpForLevel(2);
 		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: threshold });
 		const state = makeTestState({ enemies: [enemy] });
 		const beforeMaxHp = state.player.maxHp;
 
 		const result = handleInput(state, 'd');
-		expect(result.player.maxHp).toBeGreaterThan(beforeMaxHp);
+		expect(result.player.maxHp).toBe(beforeMaxHp);
 	});
 
-	it('heals player by the HP gain amount on level-up', () => {
-		const threshold = xpForLevel(2);
-		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: threshold });
-		const state = makeTestState({ enemies: [enemy], });
-		const beforeMaxHp = state.player.maxHp;
-		state.player.hp = beforeMaxHp - 5; // below max
-
-		const result = handleInput(state, 'd');
-		// HP should have increased by the hpGain (new maxHp - old maxHp)
-		const hpGain = result.player.maxHp - beforeMaxHp;
-		expect(result.player.hp).toBe(beforeMaxHp - 5 + hpGain);
-	});
-
-	it('shows level-up message', () => {
+	it('shows level-up message with talent point', () => {
 		const threshold = xpForLevel(2);
 		const enemy = makeEnemy(6, 5, { hp: 1, maxHp: threshold });
 		const state = makeTestState({ enemies: [enemy] });
@@ -272,6 +258,7 @@ describe('Level-up', () => {
 		const lvlMsg = result.messages.find((m) => m.text.includes('Level up!'));
 		expect(lvlMsg).toBeDefined();
 		expect(lvlMsg!.text).toContain('Level 2');
+		expect(lvlMsg!.text).toContain('+1 Talent Point');
 	});
 
 	it('can level up multiple times at once with large XP gain', () => {
@@ -1661,7 +1648,7 @@ describe('skill tree integration', () => {
 		const result = handleInput(state, 'd');
 		expect(result.characterLevel).toBe(2);
 		expect(result.skillPoints).toBe(1);
-		expect(result.messages.some(m => m.text.includes('Skill Point'))).toBe(true);
+		expect(result.messages.some(m => m.text.includes('Talent Point'))).toBe(true);
 	});
 
 	it('skill sight bonus increases effective sight radius', () => {

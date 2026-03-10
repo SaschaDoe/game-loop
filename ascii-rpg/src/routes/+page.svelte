@@ -1066,19 +1066,6 @@
 			</div>
 		</div>
 	{/if}
-	{#if state.pendingAttributePoint}
-		<div class="attr-overlay">
-			<div class="attr-panel">
-				<h3 class="spell-menu-title">ALLOCATE ATTRIBUTE POINT</h3>
-				<div class="attr-row"><span class="attr-key">[1]</span> STR: {state.player.str ?? 10}</div>
-				<div class="attr-row"><span class="attr-key">[2]</span> INT: {state.player.int ?? 10}</div>
-				<div class="attr-row"><span class="attr-key">[3]</span> WIL: {state.player.wil ?? 10}</div>
-				<div class="attr-row"><span class="attr-key">[4]</span> AGI: {state.player.agi ?? 10}</div>
-				<div class="attr-row"><span class="attr-key">[5]</span> VIT: {state.player.vit ?? 10}</div>
-				<div class="dialogue-hint">Press 1-5 to allocate</div>
-			</div>
-		</div>
-	{/if}
 {/if}
 
 <div class="version">v{__APP_VERSION__} #{__BUILD_NUMBER__}</div>

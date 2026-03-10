@@ -429,8 +429,6 @@ export interface GameState {
 	manaRegenIntCounter: number;        // turn counter for INT-based mana regen
 	spellMenuOpen: boolean;             // whether the spell selection menu is open
 	spellMenuCursor: number;            // selected spell index in the menu
-	/** Pending attribute point to allocate on level-up */
-	pendingAttributePoint: boolean;
 	/** Targeting mode for spells that need a direction/position */
 	spellTargeting: SpellTargetingState | null;
 

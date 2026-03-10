@@ -176,6 +176,7 @@ describe('Ritual Integration', () => {
 			name: 'Test', characterClass: 'warrior', difficulty: 'normal',
 			startingLocation: 'cave', worldSeed: 'test', archetype: 'might',
 		});
+		state.skillPoints = 1;
 		const result = learnRitual(state, 'ritual_summoning_circle');
 		expect(result).toBe(true);
 		expect(state.learnedRituals).toContain('ritual_summoning_circle');
@@ -186,6 +187,7 @@ describe('Ritual Integration', () => {
 			name: 'Test', characterClass: 'warrior', difficulty: 'normal',
 			startingLocation: 'cave', worldSeed: 'test', archetype: 'might',
 		});
+		state.skillPoints = 2;
 		const first = learnRitual(state, 'ritual_ward_of_protection');
 		const second = learnRitual(state, 'ritual_ward_of_protection');
 		expect(first).toBe(true);
@@ -240,6 +242,7 @@ describe('Ritual Save/Load', () => {
 			name: 'Test', characterClass: 'mage', difficulty: 'normal',
 			startingLocation: 'cave', worldSeed: 'test',
 		});
+		state.skillPoints = 2;
 		learnRitual(state, 'ritual_ward_of_protection');
 		learnRitual(state, 'ritual_scrying');
 		state.teleportAnchors[1] = { x: 5, y: 5 };
@@ -270,6 +273,7 @@ describe('Ritual Tome Usage', () => {
 			name: 'Test', characterClass: 'mage', difficulty: 'normal',
 			startingLocation: 'cave', worldSeed: 'test',
 		});
+		state.skillPoints = 1;
 		const tome = { ...ITEM_CATALOG['tome_ward_of_protection'] };
 		state.inventory[0] = tome;
 
@@ -284,6 +288,7 @@ describe('Ritual Tome Usage', () => {
 			name: 'Test', characterClass: 'mage', difficulty: 'normal',
 			startingLocation: 'cave', worldSeed: 'test',
 		});
+		state.skillPoints = 1;
 		learnRitual(state, 'ritual_ward_of_protection');
 		const tome = { ...ITEM_CATALOG['tome_ward_of_protection'] };
 		state.inventory[0] = tome;

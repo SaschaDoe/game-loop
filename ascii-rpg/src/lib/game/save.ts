@@ -79,7 +79,6 @@ interface SerializedState {
 	quickCastSlots?: (string | null)[];
 	manaRegenBaseCounter?: number;
 	manaRegenIntCounter?: number;
-	pendingAttributePoint?: boolean;
 	// Mastery & Forbidden magic
 	schoolMastery?: Record<string, number>;
 	forbiddenCosts?: {
@@ -236,7 +235,6 @@ export function serializeState(state: GameState): string {
 			quickCastSlots: state.quickCastSlots,
 			manaRegenBaseCounter: state.manaRegenBaseCounter,
 			manaRegenIntCounter: state.manaRegenIntCounter,
-			pendingAttributePoint: state.pendingAttributePoint,
 			schoolMastery: state.schoolMastery,
 			forbiddenCosts: state.forbiddenCosts,
 			leyLineLevel: state.leyLineLevel,
@@ -331,7 +329,6 @@ export function deserializeState(json: string): GameState {
 		manaRegenIntCounter: s.manaRegenIntCounter ?? 0,
 		spellMenuOpen: false,
 		spellMenuCursor: 0,
-		pendingAttributePoint: s.pendingAttributePoint ?? false,
 		spellTargeting: null,
 		schoolMastery: s.schoolMastery ?? (createEmptyMastery() as unknown as Record<string, number>),
 		forbiddenCosts: s.forbiddenCosts ?? {
