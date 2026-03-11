@@ -121,6 +121,9 @@ export interface RegionalNPCDef {
 	dialogue: string[];
 	gives?: { hp?: number; atk?: number };
 	mood: NPC['mood'];
+	race?: NPC['race'];
+	gender?: NPC['gender'];
+	raceAttitude?: NPC['raceAttitude'];
 }
 
 export const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
@@ -138,7 +141,7 @@ export const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'M', color: '#da4', name: 'Merchant', dialogue: ['Trade is the lifeblood of the Hearthlands.', 'The roads have become dangerous — bandits everywhere.', 'I hear the King\'s Stones hold ancient magic.'], mood: 'friendly' },
 		{ char: 'G', color: '#8a4', name: 'Guard Captain', dialogue: ['Keep your weapons sheathed within town walls.', 'We\'ve had reports of strange creatures on the roads.', 'The Old Watchtower was abandoned years ago. Haunted, they say.'], gives: { hp: 2 }, mood: 'neutral' },
 		{ char: 'B', color: '#fa8', name: 'Wandering Bard', dialogue: ['Seven thrones sit in shadow deep, where stolen gods their vigil keep...', 'It\'s just a song, friend. Nobody takes it seriously. Well, almost nobody.', 'I collect stories from every region. The ones that match across borders — those are the true ones.'], mood: 'friendly' },
-		{ char: 'F', color: '#a84', name: 'Farmer Edric', dialogue: ['Something is wrong with my land... the crops, the well... please, can you help?'], mood: 'afraid' },
+		{ char: 'F', color: '#a84', name: 'Farmer Edric', dialogue: ['Something is wrong with my land... the crops, the well... please, can you help?'], mood: 'afraid', race: 'human', gender: 'male', raceAttitude: { elf: -2, dwarf: 0, human: 3 } },
 	],
 	frostpeak: [
 		{ char: 'D', color: '#8df', name: 'Dwarven Smith', dialogue: ['These mountains hold iron that sings when struck.', 'The frozen halls above... even we dare not enter.', 'Take this — you\'ll need warmth where you\'re going.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -461,6 +464,9 @@ export function spawnRegionalNPCs(map: GameMap, region: string, existingNPCs: NP
 					given: false,
 					mood: def.mood,
 					moodTurns: 0,
+					...(def.race && { race: def.race }),
+					...(def.gender && { gender: def.gender }),
+					...(def.raceAttitude && { raceAttitude: def.raceAttitude }),
 				});
 				occupied.add(key);
 				placed = true;
