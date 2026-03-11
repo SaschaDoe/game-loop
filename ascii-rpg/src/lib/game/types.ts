@@ -5,7 +5,7 @@ export interface Position {
 	y: number;
 }
 
-export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' | 'paladin' | 'necromancer' | 'bard' | 'adept';
+export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' | 'paladin' | 'necromancer' | 'bard' | 'adept' | 'primordial' | 'runesmith' | 'spellblade';
 
 export type CharacterRace = 'elf' | 'dwarf' | 'human';
 

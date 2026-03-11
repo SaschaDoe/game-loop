@@ -35,7 +35,11 @@
 		cleric: 'CLERIC',
 		paladin: 'PALADIN',
 		necromancer: 'NECROMANCER',
-		bard: 'BARD'
+		bard: 'BARD',
+		adept: 'ADEPT',
+		primordial: 'PRIMORDIAL',
+		runesmith: 'RUNESMITH',
+		spellblade: 'SPELLBLADE',
 	};
 	const LOCATIONS: StartingLocation[] = ['village', 'tavern', 'cave', 'academy'];
 

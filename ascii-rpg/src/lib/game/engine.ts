@@ -86,6 +86,9 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	necromancer: { hp: -3, atk: 2, sight: 1, description: 'A dark mage who commands death itself' },
 	bard: { hp: 0, atk: 0, sight: 1, description: 'A charming performer whose songs shape fate' },
 	adept: { hp: 0, atk: 0, sight: 1, description: 'A disciplined practitioner of inner power' },
+	primordial:  { hp: -1, atk: 0, sight: 2, description: 'Ley Line channeler — high magic sight, fragile' },
+	runesmith:   { hp: 3, atk: 1, sight: -1, description: 'Rune inscriber — durable, strong, limited vision' },
+	spellblade:  { hp: 2, atk: 1, sight: 0, description: 'Warrior-mage — balanced combat and magic' },
 };
 
 const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', archetype: 'might', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
@@ -274,6 +277,9 @@ export function createGame(config?: CharacterConfig): GameState {
 		necromancer: { equip: [['leftHand', 'bone_staff'], ['back', 'death_shroud']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
 		bard:        { equip: [['leftHand', 'rapier'], ['rightHand', 'lute'], ['head', 'fancy_hat']], inventory: ['health_potion', 'bread', 'water_flask'] },
 		adept:       { equip: [['leftHand', 'mage_staff'], ['body', 'cloth_robe']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
+		primordial:  { equip: [['leftHand', 'mage_staff']], inventory: ['health_potion', 'health_potion'] },
+		runesmith:   { equip: [['leftHand', 'iron_sword'], ['body', 'leather_armor']], inventory: ['health_potion', 'health_potion'] },
+		spellblade:  { equip: [['leftHand', 'iron_sword'], ['body', 'leather_armor']], inventory: ['health_potion', 'health_potion'] },
 	};
 	const startingGear = CLASS_STARTING_ITEMS[cfg.characterClass];
 	for (const [slot, itemId] of startingGear.equip) {

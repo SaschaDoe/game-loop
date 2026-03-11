@@ -49,6 +49,9 @@ export const CLASS_PROFILES: Record<CharacterClass, ClassProfile> = {
 	ranger:      { suggestedArchetype: 'finesse', startingAbility: 'trap_sense',  startingSpell: null,              armorProficiency: 'medium', description: 'A wilderness tracker with sharp eyes' },
 	bard:        { suggestedArchetype: 'finesse', startingAbility: 'inspire',     startingSpell: null,              armorProficiency: 'light',  description: 'A charming performer whose songs shape fate' },
 	adept:       { suggestedArchetype: 'arcane',  startingAbility: null,          startingSpell: 'spell_summon_light', armorProficiency: 'robes',  description: 'A dedicated student of the arcane arts, brimming with untapped potential' },
+	primordial:  { suggestedArchetype: 'arcane',  startingAbility: 'ley_surge',   startingSpell: null,              armorProficiency: 'robes',  description: 'A Ley Line channeler who draws power from the earth itself' },
+	runesmith:   { suggestedArchetype: 'might',   startingAbility: 'rune_ward',   startingSpell: null,              armorProficiency: 'heavy',  description: 'A rune inscriber who etches power into stone and steel' },
+	spellblade:  { suggestedArchetype: 'might',   startingAbility: 'arcane_strike', startingSpell: null,            armorProficiency: 'medium', description: 'A warrior-mage who blends steel and sorcery' },
 };
 
 // ---------------------------------------------------------------------------
