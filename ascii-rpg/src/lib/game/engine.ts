@@ -1123,7 +1123,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 			// Conditional start nodes (e.g. mage at academy gets different greeting)
 			if (tree.conditionalStartNodes && npc.dialogueIndex === 0) {
-				const ctx = buildDialogueContext(state, npc.mood);
+				const ctx = buildDialogueContext(state, npc.mood, npc);
 				for (const csn of tree.conditionalStartNodes) {
 					if (checkCondition(csn.condition, ctx) && tree.nodes[csn.nodeId]) {
 						startId = csn.nodeId;
@@ -1146,7 +1146,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				visitedNodes: new Set<string>(),
 				givenItems: npc.given,
 				mood: npc.mood,
-				context: buildDialogueContext(state, npc.mood),
+				context: buildDialogueContext(state, npc.mood, npc),
 			};
 			if (npc.dialogueIndex === 0) {
 				npc.dialogueIndex = 1;

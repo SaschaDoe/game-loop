@@ -909,6 +909,71 @@ describe('dialogue conditions: hasSpell/hasRitual/hasQuest/questCompleted', () =
 	});
 });
 
+describe('race dialogue conditions', () => {
+	it('race — matches when playerRace equals value', () => {
+		const ctx = makeDialogueContext({ playerRace: 'elf' });
+		expect(checkCondition({ type: 'race', value: 'elf' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'race', value: 'dwarf' }, ctx)).toBe(false);
+	});
+
+	it('notRace — matches when playerRace does not equal value', () => {
+		const ctx = makeDialogueContext({ playerRace: 'dwarf' });
+		expect(checkCondition({ type: 'notRace', value: 'elf' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'notRace', value: 'dwarf' }, ctx)).toBe(false);
+	});
+
+	it('minRaceAttitude — true when attitude >= value', () => {
+		const ctx = makeDialogueContext({ raceAttitude: { elf: 3, dwarf: -1, human: 0 } });
+		expect(checkCondition({ type: 'minRaceAttitude', race: 'elf', value: 3 }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'minRaceAttitude', race: 'elf', value: 4 }, ctx)).toBe(false);
+		expect(checkCondition({ type: 'minRaceAttitude', race: 'dwarf', value: -1 }, ctx)).toBe(true);
+	});
+
+	it('maxRaceAttitude — true when attitude <= value', () => {
+		const ctx = makeDialogueContext({ raceAttitude: { elf: 3, dwarf: -1, human: 0 } });
+		expect(checkCondition({ type: 'maxRaceAttitude', race: 'dwarf', value: -1 }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'maxRaceAttitude', race: 'dwarf', value: -2 }, ctx)).toBe(false);
+		expect(checkCondition({ type: 'maxRaceAttitude', race: 'human', value: 0 }, ctx)).toBe(true);
+	});
+});
+
+describe('buildDialogueContext with NPC race attitude', () => {
+	it('populates raceAttitude from NPC base attitude', () => {
+		const npc = makeNpc({ name: 'Elder', raceAttitude: { elf: 2, dwarf: -1, human: 1 } });
+		const state = makeTestState({ npcs: [npc] });
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude).toEqual({ elf: 2, dwarf: -1, human: 1 });
+	});
+
+	it('defaults raceAttitude to zeros when NPC has no raceAttitude', () => {
+		const npc = makeNpc({ name: 'Elder' });
+		const state = makeTestState({ npcs: [npc] });
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude).toEqual({ elf: 0, dwarf: 0, human: 0 });
+	});
+
+	it('combines NPC base attitude with player-driven shifts', () => {
+		const npc = makeNpc({ name: 'Elder', raceAttitude: { elf: 2, dwarf: -1, human: 1 } });
+		const state = makeTestState({
+			npcs: [npc],
+			npcAttitudeShifts: { 'Elder': { elf: 1, dwarf: 2, human: -1 } },
+		});
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude).toEqual({ elf: 3, dwarf: 1, human: 0 });
+	});
+
+	it('clamps combined attitude to [-5, 5]', () => {
+		const npc = makeNpc({ name: 'Elder', raceAttitude: { elf: 4, dwarf: -4, human: 0 } });
+		const state = makeTestState({
+			npcs: [npc],
+			npcAttitudeShifts: { 'Elder': { elf: 3, dwarf: -3, human: 0 } },
+		});
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude.elf).toBe(5);
+		expect(ctx.raceAttitude.dwarf).toBe(-5);
+	});
+});
+
 describe('npcMoodColor', () => {
 	it('returns NPC default color for neutral mood', () => {
 		const npc = makeNpc({ color: '#0ff', mood: 'neutral' });

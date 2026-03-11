@@ -1,4 +1,4 @@
-import type { GameState, Entity, CharacterClass, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
+import type { GameState, Entity, CharacterClass, CharacterRace, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
 import { addMessage, handlePlayerDeath, relocateNpc } from './engine-utils';
 import { revealOverworldArea } from './overworld-handler';
 import { learnRitual } from './spell-handler';
@@ -7,7 +7,17 @@ import { acceptQuest, completeQuest } from './quests';
 import { enrollAtAcademy, completeLesson, completeTeachingSession, getAcademyDay, isLessonReady, allLessonsComplete } from './academy';
 import type { WorldMap } from './overworld';
 
-export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutral'): DialogueContext {
+export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutral', npc?: NPC): DialogueContext {
+	// Compute effective race attitude from NPC base attitude + player-driven shifts
+	let raceAttitude: Record<CharacterRace, number> = { elf: 0, dwarf: 0, human: 0 };
+	if (npc?.raceAttitude) {
+		const shifts = state.npcAttitudeShifts;
+		raceAttitude = {
+			elf: Math.max(-5, Math.min(5, (npc.raceAttitude.elf ?? 0) + (shifts[npc.name]?.elf ?? 0))),
+			dwarf: Math.max(-5, Math.min(5, (npc.raceAttitude.dwarf ?? 0) + (shifts[npc.name]?.dwarf ?? 0))),
+			human: Math.max(-5, Math.min(5, (npc.raceAttitude.human ?? 0) + (shifts[npc.name]?.human ?? 0))),
+		};
+	}
 	return {
 		dungeonLevel: state.level,
 		characterLevel: state.characterLevel,
@@ -42,7 +52,7 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		activeQuestIds: state.quests.filter(q => q.status === 'active').map(q => q.id),
 		completedQuestIds: state.completedQuestIds,
 		playerRace: state.playerRace,
-		raceAttitude: { elf: 0, dwarf: 0, human: 0 },
+		raceAttitude,
 	};
 }
 
