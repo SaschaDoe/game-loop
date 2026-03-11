@@ -117,7 +117,9 @@ export function rollSocialCheck(check: SocialCheck, state: GameState): { success
 	const roll = 1 + Math.floor(Math.random() * 20);
 	const classBonus = SOCIAL_CLASS_BONUS[state.characterConfig.characterClass][check.skill];
 	const levelBonus = Math.floor(state.characterLevel / 3);
-	const bonus = classBonus + levelBonus;
+	// Human racial passive: +1 social bonus
+	const raceBonus = state.playerRace === 'human' ? 1 : 0;
+	const bonus = classBonus + levelBonus + raceBonus;
 	const total = roll + bonus;
 	return { success: total >= check.difficulty, roll, bonus, total };
 }

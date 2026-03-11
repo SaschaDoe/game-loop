@@ -12,7 +12,11 @@ import {
 	applyPermanentBuffs,
 	RACIAL_QUEST_BUFFS,
 } from './races';
-import type { CharacterRace, PermanentBuff } from './types';
+import { racialPoisonDuration, dwarfUndergroundDefense } from './engine-utils';
+import { rollSocialCheck } from './dialogue-handler';
+import { getOverworldSightRadius } from './overworld-handler';
+import type { CharacterRace, PermanentBuff, GameState } from './types';
+import { Visibility } from './types';
 
 describe('Race Attributes', () => {
 	it('all races sum to 54 attribute points', () => {
@@ -403,5 +407,138 @@ describe('RACIAL_QUEST_BUFFS', () => {
 		for (const [key, buff] of Object.entries(RACIAL_QUEST_BUFFS)) {
 			expect(buff.effects.length, `${key} should have effects`).toBeGreaterThan(0);
 		}
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Racial Passive Gameplay Effects
+// ---------------------------------------------------------------------------
+
+function makeMinimalState(overrides: Partial<GameState> = {}): GameState {
+	const width = 10;
+	const height = 10;
+	const tiles = Array.from({ length: height }, () =>
+		Array.from({ length: width }, () => '.' as const)
+	);
+	const visibility = Array.from({ length: height }, () =>
+		Array.from({ length: width }, () => Visibility.Visible)
+	);
+	return {
+		player: { pos: { x: 5, y: 5 }, char: '@', color: '#ff0', name: 'Hero', hp: 20, maxHp: 20, attack: 10, statusEffects: [] },
+		enemies: [], map: { width, height, tiles, secretWalls: new Set<string>() },
+		messages: [], level: 1, gameOver: false, xp: 0, characterLevel: 1,
+		visibility, sightRadius: 8, detectedSecrets: new Set<string>(),
+		traps: [], detectedTraps: new Set<string>(),
+		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
+		abilityCooldown: 0, hazards: [], npcs: [], chests: [], lootDrops: [],
+		skillPoints: 0, unlockedSkills: [], activeDialogue: null, rumors: [],
+		knownLanguages: [], landmarks: [], heardStories: [],
+		stats: { enemiesKilled: 0, bossesKilled: 0, secretsFound: 0, trapsDisarmed: 0, chestsOpened: 0, levelsCleared: 0, npcsSpokenTo: 0, landmarksExamined: 0, damageDealt: 0, damageTaken: 0, maxDungeonLevel: 0, stealthKills: 0, backstabs: 0, questsCompleted: 0, questsFailed: 0 },
+		unlockedAchievements: [], lieCount: 0, bestiary: {},
+		hunger: 100, thirst: 100, survivalEnabled: true, turnCount: 0,
+		locationMode: 'location' as const, worldMap: null, overworldPos: null,
+		currentLocationId: null, waypoint: null,
+		inventory: Array.from({ length: 12 }, () => null),
+		equipment: { head: null, body: null, trouser: null, leftHand: null, rightHand: null, back: null, leftFoot: null, rightFoot: null },
+		containers: [], activeBookReading: null, inventoryOpen: false,
+		activeContainer: null, inventoryCursor: 0, inventoryPanel: 'inventory' as const,
+		locationCache: {}, quests: [], completedQuestIds: [], failedQuestIds: [],
+		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
+		academyState: null, playerTitles: [],
+		playerRace: 'human' as const, permanentBuffs: [], npcAttitudeShifts: {},
+		learnedSpells: [], spellCooldowns: {}, quickCastSlots: [null, null, null, null],
+		manaRegenBaseCounter: 0, manaRegenIntCounter: 0, spellMenuOpen: false, spellMenuCursor: 0,
+		spellTargeting: null, schoolMastery: {},
+		forbiddenCosts: { corruption: 0, paradoxBaseline: 0, maxHpLost: 0, sanityLost: 0, soulCapLost: 0 },
+		leyLineLevel: 0, trueSightActive: 0, revealedLeyLineTiles: new Set(),
+		learnedRituals: [], ritualChanneling: null, activeWards: [],
+		teleportAnchors: {}, activeSummon: null, scriedLevel: null,
+		terrainEffects: [], specialization: null, pendingSpecialization: false, forbiddenPassives: [],
+		...overrides,
+	};
+}
+
+describe('Racial Passive: Dwarf Poison Resistance', () => {
+	it('halves poison duration for dwarves', () => {
+		const state = makeMinimalState({ playerRace: 'dwarf' });
+		expect(racialPoisonDuration(state, 'poison', 6)).toBe(3);
+	});
+
+	it('minimum poison duration is 1 for dwarves', () => {
+		const state = makeMinimalState({ playerRace: 'dwarf' });
+		expect(racialPoisonDuration(state, 'poison', 1)).toBe(1);
+	});
+
+	it('does not halve non-poison effects for dwarves', () => {
+		const state = makeMinimalState({ playerRace: 'dwarf' });
+		expect(racialPoisonDuration(state, 'burn', 6)).toBe(6);
+	});
+
+	it('does not halve poison for non-dwarves', () => {
+		const state = makeMinimalState({ playerRace: 'elf' });
+		expect(racialPoisonDuration(state, 'poison', 6)).toBe(6);
+	});
+});
+
+describe('Racial Passive: Human Social Bonus', () => {
+	it('human gets +1 social bonus in rollSocialCheck', () => {
+		const humanState = makeMinimalState({ playerRace: 'human' });
+		const elfState = makeMinimalState({ playerRace: 'elf' });
+		const check = { skill: 'persuade' as const, difficulty: 1, successNode: 's', failNode: 'f' };
+		// Roll with Math.random fixed
+		const orig = Math.random;
+		Math.random = () => 0.5; // roll = 11
+		try {
+			const humanResult = rollSocialCheck(check, humanState);
+			const elfResult = rollSocialCheck(check, elfState);
+			expect(humanResult.bonus).toBe(elfResult.bonus + 1);
+		} finally {
+			Math.random = orig;
+		}
+	});
+});
+
+describe('Racial Passive: Elf Forest Sight', () => {
+	it('elf gets +1 overworld sight in forest terrain', () => {
+		const forestTile = { terrain: 'forest', passable: true } as any;
+		const elfSight = getOverworldSightRadius(forestTile, 'elf');
+		const humanSight = getOverworldSightRadius(forestTile, 'human');
+		expect(elfSight).toBe(humanSight + 1);
+	});
+
+	it('elf does not get bonus in non-forest terrain', () => {
+		const grassTile = { terrain: 'grass', passable: true } as any;
+		const elfSight = getOverworldSightRadius(grassTile, 'elf');
+		const humanSight = getOverworldSightRadius(grassTile, 'human');
+		expect(elfSight).toBe(humanSight);
+	});
+});
+
+describe('Racial Passive: Dwarf Underground Defense', () => {
+	it('dwarf gets +2 defense in dungeon', () => {
+		const state = makeMinimalState({
+			playerRace: 'dwarf',
+			locationMode: 'location',
+			currentLocationId: 'some_dungeon',
+		});
+		expect(dwarfUndergroundDefense(state)).toBe(2);
+	});
+
+	it('dwarf gets no bonus on overworld', () => {
+		const state = makeMinimalState({
+			playerRace: 'dwarf',
+			locationMode: 'overworld',
+			currentLocationId: null,
+		});
+		expect(dwarfUndergroundDefense(state)).toBe(0);
+	});
+
+	it('non-dwarf gets no bonus in dungeon', () => {
+		const state = makeMinimalState({
+			playerRace: 'elf',
+			locationMode: 'location',
+			currentLocationId: 'some_dungeon',
+		});
+		expect(dwarfUndergroundDefense(state)).toBe(0);
 	});
 });

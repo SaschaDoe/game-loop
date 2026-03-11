@@ -1,6 +1,6 @@
 import type { GameState, Entity, Position, MessageType, CharacterClass } from './types';
 import { Visibility } from './types';
-import { addMessage, handlePlayerDeath, isBlocked, xpReward, applyXpMultiplier, checkLevelUp, processAchievements, tickEntityEffects, tryDropLoot, tickNpcMoods } from './engine-utils';
+import { addMessage, handlePlayerDeath, isBlocked, xpReward, applyXpMultiplier, checkLevelUp, processAchievements, tickEntityEffects, tryDropLoot, tickNpcMoods, racialPoisonDuration } from './engine-utils';
 import { tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
 import { hasEffect, applyEffect } from './status-effects';
 import { getSkillBonuses } from './skills';
@@ -305,7 +305,7 @@ export function moveEnemies(state: GameState, defending = false) {
 						addMessage(state, `${enemy.name} unleashes ${chSpell.name} for ${dmg} damage!`, 'damage_taken');
 					}
 					if (chSpell?.statusEffect) {
-						applyEffect(state.player, chSpell.statusEffect.type as any, chSpell.statusEffect.duration, chSpell.statusEffect.potency);
+						applyEffect(state.player, chSpell.statusEffect.type as any, racialPoisonDuration(state, chSpell.statusEffect.type, chSpell.statusEffect.duration), chSpell.statusEffect.potency);
 					}
 					enemy.channeling = null;
 				}
@@ -340,7 +340,7 @@ export function moveEnemies(state: GameState, defending = false) {
 						addMessage(state, `${enemy.name} casts ${spell.name} for ${dmg} damage!`, 'damage_taken');
 					}
 					if (spell.statusEffect) {
-						applyEffect(state.player, spell.statusEffect.type as any, spell.statusEffect.duration, spell.statusEffect.potency);
+						applyEffect(state.player, spell.statusEffect.type as any, racialPoisonDuration(state, spell.statusEffect.type, spell.statusEffect.duration), spell.statusEffect.potency);
 						if (spell.baseDamage <= 0) {
 							addMessage(state, `${enemy.name} casts ${spell.name}!`, 'danger');
 						}
@@ -397,7 +397,7 @@ export function moveEnemies(state: GameState, defending = false) {
 			checkRitualInterrupt(state, dmg);
 			const onHit = getMonsterOnHitEffect(enemy);
 			if (onHit) {
-				applyEffect(state.player, onHit.type, onHit.duration, onHit.potency);
+				applyEffect(state.player, onHit.type, racialPoisonDuration(state, onHit.type, onHit.duration), onHit.potency);
 				addMessage(state, `${enemy.name}'s attack inflicts ${onHit.type}!`, 'damage_taken');
 			}
 			if (state.player.hp <= 0) {

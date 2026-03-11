@@ -435,17 +435,17 @@ describe('rollSocialCheck', () => {
 	it('includes class bonus for warrior intimidate', () => {
 		const state = makeTestState({ characterLevel: 0 });
 		const check: SocialCheck = { skill: 'intimidate', difficulty: 100, successNode: 's', failNode: 'f' };
-		// Warrior intimidate bonus is 4, level bonus = floor(0/3) = 0
+		// Warrior intimidate bonus is 4, level bonus = floor(0/3) = 0, human race bonus = 1
 		const result = rollSocialCheck(check, state);
-		expect(result.bonus).toBe(4);
+		expect(result.bonus).toBe(5);
 	});
 
 	it('includes level bonus (floor of characterLevel / 3)', () => {
 		const state = makeTestState({ characterLevel: 9 });
 		const check: SocialCheck = { skill: 'persuade', difficulty: 100, successNode: 's', failNode: 'f' };
-		// Warrior persuade = 0, level bonus = floor(9/3) = 3
+		// Warrior persuade = 0, level bonus = floor(9/3) = 3, human race bonus = 1
 		const result = rollSocialCheck(check, state);
-		expect(result.bonus).toBe(3);
+		expect(result.bonus).toBe(4);
 	});
 
 	it('succeeds when total >= difficulty', () => {

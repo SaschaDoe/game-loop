@@ -1,4 +1,4 @@
-import type { GameState, GameMap, Entity, Position, NPC, NPCMood, CachedLocationState, Difficulty } from './types';
+import type { GameState, GameMap, Entity, Position, NPC, NPCMood, CachedLocationState, Difficulty, CharacterRace } from './types';
 import type { WorldMap, OverworldTile, Settlement, DungeonEntrance, PointOfInterest, RegionId } from './overworld';
 import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, REGION_DEFS } from './overworld';
 import { addMessage, effectiveSightRadius, detectAdjacentSecrets, processAchievements, checkLevelUp } from './engine-utils';
@@ -338,8 +338,13 @@ const GRAVE_LORE: Record<string, string> = {
 // ── Helper Functions ──
 
 /** Get overworld sight radius based on the terrain the player is standing on. */
-export function getOverworldSightRadius(tile: OverworldTile): number {
-	return TERRAIN_SIGHT_RADIUS[tile.terrain] ?? OVERWORLD_SIGHT_RADIUS;
+export function getOverworldSightRadius(tile: OverworldTile, playerRace?: CharacterRace): number {
+	const base = TERRAIN_SIGHT_RADIUS[tile.terrain] ?? OVERWORLD_SIGHT_RADIUS;
+	// Elf racial passive: +1 sight in forest terrain
+	if (playerRace === 'elf' && (tile.terrain === 'forest' || tile.terrain === 'dead_trees')) {
+		return base + 1;
+	}
+	return base;
 }
 
 /** Get the movement turn cost for an overworld tile. Roads = 1 but allow double-step. Slow terrain = 2 turns. */
@@ -1016,7 +1021,7 @@ export function handleOverworldInput(
 
 	// Move on overworld
 	state.overworldPos = { x: nx, y: ny };
-	revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(targetTile));
+	revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(targetTile, state.playerRace));
 
 	// Update ley line level based on tile
 	state.leyLineLevel = getLeyLineLevelForTile(targetTile);
@@ -1080,7 +1085,7 @@ export function handleOverworldInput(
 				// Check region transition for second step too
 				const secondRegion = secondTile.region;
 				state.overworldPos = { x: nx2, y: ny2 };
-				revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(secondTile));
+				revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(secondTile, state.playerRace));
 				if (secondRegion !== nextRegion) {
 					const regionDef = worldMap.regions.find(r => r.id === secondRegion);
 					if (regionDef) {
@@ -1225,9 +1230,13 @@ export function renderOverworldColored(state: GameState): { char: string; color:
 				continue;
 			}
 
-			// Ley line color overlay (True Sight or Reveal Secrets)
+			// Ley line color overlay (True Sight, Reveal Secrets, or Elf racial sensing)
 			if (tile.leyLine && isNearPlayer) {
-				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`));
+				const elfSenseRange = state.playerRace === 'elf' ? 3 : 0;
+				const elfCanSense = elfSenseRange > 0 && state.overworldPos &&
+					Math.abs(wx - state.overworldPos.x) <= elfSenseRange &&
+					Math.abs(wy - state.overworldPos.y) <= elfSenseRange;
+				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`) || elfCanSense);
 				if (leyVisible) {
 					const display = TERRAIN_DISPLAY[tile.terrain];
 					const leyColor = tile.leyLine === 'convergence' ? '#fc4' : tile.leyLine === 'core' ? '#4ff' : '#2aa';
