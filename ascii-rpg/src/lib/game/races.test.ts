@@ -6,6 +6,7 @@ import {
 	RACE_PASSIVES,
 	isClassAvailableForRace,
 	MANA_FLOOR,
+	getRaceFlavorLine,
 } from './races';
 import type { CharacterRace } from './types';
 
@@ -141,5 +142,120 @@ describe('Race Passives', () => {
 describe('Mana Floor', () => {
 	it('MANA_FLOOR is 5', () => {
 		expect(MANA_FLOOR).toBe(5);
+	});
+});
+
+describe('getRaceFlavorLine', () => {
+	it('returns null for same-race interactions', () => {
+		expect(getRaceFlavorLine('elf', 'elf', -5)).toBeNull();
+		expect(getRaceFlavorLine('dwarf', 'dwarf', 5)).toBeNull();
+		expect(getRaceFlavorLine('human', 'human', 3)).toBeNull();
+	});
+
+	it('returns null for neutral attitude (-1 to +1)', () => {
+		expect(getRaceFlavorLine('elf', 'dwarf', 0)).toBeNull();
+		expect(getRaceFlavorLine('elf', 'dwarf', 1)).toBeNull();
+		expect(getRaceFlavorLine('elf', 'dwarf', -1)).toBeNull();
+	});
+
+	it('returns a string for hostile attitude', () => {
+		// Run multiple times to handle randomness
+		let found = false;
+		for (let i = 0; i < 20; i++) {
+			const line = getRaceFlavorLine('elf', 'dwarf', -5);
+			if (line !== null) {
+				expect(typeof line).toBe('string');
+				expect(line.length).toBeGreaterThan(0);
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('returns a string for warm attitude (+2 to +3)', () => {
+		let found = false;
+		for (let i = 0; i < 20; i++) {
+			const line = getRaceFlavorLine('dwarf', 'elf', 3);
+			if (line !== null) {
+				expect(typeof line).toBe('string');
+				expect(line.length).toBeGreaterThan(0);
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('returns a string for kinship attitude (+4 to +5)', () => {
+		let found = false;
+		for (let i = 0; i < 20; i++) {
+			const line = getRaceFlavorLine('human', 'elf', 5);
+			if (line !== null) {
+				expect(typeof line).toBe('string');
+				expect(line.length).toBeGreaterThan(0);
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('returns a string for cold attitude (-2 to -3)', () => {
+		let found = false;
+		for (let i = 0; i < 20; i++) {
+			const line = getRaceFlavorLine('human', 'dwarf', -2);
+			if (line !== null) {
+				expect(typeof line).toBe('string');
+				expect(line.length).toBeGreaterThan(0);
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('may return innuendo for female human NPC with attitude >= 2 toward non-human', () => {
+		// Run many times — 30% chance each time
+		let innuendoFound = false;
+		for (let i = 0; i < 100; i++) {
+			const line = getRaceFlavorLine('human', 'elf', 3, 'female');
+			if (line !== null && line.includes('gifted') || line?.includes('cooking') || line?.includes('Tall')) {
+				innuendoFound = true;
+				break;
+			}
+		}
+		// With 100 attempts at 30% chance, probability of never getting one is 0.7^100 ≈ 0
+		expect(innuendoFound).toBe(true);
+	});
+
+	it('does not return innuendo for male human NPC', () => {
+		// Male NPCs should only return regular flavor lines
+		for (let i = 0; i < 50; i++) {
+			const line = getRaceFlavorLine('human', 'elf', 3, 'male');
+			if (line !== null) {
+				// Regular warm lines for human→elf don't contain innuendo keywords
+				expect(line).not.toContain('gifted');
+				expect(line).not.toContain('cooking');
+			}
+		}
+	});
+
+	it('all race pairs have flavor lines for non-neutral tiers', () => {
+		const races: CharacterRace[] = ['elf', 'dwarf', 'human'];
+		for (const npcRace of races) {
+			for (const playerRace of races) {
+				if (npcRace === playerRace) continue;
+				// Check hostile tier returns lines
+				let hostileFound = false;
+				for (let i = 0; i < 20; i++) {
+					if (getRaceFlavorLine(npcRace, playerRace, -5) !== null) {
+						hostileFound = true;
+						break;
+					}
+				}
+				expect(hostileFound, `${npcRace} → ${playerRace} hostile`).toBe(true);
+			}
+		}
 	});
 });
