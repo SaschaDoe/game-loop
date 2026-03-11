@@ -350,3 +350,105 @@ describe('Bard skills', () => {
 		expect(canUnlock('b_spell_1', [], 'necromancer')).toBe(false);
 	});
 });
+
+describe('Primordial skills', () => {
+	it('has 9 skills', () => {
+		expect(getClassSkills('primordial')).toHaveLength(9);
+	});
+
+	it('has 3 branches', () => {
+		const branches = getClassBranches('primordial');
+		expect(branches).toHaveLength(3);
+		expect(branches).toContain('Ley Channeling');
+		expect(branches).toContain('Verdant Communion');
+		expect(branches).toContain('Veil Walking');
+	});
+
+	it('each branch has tiers 1-3', () => {
+		const skills = getClassSkills('primordial');
+		for (const branch of getClassBranches('primordial')) {
+			const branchSkills = skills.filter(s => s.branch === branch);
+			expect(branchSkills).toHaveLength(3);
+			expect(branchSkills.map(s => s.tier).sort()).toEqual([1, 2, 3]);
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('pr_ley_2', ['pr_ley_1'], 'primordial')).toBe(true);
+		expect(canUnlock('pr_verd_2', ['pr_verd_1'], 'primordial')).toBe(true);
+		expect(canUnlock('pr_veil_2', ['pr_veil_1'], 'primordial')).toBe(true);
+	});
+
+	it('tier 3 skills require tier 2', () => {
+		expect(canUnlock('pr_ley_3', ['pr_ley_1'], 'primordial')).toBe(false);
+		expect(canUnlock('pr_ley_3', ['pr_ley_1', 'pr_ley_2'], 'primordial')).toBe(true);
+	});
+});
+
+describe('Runesmith skills', () => {
+	it('has 9 skills', () => {
+		expect(getClassSkills('runesmith')).toHaveLength(9);
+	});
+
+	it('has 3 branches', () => {
+		const branches = getClassBranches('runesmith');
+		expect(branches).toHaveLength(3);
+		expect(branches).toContain('Runecraft');
+		expect(branches).toContain('Stonebinding');
+		expect(branches).toContain('Forgemastery');
+	});
+
+	it('each branch has tiers 1-3', () => {
+		const skills = getClassSkills('runesmith');
+		for (const branch of getClassBranches('runesmith')) {
+			const branchSkills = skills.filter(s => s.branch === branch);
+			expect(branchSkills).toHaveLength(3);
+			expect(branchSkills.map(s => s.tier).sort()).toEqual([1, 2, 3]);
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('rs_rune_2', ['rs_rune_1'], 'runesmith')).toBe(true);
+		expect(canUnlock('rs_stone_2', ['rs_stone_1'], 'runesmith')).toBe(true);
+		expect(canUnlock('rs_forge_2', ['rs_forge_1'], 'runesmith')).toBe(true);
+	});
+
+	it('tier 3 skills require tier 2', () => {
+		expect(canUnlock('rs_rune_3', ['rs_rune_1'], 'runesmith')).toBe(false);
+		expect(canUnlock('rs_rune_3', ['rs_rune_1', 'rs_rune_2'], 'runesmith')).toBe(true);
+	});
+});
+
+describe('Spellblade skills', () => {
+	it('has 9 skills', () => {
+		expect(getClassSkills('spellblade')).toHaveLength(9);
+	});
+
+	it('has 3 branches', () => {
+		const branches = getClassBranches('spellblade');
+		expect(branches).toHaveLength(3);
+		expect(branches).toContain('Battle Channeling');
+		expect(branches).toContain('Aegis Arts');
+		expect(branches).toContain('War Casting');
+	});
+
+	it('each branch has tiers 1-3', () => {
+		const skills = getClassSkills('spellblade');
+		for (const branch of getClassBranches('spellblade')) {
+			const branchSkills = skills.filter(s => s.branch === branch);
+			expect(branchSkills).toHaveLength(3);
+			expect(branchSkills.map(s => s.tier).sort()).toEqual([1, 2, 3]);
+		}
+	});
+
+	it('tier 2 skills have correct prerequisites', () => {
+		expect(canUnlock('sb_battle_2', ['sb_battle_1'], 'spellblade')).toBe(true);
+		expect(canUnlock('sb_aegis_2', ['sb_aegis_1'], 'spellblade')).toBe(true);
+		expect(canUnlock('sb_war_2', ['sb_war_1'], 'spellblade')).toBe(true);
+	});
+
+	it('tier 3 skills require tier 2', () => {
+		expect(canUnlock('sb_battle_3', ['sb_battle_1'], 'spellblade')).toBe(false);
+		expect(canUnlock('sb_battle_3', ['sb_battle_1', 'sb_battle_2'], 'spellblade')).toBe(true);
+	});
+});
