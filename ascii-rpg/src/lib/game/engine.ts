@@ -26,6 +26,7 @@ import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn,
 import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, tickAcademy } from './academy';
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, getWeaponBonus, getArmorValue } from './magic';
+import { RACE_ATTRIBUTES, RACE_SIGHT_BONUS, isClassAvailableForRace, MANA_FLOOR } from './races';
 import { SPELL_CATALOG } from './spells';
 import { createEmptyMastery, getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
@@ -94,6 +95,18 @@ export function createGame(config?: CharacterConfig): GameState {
 	// Default archetype from class profile if not specified
 	const cfg = { ...rawCfg, archetype: rawCfg.archetype ?? CLASS_PROFILES[rawCfg.characterClass].suggestedArchetype };
 
+	// Determine race (default to 'human')
+	const race = cfg.race ?? 'human';
+	const characterClass = cfg.characterClass;
+
+	// Validate race+class combination
+	if (!isClassAvailableForRace(race, characterClass)) {
+		throw new Error(`Class '${characterClass}' is not available for race '${race}'`);
+	}
+
+	// Get race attributes
+	const raceAttrs = RACE_ATTRIBUTES[race];
+
 	// Generate the overworld
 	const worldMap = generateWorld(cfg.worldSeed);
 
@@ -111,8 +124,6 @@ export function createGame(config?: CharacterConfig): GameState {
 	const sightRadius = DEFAULT_SIGHT_RADIUS;
 	const visibility = createVisibilityGrid(MAP_W, MAP_H);
 
-	// Set up archetype attributes
-	const archetype = ARCHETYPE_ATTRIBUTES[cfg.archetype];
 	const classProfile = CLASS_PROFILES[cfg.characterClass];
 
 	const state: GameState = {
@@ -125,12 +136,12 @@ export function createGame(config?: CharacterConfig): GameState {
 			maxHp: 10,
 			attack: 0,
 			statusEffects: [],
-			// Core attributes from archetype
-			str: archetype.str,
-			int: archetype.int,
-			wil: archetype.wil,
-			agi: archetype.agi,
-			vit: archetype.vit,
+			// Core attributes from race
+			str: raceAttrs.str,
+			int: raceAttrs.int,
+			wil: raceAttrs.wil,
+			agi: raceAttrs.agi,
+			vit: raceAttrs.vit,
 			// Mana — calculated below
 			mana: 0,
 			maxMana: 0,
@@ -196,7 +207,7 @@ export function createGame(config?: CharacterConfig): GameState {
 		playerTitles: [],
 
 		// Race system
-		playerRace: 'human',
+		playerRace: race,
 		permanentBuffs: [],
 		npcAttitudeShifts: {},
 
@@ -274,16 +285,15 @@ export function createGame(config?: CharacterConfig): GameState {
 		if (item) addToInventory(state.inventory, { ...item });
 	}
 
-	// Calculate derived stats from archetype attributes + equipment
+	// Calculate derived stats from race attributes + equipment
 	const weaponBonus = getWeaponBonus(state.equipment);
 	const armorValue = getArmorValue(state.equipment);
-	recalculateDerivedStats(state.player, armorValue, weaponBonus, archetype.manaModifier);
+	recalculateDerivedStats(state.player, armorValue, weaponBonus, raceAttrs.manaModifier);
 	state.player.hp = state.player.maxHp; // Start at full HP
 	state.player.mana = state.player.maxMana; // Start at full mana
 
-	// Apply sight radius based on archetype (Arcane sees further)
-	if (cfg.archetype === 'arcane') state.sightRadius += 2;
-	else if (cfg.archetype === 'finesse') state.sightRadius += 1;
+	// Apply sight radius from race + class
+	state.sightRadius += RACE_SIGHT_BONUS[race];
 
 	// Grant starting spell from class profile
 	if (classProfile.startingSpell && SPELL_CATALOG[classProfile.startingSpell]) {
