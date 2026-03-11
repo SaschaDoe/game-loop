@@ -21,7 +21,6 @@
 	type GamePhase = 'intro' | 'creation' | 'playing';
 
 	const INTRO_LINES = [
-		'You stand before the entrance to\nSlop Fortress.\n\nCold air rises from the depths below.',
 		'They say the Seven Ascended saved\nthe world. Every temple teaches it.\nEvery hymn proclaims it.\n\nBut the old trees whisper otherwise.',
 		'Lately, the signs have worsened.\nBlighted harvests. Restless dead.\nCracks in places that should hold.\n\nAnd you — you hear things others cannot.',
 		'A voice stirs at the edge of thought,\nfaint as wind through ancient stone:\n\n"The masks are slipping..."\n\nBut first — who are you?'
@@ -405,16 +404,22 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="screen intro-screen" onclick={advanceIntro}>
-		<h1 class="game-title">SLOP FORTRESS</h1>
+		<h1 class="game-title">AETHERMOOR</h1>
 		<div class="intro-frame">
-			<pre class="intro-art">       #####
-      ##   ##
-     ##     ##
-     #  . . .#
-     #  .   .#
-     #  .   .#
-     ####.####
-         .</pre>
+			<pre class="intro-art">      .  *  .    *    .  *
+   *    .     .    .     .  *
+        ___..---""---..___
+     .-'   /\       /\   '-.
+    /     /  \_   _/  \     \
+   |     | /  | | |  \ |     |
+   |      \   |/|\|   /      |
+    \      '-.._|_..-'      /
+     '-._    \     /    _.-'
+      /  '---.\   /.---'  \
+     |  *  .   '-'   .  *  |
+      \   .    / \    .   /
+       '-.___/   \___.-'
+            .  *  .</pre>
 		</div>
 		<p class="intro-text">{INTRO_LINES[introStep]}</p>
 		<p class="intro-prompt">[ Press SPACE or tap to continue ]</p>
