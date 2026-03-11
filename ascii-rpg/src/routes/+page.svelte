@@ -22,9 +22,9 @@
 
 	const INTRO_LINES = [
 		'You stand before the entrance to\nSlop Fortress.\n\nCold air rises from the depths below.',
-		'A hooded figure emerges from the darkness.\n\n"Another brave soul, drawn to the depths..."',
-		'"Many have entered seeking fortune and glory.\nFew have returned to tell the tale."',
-		'"Before you descend, adventurer...\ntell me \u2014 who are you?"'
+		'They say the Seven Ascended saved\nthe world. Every temple teaches it.\nEvery hymn proclaims it.\n\nBut the old trees whisper otherwise.',
+		'Lately, the signs have worsened.\nBlighted harvests. Restless dead.\nCracks in places that should hold.\n\nAnd you — you hear things others cannot.',
+		'A voice stirs at the edge of thought,\nfaint as wind through ancient stone:\n\n"The masks are slipping..."\n\nBut first — who are you?'
 	];
 
 	const CLASSES: CharacterClass[] = ['warrior', 'mage', 'rogue', 'ranger', 'cleric', 'paladin', 'necromancer', 'bard'];
