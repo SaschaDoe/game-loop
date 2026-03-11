@@ -25,6 +25,9 @@ export const DODGE_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.12,
 	bard: 0.18,
 	adept: 0.10,
+	primordial: 0.15,
+	runesmith: 0.08,
+	spellblade: 0.12,
 };
 
 export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
@@ -37,6 +40,9 @@ export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
 	necromancer: 0,
 	bard: 0,
 	adept: 0,
+	primordial: 0,
+	runesmith: 2,
+	spellblade: 1,
 };
 
 export const PUSH_CHANCE: Record<CharacterClass, number> = {
@@ -49,6 +55,9 @@ export const PUSH_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.20,
 	bard: 0.25,
 	adept: 0.25,
+	primordial: 0.25,
+	runesmith: 0.70,
+	spellblade: 0.55,
 };
 
 export const ENVIRONMENTAL_KILL_BONUS = 1.5;
@@ -63,6 +72,9 @@ const FLEE_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.55,
 	bard: 0.65,
 	adept: 0.60,
+	primordial: 0.55,
+	runesmith: 0.40,
+	spellblade: 0.50,
 };
 
 // ── Interfaces ──
