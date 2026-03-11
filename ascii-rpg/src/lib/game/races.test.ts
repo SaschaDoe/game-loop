@@ -7,6 +7,8 @@ import {
 	isClassAvailableForRace,
 	MANA_FLOOR,
 	getRaceFlavorLine,
+	shiftNpcAttitude,
+	getEffectiveAttitude,
 } from './races';
 import type { CharacterRace } from './types';
 
@@ -257,5 +259,80 @@ describe('getRaceFlavorLine', () => {
 				expect(hostileFound, `${npcRace} → ${playerRace} hostile`).toBe(true);
 			}
 		}
+	});
+});
+
+describe('shiftNpcAttitude', () => {
+	it('creates new entry when NPC has no shifts', () => {
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		shiftNpcAttitude(shifts, 'Barkeep', 'elf', 2);
+		expect(shifts['Barkeep']).toEqual({ elf: 2, dwarf: 0, human: 0 });
+	});
+
+	it('accumulates shifts for the same NPC', () => {
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		shiftNpcAttitude(shifts, 'Barkeep', 'elf', 2);
+		shiftNpcAttitude(shifts, 'Barkeep', 'elf', 1);
+		expect(shifts['Barkeep'].elf).toBe(3);
+	});
+
+	it('clamps positive shifts to 5', () => {
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		shiftNpcAttitude(shifts, 'Barkeep', 'dwarf', 10);
+		expect(shifts['Barkeep'].dwarf).toBe(5);
+	});
+
+	it('clamps negative shifts to -5', () => {
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		shiftNpcAttitude(shifts, 'Barkeep', 'human', -10);
+		expect(shifts['Barkeep'].human).toBe(-5);
+	});
+
+	it('handles negative delta', () => {
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		shiftNpcAttitude(shifts, 'Mother', 'elf', 3);
+		shiftNpcAttitude(shifts, 'Mother', 'elf', -2);
+		expect(shifts['Mother'].elf).toBe(1);
+	});
+});
+
+describe('getEffectiveAttitude', () => {
+	it('returns base attitude when no shifts exist', () => {
+		const base: Record<CharacterRace, number> = { elf: 2, dwarf: -1, human: 0 };
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		expect(getEffectiveAttitude(base, shifts, 'Barkeep', 'elf')).toBe(2);
+		expect(getEffectiveAttitude(base, shifts, 'Barkeep', 'dwarf')).toBe(-1);
+	});
+
+	it('combines base and shift', () => {
+		const base: Record<CharacterRace, number> = { elf: 2, dwarf: -1, human: 0 };
+		const shifts: Record<string, Record<CharacterRace, number>> = {
+			'Barkeep': { elf: 1, dwarf: 2, human: -1 },
+		};
+		expect(getEffectiveAttitude(base, shifts, 'Barkeep', 'elf')).toBe(3);
+		expect(getEffectiveAttitude(base, shifts, 'Barkeep', 'dwarf')).toBe(1);
+		expect(getEffectiveAttitude(base, shifts, 'Barkeep', 'human')).toBe(-1);
+	});
+
+	it('clamps combined result to 5', () => {
+		const base: Record<CharacterRace, number> = { elf: 4, dwarf: 0, human: 0 };
+		const shifts: Record<string, Record<CharacterRace, number>> = {
+			'NPC': { elf: 3, dwarf: 0, human: 0 },
+		};
+		expect(getEffectiveAttitude(base, shifts, 'NPC', 'elf')).toBe(5);
+	});
+
+	it('clamps combined result to -5', () => {
+		const base: Record<CharacterRace, number> = { elf: -3, dwarf: 0, human: 0 };
+		const shifts: Record<string, Record<CharacterRace, number>> = {
+			'NPC': { elf: -4, dwarf: 0, human: 0 },
+		};
+		expect(getEffectiveAttitude(base, shifts, 'NPC', 'elf')).toBe(-5);
+	});
+
+	it('handles missing base race entry gracefully', () => {
+		const base = { elf: 1, dwarf: 0, human: 0 } as Record<CharacterRace, number>;
+		const shifts: Record<string, Record<CharacterRace, number>> = {};
+		expect(getEffectiveAttitude(base, shifts, 'NPC', 'elf')).toBe(1);
 	});
 });

@@ -319,3 +319,37 @@ export function getRaceFlavorLine(
 
 	return pool[Math.floor(Math.random() * pool.length)];
 }
+
+// ---------------------------------------------------------------------------
+// NPC Attitude Shift Mechanics
+// ---------------------------------------------------------------------------
+
+/**
+ * Shift a specific NPC's attitude toward a race.
+ * Mutates the shifts record in place. Clamps result to [-5, 5].
+ */
+export function shiftNpcAttitude(
+	shifts: Record<string, Record<CharacterRace, number>>,
+	npcId: string,
+	race: CharacterRace,
+	delta: number,
+): void {
+	if (!shifts[npcId]) shifts[npcId] = { elf: 0, dwarf: 0, human: 0 };
+	shifts[npcId][race] = Math.max(-5, Math.min(5, shifts[npcId][race] + delta));
+}
+
+/**
+ * Compute the effective attitude an NPC has toward a specific race,
+ * combining the NPC's base attitude with any player-driven shifts.
+ * Clamps result to [-5, 5].
+ */
+export function getEffectiveAttitude(
+	baseAttitude: Record<CharacterRace, number>,
+	shifts: Record<string, Record<CharacterRace, number>>,
+	npcId: string,
+	race: CharacterRace,
+): number {
+	const base = baseAttitude[race] ?? 0;
+	const shift = shifts[npcId]?.[race] ?? 0;
+	return Math.max(-5, Math.min(5, base + shift));
+}
