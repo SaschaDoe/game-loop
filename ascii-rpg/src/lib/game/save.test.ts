@@ -366,6 +366,61 @@ describe('serializeState / deserializeState round-trip', () => {
 		expect(restored.revealedLeyLineTiles).toBeInstanceOf(Set);
 		expect(restored.revealedLeyLineTiles.size).toBe(0);
 	});
+
+	it('round-trips playerRace', () => {
+		const state = makeTestState({ playerRace: 'elf' as const });
+		const restored = deserializeState(serializeState(state));
+		expect(restored.playerRace).toBe('elf');
+	});
+
+	it('defaults playerRace to human for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.playerRace;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.playerRace).toBe('human');
+	});
+
+	it('round-trips permanentBuffs', () => {
+		const state = makeTestState({
+			permanentBuffs: [{
+				id: 'test_buff',
+				source: 'quest_reward',
+				effects: [{ type: 'statBonus', stat: 'spellPower', value: 3 }],
+			}],
+		});
+		const restored = deserializeState(serializeState(state));
+		expect(restored.permanentBuffs).toHaveLength(1);
+		expect(restored.permanentBuffs[0].id).toBe('test_buff');
+		expect(restored.permanentBuffs[0].effects[0]).toEqual({ type: 'statBonus', stat: 'spellPower', value: 3 });
+	});
+
+	it('defaults permanentBuffs to empty array for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.permanentBuffs;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.permanentBuffs).toEqual([]);
+	});
+
+	it('round-trips npcAttitudeShifts', () => {
+		const state = makeTestState({
+			npcAttitudeShifts: { 'npc_1': { elf: 5, dwarf: -3, human: 0 } },
+		});
+		const restored = deserializeState(serializeState(state));
+		expect(restored.npcAttitudeShifts['npc_1']).toEqual({ elf: 5, dwarf: -3, human: 0 });
+	});
+
+	it('defaults npcAttitudeShifts to empty object for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.npcAttitudeShifts;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.npcAttitudeShifts).toEqual({});
+	});
 });
 
 describe('deserializeState error handling', () => {
