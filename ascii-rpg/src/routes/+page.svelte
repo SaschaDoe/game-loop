@@ -985,9 +985,8 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="spell-menu" onclick={(e) => e.stopPropagation()}>
 				<h3 class="spell-menu-title">SPELLS (M to close)</h3>
-				{@const grouped = getGroupedSpells(state.learnedSpells)}
-				{@const armorWeight = CLASS_PROFILES[state.characterConfig.characterClass]?.armorProficiency ?? 'light'}
-				{#each grouped as group}
+				{#each getGroupedSpells(state.learnedSpells) as group}
+					{@const armorWeight = CLASS_PROFILES[state.characterConfig.characterClass]?.armorProficiency ?? 'light'}
 					{@const schoolXp = state.schoolMastery?.[group.school] ?? 0}
 					{@const schoolLevel = getMasteryLevel(schoolXp)}
 					<div class="spell-school-header" style="color:{SPELL_SCHOOL_COLORS[group.school] ?? '#888'}">
