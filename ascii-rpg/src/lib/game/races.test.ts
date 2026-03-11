@@ -122,19 +122,19 @@ describe('isClassAvailableForRace', () => {
 });
 
 describe('Race Passives', () => {
-	it('elf has ley_sight passive', () => {
-		expect(RACE_PASSIVES.elf.id).toBe('ley_sight');
-		expect(RACE_PASSIVES.elf.description).toContain('Ley lines');
+	it('elf has ley_attunement passive', () => {
+		expect(RACE_PASSIVES.elf.id).toBe('ley_attunement');
+		expect(RACE_PASSIVES.elf.description).toContain('sight radius');
 	});
 
-	it('dwarf has runic_affinity passive', () => {
-		expect(RACE_PASSIVES.dwarf.id).toBe('runic_affinity');
-		expect(RACE_PASSIVES.dwarf.description).toContain('Rune');
+	it('dwarf has stone_blood passive', () => {
+		expect(RACE_PASSIVES.dwarf.id).toBe('stone_blood');
+		expect(RACE_PASSIVES.dwarf.description).toContain('Poison resistance');
 	});
 
-	it('human has second_wind passive', () => {
-		expect(RACE_PASSIVES.human.id).toBe('second_wind');
-		expect(RACE_PASSIVES.human.description).toContain('HP');
+	it('human has adaptable passive', () => {
+		expect(RACE_PASSIVES.human.id).toBe('adaptable');
+		expect(RACE_PASSIVES.human.description).toContain('Social checks');
 	});
 
 	it('all races have passives', () => {
@@ -429,7 +429,7 @@ function makeMinimalState(overrides: Partial<GameState> = {}): GameState {
 		messages: [], level: 1, gameOver: false, xp: 0, characterLevel: 1,
 		visibility, sightRadius: 8, detectedSecrets: new Set<string>(),
 		traps: [], detectedTraps: new Set<string>(),
-		characterConfig: { name: 'Hero', characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
+		characterConfig: { name: 'Hero', race: 'human' as const, characterClass: 'warrior' as const, difficulty: 'normal' as const, startingLocation: 'cave' as const, worldSeed: 'test' },
 		abilityCooldown: 0, hazards: [], npcs: [], chests: [], lootDrops: [],
 		skillPoints: 0, unlockedSkills: [], activeDialogue: null, rumors: [],
 		knownLanguages: [], landmarks: [], heardStories: [],

@@ -14,6 +14,7 @@ export interface RaceDefinition {
 	wil: number;
 	agi: number;
 	vit: number;
+	primaryAttribute: 'str' | 'int' | 'wil' | 'agi' | 'vit';
 	manaModifier: number;
 	description: string;
 }
@@ -25,6 +26,7 @@ export const RACE_ATTRIBUTES: Record<CharacterRace, RaceDefinition> = {
 		wil: 12,
 		agi: 14,
 		vit: 7,
+		primaryAttribute: 'int',
 		manaModifier: 1.40,
 		description: 'Graceful and attuned to magic. High intelligence and agility, but fragile.',
 	},
@@ -34,6 +36,7 @@ export const RACE_ATTRIBUTES: Record<CharacterRace, RaceDefinition> = {
 		wil: 11,
 		agi: 7,
 		vit: 14,
+		primaryAttribute: 'str',
 		manaModifier: 0.30,
 		description: 'Stout and resilient. Raw physical power with minimal mana.',
 	},
@@ -43,6 +46,7 @@ export const RACE_ATTRIBUTES: Record<CharacterRace, RaceDefinition> = {
 		wil: 11,
 		agi: 11,
 		vit: 11,
+		primaryAttribute: 'int',
 		manaModifier: 0.80,
 		description: 'Balanced and adaptable. No extreme strengths or weaknesses.',
 	},
@@ -79,16 +83,16 @@ export interface RacePassive {
 
 export const RACE_PASSIVES: Record<CharacterRace, RacePassive> = {
 	elf: {
-		id: 'ley_sight',
-		description: 'Ley lines are always visible on the overworld.',
+		id: 'ley_attunement',
+		description: '+1 sight radius in forests, sense ley lines within 3 tiles without True Sight',
 	},
 	dwarf: {
-		id: 'runic_affinity',
-		description: 'Rune-enhanced equipment has a chance to gain extra bonuses.',
+		id: 'stone_blood',
+		description: 'Poison resistance (50% duration reduction), +2 physical defense underground/mountain',
 	},
 	human: {
-		id: 'second_wind',
-		description: 'When HP drops below 20%, heal 25% of max HP once per level.',
+		id: 'adaptable',
+		description: 'Social checks get +1 bonus with any NPC',
 	},
 };
 

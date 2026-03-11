@@ -25,8 +25,8 @@ import { BOOK_CATALOG, getAllBookIds } from './books';
 import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn, generateNoise } from './stealth';
 import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, tickAcademy } from './academy';
-import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, getWeaponBonus, getArmorValue } from './magic';
-import { RACE_ATTRIBUTES, RACE_SIGHT_BONUS, isClassAvailableForRace, MANA_FLOOR } from './races';
+import { CLASS_PROFILES, recalculateDerivedStats, getWeaponBonus, getArmorValue } from './magic';
+import { RACE_ATTRIBUTES, RACE_SIGHT_BONUS, isClassAvailableForRace } from './races';
 import { SPELL_CATALOG } from './spells';
 import { createEmptyMastery, getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
@@ -91,7 +91,7 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	spellblade:  { hp: 2, atk: 1, sight: 0, description: 'Warrior-mage — balanced combat and magic' },
 };
 
-const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', archetype: 'might', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
+const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', race: 'human', characterClass: 'warrior', archetype: 'might', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
 
 export function createGame(config?: CharacterConfig): GameState {
 	const rawCfg = config ? { ...config, worldSeed: config.worldSeed || randomSeedString() } : { ...DEFAULT_CONFIG, worldSeed: randomSeedString() };

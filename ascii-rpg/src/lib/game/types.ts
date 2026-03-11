@@ -19,7 +19,7 @@ export type AttributeName = 'str' | 'int' | 'wil' | 'agi' | 'vit';
 
 export interface CharacterConfig {
 	name: string;
-	race?: CharacterRace;
+	race: CharacterRace;
 	characterClass: CharacterClass;
 	archetype?: CharacterArchetype;
 	difficulty: Difficulty;

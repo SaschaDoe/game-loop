@@ -14,6 +14,7 @@ export class GameDriver {
 	constructor(config?: Partial<CharacterConfig>) {
 		const fullConfig: CharacterConfig = {
 			name: 'Hero',
+			race: 'human',
 			characterClass: 'warrior',
 			difficulty: 'normal',
 			startingLocation: 'cave',

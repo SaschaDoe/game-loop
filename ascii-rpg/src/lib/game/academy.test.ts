@@ -10,7 +10,7 @@ import {
 } from './academy';
 
 function makeAcademyConfig(characterClass: CharacterConfig['characterClass'] = 'warrior'): CharacterConfig {
-	return { name: 'Test', characterClass, difficulty: 'normal', startingLocation: 'academy', worldSeed: 'academy-test' };
+	return { name: 'Test', race: 'human', characterClass, difficulty: 'normal', startingLocation: 'academy', worldSeed: 'academy-test' };
 }
 
 function makeState(characterClass: CharacterConfig['characterClass'] = 'warrior'): GameState {
@@ -42,7 +42,7 @@ describe('academy initialization', () => {
 	});
 
 	it('non-academy start has no academy state', () => {
-		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'village-test' });
+		const state = createGame({ name: 'Test', race: 'human', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'village-test' });
 		expect(state.academyState).toBeNull();
 	});
 });

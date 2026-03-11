@@ -5,6 +5,7 @@
 
 import type { Entity, CharacterArchetype, CharacterClass, AttributeName } from './types';
 import type { ArmorWeight } from './spells';
+import { MANA_FLOOR } from './races';
 
 // ---------------------------------------------------------------------------
 // Archetype Definitions (US-MS-01)
@@ -96,7 +97,7 @@ export function recalculateDerivedStats(entity: Entity, armorValue: number = 0, 
 
 	// maxMana = max(MANA_FLOOR, floor(INT * 2 * manaModifier))
 	if (manaModifier !== undefined) {
-		entity.maxMana = Math.max(5, Math.floor(int * 2 * manaModifier));
+		entity.maxMana = Math.max(MANA_FLOOR, Math.floor(int * 2 * manaModifier));
 	}
 
 	// Clamp HP and mana to max
