@@ -404,22 +404,15 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="screen intro-screen" onclick={advanceIntro}>
-		<h1 class="game-title">AETHERMOOR</h1>
+		<h1 class="game-title">SLOP FORTRESS</h1>
 		<div class="intro-frame">
-			<pre class="intro-art">      .  *  .    *    .  *
-   *    .     .    .     .  *
-        ___..---""---..___
-     .-'   /\       /\   '-.
-    /     /  \_   _/  \     \
-   |     | /  | | |  \ |     |
-   |      \   |/|\|   /      |
-    \      '-.._|_..-'      /
-     '-._    \     /    _.-'
-      /  '---.\   /.---'  \
-     |  *  .   '-'   .  *  |
-      \   .    / \    .   /
-       '-.___/   \___.-'
-            .  *  .</pre>
+			<pre class="intro-art">        *
+    \   |   /
+     \  |  /
+  *-----*-----*
+     /  |  \
+    /   |   \
+        *</pre>
 		</div>
 		<p class="intro-text">{INTRO_LINES[introStep]}</p>
 		<p class="intro-prompt">[ Press SPACE or tap to continue ]</p>
