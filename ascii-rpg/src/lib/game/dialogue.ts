@@ -5930,6 +5930,264 @@ const FARMER_EDRIC_DIALOGUE: DialogueTree = {
 	}
 };
 
+// ─── ELDER THANDRIL (Eldergrove — Elf racial quest giver) ───
+
+const ELDER_THANDRIL_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	conditionalStartNodes: [
+		{ condition: { type: 'questCompleted', value: 'elf_03_unbroken_thread' }, nodeId: 'post_quest' },
+		{ condition: { type: 'questCompleted', value: 'elf_02_echoes' }, nodeId: 'quest3_offer' },
+		{ condition: { type: 'questCompleted', value: 'elf_01_withering_grove' }, nodeId: 'quest2_offer' },
+		{ condition: { type: 'hasQuest', value: 'elf_01_withering_grove' }, nodeId: 'quest1_active' },
+	],
+	nodes: {
+		start: node('start',
+			'The grove grows silent, traveler. The spirit tree withers, and I feel the land\'s pain in my bones. These woods have stood for three thousand years. I will not watch them fall in my lifetime.',
+			[
+				opt('What is happening to the grove?', 'grove_info', '#ff8'),
+				opt('I can help. [Accept: The Withering Grove]', 'quest1_accepted', '#4f4', {
+					showIf: { type: 'race', value: 'elf' },
+					onSelect: { acceptQuest: 'elf_01_withering_grove' },
+				}),
+				opt('[Only elves may undertake this task]', '__exit__', '#666', {
+					showIf: { type: 'notRace', value: 'elf' },
+				}),
+				opt('Farewell.', '__exit__', '#888'),
+			]
+		),
+		grove_info: node('grove_info',
+			'Corrupted beasts prowl where songbirds once nested. The spirit tree — oldest living thing in the Eldergrove — bleeds sap like tears. There is a shrine beneath its roots, sealed for centuries. I believe the corruption flows from below.',
+			[
+				opt('I will investigate. [Accept: The Withering Grove]', 'quest1_accepted', '#4f4', {
+					showIf: { type: 'race', value: 'elf' },
+					onSelect: { acceptQuest: 'elf_01_withering_grove' },
+				}),
+				opt('Farewell.', '__exit__', '#888'),
+			]
+		),
+		quest1_accepted: node('quest1_accepted',
+			'Thank you, child of the forest. Seek the spirit tree deep in the Eldergrove. Clear the beasts and find the shrine beneath the roots. The answers lie below.',
+			[
+				opt('I will not fail you.', '__exit__', '#4f4'),
+			]
+		),
+		quest1_active: node('quest1_active',
+			'Have you found the spirit tree? The corruption spreads with each passing day.',
+			[
+				opt('Not yet. I will keep searching.', '__exit__', '#888'),
+			]
+		),
+		quest2_offer: node('quest2_offer',
+			'You found the shrine — and the severed ley line connection. There is more to discover. In a moonlit glade to the north, a ghost lingers — an ancient elf who once sang the First Song. Speak with her.',
+			[
+				opt('The First Song? [Accept: Echoes of the First Song]', 'quest2_accepted', '#4f4', {
+					onSelect: { acceptQuest: 'elf_02_echoes' },
+				}),
+				opt('I need to prepare first.', '__exit__', '#888'),
+			]
+		),
+		quest2_accepted: node('quest2_accepted',
+			'Beware — cultists have been seen in the glade, drawn by the ghost\'s presence. They seek to silence what remains of the old ways. Protect her memory.',
+			[
+				opt('I will find her.', '__exit__', '#4f4'),
+			]
+		),
+		quest3_offer: node('quest3_offer',
+			'The ghost remembers the First Song — and with it, the path to the ley line nexus beneath the Eldergrove. Only one of elven blood can restore the connection. Will you descend?',
+			[
+				opt('I am ready. [Accept: The Unbroken Thread]', 'quest3_accepted', '#4f4', {
+					onSelect: { acceptQuest: 'elf_03_unbroken_thread' },
+				}),
+				opt('Not yet.', '__exit__', '#888'),
+			]
+		),
+		quest3_accepted: node('quest3_accepted',
+			'The nexus is deep — deeper than any elf has gone in a thousand years. Gather a fragment of the ley line\'s power. When you return, the grove will remember what it means to sing.',
+			[
+				opt('For the grove.', '__exit__', '#4f4'),
+			]
+		),
+		post_quest: node('post_quest',
+			'The ley lines hum again. The spirit tree blooms. You have restored what the gods tried to sever. The Eldergrove will remember your name for centuries to come.',
+			[
+				opt('The grove is safe. That is enough.', '__exit__', '#4f4'),
+			]
+		),
+	}
+};
+
+// ─── FORGEMASTER BRYNN (Irongate — Dwarf racial quest giver) ───
+
+const FORGEMASTER_BRYNN_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	conditionalStartNodes: [
+		{ condition: { type: 'questCompleted', value: 'dwarf_03_stone_remembers' }, nodeId: 'post_quest' },
+		{ condition: { type: 'questCompleted', value: 'dwarf_02_makers_grammar' }, nodeId: 'quest3_offer' },
+		{ condition: { type: 'questCompleted', value: 'dwarf_01_sealed_gallery' }, nodeId: 'quest2_offer' },
+		{ condition: { type: 'hasQuest', value: 'dwarf_01_sealed_gallery' }, nodeId: 'quest1_active' },
+	],
+	nodes: {
+		start: node('start',
+			'Aye, another soul drawn by the sound of hammers. But the deep mines have gone quiet — we broke through a sealed wall and found... something old. Older than Irongate itself.',
+			[
+				opt('What did you find?', 'mine_info', '#ff8'),
+				opt('Let me investigate. [Accept: The Sealed Gallery]', 'quest1_accepted', '#4f4', {
+					showIf: { type: 'race', value: 'dwarf' },
+					onSelect: { acceptQuest: 'dwarf_01_sealed_gallery' },
+				}),
+				opt('[Only dwarves may undertake this task]', '__exit__', '#666', {
+					showIf: { type: 'notRace', value: 'dwarf' },
+				}),
+				opt('Farewell.', '__exit__', '#888'),
+			]
+		),
+		mine_info: node('mine_info',
+			'A gallery carved in the old style — before the Runeweaver tradition was reformed. The runes on the walls do not name the gods. They describe forces. And something has been scratching at the stone from within.',
+			[
+				opt('I will clear it out. [Accept: The Sealed Gallery]', 'quest1_accepted', '#4f4', {
+					showIf: { type: 'race', value: 'dwarf' },
+					onSelect: { acceptQuest: 'dwarf_01_sealed_gallery' },
+				}),
+				opt('Farewell.', '__exit__', '#888'),
+			]
+		),
+		quest1_accepted: node('quest1_accepted',
+			'Good. The gallery is in the deepest part of the old mines. Watch for stone crawlers — they nest in the cracks. Find the rune tablet on the far wall. It may hold answers.',
+			[
+				opt('I will return with it.', '__exit__', '#4f4'),
+			]
+		),
+		quest1_active: node('quest1_active',
+			'The stone crawlers still infest the gallery. Have you recovered the tablet?',
+			[
+				opt('Not yet. I am working on it.', '__exit__', '#888'),
+			]
+		),
+		quest2_offer: node('quest2_offer',
+			'The rune tablet... I cannot read it. The grammar is too old. But there is a lorekeeper in the deep holds — Tharn. He studies the old scripts. He may be able to translate it.',
+			[
+				opt('I will find him. [Accept: The Maker\'s Grammar]', 'quest2_accepted', '#4f4', {
+					onSelect: { acceptQuest: 'dwarf_02_makers_grammar' },
+				}),
+				opt('Later.', '__exit__', '#888'),
+			]
+		),
+		quest2_accepted: node('quest2_accepted',
+			'Tharn lives deep — past the inscription chamber. Rune constructs guard the way. They were built by our ancestors to protect knowledge from... something. Or someone.',
+			[
+				opt('I will find a way through.', '__exit__', '#4f4'),
+			]
+		),
+		quest3_offer: node('quest3_offer',
+			'Tharn translated the tablet. It speaks of the First Forge — where dwarves first bound runes to metal. Its location was lost when the gods rewrote our traditions. But now we know where it is.',
+			[
+				opt('I will rekindle it. [Accept: The Stone Remembers]', 'quest3_accepted', '#4f4', {
+					onSelect: { acceptQuest: 'dwarf_03_stone_remembers' },
+				}),
+				opt('I need more time.', '__exit__', '#888'),
+			]
+		),
+		quest3_accepted: node('quest3_accepted',
+			'The First Forge lies beneath the deepest hold. Only dwarven blood can wake the old fire. Rekindle it, and the stone will remember what it was before the gods told it to forget.',
+			[
+				opt('For the Makers.', '__exit__', '#4f4'),
+			]
+		),
+		post_quest: node('post_quest',
+			'The First Forge burns again. I can feel it in the stone — a warmth that has been missing for a thousand years. You have given us back our heritage. The mountain sings.',
+			[
+				opt('The stone remembers. That is what matters.', '__exit__', '#4f4'),
+			]
+		),
+	}
+};
+
+// ─── OLD MARGRET (Drowned Mire — Human racial quest giver) ───
+
+const OLD_MARGRET_DIALOGUE: DialogueTree = {
+	startNode: 'start',
+	conditionalStartNodes: [
+		{ condition: { type: 'questCompleted', value: 'human_03_crown_of_depths' }, nodeId: 'post_quest' },
+		{ condition: { type: 'questCompleted', value: 'human_02_kings_folly' }, nodeId: 'quest3_offer' },
+		{ condition: { type: 'questCompleted', value: 'human_01_lights_in_mire' }, nodeId: 'quest2_offer' },
+		{ condition: { type: 'hasQuest', value: 'human_01_lights_in_mire' }, nodeId: 'quest1_active' },
+	],
+	nodes: {
+		start: node('start',
+			'Careful where you step, dear. The mire swallows the careless. I have lived here sixty years and I still watch my feet. But lately... the lights have returned. Lights that should not be.',
+			[
+				opt('What lights?', 'mire_info', '#ff8'),
+				opt('I will investigate. [Accept: Lights in the Mire]', 'quest1_accepted', '#4f4', {
+					showIf: { type: 'race', value: 'human' },
+					onSelect: { acceptQuest: 'human_01_lights_in_mire' },
+				}),
+				opt('[Only humans may undertake this task]', '__exit__', '#666', {
+					showIf: { type: 'notRace', value: 'human' },
+				}),
+				opt('Farewell.', '__exit__', '#888'),
+			]
+		),
+		mire_info: node('mire_info',
+			'Blue-white wisps that move against the wind, deep in the marsh. My grandmother told me they mark the outline of a palace — the Aetherian Palace, swallowed by the mire when the gods punished King Valdris.',
+			[
+				opt('I will find the source. [Accept: Lights in the Mire]', 'quest1_accepted', '#4f4', {
+					showIf: { type: 'race', value: 'human' },
+					onSelect: { acceptQuest: 'human_01_lights_in_mire' },
+				}),
+				opt('Farewell.', '__exit__', '#888'),
+			]
+		),
+		quest1_accepted: node('quest1_accepted',
+			'Follow the lights west into the deep mire. Marsh horrors lurk there — drawn by the same energy. If you find anything, bring it back. A seal, a crest — anything that proves the palace was real.',
+			[
+				opt('I will return with proof.', '__exit__', '#4f4'),
+			]
+		),
+		quest1_active: node('quest1_active',
+			'Have you found anything in the mire? The lights have been brighter lately.',
+			[
+				opt('Still searching. I will be back.', '__exit__', '#888'),
+			]
+		),
+		quest2_offer: node('quest2_offer',
+			'A royal seal! The Aetherian crest! My grandmother was right — the palace is down there. I know a path through the deep mire to what might be an entrance. Will you go further?',
+			[
+				opt('Show me the way. [Accept: The King\'s Folly]', 'quest2_accepted', '#4f4', {
+					onSelect: { acceptQuest: 'human_02_kings_folly' },
+				}),
+				opt('Not yet.', '__exit__', '#888'),
+			]
+		),
+		quest2_accepted: node('quest2_accepted',
+			'The entrance is half-submerged — you will need to wade. Inside, look for wall carvings. Valdris was proud. He would have left his story for someone to find. But beware — the palace was sealed for a reason.',
+			[
+				opt('I will uncover the truth.', '__exit__', '#4f4'),
+			]
+		),
+		quest3_offer: node('quest3_offer',
+			'The carvings tell of a king who knew the truth about the gods — and paid for it with his kingdom. But his throne room... it lies deeper still. His crown is said to hold the defiance of a mortal who stood against divinity.',
+			[
+				opt('I will claim it. [Accept: The Crown of Depths]', 'quest3_accepted', '#4f4', {
+					onSelect: { acceptQuest: 'human_03_crown_of_depths' },
+				}),
+				opt('I need more time to prepare.', '__exit__', '#888'),
+			]
+		),
+		quest3_accepted: node('quest3_accepted',
+			'The throne room is at the deepest point of the palace. Valdris\'s crown awaits one of human blood — one who carries the will to challenge what should not be challenged. Go carefully, dear.',
+			[
+				opt('For the Inheritors.', '__exit__', '#4f4'),
+			]
+		),
+		post_quest: node('post_quest',
+			'You wear Valdris\'s crown. Not on your head — in your spirit. I can see it in your eyes. The defiance. The will. The mire remembers its king, and now it has a new champion.',
+			[
+				opt('The truth will not stay buried.', '__exit__', '#4f4'),
+			]
+		),
+	}
+};
+
 export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Mother': MOTHER_DIALOGUE,
 	'Father': FATHER_DIALOGUE,
@@ -5957,4 +6215,7 @@ export const NPC_DIALOGUE_TREES: Record<string, DialogueTree> = {
 	'Professor Ignis': PROFESSOR_IGNIS_ACADEMY_DIALOGUE,
 	'Deep Scholar': DEEP_SCHOLAR_DIALOGUE,
 	'Farmer Edric': FARMER_EDRIC_DIALOGUE,
+	'Elder Thandril': ELDER_THANDRIL_DIALOGUE,
+	'Forgemaster Brynn': FORGEMASTER_BRYNN_DIALOGUE,
+	'Old Margret': OLD_MARGRET_DIALOGUE,
 };
