@@ -421,6 +421,20 @@ describe('serializeState / deserializeState round-trip', () => {
 		const restored = deserializeState(JSON.stringify(data));
 		expect(restored.npcAttitudeShifts).toEqual({});
 	});
+
+	it('loads old save without any race system fields and applies correct defaults', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		// Simulate a pre-race-system save by removing all race fields
+		delete data.state.playerRace;
+		delete data.state.permanentBuffs;
+		delete data.state.npcAttitudeShifts;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.playerRace).toBe('human');
+		expect(restored.permanentBuffs).toEqual([]);
+		expect(restored.npcAttitudeShifts).toEqual({});
+	});
 });
 
 describe('deserializeState error handling', () => {
