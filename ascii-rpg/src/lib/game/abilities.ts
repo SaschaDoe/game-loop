@@ -64,6 +64,24 @@ export const ABILITY_DEFS: Record<CharacterClass, AbilityDef> = {
 		cooldown: 10,
 		key: 'q'
 	},
+	primordial: {
+		name: 'Ley Surge',
+		description: 'Burst of raw Ley energy damaging all adjacent enemies',
+		cooldown: 8,
+		key: 'q'
+	},
+	runesmith: {
+		name: 'Rune Ward',
+		description: 'Inscribe a protective rune — blocks enemy movement for 3 turns',
+		cooldown: 10,
+		key: 'q'
+	},
+	spellblade: {
+		name: 'Arcane Strike',
+		description: 'Melee attack dealing bonus spell-power damage',
+		cooldown: 6,
+		key: 'q'
+	},
 };
 
 export interface AbilityResult {
@@ -265,6 +283,70 @@ function adeptManaSurge(state: GameState): AbilityResult {
 	};
 }
 
+function primordialLeySurge(state: GameState): AbilityResult {
+	const adjacent = getAdjacentEnemies(state);
+	if (adjacent.length === 0) {
+		return { messages: [{ text: 'No enemies nearby to hit!', type: 'info' }], used: false };
+	}
+
+	const messages: AbilityResult['messages'] = [];
+	const killed: Entity[] = [];
+	const spellPower = state.player.spellPower ?? 0;
+
+	for (const enemy of adjacent) {
+		const dmg = Math.max(1, state.player.attack + Math.floor(spellPower * 0.5));
+		enemy.hp -= dmg;
+		messages.push({ text: `Ley Surge blasts ${enemy.name} for ${dmg}!`, type: 'player_attack' });
+		if (enemy.hp <= 0) {
+			killed.push(enemy);
+		}
+	}
+
+	if (killed.length > 0) {
+		messages.push({ text: `Ley Surge destroys ${killed.length} ${killed.length === 1 ? 'enemy' : 'enemies'}!`, type: 'level_up' });
+	}
+
+	return { messages, used: true };
+}
+
+function runesmithRuneWard(state: GameState): AbilityResult {
+	const { x, y } = state.player.pos;
+	state.activeWards.push({
+		center: { x, y },
+		radius: 1,
+		damage: 2,
+		turnsRemaining: 3,
+	});
+	return {
+		messages: [{ text: 'You inscribe a Rune Ward! Enemies nearby will be slowed for 3 turns.', type: 'magic' }],
+		used: true
+	};
+}
+
+function spellbladeArcaneStrike(state: GameState): AbilityResult {
+	const adjacent = getAdjacentEnemies(state);
+	if (adjacent.length === 0) {
+		return { messages: [{ text: 'No enemies nearby to strike!', type: 'info' }], used: false };
+	}
+
+	const messages: AbilityResult['messages'] = [];
+	const killed: Entity[] = [];
+	const spellPower = state.player.spellPower ?? 0;
+	const target = adjacent[0]; // strike the first adjacent enemy
+	const dmg = Math.max(1, state.player.attack + spellPower);
+	target.hp -= dmg;
+	messages.push({ text: `Arcane Strike hits ${target.name} for ${dmg}!`, type: 'player_attack' });
+	if (target.hp <= 0) {
+		killed.push(target);
+	}
+
+	if (killed.length > 0) {
+		messages.push({ text: `Arcane Strike slays ${target.name}!`, type: 'level_up' });
+	}
+
+	return { messages, used: true };
+}
+
 export function useAbility(state: GameState): AbilityResult {
 	if (state.abilityCooldown > 0) {
 		const def = ABILITY_DEFS[state.characterConfig.characterClass];
@@ -293,6 +375,12 @@ export function useAbility(state: GameState): AbilityResult {
 			return bardInspiringSong(state);
 		case 'adept':
 			return adeptManaSurge(state);
+		case 'primordial':
+			return primordialLeySurge(state);
+		case 'runesmith':
+			return runesmithRuneWard(state);
+		case 'spellblade':
+			return spellbladeArcaneStrike(state);
 	}
 }
 

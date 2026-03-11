@@ -14,6 +14,7 @@ export interface SkillDef {
 export interface SkillBonus {
 	maxHp?: number;
 	attack?: number;
+	spellPower?: number;
 	dodgeChance?: number;
 	blockReduction?: number;
 	sightRadius?: number;
@@ -124,6 +125,45 @@ export const SKILL_DEFS: SkillDef[] = [
 	{ id: 'b_lore_1', name: 'Traveler\'s Tales', characterClass: 'bard', branch: 'Lorekeeper', tier: 1, prerequisite: null, description: '+1 Sight, +10% XP', bonus: { sightRadius: 1, xpMultiplier: 0.10 } },
 	{ id: 'b_lore_2', name: 'Polyglot', characterClass: 'bard', branch: 'Lorekeeper', tier: 2, prerequisite: 'b_lore_1', description: '+2 Sight, +5 HP', bonus: { sightRadius: 2, maxHp: 5 } },
 	{ id: 'b_lore_3', name: 'Living Legend', characterClass: 'bard', branch: 'Lorekeeper', tier: 3, prerequisite: 'b_lore_2', description: '+20% XP, +2 Sight', bonus: { xpMultiplier: 0.20, sightRadius: 2 } },
+
+	// Primordial — Ley Channeling
+	{ id: 'pr_ley_1', name: 'Ley Spark', characterClass: 'primordial', branch: 'Ley Channeling', tier: 1, prerequisite: null, description: '+2 Spell Power', bonus: { spellPower: 2 } },
+	{ id: 'pr_ley_2', name: 'Ley Torrent', characterClass: 'primordial', branch: 'Ley Channeling', tier: 2, prerequisite: 'pr_ley_1', description: '+1 Spell Power (aoe focus)', bonus: { spellPower: 1 } },
+	{ id: 'pr_ley_3', name: 'Ley Storm', characterClass: 'primordial', branch: 'Ley Channeling', tier: 3, prerequisite: 'pr_ley_2', description: '+5 Spell Power', bonus: { spellPower: 5 } },
+	// Primordial — Verdant Communion
+	{ id: 'pr_verd_1', name: 'Root Mend', characterClass: 'primordial', branch: 'Verdant Communion', tier: 1, prerequisite: null, description: '+3 HP', bonus: { maxHp: 3 } },
+	{ id: 'pr_verd_2', name: 'Bark Ward', characterClass: 'primordial', branch: 'Verdant Communion', tier: 2, prerequisite: 'pr_verd_1', description: '+3 Block', bonus: { blockReduction: 3 } },
+	{ id: 'pr_verd_3', name: 'Ancient Growth', characterClass: 'primordial', branch: 'Verdant Communion', tier: 3, prerequisite: 'pr_verd_2', description: '+5 Block', bonus: { blockReduction: 5 } },
+	// Primordial — Veil Walking
+	{ id: 'pr_veil_1', name: 'Fade Step', characterClass: 'primordial', branch: 'Veil Walking', tier: 1, prerequisite: null, description: '+1 Sight', bonus: { sightRadius: 1 } },
+	{ id: 'pr_veil_2', name: 'Spirit Sight', characterClass: 'primordial', branch: 'Veil Walking', tier: 2, prerequisite: 'pr_veil_1', description: '+2 Sight', bonus: { sightRadius: 2 } },
+	{ id: 'pr_veil_3', name: 'Between Worlds', characterClass: 'primordial', branch: 'Veil Walking', tier: 3, prerequisite: 'pr_veil_2', description: '+10% Dodge', bonus: { dodgeChance: 0.10 } },
+
+	// Runesmith — Runecraft
+	{ id: 'rs_rune_1', name: 'Rune of Fire', characterClass: 'runesmith', branch: 'Runecraft', tier: 1, prerequisite: null, description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'rs_rune_2', name: 'Rune of Shattering', characterClass: 'runesmith', branch: 'Runecraft', tier: 2, prerequisite: 'rs_rune_1', description: '+3 ATK', bonus: { attack: 3 } },
+	{ id: 'rs_rune_3', name: 'Rune of Annihilation', characterClass: 'runesmith', branch: 'Runecraft', tier: 3, prerequisite: 'rs_rune_2', description: '+5 ATK', bonus: { attack: 5 } },
+	// Runesmith — Stonebinding
+	{ id: 'rs_stone_1', name: 'Rune of Mending', characterClass: 'runesmith', branch: 'Stonebinding', tier: 1, prerequisite: null, description: '+3 HP', bonus: { maxHp: 3 } },
+	{ id: 'rs_stone_2', name: 'Rune of Anchoring', characterClass: 'runesmith', branch: 'Stonebinding', tier: 2, prerequisite: 'rs_stone_1', description: '+4 Block', bonus: { blockReduction: 4 } },
+	{ id: 'rs_stone_3', name: 'Rune of the Mountain', characterClass: 'runesmith', branch: 'Stonebinding', tier: 3, prerequisite: 'rs_stone_2', description: '+5 Block', bonus: { blockReduction: 5 } },
+	// Runesmith — Forgemastery
+	{ id: 'rs_forge_1', name: 'Runic Temper', characterClass: 'runesmith', branch: 'Forgemastery', tier: 1, prerequisite: null, description: '+1 ATK', bonus: { attack: 1 } },
+	{ id: 'rs_forge_2', name: 'Resonant Craft', characterClass: 'runesmith', branch: 'Forgemastery', tier: 2, prerequisite: 'rs_forge_1', description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'rs_forge_3', name: 'Masterwork', characterClass: 'runesmith', branch: 'Forgemastery', tier: 3, prerequisite: 'rs_forge_2', description: '+3 ATK', bonus: { attack: 3 } },
+
+	// Spellblade — Battle Channeling
+	{ id: 'sb_battle_1', name: 'Flame Blade', characterClass: 'spellblade', branch: 'Battle Channeling', tier: 1, prerequisite: null, description: '+3 ATK', bonus: { attack: 3 } },
+	{ id: 'sb_battle_2', name: 'Frost Edge', characterClass: 'spellblade', branch: 'Battle Channeling', tier: 2, prerequisite: 'sb_battle_1', description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'sb_battle_3', name: 'Storm Strike', characterClass: 'spellblade', branch: 'Battle Channeling', tier: 3, prerequisite: 'sb_battle_2', description: '+5 ATK', bonus: { attack: 5 } },
+	// Spellblade — Aegis Arts
+	{ id: 'sb_aegis_1', name: 'Spell Parry', characterClass: 'spellblade', branch: 'Aegis Arts', tier: 1, prerequisite: null, description: '+2 Block', bonus: { blockReduction: 2 } },
+	{ id: 'sb_aegis_2', name: 'Arcane Riposte', characterClass: 'spellblade', branch: 'Aegis Arts', tier: 2, prerequisite: 'sb_aegis_1', description: '+2 Spell Power', bonus: { spellPower: 2 } },
+	{ id: 'sb_aegis_3', name: 'Null Field', characterClass: 'spellblade', branch: 'Aegis Arts', tier: 3, prerequisite: 'sb_aegis_2', description: '+5 Block', bonus: { blockReduction: 5 } },
+	// Spellblade — War Casting
+	{ id: 'sb_war_1', name: 'Battle Focus', characterClass: 'spellblade', branch: 'War Casting', tier: 1, prerequisite: null, description: '+1 Spell Power', bonus: { spellPower: 1 } },
+	{ id: 'sb_war_2', name: 'Channeled Blade', characterClass: 'spellblade', branch: 'War Casting', tier: 2, prerequisite: 'sb_war_1', description: '+2 ATK', bonus: { attack: 2 } },
+	{ id: 'sb_war_3', name: 'Blade Storm', characterClass: 'spellblade', branch: 'War Casting', tier: 3, prerequisite: 'sb_war_2', description: '+3 ATK, +3 Spell Power', bonus: { attack: 3, spellPower: 3 } },
 ];
 
 const SKILL_BY_ID = new Map(SKILL_DEFS.map((s) => [s.id, s]));
@@ -178,6 +218,7 @@ export function getSkillBonuses(unlockedSkills: string[]): SkillBonus {
 		const b = skill.bonus;
 		if (b.maxHp) totals.maxHp = (totals.maxHp ?? 0) + b.maxHp;
 		if (b.attack) totals.attack = (totals.attack ?? 0) + b.attack;
+		if (b.spellPower) totals.spellPower = (totals.spellPower ?? 0) + b.spellPower;
 		if (b.dodgeChance) totals.dodgeChance = (totals.dodgeChance ?? 0) + b.dodgeChance;
 		if (b.blockReduction) totals.blockReduction = (totals.blockReduction ?? 0) + b.blockReduction;
 		if (b.sightRadius) totals.sightRadius = (totals.sightRadius ?? 0) + b.sightRadius;

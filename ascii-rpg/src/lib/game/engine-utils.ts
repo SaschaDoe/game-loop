@@ -101,6 +101,28 @@ export function effectiveSightRadius(state: GameState): number {
 	return Math.max(2, state.sightRadius + (bonuses.sightRadius ?? 0) + timeModifier + (equipBonuses.sight ?? 0));
 }
 
+/**
+ * Adjust a status effect duration for dwarf poison resistance.
+ * Dwarves halve the duration of poison effects (minimum 1).
+ */
+export function racialPoisonDuration(state: GameState, effectType: string, duration: number): number {
+	if (state.playerRace === 'dwarf' && effectType === 'poison') {
+		return Math.max(1, Math.floor(duration / 2));
+	}
+	return duration;
+}
+
+/**
+ * Get dwarf underground defense bonus.
+ * Returns +2 when the player is a dwarf in a dungeon (locationMode === 'location' and not on overworld).
+ */
+export function dwarfUndergroundDefense(state: GameState): number {
+	if (state.playerRace === 'dwarf' && state.locationMode === 'location' && state.currentLocationId) {
+		return 2;
+	}
+	return 0;
+}
+
 export function checkLevelUp(state: GameState): void {
 	let threshold = xpForLevel(state.characterLevel + 1);
 	while (state.xp >= threshold && state.characterLevel < 50) {

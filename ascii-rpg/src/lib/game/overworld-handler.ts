@@ -1,4 +1,4 @@
-import type { GameState, GameMap, Entity, Position, NPC, NPCMood, CachedLocationState, Difficulty } from './types';
+import type { GameState, GameMap, Entity, Position, NPC, NPCMood, CachedLocationState, Difficulty, CharacterRace } from './types';
 import type { WorldMap, OverworldTile, Settlement, DungeonEntrance, PointOfInterest, RegionId } from './overworld';
 import { generateWorld, TERRAIN_DISPLAY, WORLD_W, WORLD_H, REGION_DEFS } from './overworld';
 import { addMessage, effectiveSightRadius, detectAdjacentSecrets, processAchievements, checkLevelUp } from './engine-utils';
@@ -121,6 +121,9 @@ export interface RegionalNPCDef {
 	dialogue: string[];
 	gives?: { hp?: number; atk?: number };
 	mood: NPC['mood'];
+	race?: NPC['race'];
+	gender?: NPC['gender'];
+	raceAttitude?: NPC['raceAttitude'];
 }
 
 export const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
@@ -138,7 +141,7 @@ export const REGIONAL_NPCS: Record<string, RegionalNPCDef[]> = {
 		{ char: 'M', color: '#da4', name: 'Merchant', dialogue: ['Trade is the lifeblood of the Hearthlands.', 'The roads have become dangerous — bandits everywhere.', 'I hear the King\'s Stones hold ancient magic.'], mood: 'friendly' },
 		{ char: 'G', color: '#8a4', name: 'Guard Captain', dialogue: ['Keep your weapons sheathed within town walls.', 'We\'ve had reports of strange creatures on the roads.', 'The Old Watchtower was abandoned years ago. Haunted, they say.'], gives: { hp: 2 }, mood: 'neutral' },
 		{ char: 'B', color: '#fa8', name: 'Wandering Bard', dialogue: ['Seven thrones sit in shadow deep, where stolen gods their vigil keep...', 'It\'s just a song, friend. Nobody takes it seriously. Well, almost nobody.', 'I collect stories from every region. The ones that match across borders — those are the true ones.'], mood: 'friendly' },
-		{ char: 'F', color: '#a84', name: 'Farmer Edric', dialogue: ['Something is wrong with my land... the crops, the well... please, can you help?'], mood: 'afraid' },
+		{ char: 'F', color: '#a84', name: 'Farmer Edric', dialogue: ['Something is wrong with my land... the crops, the well... please, can you help?'], mood: 'afraid', race: 'human', gender: 'male', raceAttitude: { elf: -2, dwarf: 0, human: 3 } },
 	],
 	frostpeak: [
 		{ char: 'D', color: '#8df', name: 'Dwarven Smith', dialogue: ['These mountains hold iron that sings when struck.', 'The frozen halls above... even we dare not enter.', 'Take this — you\'ll need warmth where you\'re going.'], gives: { hp: 3 }, mood: 'friendly' },
@@ -335,8 +338,13 @@ const GRAVE_LORE: Record<string, string> = {
 // ── Helper Functions ──
 
 /** Get overworld sight radius based on the terrain the player is standing on. */
-export function getOverworldSightRadius(tile: OverworldTile): number {
-	return TERRAIN_SIGHT_RADIUS[tile.terrain] ?? OVERWORLD_SIGHT_RADIUS;
+export function getOverworldSightRadius(tile: OverworldTile, playerRace?: CharacterRace): number {
+	const base = TERRAIN_SIGHT_RADIUS[tile.terrain] ?? OVERWORLD_SIGHT_RADIUS;
+	// Elf racial passive: +1 sight in forest terrain
+	if (playerRace === 'elf' && (tile.terrain === 'forest' || tile.terrain === 'dead_trees')) {
+		return base + 1;
+	}
+	return base;
 }
 
 /** Get the movement turn cost for an overworld tile. Roads = 1 but allow double-step. Slow terrain = 2 turns. */
@@ -461,6 +469,9 @@ export function spawnRegionalNPCs(map: GameMap, region: string, existingNPCs: NP
 					given: false,
 					mood: def.mood,
 					moodTurns: 0,
+					...(def.race && { race: def.race }),
+					...(def.gender && { gender: def.gender }),
+					...(def.raceAttitude && { raceAttitude: def.raceAttitude }),
 				});
 				occupied.add(key);
 				placed = true;
@@ -1010,7 +1021,7 @@ export function handleOverworldInput(
 
 	// Move on overworld
 	state.overworldPos = { x: nx, y: ny };
-	revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(targetTile));
+	revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(targetTile, state.playerRace));
 
 	// Update ley line level based on tile
 	state.leyLineLevel = getLeyLineLevelForTile(targetTile);
@@ -1074,7 +1085,7 @@ export function handleOverworldInput(
 				// Check region transition for second step too
 				const secondRegion = secondTile.region;
 				state.overworldPos = { x: nx2, y: ny2 };
-				revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(secondTile));
+				revealOverworldArea(worldMap, state.overworldPos, getOverworldSightRadius(secondTile, state.playerRace));
 				if (secondRegion !== nextRegion) {
 					const regionDef = worldMap.regions.find(r => r.id === secondRegion);
 					if (regionDef) {
@@ -1219,9 +1230,15 @@ export function renderOverworldColored(state: GameState): { char: string; color:
 				continue;
 			}
 
-			// Ley line color overlay (True Sight or Reveal Secrets)
+			// Ley line color overlay (True Sight, Reveal Secrets, Elf racial sensing, or permanent buff)
 			if (tile.leyLine && isNearPlayer) {
-				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`));
+				const elfSenseRange = state.playerRace === 'elf' ? 3 : 0;
+				const elfCanSense = elfSenseRange > 0 && state.overworldPos &&
+					Math.abs(wx - state.overworldPos.x) <= elfSenseRange &&
+					Math.abs(wy - state.overworldPos.y) <= elfSenseRange;
+				const hasLeyVisionBuff = state.permanentBuffs.some(b =>
+					b.effects.some(e => e.type === 'flag' && e.flag === 'leyLinesAlwaysVisible'));
+				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`) || elfCanSense || hasLeyVisionBuff);
 				if (leyVisible) {
 					const display = TERRAIN_DISPLAY[tile.terrain];
 					const leyColor = tile.leyLine === 'convergence' ? '#fc4' : tile.leyLine === 'core' ? '#4ff' : '#2aa';

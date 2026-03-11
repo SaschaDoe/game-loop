@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook, assignQuickCast, learnSpell } from '$lib/game/engine';
+	import { createGame, handleInput, handleDialogueChoice, closeDialogue, renderColored, xpForLevel, CLASS_BONUSES, MOOD_DISPLAY, garbleText, checkCondition, SOCIAL_SKILL_DISPLAY, canDetectLies, getOverworldInfo, renderWorldMap, getWaypointIndicator, dangerDisplay, openInventory, closeInventory, useInventoryItem, dropInventoryItem, unequipToInventory, takeFromContainer, storeInContainer, flipBookPage, closeBook, getActiveBook, assignQuickCast, learnSpell, injectRaceFlavorLine } from '$lib/game/engine';
 	import { STORIES } from '$lib/game/dialogue';
 	import { ABILITY_DEFS } from '$lib/game/abilities';
-	import type { GameState, CharacterClass, CharacterArchetype, CharacterConfig, StartingLocation, Difficulty } from '$lib/game/types';
+	import type { GameState, CharacterClass, CharacterArchetype, CharacterConfig, StartingLocation, Difficulty, CharacterRace } from '$lib/game/types';
+	import { RACE_ATTRIBUTES, RACE_PASSIVES, RACE_EXCLUSIVE_CLASSES, isClassAvailableForRace } from '$lib/game/races';
 	import { STARTING_LOCATIONS } from '$lib/game/locations';
 	import { DIFFICULTY_DEFS, DIFFICULTIES, isPermadeath } from '$lib/game/difficulty';
 	import { deleteSave } from '$lib/game/save';
@@ -35,16 +36,34 @@
 		cleric: 'CLERIC',
 		paladin: 'PALADIN',
 		necromancer: 'NECROMANCER',
-		bard: 'BARD'
+		bard: 'BARD',
+		adept: 'ADEPT',
+		primordial: 'PRIMORDIAL',
+		runesmith: 'RUNESMITH',
+		spellblade: 'SPELLBLADE',
 	};
 	const LOCATIONS: StartingLocation[] = ['village', 'tavern', 'cave', 'academy'];
+
+	const RACES: CharacterRace[] = ['elf', 'dwarf', 'human'];
+	const RACE_LABELS: Record<CharacterRace, string> = {
+		elf: 'ELF',
+		dwarf: 'DWARF',
+		human: 'HUMAN',
+	};
 
 	let phase: GamePhase = $state('intro');
 	let introStep = $state(0);
 	let playerName = $state('');
+	let selectedRace: CharacterRace = $state('human');
 	let selectedArchetype: CharacterArchetype = $state('might');
 	let selectedClass: CharacterClass = $state('warrior');
 	let selectedLocation: StartingLocation = $state('village');
+
+	// Compute available classes based on selected race
+	let availableClasses = $derived(
+		[...CLASSES, ...(['primordial', 'runesmith', 'spellblade'] as CharacterClass[])]
+			.filter(cls => isClassAvailableForRace(selectedRace, cls))
+	);
 
 	const ARCHETYPES: CharacterArchetype[] = ['arcane', 'finesse', 'might'];
 	const ARCHETYPE_LABELS: Record<CharacterArchetype, string> = {
@@ -149,13 +168,32 @@
 		typewriterRaf = requestAnimationFrame(tick);
 	}
 
+	/** Compute dialogue display text with race flavor injection. */
+	function getDialogueDisplayText(npcText: string, npcName: string, isGarbled: boolean, language: string): string {
+		if (isGarbled) return garbleText(npcText, language);
+		// Inject race flavor line based on NPC attitude toward player race
+		const npc = state.npcs.find(n => n.name === npcName);
+		if (npc) {
+			return injectRaceFlavorLine(
+				npcText,
+				npc.race,
+				npc.gender,
+				npc.raceAttitude,
+				npc.name,
+				state.playerRace,
+				state.npcAttitudeShifts,
+			);
+		}
+		return npcText;
+	}
+
 	$effect(() => {
 		if (state.activeDialogue) {
 			const dlg = state.activeDialogue;
 			const node = dlg.tree.nodes[dlg.currentNodeId];
 			if (node) {
 				const isGarbled = !!(node.language && !state.knownLanguages.includes(node.language));
-				const displayText = isGarbled ? garbleText(node.npcText ?? '', node.language ?? '') : (node.npcText ?? '');
+				const displayText = getDialogueDisplayText(node.npcText ?? '', dlg.npcName, isGarbled, node.language ?? '');
 				startTypewriter(displayText, dlg.currentNodeId);
 			}
 		}
@@ -178,6 +216,7 @@
 	function startGame() {
 		const config: CharacterConfig = {
 			name: playerName.trim() || 'Hero',
+			race: selectedRace,
 			characterClass: selectedClass,
 			archetype: selectedArchetype,
 			difficulty: selectedDifficulty,
@@ -434,22 +473,35 @@
 			/>
 		</div>
 
-		<p class="class-label">Choose your archetype:</p>
+		<p class="class-label">Choose your race:</p>
 		<div class="class-grid">
-			{#each ARCHETYPES as arch}
-				{@const def = ARCHETYPE_ATTRIBUTES[arch]}
+			{#each RACES as race}
+				{@const attrs = RACE_ATTRIBUTES[race]}
+				{@const passive = RACE_PASSIVES[race]}
+				{@const exclusive = RACE_EXCLUSIVE_CLASSES[race]}
 				<button
 					class="class-card"
-					class:selected={selectedArchetype === arch}
-					onclick={() => (selectedArchetype = arch)}
+					class:selected={selectedRace === race}
+					onclick={() => {
+						selectedRace = race;
+						if (!isClassAvailableForRace(race, selectedClass)) {
+							selectedClass = 'warrior';
+						}
+					}}
 				>
-					<span class="class-name">{ARCHETYPE_LABELS[arch]}</span>
-					<span class="class-desc">{def.description}</span>
+					<span class="class-name">{RACE_LABELS[race]}</span>
+					<span class="class-desc">{attrs.description}</span>
 					<span class="class-stats">
-						STR {def.str} INT {def.int} WIL {def.wil} AGI {def.agi} VIT {def.vit}
+						STR {attrs.str} INT {attrs.int} WIL {attrs.wil} AGI {attrs.agi} VIT {attrs.vit}
 					</span>
 					<span class="class-stats" style="color: #4488ff">
-						Mana: x{def.manaModifier.toFixed(2)}
+						Mana: x{attrs.manaModifier.toFixed(2)}
+					</span>
+					<span class="class-stats" style="color: #c8f">
+						Passive: {passive.description}
+					</span>
+					<span class="class-stats" style="color: #fc4">
+						Exclusive: {exclusive}
 					</span>
 				</button>
 			{/each}
@@ -457,15 +509,16 @@
 
 		<p class="class-label">Choose your class:</p>
 		<div class="class-grid">
-			{#each CLASSES as cls, i}
+			{#each availableClasses as cls, i}
 				{@const profile = CLASS_PROFILES[cls]}
+				{@const isExclusive = Object.values(RACE_EXCLUSIVE_CLASSES).includes(cls as string)}
 				<button
 					class="class-card"
 					class:selected={selectedClass === cls}
 					onclick={() => { selectedClass = cls; selectedArchetype = profile.suggestedArchetype; }}
 				>
 					<span class="class-key">[{i + 1}]</span>
-					<span class="class-name">{CLASS_LABELS[cls]}</span>
+					<span class="class-name" style={isExclusive ? 'color: #fc4' : ''}>{CLASS_LABELS[cls]}</span>
 					<span class="class-desc">{profile.description}</span>
 					<span class="class-stats">
 						{profile.startingAbility ? `Q: ${profile.startingAbility}` : ''}
@@ -658,7 +711,7 @@
 		{@const dlg = state.activeDialogue}
 		{@const node = dlg.tree.nodes[dlg.currentNodeId]}
 		{@const isGarbled = !!(node?.language && !state.knownLanguages.includes(node.language))}
-		{@const displayText = isGarbled ? garbleText(node?.npcText ?? '', node?.language ?? '') : (node?.npcText ?? '')}
+		{@const displayText = getDialogueDisplayText(node?.npcText ?? '', dlg.npcName, isGarbled, node?.language ?? '')}
 		{@const isSuspicious = !!(node?.suspicious && canDetectLies(state))}
 	{@const filteredOpts = (node?.options ?? []).map((opt, origIdx) => ({ opt, origIdx })).filter(({ opt }) => !opt.showIf || checkCondition(opt.showIf, dlg.context))}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->

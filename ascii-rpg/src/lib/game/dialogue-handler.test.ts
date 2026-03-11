@@ -10,6 +10,7 @@ import {
 	npcMoodColor,
 	SOCIAL_CLASS_BONUS,
 	MOOD_DISPLAY,
+	injectRaceFlavorLine,
 } from './dialogue-handler';
 import type { GameState, Entity, DialogueCondition, DialogueContext, NPC, SocialCheck, NPCMood } from './types';
 import { Visibility } from './types';
@@ -87,6 +88,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		playerRace: 'human' as const,
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
 		learnedSpells: [],
 		spellCooldowns: {},
 		quickCastSlots: [null, null, null, null],
@@ -163,6 +167,8 @@ function makeDialogueContext(overrides?: Partial<DialogueContext>): DialogueCont
 		learnedRituals: [],
 		activeQuestIds: [],
 		completedQuestIds: [],
+		playerRace: 'human' as const,
+		raceAttitude: { elf: 0, dwarf: 0, human: 0 },
 		...overrides,
 	};
 }
@@ -429,17 +435,17 @@ describe('rollSocialCheck', () => {
 	it('includes class bonus for warrior intimidate', () => {
 		const state = makeTestState({ characterLevel: 0 });
 		const check: SocialCheck = { skill: 'intimidate', difficulty: 100, successNode: 's', failNode: 'f' };
-		// Warrior intimidate bonus is 4, level bonus = floor(0/3) = 0
+		// Warrior intimidate bonus is 4, level bonus = floor(0/3) = 0, human race bonus = 1
 		const result = rollSocialCheck(check, state);
-		expect(result.bonus).toBe(4);
+		expect(result.bonus).toBe(5);
 	});
 
 	it('includes level bonus (floor of characterLevel / 3)', () => {
 		const state = makeTestState({ characterLevel: 9 });
 		const check: SocialCheck = { skill: 'persuade', difficulty: 100, successNode: 's', failNode: 'f' };
-		// Warrior persuade = 0, level bonus = floor(9/3) = 3
+		// Warrior persuade = 0, level bonus = floor(9/3) = 3, human race bonus = 1
 		const result = rollSocialCheck(check, state);
-		expect(result.bonus).toBe(3);
+		expect(result.bonus).toBe(4);
 	});
 
 	it('succeeds when total >= difficulty', () => {
@@ -904,6 +910,71 @@ describe('dialogue conditions: hasSpell/hasRitual/hasQuest/questCompleted', () =
 	});
 });
 
+describe('race dialogue conditions', () => {
+	it('race — matches when playerRace equals value', () => {
+		const ctx = makeDialogueContext({ playerRace: 'elf' });
+		expect(checkCondition({ type: 'race', value: 'elf' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'race', value: 'dwarf' }, ctx)).toBe(false);
+	});
+
+	it('notRace — matches when playerRace does not equal value', () => {
+		const ctx = makeDialogueContext({ playerRace: 'dwarf' });
+		expect(checkCondition({ type: 'notRace', value: 'elf' }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'notRace', value: 'dwarf' }, ctx)).toBe(false);
+	});
+
+	it('minRaceAttitude — true when attitude >= value', () => {
+		const ctx = makeDialogueContext({ raceAttitude: { elf: 3, dwarf: -1, human: 0 } });
+		expect(checkCondition({ type: 'minRaceAttitude', race: 'elf', value: 3 }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'minRaceAttitude', race: 'elf', value: 4 }, ctx)).toBe(false);
+		expect(checkCondition({ type: 'minRaceAttitude', race: 'dwarf', value: -1 }, ctx)).toBe(true);
+	});
+
+	it('maxRaceAttitude — true when attitude <= value', () => {
+		const ctx = makeDialogueContext({ raceAttitude: { elf: 3, dwarf: -1, human: 0 } });
+		expect(checkCondition({ type: 'maxRaceAttitude', race: 'dwarf', value: -1 }, ctx)).toBe(true);
+		expect(checkCondition({ type: 'maxRaceAttitude', race: 'dwarf', value: -2 }, ctx)).toBe(false);
+		expect(checkCondition({ type: 'maxRaceAttitude', race: 'human', value: 0 }, ctx)).toBe(true);
+	});
+});
+
+describe('buildDialogueContext with NPC race attitude', () => {
+	it('populates raceAttitude from NPC base attitude', () => {
+		const npc = makeNpc({ name: 'Elder', raceAttitude: { elf: 2, dwarf: -1, human: 1 } });
+		const state = makeTestState({ npcs: [npc] });
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude).toEqual({ elf: 2, dwarf: -1, human: 1 });
+	});
+
+	it('defaults raceAttitude to zeros when NPC has no raceAttitude', () => {
+		const npc = makeNpc({ name: 'Elder' });
+		const state = makeTestState({ npcs: [npc] });
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude).toEqual({ elf: 0, dwarf: 0, human: 0 });
+	});
+
+	it('combines NPC base attitude with player-driven shifts', () => {
+		const npc = makeNpc({ name: 'Elder', raceAttitude: { elf: 2, dwarf: -1, human: 1 } });
+		const state = makeTestState({
+			npcs: [npc],
+			npcAttitudeShifts: { 'Elder': { elf: 1, dwarf: 2, human: -1 } },
+		});
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude).toEqual({ elf: 3, dwarf: 1, human: 0 });
+	});
+
+	it('clamps combined attitude to [-5, 5]', () => {
+		const npc = makeNpc({ name: 'Elder', raceAttitude: { elf: 4, dwarf: -4, human: 0 } });
+		const state = makeTestState({
+			npcs: [npc],
+			npcAttitudeShifts: { 'Elder': { elf: 3, dwarf: -3, human: 0 } },
+		});
+		const ctx = buildDialogueContext(state, 'neutral', npc);
+		expect(ctx.raceAttitude.elf).toBe(5);
+		expect(ctx.raceAttitude.dwarf).toBe(-5);
+	});
+});
+
 describe('npcMoodColor', () => {
 	it('returns NPC default color for neutral mood', () => {
 		const npc = makeNpc({ color: '#0ff', mood: 'neutral' });
@@ -933,5 +1004,69 @@ describe('npcMoodColor', () => {
 	it('returns sad color for sad mood', () => {
 		const npc = makeNpc({ mood: 'sad' });
 		expect(npcMoodColor(npc)).toBe(MOOD_DISPLAY.sad.color);
+	});
+});
+
+describe('injectRaceFlavorLine', () => {
+	it('returns original text when npcRace is undefined', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', undefined, 'male', { elf: 0, dwarf: 0, human: 0 }, 'NPC1', 'elf', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('returns original text when baseAttitude is undefined', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', 'human', 'male', undefined, 'NPC1', 'elf', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('returns original text for same-race interaction', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', 'human', 'male', { elf: 0, dwarf: 0, human: 5 }, 'NPC1', 'human', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('returns original text for neutral attitude', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', 'human', 'male', { elf: 0, dwarf: 0, human: 0 }, 'NPC1', 'elf', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('prepends flavor line for hostile attitude', () => {
+		// Hostile = attitude <= -4
+		let found = false;
+		for (let i = 0; i < 30; i++) {
+			const result = injectRaceFlavorLine('Hello traveler.', 'elf', 'male', { elf: 0, dwarf: -5, human: 0 }, 'NPC1', 'dwarf', {});
+			if (result !== 'Hello traveler.' && result.endsWith('\n\nHello traveler.')) {
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('prepends flavor line for warm attitude', () => {
+		let found = false;
+		for (let i = 0; i < 30; i++) {
+			const result = injectRaceFlavorLine('Greetings.', 'dwarf', 'male', { elf: 3, dwarf: 0, human: 0 }, 'NPC1', 'elf', {});
+			if (result !== 'Greetings.' && result.endsWith('\n\nGreetings.')) {
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('accounts for attitude shifts', () => {
+		// Base attitude is 0 (neutral), shift pushes it to -5 (hostile)
+		let found = false;
+		for (let i = 0; i < 30; i++) {
+			const result = injectRaceFlavorLine(
+				'Hello.', 'human', 'male',
+				{ elf: 0, dwarf: 0, human: 0 }, 'NPC1', 'elf',
+				{ 'NPC1': { elf: -5, dwarf: 0, human: 0 } },
+			);
+			if (result !== 'Hello.' && result.endsWith('\n\nHello.')) {
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
 	});
 });

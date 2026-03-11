@@ -5,7 +5,9 @@ export interface Position {
 	y: number;
 }
 
-export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' | 'paladin' | 'necromancer' | 'bard' | 'adept';
+export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'ranger' | 'cleric' | 'paladin' | 'necromancer' | 'bard' | 'adept' | 'primordial' | 'runesmith' | 'spellblade';
+
+export type CharacterRace = 'elf' | 'dwarf' | 'human';
 
 export type CharacterArchetype = 'arcane' | 'finesse' | 'might';
 
@@ -17,6 +19,7 @@ export type AttributeName = 'str' | 'int' | 'wil' | 'agi' | 'vit';
 
 export interface CharacterConfig {
 	name: string;
+	race?: CharacterRace;
 	characterClass: CharacterClass;
 	archetype?: CharacterArchetype;
 	difficulty: Difficulty;
@@ -98,6 +101,10 @@ export type DialogueCondition =
 	| { type: 'hasRitual'; value: string }
 	| { type: 'hasQuest'; value: string }
 	| { type: 'questCompleted'; value: string }
+	| { type: 'race'; value: CharacterRace }
+	| { type: 'notRace'; value: CharacterRace }
+	| { type: 'minRaceAttitude'; race: CharacterRace; value: number }
+	| { type: 'maxRaceAttitude'; race: CharacterRace; value: number }
 	| { type: 'allOf'; conditions: DialogueCondition[] };
 
 export type SocialSkill = 'persuade' | 'intimidate' | 'deceive';
@@ -167,6 +174,8 @@ export interface DialogueContext {
 	learnedRituals: string[];
 	activeQuestIds: string[];
 	completedQuestIds: string[];
+	playerRace: CharacterRace;
+	raceAttitude: Record<CharacterRace, number>;
 }
 
 export interface ActiveDialogue {
@@ -193,6 +202,9 @@ export interface NPC {
 	dialogueTree?: DialogueTree;
 	mood: NPCMood;
 	moodTurns: number;
+	race?: CharacterRace;
+	gender?: 'male' | 'female';
+	raceAttitude?: Record<CharacterRace, number>;
 }
 
 export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse' | 'inspire';
@@ -432,6 +444,11 @@ export interface GameState {
 	academyState: AcademyState | null;
 	playerTitles: string[];
 
+	// Race system
+	playerRace: CharacterRace;
+	permanentBuffs: PermanentBuff[];
+	npcAttitudeShifts: Record<string, Record<CharacterRace, number>>;
+
 	// Magic system (Epic 79)
 	learnedSpells: string[];            // spell IDs the player has learned
 	spellCooldowns: Record<string, number>;  // spell ID → remaining cooldown turns
@@ -531,6 +548,18 @@ export interface QuestReward {
 	rumor?: Rumor;
 	story?: Story;
 	learnRitual?: string;
+	permanentBuff?: string;
+}
+
+export type BuffEffect =
+	| { type: 'statBonus'; stat: 'spellPower' | 'physicalDefense' | 'socialBonus'; value: number }
+	| { type: 'flag'; flag: 'leyLinesAlwaysVisible' | 'runeEnhanceChance' }
+	| { type: 'conditional'; trigger: 'hpBelow20Pct'; effect: 'heal25Pct'; usesPerLevel: number };
+
+export interface PermanentBuff {
+	id: string;
+	source: string;
+	effects: BuffEffect[];
 }
 
 export interface Quest {
@@ -545,6 +574,7 @@ export interface Quest {
 	isMainQuest: boolean;
 	turnAccepted: number;
 	turnLimit?: number;
+	raceRequirement?: CharacterRace;
 }
 
 // ---------------------------------------------------------------------------

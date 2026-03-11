@@ -1,5 +1,6 @@
 import type { GameState, Trap, TrapType, Position, GameMap, CharacterClass } from './types';
 import { applyEffect } from './status-effects';
+import { racialPoisonDuration } from './engine-utils';
 import type { SeededRandom } from './seeded-random';
 
 interface TrapDef {
@@ -95,7 +96,7 @@ export function triggerTrap(state: GameState, trap: Trap): TriggerResult {
 		case 'poison_dart': {
 			const dmg = 1 + Math.floor(state.level / 2);
 			state.player.hp -= dmg;
-			applyEffect(state.player, 'poison', 3, 1 + Math.floor(state.level / 3));
+			applyEffect(state.player, 'poison', racialPoisonDuration(state, 'poison', 3), 1 + Math.floor(state.level / 3));
 			messages.push(`A ${name} fires! ${dmg} damage and poisoned!`);
 			break;
 		}
@@ -152,6 +153,9 @@ export const DISARM_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.30,
 	bard: 0.45,
 	adept: 0.55,
+	primordial: 0.35,
+	runesmith: 0.60,
+	spellblade: 0.45,
 };
 
 export interface DisarmResult {

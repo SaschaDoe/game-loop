@@ -1,5 +1,6 @@
-import type { GameState, Entity, CharacterClass, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
+import type { GameState, Entity, CharacterClass, CharacterRace, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
 import { addMessage, handlePlayerDeath, relocateNpc } from './engine-utils';
+import { getEffectiveAttitude, getRaceFlavorLine, applyPermanentBuffs } from './races';
 import { revealOverworldArea } from './overworld-handler';
 import { learnRitual } from './spell-handler';
 import { SPELL_CATALOG } from './spells';
@@ -7,7 +8,17 @@ import { acceptQuest, completeQuest } from './quests';
 import { enrollAtAcademy, completeLesson, completeTeachingSession, getAcademyDay, isLessonReady, allLessonsComplete } from './academy';
 import type { WorldMap } from './overworld';
 
-export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutral'): DialogueContext {
+export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutral', npc?: NPC): DialogueContext {
+	// Compute effective race attitude from NPC base attitude + player-driven shifts
+	let raceAttitude: Record<CharacterRace, number> = { elf: 0, dwarf: 0, human: 0 };
+	if (npc?.raceAttitude) {
+		const shifts = state.npcAttitudeShifts;
+		raceAttitude = {
+			elf: Math.max(-5, Math.min(5, (npc.raceAttitude.elf ?? 0) + (shifts[npc.name]?.elf ?? 0))),
+			dwarf: Math.max(-5, Math.min(5, (npc.raceAttitude.dwarf ?? 0) + (shifts[npc.name]?.dwarf ?? 0))),
+			human: Math.max(-5, Math.min(5, (npc.raceAttitude.human ?? 0) + (shifts[npc.name]?.human ?? 0))),
+		};
+	}
 	return {
 		dungeonLevel: state.level,
 		characterLevel: state.characterLevel,
@@ -41,6 +52,8 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		learnedRituals: state.learnedRituals,
 		activeQuestIds: state.quests.filter(q => q.status === 'active').map(q => q.id),
 		completedQuestIds: state.completedQuestIds,
+		playerRace: state.playerRace,
+		raceAttitude,
 	};
 }
 
@@ -77,6 +90,10 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'hasRitual': return ctx.learnedRituals.includes(cond.value);
 		case 'hasQuest': return ctx.activeQuestIds.includes(cond.value);
 		case 'questCompleted': return ctx.completedQuestIds.includes(cond.value);
+		case 'race': return ctx.playerRace === cond.value;
+		case 'notRace': return ctx.playerRace !== cond.value;
+		case 'minRaceAttitude': return ctx.raceAttitude[cond.race] >= cond.value;
+		case 'maxRaceAttitude': return ctx.raceAttitude[cond.race] <= cond.value;
 		case 'allOf': return cond.conditions.every(c => checkCondition(c, ctx));
 	}
 }
@@ -91,13 +108,20 @@ export const SOCIAL_CLASS_BONUS: Record<CharacterClass, Record<SocialSkill, numb
 	necromancer: { persuade: -1, intimidate: 4, deceive: 2 },
 	bard:        { persuade: 4, intimidate: -1, deceive: 3 },
 	adept:       { persuade: 2, intimidate: 1, deceive: 0 },
+	primordial:  { persuade: 3, intimidate: -2, deceive: 1 },
+	runesmith:   { persuade: 1, intimidate: 2, deceive: -2 },
+	spellblade:  { persuade: 2, intimidate: 2, deceive: -1 },
 };
 
 export function rollSocialCheck(check: SocialCheck, state: GameState): { success: boolean; roll: number; bonus: number; total: number } {
 	const roll = 1 + Math.floor(Math.random() * 20);
 	const classBonus = SOCIAL_CLASS_BONUS[state.characterConfig.characterClass][check.skill];
 	const levelBonus = Math.floor(state.characterLevel / 3);
-	const bonus = classBonus + levelBonus;
+	// Human racial passive: +1 social bonus
+	const raceBonus = state.playerRace === 'human' ? 1 : 0;
+	// Permanent buff social bonus (e.g., Sovereign's Will)
+	const buffResult = applyPermanentBuffs(state.player, state.permanentBuffs);
+	const bonus = classBonus + levelBonus + raceBonus + buffResult.socialBonus;
 	const total = roll + bonus;
 	return { success: total >= check.difficulty, roll, bonus, total };
 }
@@ -388,6 +412,27 @@ export function garbleText(text: string, language: string): string {
 		}
 	}
 	return result;
+}
+
+/**
+ * Prepend a race flavor line to NPC dialogue text based on the NPC's
+ * effective attitude toward the player's race.
+ * Returns the original text unmodified if no flavor applies.
+ */
+export function injectRaceFlavorLine(
+	npcText: string,
+	npcRace: CharacterRace | undefined,
+	npcGender: 'male' | 'female' | undefined,
+	baseAttitude: Record<CharacterRace, number> | undefined,
+	npcId: string,
+	playerRace: CharacterRace,
+	shifts: Record<string, Record<CharacterRace, number>>,
+): string {
+	if (!npcRace || !baseAttitude) return npcText;
+	const attitude = getEffectiveAttitude(baseAttitude, shifts, npcId, playerRace);
+	const flavor = getRaceFlavorLine(npcRace, playerRace, attitude, npcGender);
+	if (!flavor) return npcText;
+	return `${flavor}\n\n${npcText}`;
 }
 
 export function closeDialogue(state: GameState): GameState {

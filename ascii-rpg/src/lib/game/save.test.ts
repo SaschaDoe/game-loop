@@ -109,6 +109,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		playerRace: 'human' as const,
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
 		learnedSpells: [],
 		spellCooldowns: {},
 		quickCastSlots: [null, null, null, null],
@@ -362,6 +365,75 @@ describe('serializeState / deserializeState round-trip', () => {
 		const restored = deserializeState(serializeState(state));
 		expect(restored.revealedLeyLineTiles).toBeInstanceOf(Set);
 		expect(restored.revealedLeyLineTiles.size).toBe(0);
+	});
+
+	it('round-trips playerRace', () => {
+		const state = makeTestState({ playerRace: 'elf' as const });
+		const restored = deserializeState(serializeState(state));
+		expect(restored.playerRace).toBe('elf');
+	});
+
+	it('defaults playerRace to human for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.playerRace;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.playerRace).toBe('human');
+	});
+
+	it('round-trips permanentBuffs', () => {
+		const state = makeTestState({
+			permanentBuffs: [{
+				id: 'test_buff',
+				source: 'quest_reward',
+				effects: [{ type: 'statBonus', stat: 'spellPower', value: 3 }],
+			}],
+		});
+		const restored = deserializeState(serializeState(state));
+		expect(restored.permanentBuffs).toHaveLength(1);
+		expect(restored.permanentBuffs[0].id).toBe('test_buff');
+		expect(restored.permanentBuffs[0].effects[0]).toEqual({ type: 'statBonus', stat: 'spellPower', value: 3 });
+	});
+
+	it('defaults permanentBuffs to empty array for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.permanentBuffs;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.permanentBuffs).toEqual([]);
+	});
+
+	it('round-trips npcAttitudeShifts', () => {
+		const state = makeTestState({
+			npcAttitudeShifts: { 'npc_1': { elf: 5, dwarf: -3, human: 0 } },
+		});
+		const restored = deserializeState(serializeState(state));
+		expect(restored.npcAttitudeShifts['npc_1']).toEqual({ elf: 5, dwarf: -3, human: 0 });
+	});
+
+	it('defaults npcAttitudeShifts to empty object for old saves', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		delete data.state.npcAttitudeShifts;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.npcAttitudeShifts).toEqual({});
+	});
+
+	it('loads old save without any race system fields and applies correct defaults', () => {
+		const state = makeTestState();
+		const json = serializeState(state);
+		const data = JSON.parse(json);
+		// Simulate a pre-race-system save by removing all race fields
+		delete data.state.playerRace;
+		delete data.state.permanentBuffs;
+		delete data.state.npcAttitudeShifts;
+		const restored = deserializeState(JSON.stringify(data));
+		expect(restored.playerRace).toBe('human');
+		expect(restored.permanentBuffs).toEqual([]);
+		expect(restored.npcAttitudeShifts).toEqual({});
 	});
 });
 

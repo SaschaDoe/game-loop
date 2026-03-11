@@ -44,8 +44,8 @@ function drawBuilding(tiles: Tile[][], x: number, y: number, w: number, h: numbe
 	}
 }
 
-function makeNPC(x: number, y: number, char: string, color: string, name: string, dialogue: string[], gives?: { hp?: number; atk?: number }, mood: NPC['mood'] = 'friendly'): NPC {
-	return { pos: { x, y }, char, color, name, dialogue, dialogueIndex: 0, gives, given: false, mood, moodTurns: 0 };
+function makeNPC(x: number, y: number, char: string, color: string, name: string, dialogue: string[], gives?: { hp?: number; atk?: number }, mood: NPC['mood'] = 'friendly', extras?: Partial<Pick<NPC, 'race' | 'gender' | 'raceAttitude'>>): NPC {
+	return { pos: { x, y }, char, color, name, dialogue, dialogueIndex: 0, gives, given: false, mood, moodTurns: 0, ...extras };
 }
 
 function generateVillage(width: number, height: number): LocationResult {
@@ -78,12 +78,12 @@ function generateVillage(width: number, height: number): LocationResult {
 			'Be careful out there, dear.',
 			'Take this healing salve. You\'ll need it.',
 			'Come back safe...'
-		], { hp: 5 }),
+		], { hp: 5 }, 'friendly', { race: 'human', gender: 'female', raceAttitude: { elf: -1, dwarf: -1, human: 2 } }),
 		makeNPC(15, 8, 'F', '#8af', 'Father', [
 			'Here, take my old sword. It served me well.',
 			'The dungeon entrance is to the east.',
 			'May the light guide you.'
-		], { atk: 1 })
+		], { atk: 1 }, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: -1, dwarf: 0, human: 2 } })
 	];
 
 	return {
@@ -126,17 +126,17 @@ function generateTavern(width: number, height: number): LocationResult {
 			'Welcome to The Rusty Flagon!',
 			'Have a drink on the house. Looks like you need it.',
 			'The dungeon below has been causing trouble lately...'
-		], { hp: 3 }),
+		], { hp: 3 }, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: 0, dwarf: 0, human: 1 } }),
 		makeNPC(25, 11, '?', '#8ff', 'Hooded Stranger', [
 			'The deeper levels hold greater treasures...',
 			'Beware the bosses that guard every fifth floor.',
 			'Some walls hide secret passages. Stay observant.'
-		]),
+		], undefined, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: 0, dwarf: 0, human: 0 } }),
 		makeNPC(12, 15, 'D', '#888', 'Drunk Patron', [
 			'*hic* I shee two of you...',
 			'The wallsh... they have shecretsh... *hic*',
 			'Zzzz...'
-		])
+		], undefined, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: 0, dwarf: 0, human: 0 } })
 	];
 
 	return {
@@ -762,7 +762,7 @@ function generateKorthaven(width: number, height: number): LocationResult {
 			'There are whispers of an old throne beneath the city — older than any duke.',
 			'Serve Korthaven faithfully and you will find me a generous patron.',
 			'Tell no one, but I\'ve seen documents that suggest the gods themselves once walked these docks.'
-		], { hp: 5 }),
+		], { hp: 5 }, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: 1, dwarf: -2, human: 3 } }),
 
 		// 2. Arena Master Gorath — Arena
 		makeNPC(41, 5, 'G', '#f84', 'Arena Master Gorath', [
@@ -814,7 +814,7 @@ function generateKorthaven(width: number, height: number): LocationResult {
 			'The Duke\'s inspector drinks here when he thinks no one is watching.',
 			'Old Daven in the corner knows more than he lets on. Buy him an ale.',
 			'I hear things. For the right price, you might hear them too.'
-		]),
+		], undefined, 'friendly', { race: 'human', gender: 'female', raceAttitude: { elf: 2, dwarf: 1, human: 1 } }),
 
 		// 8. Old Daven — Tavern
 		makeNPC(10, 22, 'O', '#888', 'Old Daven', [
@@ -831,7 +831,7 @@ function generateKorthaven(width: number, height: number): LocationResult {
 			'The Thieves\' Guild operates brazenly. I\'ll shut them down — eventually.',
 			'Something stirs in the catacombs beneath the old quarter. I need capable hands.',
 			'Take this. Consider it a retainer for services to the city.'
-		], { hp: 2 }),
+		], { hp: 2 }, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: -1, dwarf: -1, human: 2 } }),
 
 		// 10. Apothecary Mora — Apothecary
 		makeNPC(4, 14, 'M', '#4a4', 'Apothecary Mora', [
@@ -849,7 +849,7 @@ function generateKorthaven(width: number, height: number): LocationResult {
 			'Inspector Kaelen thinks he\'ll shut us down. He\'s been saying that for years.',
 			'We have eyes in every faction. The Church, the Crown, even the merchant houses.',
 			'There\'s a vault beneath the Duke\'s Palace that no one speaks of. I want in.'
-		]),
+		], undefined, 'friendly', { race: 'human', gender: 'female', raceAttitude: { elf: 0, dwarf: 2, human: 1 } }),
 
 		// 12. Sera the Fence — near Thieves' Guild
 		makeNPC(17, 19, 'S', '#a8f', 'Sera the Fence', [
@@ -956,7 +956,7 @@ function generateAcademy(width: number, height: number): LocationResult {
 			'Alchemy is the art of transformation!',
 			'Take those potions — you\'ll need them below.',
 			'The practice dungeon has real dangers. Don\'t be reckless.'
-		], { atk: 1 }),
+		], { atk: 1 }, 'friendly', { race: 'human', gender: 'male', raceAttitude: { elf: 2, dwarf: 1, human: 0 } }),
 		makeNPC(8, 17, 'S', '#8f8', 'Fellow Student', [
 			'You\'re new too? I heard the practice dungeon is no joke.',
 			'The Archmagus says the deeper floors have actual monsters.',

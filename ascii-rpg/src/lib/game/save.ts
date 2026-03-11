@@ -1,11 +1,11 @@
-import type { GameState, Tile, GameStats, LocationMode, Quest, StealthState } from './types';
+import type { GameState, Tile, GameStats, LocationMode, Quest, StealthState, CharacterRace, PermanentBuff } from './types';
 import type { Item, Equipment, WorldContainer } from './items';
 import { createEmptyInventory, createEmptyEquipment } from './items';
 import { createDefaultStats } from './achievements';
 import { generateWorld, type WorldMap } from './overworld';
 import { createEmptyMastery } from './mastery';
 
-export const SAVE_VERSION = 21;
+export const SAVE_VERSION = 22;
 export const SAVE_KEY = 'ascii-rpg-save';
 
 interface SaveData {
@@ -73,6 +73,10 @@ interface SerializedState {
 	stealth?: GameState['stealth'];
 	academyState?: GameState['academyState'];
 	playerTitles?: string[];
+	// Race system
+	playerRace?: CharacterRace;
+	permanentBuffs?: PermanentBuff[];
+	npcAttitudeShifts?: Record<string, Record<CharacterRace, number>>;
 	// Magic system (Epic 79)
 	learnedSpells?: string[];
 	spellCooldowns?: Record<string, number>;
@@ -231,6 +235,9 @@ export function serializeState(state: GameState): string {
 			stealth: state.stealth,
 			academyState: state.academyState,
 			playerTitles: state.playerTitles,
+			playerRace: state.playerRace,
+			permanentBuffs: state.permanentBuffs,
+			npcAttitudeShifts: state.npcAttitudeShifts,
 			learnedSpells: state.learnedSpells,
 			spellCooldowns: state.spellCooldowns,
 			quickCastSlots: state.quickCastSlots,
@@ -324,6 +331,9 @@ export function deserializeState(json: string): GameState {
 		stealth: s.stealth ?? { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: s.academyState ?? null,
 		playerTitles: s.playerTitles ?? [],
+		playerRace: s.playerRace ?? 'human',
+		permanentBuffs: s.permanentBuffs ?? [],
+		npcAttitudeShifts: s.npcAttitudeShifts ?? {},
 		learnedSpells: s.learnedSpells ?? [],
 		spellCooldowns: s.spellCooldowns ?? {},
 		quickCastSlots: s.quickCastSlots ?? [null, null, null, null],

@@ -93,6 +93,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		playerRace: 'human' as const,
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
 		learnedSpells: [],
 		spellCooldowns: {},
 		quickCastSlots: [null, null, null, null],
@@ -190,6 +193,56 @@ describe('createGame', () => {
 			}
 		}
 		expect(hasUnexplored).toBe(true);
+	});
+});
+
+describe('createGame race system', () => {
+	it('defaults to human race when no race specified', () => {
+		const state = createGame({ name: 'Test', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-default' });
+		expect(state.playerRace).toBe('human');
+	});
+
+	it('sets playerRace to elf when specified', () => {
+		const state = createGame({ name: 'Test', race: 'elf', characterClass: 'mage', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-elf' });
+		expect(state.playerRace).toBe('elf');
+	});
+
+	it('sets playerRace to dwarf when specified', () => {
+		const state = createGame({ name: 'Test', race: 'dwarf', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-dwarf' });
+		expect(state.playerRace).toBe('dwarf');
+	});
+
+	it('elf mage has higher INT than human warrior', () => {
+		const elfMage = createGame({ name: 'Elf', race: 'elf', characterClass: 'mage', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-cmp1' });
+		const humanWarrior = createGame({ name: 'Human', race: 'human', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-cmp2' });
+		expect(elfMage.player.int).toBeGreaterThan(humanWarrior.player.int!);
+	});
+
+	it('dwarf has higher STR than elf', () => {
+		const dwarf = createGame({ name: 'Dwarf', race: 'dwarf', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-str1' });
+		const elf = createGame({ name: 'Elf', race: 'elf', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-str2' });
+		expect(dwarf.player.str).toBeGreaterThan(elf.player.str!);
+	});
+
+	it('elf has higher maxMana than dwarf (same class)', () => {
+		const elf = createGame({ name: 'Elf', race: 'elf', characterClass: 'mage', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-mana1' });
+		const dwarf = createGame({ name: 'Dwarf', race: 'dwarf', characterClass: 'mage', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-mana2' });
+		expect(elf.player.maxMana).toBeGreaterThan(dwarf.player.maxMana!);
+	});
+
+	it('initializes permanentBuffs as empty array', () => {
+		const state = createGame({ name: 'Test', race: 'elf', characterClass: 'mage', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-buffs' });
+		expect(state.permanentBuffs).toEqual([]);
+	});
+
+	it('initializes npcAttitudeShifts as empty object', () => {
+		const state = createGame({ name: 'Test', race: 'dwarf', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-att' });
+		expect(state.npcAttitudeShifts).toEqual({});
+	});
+
+	it('dwarf maxMana is at least MANA_FLOOR (5)', () => {
+		const state = createGame({ name: 'Test', race: 'dwarf', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'village', worldSeed: 'race-floor' });
+		expect(state.player.maxMana).toBeGreaterThanOrEqual(5);
 	});
 });
 

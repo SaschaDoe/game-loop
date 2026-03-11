@@ -26,6 +26,7 @@ import { enterStealth, exitStealth, calculateBackstabDamage, processStealthTurn,
 import { updateQuestProgress, checkTimedQuests } from './quests';
 import { createAcademyState, tickAcademy } from './academy';
 import { ARCHETYPE_ATTRIBUTES, CLASS_PROFILES, recalculateDerivedStats, getWeaponBonus, getArmorValue } from './magic';
+import { RACE_ATTRIBUTES, RACE_SIGHT_BONUS, isClassAvailableForRace, MANA_FLOOR } from './races';
 import { SPELL_CATALOG } from './spells';
 import { createEmptyMastery, getAvailableSpecializations } from './mastery';
 import type { SchoolMastery } from './mastery';
@@ -85,6 +86,9 @@ export const CLASS_BONUSES: Record<CharacterClass, { hp: number; atk: number; si
 	necromancer: { hp: -3, atk: 2, sight: 1, description: 'A dark mage who commands death itself' },
 	bard: { hp: 0, atk: 0, sight: 1, description: 'A charming performer whose songs shape fate' },
 	adept: { hp: 0, atk: 0, sight: 1, description: 'A disciplined practitioner of inner power' },
+	primordial:  { hp: -1, atk: 0, sight: 2, description: 'Ley Line channeler — high magic sight, fragile' },
+	runesmith:   { hp: 3, atk: 1, sight: -1, description: 'Rune inscriber — durable, strong, limited vision' },
+	spellblade:  { hp: 2, atk: 1, sight: 0, description: 'Warrior-mage — balanced combat and magic' },
 };
 
 const DEFAULT_CONFIG: CharacterConfig = { name: 'Hero', characterClass: 'warrior', archetype: 'might', difficulty: 'normal', startingLocation: 'cave', worldSeed: '' };
@@ -93,6 +97,18 @@ export function createGame(config?: CharacterConfig): GameState {
 	const rawCfg = config ? { ...config, worldSeed: config.worldSeed || randomSeedString() } : { ...DEFAULT_CONFIG, worldSeed: randomSeedString() };
 	// Default archetype from class profile if not specified
 	const cfg = { ...rawCfg, archetype: rawCfg.archetype ?? CLASS_PROFILES[rawCfg.characterClass].suggestedArchetype };
+
+	// Determine race (default to 'human')
+	const race = cfg.race ?? 'human';
+	const characterClass = cfg.characterClass;
+
+	// Validate race+class combination
+	if (!isClassAvailableForRace(race, characterClass)) {
+		throw new Error(`Class '${characterClass}' is not available for race '${race}'`);
+	}
+
+	// Get race attributes
+	const raceAttrs = RACE_ATTRIBUTES[race];
 
 	// Generate the overworld
 	const worldMap = generateWorld(cfg.worldSeed);
@@ -111,8 +127,6 @@ export function createGame(config?: CharacterConfig): GameState {
 	const sightRadius = DEFAULT_SIGHT_RADIUS;
 	const visibility = createVisibilityGrid(MAP_W, MAP_H);
 
-	// Set up archetype attributes
-	const archetype = ARCHETYPE_ATTRIBUTES[cfg.archetype];
 	const classProfile = CLASS_PROFILES[cfg.characterClass];
 
 	const state: GameState = {
@@ -125,12 +139,12 @@ export function createGame(config?: CharacterConfig): GameState {
 			maxHp: 10,
 			attack: 0,
 			statusEffects: [],
-			// Core attributes from archetype
-			str: archetype.str,
-			int: archetype.int,
-			wil: archetype.wil,
-			agi: archetype.agi,
-			vit: archetype.vit,
+			// Core attributes from race
+			str: raceAttrs.str,
+			int: raceAttrs.int,
+			wil: raceAttrs.wil,
+			agi: raceAttrs.agi,
+			vit: raceAttrs.vit,
 			// Mana — calculated below
 			mana: 0,
 			maxMana: 0,
@@ -195,6 +209,11 @@ export function createGame(config?: CharacterConfig): GameState {
 		academyState: null,
 		playerTitles: [],
 
+		// Race system
+		playerRace: race,
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
+
 		// Magic system (Epic 79)
 		learnedSpells: [],
 		spellCooldowns: {},
@@ -258,6 +277,9 @@ export function createGame(config?: CharacterConfig): GameState {
 		necromancer: { equip: [['leftHand', 'bone_staff'], ['back', 'death_shroud']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
 		bard:        { equip: [['leftHand', 'rapier'], ['rightHand', 'lute'], ['head', 'fancy_hat']], inventory: ['health_potion', 'bread', 'water_flask'] },
 		adept:       { equip: [['leftHand', 'mage_staff'], ['body', 'cloth_robe']], inventory: ['health_potion', 'health_potion', 'health_potion'] },
+		primordial:  { equip: [['leftHand', 'mage_staff']], inventory: ['health_potion', 'health_potion'] },
+		runesmith:   { equip: [['leftHand', 'iron_sword'], ['body', 'leather_armor']], inventory: ['health_potion', 'health_potion'] },
+		spellblade:  { equip: [['leftHand', 'iron_sword'], ['body', 'leather_armor']], inventory: ['health_potion', 'health_potion'] },
 	};
 	const startingGear = CLASS_STARTING_ITEMS[cfg.characterClass];
 	for (const [slot, itemId] of startingGear.equip) {
@@ -269,16 +291,15 @@ export function createGame(config?: CharacterConfig): GameState {
 		if (item) addToInventory(state.inventory, { ...item });
 	}
 
-	// Calculate derived stats from archetype attributes + equipment
+	// Calculate derived stats from race attributes + equipment
 	const weaponBonus = getWeaponBonus(state.equipment);
 	const armorValue = getArmorValue(state.equipment);
-	recalculateDerivedStats(state.player, armorValue, weaponBonus, archetype.manaModifier);
+	recalculateDerivedStats(state.player, armorValue, weaponBonus, raceAttrs.manaModifier);
 	state.player.hp = state.player.maxHp; // Start at full HP
 	state.player.mana = state.player.maxMana; // Start at full mana
 
-	// Apply sight radius based on archetype (Arcane sees further)
-	if (cfg.archetype === 'arcane') state.sightRadius += 2;
-	else if (cfg.archetype === 'finesse') state.sightRadius += 1;
+	// Apply sight radius from race + class
+	state.sightRadius += RACE_SIGHT_BONUS[race];
 
 	// Grant starting spell from class profile
 	if (classProfile.startingSpell && SPELL_CATALOG[classProfile.startingSpell]) {
@@ -306,11 +327,14 @@ interface DungeonNPCDef {
 	gives?: { hp?: number; atk?: number };
 	minLevel: number;
 	weight: number;
+	race?: NPC['race'];
+	gender?: NPC['gender'];
+	raceAttitude?: NPC['raceAttitude'];
 }
 
 const DUNGEON_NPCS: DungeonNPCDef[] = [
-	{ char: '$', color: '#ff8', name: 'Morrigan', dialogue: ['Welcome to Morrigan\'s Mobile Emporium!', 'We go where the customers are!', 'Even monster-infested death traps!'], gives: { hp: 5 }, minLevel: 2, weight: 3 },
-	{ char: 'C', color: '#8bf', name: 'Corwin', dialogue: ['Oh thank the gods, a person!', 'I\'ve been lost for days...', 'My maps are completely useless here.'], minLevel: 3, weight: 2 },
+	{ char: '$', color: '#ff8', name: 'Morrigan', dialogue: ['Welcome to Morrigan\'s Mobile Emporium!', 'We go where the customers are!', 'Even monster-infested death traps!'], gives: { hp: 5 }, minLevel: 2, weight: 3, race: 'human', gender: 'female', raceAttitude: { elf: 1, dwarf: 1, human: 1 } },
+	{ char: 'C', color: '#8bf', name: 'Corwin', dialogue: ['Oh thank the gods, a person!', 'I\'ve been lost for days...', 'My maps are completely useless here.'], minLevel: 3, weight: 2, race: 'human', gender: 'male', raceAttitude: { elf: 0, dwarf: 0, human: 0 } },
 	{ char: 'W', color: '#a8f', name: 'Whispering Shade', dialogue: ['*An ethereal figure flickers in the shadows, murmuring in an alien tongue...*'], minLevel: 5, weight: 2 },
 	{ char: 'g', color: '#8f4', name: 'Grikkle', dialogue: ['Psst! Hey! You! Big-person! Grikkle has GOODS!', 'Best goods! Premium quality!', 'Fell off back of cart! Very legitimate!'], gives: { hp: 3 }, minLevel: 1, weight: 3 },
 ];
@@ -353,6 +377,9 @@ function spawnDungeonNPCs(map: { width: number; height: number; tiles: string[][
 		given: false,
 		mood: 'neutral' as const,
 		moodTurns: 0,
+		...(pick.race && { race: pick.race }),
+		...(pick.gender && { gender: pick.gender }),
+		...(pick.raceAttitude && { raceAttitude: pick.raceAttitude }),
 	}];
 }
 
@@ -564,6 +591,10 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		// Race system defaults
+		playerRace: 'human',
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
 		// Magic system defaults
 		learnedSpells: [],
 		spellCooldowns: {},
@@ -1098,7 +1129,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			}
 			// Conditional start nodes (e.g. mage at academy gets different greeting)
 			if (tree.conditionalStartNodes && npc.dialogueIndex === 0) {
-				const ctx = buildDialogueContext(state, npc.mood);
+				const ctx = buildDialogueContext(state, npc.mood, npc);
 				for (const csn of tree.conditionalStartNodes) {
 					if (checkCondition(csn.condition, ctx) && tree.nodes[csn.nodeId]) {
 						startId = csn.nodeId;
@@ -1121,7 +1152,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				visitedNodes: new Set<string>(),
 				givenItems: npc.given,
 				mood: npc.mood,
-				context: buildDialogueContext(state, npc.mood),
+				context: buildDialogueContext(state, npc.mood, npc),
 			};
 			if (npc.dialogueIndex === 0) {
 				npc.dialogueIndex = 1;
@@ -1486,7 +1517,7 @@ export function renderColored(state: GameState): { char: string; color: string }
 
 export { xpForLevel, xpReward, effectiveSightRadius, addMessage, isBlocked, handlePlayerDeath, checkLevelUp, applyXpMultiplier, processAchievements, detectAdjacentSecrets, tryDropLoot, tickEntityEffects, relocateNpc, tickNpcMoods } from './engine-utils';
 export { learnRitual, handleSpellTargeting, handleRitualChanneling, handleSpellMenu, tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
-export { buildDialogueContext, checkCondition, rollSocialCheck, SOCIAL_SKILL_DISPLAY, handleDialogueChoice, canDetectLies, MOOD_DISPLAY, npcMoodColor, garbleText, closeDialogue, SOCIAL_CLASS_BONUS } from './dialogue-handler';
+export { buildDialogueContext, checkCondition, rollSocialCheck, SOCIAL_SKILL_DISPLAY, handleDialogueChoice, canDetectLies, MOOD_DISPLAY, npcMoodColor, garbleText, closeDialogue, SOCIAL_CLASS_BONUS, injectRaceFlavorLine } from './dialogue-handler';
 export { render, dimColor, renderLocationColored } from './renderer';
 export { moveEnemies, attemptPush, attemptFlee, processKill, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, ENVIRONMENTAL_KILL_BONUS } from './combat';
 export type { PushResult } from './combat';

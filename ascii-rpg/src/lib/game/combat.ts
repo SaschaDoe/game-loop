@@ -1,6 +1,6 @@
 import type { GameState, Entity, Position, MessageType, CharacterClass } from './types';
 import { Visibility } from './types';
-import { addMessage, handlePlayerDeath, isBlocked, xpReward, applyXpMultiplier, checkLevelUp, processAchievements, tickEntityEffects, tryDropLoot, tickNpcMoods } from './engine-utils';
+import { addMessage, handlePlayerDeath, isBlocked, xpReward, applyXpMultiplier, checkLevelUp, processAchievements, tickEntityEffects, tryDropLoot, tickNpcMoods, racialPoisonDuration } from './engine-utils';
 import { tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
 import { hasEffect, applyEffect } from './status-effects';
 import { getSkillBonuses } from './skills';
@@ -25,6 +25,9 @@ export const DODGE_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.12,
 	bard: 0.18,
 	adept: 0.10,
+	primordial: 0.15,
+	runesmith: 0.08,
+	spellblade: 0.12,
 };
 
 export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
@@ -37,6 +40,9 @@ export const BLOCK_REDUCTION: Record<CharacterClass, number> = {
 	necromancer: 0,
 	bard: 0,
 	adept: 0,
+	primordial: 0,
+	runesmith: 2,
+	spellblade: 1,
 };
 
 export const PUSH_CHANCE: Record<CharacterClass, number> = {
@@ -49,6 +55,9 @@ export const PUSH_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.20,
 	bard: 0.25,
 	adept: 0.25,
+	primordial: 0.25,
+	runesmith: 0.70,
+	spellblade: 0.55,
 };
 
 export const ENVIRONMENTAL_KILL_BONUS = 1.5;
@@ -63,6 +72,9 @@ const FLEE_CHANCE: Record<CharacterClass, number> = {
 	necromancer: 0.55,
 	bard: 0.65,
 	adept: 0.60,
+	primordial: 0.55,
+	runesmith: 0.40,
+	spellblade: 0.50,
 };
 
 // ── Interfaces ──
@@ -293,7 +305,7 @@ export function moveEnemies(state: GameState, defending = false) {
 						addMessage(state, `${enemy.name} unleashes ${chSpell.name} for ${dmg} damage!`, 'damage_taken');
 					}
 					if (chSpell?.statusEffect) {
-						applyEffect(state.player, chSpell.statusEffect.type as any, chSpell.statusEffect.duration, chSpell.statusEffect.potency);
+						applyEffect(state.player, chSpell.statusEffect.type as any, racialPoisonDuration(state, chSpell.statusEffect.type, chSpell.statusEffect.duration), chSpell.statusEffect.potency);
 					}
 					enemy.channeling = null;
 				}
@@ -328,7 +340,7 @@ export function moveEnemies(state: GameState, defending = false) {
 						addMessage(state, `${enemy.name} casts ${spell.name} for ${dmg} damage!`, 'damage_taken');
 					}
 					if (spell.statusEffect) {
-						applyEffect(state.player, spell.statusEffect.type as any, spell.statusEffect.duration, spell.statusEffect.potency);
+						applyEffect(state.player, spell.statusEffect.type as any, racialPoisonDuration(state, spell.statusEffect.type, spell.statusEffect.duration), spell.statusEffect.potency);
 						if (spell.baseDamage <= 0) {
 							addMessage(state, `${enemy.name} casts ${spell.name}!`, 'danger');
 						}
@@ -385,7 +397,7 @@ export function moveEnemies(state: GameState, defending = false) {
 			checkRitualInterrupt(state, dmg);
 			const onHit = getMonsterOnHitEffect(enemy);
 			if (onHit) {
-				applyEffect(state.player, onHit.type, onHit.duration, onHit.potency);
+				applyEffect(state.player, onHit.type, racialPoisonDuration(state, onHit.type, onHit.duration), onHit.potency);
 				addMessage(state, `${enemy.name}'s attack inflicts ${onHit.type}!`, 'damage_taken');
 			}
 			if (state.player.hp <= 0) {

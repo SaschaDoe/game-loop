@@ -111,6 +111,26 @@ export const CLASS_MASTERY_MULTIPLIERS: Record<CharacterClass, Record<MasterySch
 		alchemy: 1.0, conjuration: 1.0, shadow: 1.0,
 		blood: 1.0, necromancy: 1.0, void_magic: 1.0, chronomancy: 1.0, soul: 1.0,
 	},
+	adept: {
+		elements: 1.2, enchantment: 1.2, restoration: 1.2, divination: 1.3,
+		alchemy: 1.2, conjuration: 1.2, shadow: 1.0,
+		blood: 0.8, necromancy: 0.8, void_magic: 0.8, chronomancy: 1.0, soul: 1.0,
+	},
+	primordial: {
+		elements: 1.3, enchantment: 1.0, restoration: 1.3, divination: 1.5,
+		alchemy: 1.0, conjuration: 1.3, shadow: 0.8,
+		blood: 0.5, necromancy: 0.5, void_magic: 0.5, chronomancy: 1.0, soul: 1.0,
+	},
+	runesmith: {
+		elements: 1.3, enchantment: 1.5, restoration: 1.0, divination: 1.0,
+		alchemy: 1.3, conjuration: 1.0, shadow: 0.5,
+		blood: 0.5, necromancy: 0.5, void_magic: 0.5, chronomancy: 0.8, soul: 0.5,
+	},
+	spellblade: {
+		elements: 1.3, enchantment: 1.3, restoration: 1.0, divination: 0.8,
+		alchemy: 0.8, conjuration: 1.0, shadow: 1.0,
+		blood: 1.0, necromancy: 0.8, void_magic: 0.8, chronomancy: 0.8, soul: 0.8,
+	},
 };
 
 // ---------------------------------------------------------------------------
