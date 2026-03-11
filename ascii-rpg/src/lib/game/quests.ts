@@ -864,6 +864,38 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 		isMainQuest: false,
 	},
 
+	// --- School Year (enrollment → lessons → final exam) ---
+	side_ac_school_year: {
+		id: 'side_ac_school_year',
+		title: 'The School Year',
+		description:
+			'You have enrolled at the Arcane Academy. Attend all six lessons with Professor Ignis, then pass the final exam to graduate.',
+		objectives: [
+			{ id: 'ac_sy_lessons', description: 'Complete all 6 academy lessons', type: 'explore', target: 'academy_lessons_complete', required: 1 },
+			{ id: 'ac_sy_exam', description: 'Pass the final exam', type: 'explore', target: 'academy_exam_passed', required: 1 },
+		],
+		rewards: { xp: 300, hp: 3 },
+		giverNpcName: 'Archmagus Veylen',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+	},
+
+	// --- Teaching (available after graduating) ---
+	side_ac_teaching: {
+		id: 'side_ac_teaching',
+		title: 'Master Teacher',
+		description:
+			'The Archmagus has asked you to share your knowledge with the next generation of students. Teach five lessons at the Academy to earn the title of Master Teacher.',
+		objectives: [
+			{ id: 'ac_teach_sessions', description: 'Teach 5 lessons at the Academy', type: 'explore', target: 'academy_teaching_session', required: 5 },
+		],
+		rewards: { xp: 250, atk: 1 },
+		giverNpcName: 'Archmagus Veylen',
+		regionId: 'arcane_conservatory',
+		isMainQuest: false,
+		prerequisiteQuestId: 'side_ac_school_year',
+	},
+
 	// --- Semester 1: Foundations ---
 	side_ac_elem101: {
 		id: 'side_ac_elem101',

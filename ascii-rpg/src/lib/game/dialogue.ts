@@ -5589,11 +5589,17 @@ const ARCHMAGUS_VEYLEN_DIALOGUE: DialogueTree = {
 				opt('I\'m just passing through.', 'farewell'),
 			]
 		),
+		enroll: node('enroll',
+			'Excellent! You are now enrolled. Your school year begins — attend lessons with Professor Ignis and prepare for the final exam. The first lesson is available immediately. Good luck, student.',
+			[
+				opt('I\'ll make you proud, Archmagus.', 'farewell', '#4f4'),
+			]
+		),
 		// ── Mage class start (auto-graduated) ──
 		start_mage: node('start_mage',
 			'Ah, you return! I remember your final year — exemplary work in transmutation and ward theory. The faculty and I are honored to bestow upon you the title of Archmage Apprentice. Welcome back to the Academy. Perhaps you would consider sharing your knowledge with our new students?',
 			[
-				opt('I would be honored to teach.', 'teaching_intro', '#4f4'),
+				opt('I would be honored to teach.', 'teaching_offer', '#4f4'),
 				opt('Thank you, Archmagus. What else can I help with?', 'return_graduated'),
 				opt('I must continue my journey.', 'farewell'),
 			]
@@ -5602,7 +5608,7 @@ const ARCHMAGUS_VEYLEN_DIALOGUE: DialogueTree = {
 		start_graduated: node('start_graduated',
 			'Welcome back, graduate! You proved yourself in the trials. The Academy is proud to count you among its alumni. Would you like to teach a lesson today?',
 			[
-				opt('I\'d like to teach.', 'teaching_intro', '#4f4', { showIf: { type: 'academyGraduated' } }),
+				opt('I\'d like to teach.', 'teaching_offer', '#4f4', { showIf: { type: 'academyGraduated' } }),
 				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
 				opt('Farewell, Archmagus.', 'farewell'),
 			]
@@ -5613,16 +5619,24 @@ const ARCHMAGUS_VEYLEN_DIALOGUE: DialogueTree = {
 			[
 				opt('I\'m ready for the final exam.', 'exam_start', '#ff4', { showIf: { type: 'allOf', conditions: [{ type: 'academyAllLessonsComplete' }, { type: 'academyExamNotTaken' }] } }),
 				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
-				opt('I\'d like to teach.', 'teaching_intro', '#4f4', { showIf: { type: 'academyGraduated' } }),
+				opt('I\'d like to teach.', 'teaching_offer', '#4f4', { showIf: { type: 'academyGraduated' } }),
 				opt('Farewell.', 'farewell'),
 			]
 		),
 		return_graduated: node('return_graduated',
 			'The Academy thrives. Our students could benefit from your experience. What would you like to do?',
 			[
-				opt('I\'d like to teach a lesson.', 'teaching_intro', '#4f4'),
+				opt('I\'d like to teach a lesson.', 'teaching_offer', '#4f4'),
 				opt('Tell me about the Academy.', 'about_academy', '#8cf'),
 				opt('Farewell.', 'farewell'),
+			]
+		),
+		// ── Teaching quest offer (auto-accepts teaching quest then goes to teaching_intro) ──
+		teaching_offer: node('teaching_offer',
+			'The students are eager to learn from someone with real experience. Shall we begin?',
+			[
+				opt('Let\'s begin.', 'teaching_intro', '#4f4', { onSelect: { acceptQuest: 'side_ac_teaching' } }),
+				opt('Not right now.', 'return_graduated'),
 			]
 		),
 		about_academy: node('about_academy',
@@ -5706,9 +5720,16 @@ const PROFESSOR_IGNIS_ACADEMY_DIALOGUE: DialogueTree = {
 	returnNode: 'return',
 	conditionalStartNodes: [
 		{ condition: { type: 'academyGraduated' }, nodeId: 'start_graduated' },
+		{ condition: { type: 'academyEnrolled' }, nodeId: 'start_enrolled' },
 	],
 	nodes: {
 		start: node('start',
+			'I am Professor Ignis, master of alchemy and combat theory. You look like a newcomer — speak with the Archmagus if you wish to enroll. My lessons are only for enrolled students.',
+			[
+				opt('I\'ll speak with the Archmagus.', 'farewell'),
+			]
+		),
+		start_enrolled: node('start_enrolled',
 			'Welcome, student! I am Professor Ignis, master of alchemy and combat theory. I teach six lessons that will prepare you for your final exam. Your first lesson is ready now — shall we begin?',
 			[
 				opt('What will I learn?', 'curriculum', '#8cf'),

@@ -121,8 +121,8 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 describe('QUEST_CATALOG', () => {
 	const allDefs = Object.values(QUEST_CATALOG);
 
-	it('has the expected number of quests (5 main + 57 side + 9 racial = 71)', () => {
-		expect(Object.keys(QUEST_CATALOG).length).toBe(71);
+	it('has the expected number of quests (5 main + 59 side + 9 racial = 73)', () => {
+		expect(Object.keys(QUEST_CATALOG).length).toBe(73);
 	});
 
 	it('every quest has a valid id that matches its catalog key', () => {
@@ -172,7 +172,7 @@ describe('QUEST_CATALOG', () => {
 		const mainQuests = allDefs.filter((d) => d.isMainQuest);
 		const sideQuests = allDefs.filter((d) => !d.isMainQuest);
 		expect(mainQuests.length).toBe(5);
-		expect(sideQuests.length).toBe(66);
+		expect(sideQuests.length).toBe(68);
 	});
 
 	it('main quests form a prerequisite chain', () => {
@@ -668,10 +668,10 @@ describe('getAvailableQuests', () => {
 	it('returns all available quests when no filters are provided', () => {
 		const state = makeTestState();
 		const available = getAvailableQuests(state);
-		// Non-prerequisite quests: side quests without prereqs (48) + main_01 (no prereq) = 49
+		// Non-prerequisite quests: side quests without prereqs (49) + main_01 (no prereq) = 50
 		// Plus 1 racial quest (human_01, since default playerRace is 'human')
-		// main_02-05, side_kort_crown, side_eg_beast, 7 arcane_conservatory prereqs, and 6 non-human racial quests are excluded
-		expect(available.length).toBe(50);
+		// main_02-05, side_kort_crown, side_eg_beast, 7 arcane_conservatory prereqs, side_ac_teaching (has prereq), and 6 non-human racial quests are excluded
+		expect(available.length).toBe(51);
 	});
 
 	it('returns quests filtered by both NPC name and region', () => {

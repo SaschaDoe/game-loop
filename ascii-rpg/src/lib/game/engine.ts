@@ -253,12 +253,14 @@ export function createGame(config?: CharacterConfig): GameState {
 	// Academy initialization
 	if (cfg.startingLocation === 'academy') {
 		if (cfg.characterClass === 'mage') {
-			// Mages are recognized as graduates
+			// Mages are recognized as graduates — school year already complete
 			state.academyState = createAcademyState(false, true, 0);
 			state.playerTitles.push('Archmage Apprentice');
+			// Mark school year quest as already completed
+			state.completedQuestIds.push('side_ac_school_year');
 		} else {
-			// Others start enrolled
-			state.academyState = createAcademyState(true, false, 0);
+			// Others must enroll first — not enrolled yet
+			state.academyState = createAcademyState(false, false, 0);
 		}
 	}
 

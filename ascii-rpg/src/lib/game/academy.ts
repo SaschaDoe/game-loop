@@ -7,6 +7,7 @@
  * the total is ~30 days.
  */
 import type { GameState, AcademyState, GameMessage } from './types';
+import { acceptQuest, updateQuestProgress, completeQuest } from './quests';
 
 // ── Constants ──
 
@@ -245,6 +246,8 @@ export function canTeach(state: GameState): boolean {
 
 export function enrollAtAcademy(state: GameState): void {
 	state.academyState = createAcademyState(true, false, state.turnCount);
+	// Auto-accept the school year quest
+	acceptQuest(state, 'side_ac_school_year');
 }
 
 export function completeLesson(state: GameState, lessonId: string): void {
@@ -258,6 +261,11 @@ export function completeLesson(state: GameState, lessonId: string): void {
 	if (state.academyState.nextLessonIndex < LESSONS.length) {
 		const nextLesson = LESSONS[state.academyState.nextLessonIndex];
 		state.academyState.nextLessonAvailableTurn = state.turnCount + nextLesson.delayDays * TURNS_PER_DAY;
+	}
+
+	// When all lessons complete, update school year quest
+	if (state.academyState.nextLessonIndex >= LESSONS.length) {
+		updateQuestProgress(state, 'explore', 'academy_lessons_complete');
 	}
 }
 
@@ -287,6 +295,9 @@ export function passExam(state: GameState): void {
 	if (!state.playerTitles.includes('Mage')) {
 		state.playerTitles.push('Mage');
 	}
+	// Complete the school year quest
+	updateQuestProgress(state, 'explore', 'academy_exam_passed');
+	completeQuest(state, 'side_ac_school_year');
 }
 
 export function completeTeachingSession(state: GameState, correct: boolean): GameMessage[] {
@@ -299,6 +310,19 @@ export function completeTeachingSession(state: GameState, correct: boolean): Gam
 		state.academyState.teachingSessions++;
 		state.xp += TEACHING_XP_REWARD;
 		messages.push({ text: `Teaching session complete! +${TEACHING_XP_REWARD} XP.`, type: 'level_up' });
+
+		// Update teaching quest progress
+		updateQuestProgress(state, 'explore', 'academy_teaching_session');
+		// Auto-complete teaching quest if all objectives done
+		const teachQuest = state.quests.find(q => q.id === 'side_ac_teaching' && q.status === 'active');
+		if (teachQuest && teachQuest.objectives.every(o => o.completed)) {
+			const result = completeQuest(state, 'side_ac_teaching');
+			if (result.success) {
+				for (const msg of result.messages) {
+					messages.push({ text: msg, type: 'discovery' });
+				}
+			}
+		}
 
 		if (state.academyState.teachingSessions === 5 && !state.playerTitles.includes('Master Teacher')) {
 			state.playerTitles.push('Master Teacher');

@@ -17,6 +17,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { GameDriver } from './driver';
+import { enrollAtAcademy } from './academy';
 import type { Entity, Position, Tile } from './types';
 
 // ─────────────────────────────────────────────────────────────
@@ -514,6 +515,9 @@ describe('Full Academic Year — Adept to Mage', () => {
 
 		const ai = new AdeptAI(game);
 
+		// ── ENROLL AT ACADEMY ──
+		enrollAtAcademy(game.state);
+
 		// ── VERIFY STARTING STATE ──
 		expect(game.state.characterConfig.characterClass).toBe('adept');
 		expect(game.state.academyState!.enrolled).toBe(true);
@@ -653,6 +657,10 @@ describe('Full Academic Year — Adept to Mage', () => {
 
 		// return node: "I'd like to teach." (raw index 2)
 		game.choose(2);
+		expect(game.dialogNodeId).toBe('teaching_offer');
+
+		// "Let's begin." (accepts teaching quest)
+		game.choose(0);
 		expect(game.dialogNodeId).toBe('teaching_intro');
 
 		// "Let's begin the lesson."
@@ -789,6 +797,7 @@ describe('Full Academic Year — Adept to Mage', () => {
 		});
 
 		const ai = new AdeptAI(game);
+		enrollAtAcademy(game.state);
 		const lessonTurns: number[] = [];
 
 		// Complete all lessons, recording when each happens

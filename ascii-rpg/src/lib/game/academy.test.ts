@@ -26,19 +26,18 @@ describe('academy initialization', () => {
 		expect(state.playerTitles).toContain('Archmage Apprentice');
 	});
 
-	it('non-mage at academy starts enrolled', () => {
+	it('non-mage at academy starts unenrolled', () => {
 		const state = makeState('warrior');
 		expect(state.academyState).not.toBeNull();
-		expect(state.academyState!.enrolled).toBe(true);
+		expect(state.academyState!.enrolled).toBe(false);
 		expect(state.academyState!.graduated).toBe(false);
 		expect(state.playerTitles).toEqual([]);
 	});
 
-	it('non-mage starts with first lesson available immediately', () => {
+	it('non-mage cannot take lessons before enrollment', () => {
 		const state = makeState('warrior');
 		expect(state.academyState!.nextLessonIndex).toBe(0);
-		expect(state.academyState!.nextLessonAvailableTurn).toBe(state.turnCount);
-		expect(isLessonReady(state)).toBe(true);
+		expect(isLessonReady(state)).toBe(false);
 	});
 
 	it('non-academy start has no academy state', () => {
@@ -50,6 +49,7 @@ describe('academy initialization', () => {
 describe('sequential lesson system', () => {
 	it('first lesson is available immediately on enrollment', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		const lesson = getCurrentLesson(state);
 		expect(lesson).not.toBeNull();
 		expect(lesson!.id).toBe('alchemy_basics');
@@ -57,6 +57,7 @@ describe('sequential lesson system', () => {
 
 	it('completing a lesson advances to next with delay', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		expect(state.academyState!.nextLessonIndex).toBe(1);
 		expect(state.academyState!.lessonsCompleted).toContain('alchemy_basics');
@@ -67,6 +68,7 @@ describe('sequential lesson system', () => {
 
 	it('lesson not available before delay expires', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		// Still before delay
 		state.turnCount += 3 * TURNS_PER_DAY;
@@ -76,6 +78,7 @@ describe('sequential lesson system', () => {
 
 	it('lesson available after delay expires', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		const startTurn = state.turnCount;
 		completeLesson(state, 'alchemy_basics');
 		state.turnCount = startTurn + 4 * TURNS_PER_DAY;
@@ -85,6 +88,7 @@ describe('sequential lesson system', () => {
 
 	it('lesson waits indefinitely if player is late', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		// Way past the delay — lesson should still be available
 		state.turnCount += 100 * TURNS_PER_DAY;
@@ -94,6 +98,7 @@ describe('sequential lesson system', () => {
 
 	it('completed lesson is not re-offered', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		expect(state.academyState!.lessonsCompleted).toContain('alchemy_basics');
 		// Next lesson has a delay — either null (waiting) or a different lesson
@@ -103,6 +108,7 @@ describe('sequential lesson system', () => {
 
 	it('all 6 lessons can be completed in sequence', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		for (const lesson of LESSONS) {
 			completeLesson(state, lesson.id);
 			state.turnCount += 10 * TURNS_PER_DAY; // plenty of time
@@ -114,6 +120,7 @@ describe('sequential lesson system', () => {
 
 	it('getNextLessonInfo shows days until available', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		const info = getNextLessonInfo(state);
 		expect(info).not.toBeNull();
@@ -123,6 +130,7 @@ describe('sequential lesson system', () => {
 
 	it('getNextLessonInfo returns 0 days when ready', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		const info = getNextLessonInfo(state);
 		expect(info).not.toBeNull();
 		expect(info!.availableInDays).toBe(0);
@@ -130,6 +138,7 @@ describe('sequential lesson system', () => {
 
 	it('getNextLessonInfo returns null when all complete', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		for (const lesson of LESSONS) {
 			completeLesson(state, lesson.id);
 			state.turnCount += 10 * TURNS_PER_DAY;
@@ -139,6 +148,7 @@ describe('sequential lesson system', () => {
 
 	it('getPostLessonMessage describes next lesson', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		const msg = getPostLessonMessage(state);
 		expect(msg).toContain('Elemental Weaknesses');
@@ -147,6 +157,7 @@ describe('sequential lesson system', () => {
 
 	it('getPostLessonMessage says exam ready when all complete', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		for (const lesson of LESSONS) {
 			completeLesson(state, lesson.id);
 			state.turnCount += 10 * TURNS_PER_DAY;
@@ -159,6 +170,7 @@ describe('sequential lesson system', () => {
 describe('exam eligibility', () => {
 	it('cannot take exam before all lessons complete', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		// Only complete 3 lessons
 		for (let i = 0; i < 3; i++) {
 			completeLesson(state, LESSONS[i].id);
@@ -169,6 +181,7 @@ describe('exam eligibility', () => {
 
 	it('can take exam after all lessons complete', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		for (const lesson of LESSONS) {
 			completeLesson(state, lesson.id);
 			state.turnCount += 10 * TURNS_PER_DAY;
@@ -185,6 +198,7 @@ describe('exam eligibility', () => {
 describe('graduation', () => {
 	it('passExam grants Mage title', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		passExam(state);
 		expect(state.academyState!.graduated).toBe(true);
 		expect(state.academyState!.enrolled).toBe(false);
@@ -260,6 +274,7 @@ describe('teaching', () => {
 describe('tickAcademy', () => {
 	it('notifies when lesson becomes available', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		// Fast forward to the exact turn the next lesson unlocks
 		state.turnCount = state.academyState!.nextLessonAvailableTurn;
@@ -269,6 +284,7 @@ describe('tickAcademy', () => {
 
 	it('no notification before lesson is ready', () => {
 		const state = makeState();
+		enrollAtAcademy(state);
 		completeLesson(state, 'alchemy_basics');
 		state.turnCount = state.academyState!.nextLessonAvailableTurn - 1;
 		const msgs = tickAcademy(state);
