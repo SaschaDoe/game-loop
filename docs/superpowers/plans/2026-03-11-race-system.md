@@ -1481,9 +1481,23 @@ describe('racial questlines', () => {
 Run: `cd ascii-rpg && npx vitest run src/lib/game/quests.test.ts`
 Expected: FAIL
 
-- [ ] **Step 4: Add 9 racial quest definitions to QUEST_CATALOG in quests.ts**
+- [ ] **Step 4: Add raceRequirement filter to getAvailableQuests()**
 
-Add to the QUEST_CATALOG object in `quests.ts`. Use `QuestDef` structure (no `current` or `completed` fields on objectives — those are runtime):
+In `quests.ts`, find `getAvailableQuests()` and add a race filter early in the loop:
+
+```typescript
+if (def.raceRequirement && def.raceRequirement !== state.playerRace) continue;
+```
+
+This prevents a dwarf player from being offered elf quests programmatically (the dialogue-level gates are not sufficient alone).
+
+- [ ] **Step 5: Update the QUEST_CATALOG count assertion in quests.test.ts**
+
+The existing test asserts `Object.keys(QUEST_CATALOG).length).toBe(62)`. Adding 9 racial quests makes this 71. Update the assertion.
+
+- [ ] **Step 6: Add 9 racial quest definitions to QUEST_CATALOG in quests.ts**
+
+Add to the QUEST_CATALOG object in `quests.ts`. Use `QuestDef` structure (no `current` or `completed` fields on objectives — those are runtime). Chain quests with `prerequisiteQuestId` so parts 2 and 3 require completion of the previous part:
 
 ```typescript
 // === ELF QUESTLINE: Roots of the First Song ===
@@ -1503,6 +1517,7 @@ elf_01_withering_grove: {
 },
 elf_02_echoes: {
 	id: 'elf_02_echoes',
+	prerequisiteQuestId: 'elf_01_withering_grove',
 	title: 'Echoes Before the Thrones',
 	description: 'The shrine\'s clues lead to a hidden spirit-glade where pre-Ascension ghosts linger.',
 	objectives: [
@@ -1517,6 +1532,7 @@ elf_02_echoes: {
 },
 elf_03_unbroken_thread: {
 	id: 'elf_03_unbroken_thread',
+	prerequisiteQuestId: 'elf_02_echoes',
 	title: 'The Unbroken Thread',
 	description: 'Deep in the Eldergrove lies the oldest Ley Line nexus. The truth waits there.',
 	objectives: [
@@ -1546,6 +1562,7 @@ dwarf_01_sealed_gallery: {
 },
 dwarf_02_makers_grammar: {
 	id: 'dwarf_02_makers_grammar',
+	prerequisiteQuestId: 'dwarf_01_sealed_gallery',
 	title: 'The Maker\'s Grammar',
 	description: 'A dwarven lorekeeper can help decipher the tablet. The runes describe seven forces — not seven gods.',
 	objectives: [
@@ -1560,6 +1577,7 @@ dwarf_02_makers_grammar: {
 },
 dwarf_03_stone_remembers: {
 	id: 'dwarf_03_stone_remembers',
+	prerequisiteQuestId: 'dwarf_02_makers_grammar',
 	title: 'What the Stone Remembers',
 	description: 'The deepest chamber holds a rune-covered forge built around a raw Ley Line.',
 	objectives: [
@@ -1589,6 +1607,7 @@ human_01_lights_in_mire: {
 },
 human_02_kings_folly: {
 	id: 'human_02_kings_folly',
+	prerequisiteQuestId: 'human_01_lights_in_mire',
 	title: 'The King\'s Folly',
 	description: 'The seal unlocks a partially-submerged palace wing. Wall carvings tell the true story of Valdris.',
 	objectives: [
@@ -1603,6 +1622,7 @@ human_02_kings_folly: {
 },
 human_03_crown_of_depths: {
 	id: 'human_03_crown_of_depths',
+	prerequisiteQuestId: 'human_02_kings_folly',
 	title: 'Crown of the Depths',
 	description: 'In the submerged throne room, the Spellblade-King\'s final message waits.',
 	objectives: [
@@ -1616,7 +1636,7 @@ human_03_crown_of_depths: {
 },
 ```
 
-- [ ] **Step 5: Define the 3 permanent buff objects in races.ts**
+- [ ] **Step 7: Define the 3 permanent buff objects in races.ts**
 
 Add to `races.ts`:
 
@@ -1649,17 +1669,17 @@ export const RACIAL_QUEST_BUFFS: Record<string, PermanentBuff> = {
 };
 ```
 
-- [ ] **Step 6: Run tests**
+- [ ] **Step 8: Run tests**
 
 Run: `cd ascii-rpg && npx vitest run src/lib/game/quests.test.ts`
 Expected: PASS
 
-- [ ] **Step 7: Run full test suite**
+- [ ] **Step 9: Run full test suite**
 
 Run: `cd ascii-rpg && npm test`
 Expected: ALL PASS
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 cd ascii-rpg && git add src/lib/game/quests.ts src/lib/game/types.ts src/lib/game/races.ts src/lib/game/quests.test.ts && git commit -m "feat(quests): add 9 racial questlines with permanent buff rewards"
