@@ -1,6 +1,6 @@
 import type { GameState, Entity, CharacterClass, CharacterRace, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
 import { addMessage, handlePlayerDeath, relocateNpc } from './engine-utils';
-import { getEffectiveAttitude, getRaceFlavorLine } from './races';
+import { getEffectiveAttitude, getRaceFlavorLine, applyPermanentBuffs } from './races';
 import { revealOverworldArea } from './overworld-handler';
 import { learnRitual } from './spell-handler';
 import { SPELL_CATALOG } from './spells';
@@ -119,7 +119,9 @@ export function rollSocialCheck(check: SocialCheck, state: GameState): { success
 	const levelBonus = Math.floor(state.characterLevel / 3);
 	// Human racial passive: +1 social bonus
 	const raceBonus = state.playerRace === 'human' ? 1 : 0;
-	const bonus = classBonus + levelBonus + raceBonus;
+	// Permanent buff social bonus (e.g., Sovereign's Will)
+	const buffResult = applyPermanentBuffs(state.player, state.permanentBuffs);
+	const bonus = classBonus + levelBonus + raceBonus + buffResult.socialBonus;
 	const total = roll + bonus;
 	return { success: total >= check.difficulty, roll, bonus, total };
 }

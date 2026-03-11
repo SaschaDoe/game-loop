@@ -1,5 +1,5 @@
 import type { GameState, Quest, QuestObjective, QuestObjectiveType, QuestReward, Rumor, Story, CharacterRace } from './types';
-import { RACIAL_QUEST_BUFFS } from './races';
+import { RACIAL_QUEST_BUFFS, shiftNpcAttitude } from './races';
 
 // ---------------------------------------------------------------------------
 // Quest definition (catalog template)
@@ -1580,6 +1580,11 @@ export function completeQuest(state: GameState, questId: string): { success: boo
 			state.permanentBuffs.push(buff);
 			messages.push(`Permanent buff gained: ${buff.id.replace(/_/g, ' ')}!`);
 		}
+	}
+
+	// Shift quest giver NPC attitude +1 toward player's race on completion
+	if (quest.giverNpcName) {
+		shiftNpcAttitude(state.npcAttitudeShifts, quest.giverNpcName, state.playerRace, 1);
 	}
 
 	state.stats.questsCompleted++;

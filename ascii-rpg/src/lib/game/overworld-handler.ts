@@ -1230,13 +1230,15 @@ export function renderOverworldColored(state: GameState): { char: string; color:
 				continue;
 			}
 
-			// Ley line color overlay (True Sight, Reveal Secrets, or Elf racial sensing)
+			// Ley line color overlay (True Sight, Reveal Secrets, Elf racial sensing, or permanent buff)
 			if (tile.leyLine && isNearPlayer) {
 				const elfSenseRange = state.playerRace === 'elf' ? 3 : 0;
 				const elfCanSense = elfSenseRange > 0 && state.overworldPos &&
 					Math.abs(wx - state.overworldPos.x) <= elfSenseRange &&
 					Math.abs(wy - state.overworldPos.y) <= elfSenseRange;
-				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`) || elfCanSense);
+				const hasLeyVisionBuff = state.permanentBuffs.some(b =>
+					b.effects.some(e => e.type === 'flag' && e.flag === 'leyLinesAlwaysVisible'));
+				const leyVisible = (state.trueSightActive > 0 || state.revealedLeyLineTiles?.has(`${wx},${wy}`) || elfCanSense || hasLeyVisionBuff);
 				if (leyVisible) {
 					const display = TERRAIN_DISPLAY[tile.terrain];
 					const leyColor = tile.leyLine === 'convergence' ? '#fc4' : tile.leyLine === 'core' ? '#4ff' : '#2aa';
