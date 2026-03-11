@@ -2,7 +2,7 @@
  * Race system: attribute tables, sight bonuses, exclusive classes, passives.
  */
 
-import type { CharacterClass, CharacterRace } from './types';
+import type { CharacterClass, CharacterRace, PermanentBuff } from './types';
 
 // ---------------------------------------------------------------------------
 // Race Attribute Definitions
@@ -353,3 +353,61 @@ export function getEffectiveAttitude(
 	const shift = shifts[npcId]?.[race] ?? 0;
 	return Math.max(-5, Math.min(5, base + shift));
 }
+
+// ---------------------------------------------------------------------------
+// Permanent Buff System
+// ---------------------------------------------------------------------------
+
+export interface BuffResult {
+	spellPowerBonus: number;
+	physicalDefenseBonus: number;
+	socialBonus: number;
+	flags: string[];
+}
+
+export function applyPermanentBuffs(player: any, buffs: PermanentBuff[]): BuffResult {
+	const result: BuffResult = { spellPowerBonus: 0, physicalDefenseBonus: 0, socialBonus: 0, flags: [] };
+	for (const buff of buffs) {
+		for (const effect of buff.effects) {
+			if (effect.type === 'statBonus') {
+				if (effect.stat === 'spellPower') result.spellPowerBonus += effect.value;
+				if (effect.stat === 'physicalDefense') result.physicalDefenseBonus += effect.value;
+				if (effect.stat === 'socialBonus') result.socialBonus += effect.value;
+			} else if (effect.type === 'flag') {
+				result.flags.push(effect.flag);
+			}
+		}
+	}
+	return result;
+}
+
+// ---------------------------------------------------------------------------
+// Racial Quest Buff Definitions
+// ---------------------------------------------------------------------------
+
+export const RACIAL_QUEST_BUFFS: Record<string, PermanentBuff> = {
+	ley_resonance: {
+		id: 'ley_resonance',
+		source: 'elf_03_unbroken_thread',
+		effects: [
+			{ type: 'statBonus', stat: 'spellPower', value: 3 },
+			{ type: 'flag', flag: 'leyLinesAlwaysVisible' },
+		],
+	},
+	runic_mastery: {
+		id: 'runic_mastery',
+		source: 'dwarf_03_stone_remembers',
+		effects: [
+			{ type: 'statBonus', stat: 'physicalDefense', value: 2 },
+			{ type: 'flag', flag: 'runeEnhanceChance' },
+		],
+	},
+	sovereigns_will: {
+		id: 'sovereigns_will',
+		source: 'human_03_crown_of_depths',
+		effects: [
+			{ type: 'statBonus', stat: 'socialBonus', value: 2 },
+			{ type: 'conditional', trigger: 'hpBelow20Pct', effect: 'heal25Pct', usesPerLevel: 1 },
+		],
+	},
+};

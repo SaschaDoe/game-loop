@@ -1,4 +1,5 @@
-import type { GameState, Quest, QuestObjective, QuestObjectiveType, QuestReward, Rumor, Story } from './types';
+import type { GameState, Quest, QuestObjective, QuestObjectiveType, QuestReward, Rumor, Story, CharacterRace } from './types';
+import { RACIAL_QUEST_BUFFS } from './races';
 
 // ---------------------------------------------------------------------------
 // Quest definition (catalog template)
@@ -24,6 +25,8 @@ export interface QuestDef {
 	turnLimit?: number;
 	/** Id of a quest that must be completed before this one is available */
 	prerequisiteQuestId?: string;
+	/** Only available to players of this race */
+	raceRequirement?: CharacterRace;
 }
 
 // ---------------------------------------------------------------------------
@@ -1234,6 +1237,183 @@ export const QUEST_CATALOG: Record<string, QuestDef> = {
 		regionId: 'hearthlands',
 		isMainQuest: false,
 	},
+
+	// ===================================================================
+	// RACIAL QUESTLINES — Elf (Eldergrove)
+	// ===================================================================
+	elf_01_withering_grove: {
+		id: 'elf_01_withering_grove',
+		title: 'The Withering Grove',
+		description: 'Elder Thandril speaks of a sacred spirit tree deep in the Eldergrove that has begun to decay. Corrupted beasts prowl the once-peaceful forest. Something ancient stirs beneath the roots.',
+		objectives: [
+			{ id: 'elf01_explore', description: 'Find the spirit tree in the Eldergrove', type: 'explore', target: 'spirit_tree', required: 1 },
+			{ id: 'elf01_kill', description: 'Slay corrupted beasts near the tree', type: 'kill', target: 'Corrupted Beast', required: 3 },
+			{ id: 'elf01_shrine', description: 'Discover the hidden shrine beneath the roots', type: 'explore', target: 'root_shrine', required: 1 },
+		],
+		rewards: {
+			xp: 300,
+			rumor: { id: 'rumor_elf_leyline_roots', text: 'The spirit tree\'s roots follow a ley line deep underground. The corruption flows upward from a severed connection.', source: 'Elder Thandril', accuracy: 'true' },
+		},
+		giverNpcName: 'Elder Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		raceRequirement: 'elf',
+	},
+	elf_02_echoes: {
+		id: 'elf_02_echoes',
+		title: 'Echoes of the First Song',
+		description: 'The shrine revealed traces of an ancient elven melody — the First Song, once used to commune with ley lines. A ghostly presence in the glade may remember the words.',
+		objectives: [
+			{ id: 'elf02_explore', description: 'Find the moonlit glade', type: 'explore', target: 'moonlit_glade', required: 1 },
+			{ id: 'elf02_talk', description: 'Speak with the forest ghost', type: 'talk', target: 'Forest Ghost', required: 1 },
+			{ id: 'elf02_kill', description: 'Defeat the cultists desecrating the glade', type: 'kill', target: 'Cultist', required: 5 },
+		],
+		rewards: {
+			xp: 800,
+			story: { id: 'story_first_song', title: 'The First Song', text: 'Before the Ascension, the elves sang to the ley lines and the ley lines answered. The First Song was not magic — it was a conversation. The gods silenced it, fearing what the earth might say if asked the right questions.', teller: 'Forest Ghost', type: 'lore' },
+		},
+		giverNpcName: 'Elder Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		prerequisiteQuestId: 'elf_01_withering_grove',
+		raceRequirement: 'elf',
+	},
+	elf_03_unbroken_thread: {
+		id: 'elf_03_unbroken_thread',
+		title: 'The Unbroken Thread',
+		description: 'The ghost revealed that the ley line nexus beneath the Eldergrove can be restored — but only by one who carries elven blood and the memory of the First Song.',
+		objectives: [
+			{ id: 'elf03_explore', description: 'Descend to the ley line nexus', type: 'explore', target: 'ley_nexus', required: 1 },
+			{ id: 'elf03_collect', description: 'Gather a ley line fragment from the nexus', type: 'collect', target: 'ley_fragment', required: 1 },
+		],
+		rewards: {
+			xp: 1500,
+			permanentBuff: 'ley_resonance',
+		},
+		giverNpcName: 'Elder Thandril',
+		regionId: 'eldergrove',
+		isMainQuest: false,
+		prerequisiteQuestId: 'elf_02_echoes',
+		raceRequirement: 'elf',
+	},
+
+	// ===================================================================
+	// RACIAL QUESTLINES — Dwarf (Irongate)
+	// ===================================================================
+	dwarf_01_sealed_gallery: {
+		id: 'dwarf_01_sealed_gallery',
+		title: 'The Sealed Gallery',
+		description: 'Forgemaster Brynn has discovered a sealed passage in the old mines of Irongate. The runes on the door are ancient — older than any dwarf remembers. Something scratches at the stone from within.',
+		objectives: [
+			{ id: 'dwarf01_explore', description: 'Explore the sealed gallery in Irongate', type: 'explore', target: 'sealed_gallery', required: 1 },
+			{ id: 'dwarf01_kill', description: 'Clear the gallery of stone crawlers', type: 'kill', target: 'Stone Crawler', required: 4 },
+			{ id: 'dwarf01_collect', description: 'Recover the rune tablet from the gallery wall', type: 'collect', target: 'rune_tablet', required: 1 },
+		],
+		rewards: {
+			xp: 300,
+			rumor: { id: 'rumor_dwarf_old_runes', text: 'The rune tablet describes seven forces that shape the world — not seven gods, but seven principles. The dwarves carved this before the Ascension.', source: 'Forgemaster Brynn', accuracy: 'true' },
+		},
+		giverNpcName: 'Forgemaster Brynn',
+		regionId: 'irongate',
+		isMainQuest: false,
+		raceRequirement: 'dwarf',
+	},
+	dwarf_02_makers_grammar: {
+		id: 'dwarf_02_makers_grammar',
+		title: 'The Maker\'s Grammar',
+		description: 'The rune tablet uses a runic grammar that predates all known scripts. A lorekeeper deep in the Undermountain Holds may be able to translate it.',
+		objectives: [
+			{ id: 'dwarf02_talk', description: 'Speak with the lorekeeper in the deep hold', type: 'talk', target: 'Lorekeeper Tharn', required: 1 },
+			{ id: 'dwarf02_explore', description: 'Find the master inscription chamber', type: 'explore', target: 'inscription_chamber', required: 1 },
+			{ id: 'dwarf02_kill', description: 'Defeat the rune constructs guarding the chamber', type: 'kill', target: 'Rune Construct', required: 3 },
+		],
+		rewards: {
+			xp: 800,
+			story: { id: 'story_makers_grammar', title: 'The Maker\'s Grammar', text: 'The earliest dwarven runes did not invoke gods. They described forces — weight, heat, pressure, time. The Runeweaver tradition was a science before it was a religion. When the gods ascended, they demanded the runes be rewritten to name them. The deep holds refused. They sealed their doors and kept the old grammar alive.', teller: 'Lorekeeper Tharn', type: 'lore' },
+		},
+		giverNpcName: 'Forgemaster Brynn',
+		regionId: 'irongate',
+		isMainQuest: false,
+		prerequisiteQuestId: 'dwarf_01_sealed_gallery',
+		raceRequirement: 'dwarf',
+	},
+	dwarf_03_stone_remembers: {
+		id: 'dwarf_03_stone_remembers',
+		title: 'The Stone Remembers',
+		description: 'The lorekeeper\'s translation reveals the location of the First Forge — the place where dwarves first bound runes to metal. Its power could be awakened by one of dwarven blood.',
+		objectives: [
+			{ id: 'dwarf03_explore', description: 'Reach the First Forge', type: 'explore', target: 'first_forge', required: 1 },
+			{ id: 'dwarf03_collect', description: 'Rekindle the forge with your knowledge of the old runes', type: 'collect', target: 'forge_knowledge', required: 1 },
+		],
+		rewards: {
+			xp: 1500,
+			permanentBuff: 'runic_mastery',
+		},
+		giverNpcName: 'Forgemaster Brynn',
+		regionId: 'irongate',
+		isMainQuest: false,
+		prerequisiteQuestId: 'dwarf_02_makers_grammar',
+		raceRequirement: 'dwarf',
+	},
+
+	// ===================================================================
+	// RACIAL QUESTLINES — Human (Drowned Mire)
+	// ===================================================================
+	human_01_lights_in_mire: {
+		id: 'human_01_lights_in_mire',
+		title: 'Lights in the Mire',
+		description: 'Old Margret, a herbalist in the Drowned Mire, has seen strange lights moving through the swamp at night. Locals whisper of an ancient human palace swallowed by the marsh centuries ago.',
+		objectives: [
+			{ id: 'human01_explore', description: 'Investigate the lights in the Drowned Mire', type: 'explore', target: 'mire_lights', required: 1 },
+			{ id: 'human01_kill', description: 'Slay marsh horrors drawn to the lights', type: 'kill', target: 'Marsh Horror', required: 3 },
+			{ id: 'human01_collect', description: 'Recover a royal seal from the muck', type: 'collect', target: 'royal_seal', required: 1 },
+		],
+		rewards: {
+			xp: 300,
+			rumor: { id: 'rumor_human_sunken_palace', text: 'The royal seal bears the crest of the Aetherian Empire — a dynasty that vanished overnight. The palace sank as if the earth itself swallowed it in judgment.', source: 'Old Margret', accuracy: 'true' },
+		},
+		giverNpcName: 'Old Margret',
+		regionId: 'drowned_mire',
+		isMainQuest: false,
+		raceRequirement: 'human',
+	},
+	human_02_kings_folly: {
+		id: 'human_02_kings_folly',
+		title: 'The King\'s Folly',
+		description: 'The seal proves the sunken palace is real. Old Margret knows a path through the mire to its entrance. Inside, carvings tell the story of a king who challenged the gods.',
+		objectives: [
+			{ id: 'human02_explore', description: 'Enter the sunken palace', type: 'explore', target: 'sunken_palace', required: 1 },
+			{ id: 'human02_collect', description: 'Read the wall carvings that tell the king\'s story', type: 'collect', target: 'palace_carving', required: 3 },
+			{ id: 'human02_explore2', description: 'Survive the trapped corridor', type: 'explore', target: 'trap_corridor', required: 1 },
+		],
+		rewards: {
+			xp: 800,
+			story: { id: 'story_kings_folly', title: 'The King\'s Folly', text: 'King Valdris of the Aetherian Empire discovered the truth about the Ascension — that the seven gods were mortals who stole their thrones. He gathered his Spellblades and marched on the divine sanctum. The gods struck him down and sank his kingdom in a single night. The carvings were his final testament, hidden where only a human brave enough to seek the truth would find them.', teller: 'Palace Carvings', type: 'lore' },
+		},
+		giverNpcName: 'Old Margret',
+		regionId: 'drowned_mire',
+		isMainQuest: false,
+		prerequisiteQuestId: 'human_01_lights_in_mire',
+		raceRequirement: 'human',
+	},
+	human_03_crown_of_depths: {
+		id: 'human_03_crown_of_depths',
+		title: 'The Crown of Depths',
+		description: 'The carvings point to King Valdris\'s throne room, deeper still in the sunken palace. His crown — imbued with the defiance of a mortal who stood against gods — awaits one of human blood.',
+		objectives: [
+			{ id: 'human03_explore', description: 'Reach the throne room of King Valdris', type: 'explore', target: 'valdris_throne', required: 1 },
+			{ id: 'human03_collect', description: 'Claim the Crown of Depths', type: 'collect', target: 'crown_of_depths', required: 1 },
+		],
+		rewards: {
+			xp: 1500,
+			permanentBuff: 'sovereigns_will',
+		},
+		giverNpcName: 'Old Margret',
+		regionId: 'drowned_mire',
+		isMainQuest: false,
+		prerequisiteQuestId: 'human_02_kings_folly',
+		raceRequirement: 'human',
+	},
 };
 
 // ---------------------------------------------------------------------------
@@ -1266,6 +1446,7 @@ export function createQuestFromDef(defId: string, turnAccepted: number): Quest |
 		isMainQuest: def.isMainQuest,
 		turnAccepted,
 		turnLimit: def.turnLimit,
+		raceRequirement: def.raceRequirement,
 	};
 }
 
@@ -1393,6 +1574,13 @@ export function completeQuest(state: GameState, questId: string): { success: boo
 			messages.push(`Ritual learned: ${ritualName}!`);
 		}
 	}
+	if (r.permanentBuff) {
+		const buff = RACIAL_QUEST_BUFFS[r.permanentBuff];
+		if (buff && !state.permanentBuffs.some((b) => b.id === buff.id)) {
+			state.permanentBuffs.push(buff);
+			messages.push(`Permanent buff gained: ${buff.id.replace(/_/g, ' ')}!`);
+		}
+	}
 
 	state.stats.questsCompleted++;
 	return { success: true, messages };
@@ -1450,6 +1638,9 @@ export function getAvailableQuests(state: GameState, npcName?: string, regionId?
 
 		// Check prerequisite
 		if (def.prerequisiteQuestId && !state.completedQuestIds.includes(def.prerequisiteQuestId)) continue;
+
+		// Check race requirement
+		if (def.raceRequirement && def.raceRequirement !== state.playerRace) continue;
 
 		// Filter by NPC if provided
 		if (npcName && def.giverNpcName !== npcName) continue;

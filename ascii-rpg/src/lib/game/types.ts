@@ -548,6 +548,7 @@ export interface QuestReward {
 	rumor?: Rumor;
 	story?: Story;
 	learnRitual?: string;
+	permanentBuff?: string;
 }
 
 export type BuffEffect =
@@ -573,6 +574,7 @@ export interface Quest {
 	isMainQuest: boolean;
 	turnAccepted: number;
 	turnLimit?: number;
+	raceRequirement?: CharacterRace;
 }
 
 // ---------------------------------------------------------------------------

@@ -124,8 +124,8 @@ function makeTestState(overrides: Partial<GameState> = {}): GameState {
 describe('QUEST_CATALOG', () => {
 	const allDefs = Object.values(QUEST_CATALOG);
 
-	it('has the expected number of quests (5 main + 57 side = 62)', () => {
-		expect(Object.keys(QUEST_CATALOG).length).toBe(62);
+	it('has the expected number of quests (5 main + 57 side + 9 racial = 71)', () => {
+		expect(Object.keys(QUEST_CATALOG).length).toBe(71);
 	});
 
 	it('every quest has a valid id that matches its catalog key', () => {
@@ -175,7 +175,7 @@ describe('QUEST_CATALOG', () => {
 		const mainQuests = allDefs.filter((d) => d.isMainQuest);
 		const sideQuests = allDefs.filter((d) => !d.isMainQuest);
 		expect(mainQuests.length).toBe(5);
-		expect(sideQuests.length).toBe(57);
+		expect(sideQuests.length).toBe(66);
 	});
 
 	it('main quests form a prerequisite chain', () => {
@@ -671,9 +671,10 @@ describe('getAvailableQuests', () => {
 	it('returns all available quests when no filters are provided', () => {
 		const state = makeTestState();
 		const available = getAvailableQuests(state);
-		// Only non-prerequisite quests should be available: side quests without prereqs (48) + main_01 (no prereq) = 49
-		// main_02-05, side_kort_crown, side_eg_beast, and 7 arcane_conservatory prereq quests are excluded
-		expect(available.length).toBe(49);
+		// Non-prerequisite quests: side quests without prereqs (48) + main_01 (no prereq) = 49
+		// Plus 1 racial quest (human_01, since default playerRace is 'human')
+		// main_02-05, side_kort_crown, side_eg_beast, 7 arcane_conservatory prereqs, and 6 non-human racial quests are excluded
+		expect(available.length).toBe(50);
 	});
 
 	it('returns quests filtered by both NPC name and region', () => {
@@ -714,5 +715,108 @@ describe('ley line quests', () => {
 		const result = acceptQuest(state, 'blighted_harvest');
 		expect(result.success).toBe(true);
 		expect(state.quests[0].title).toBe('Blighted Harvest');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Racial questlines
+// ---------------------------------------------------------------------------
+
+describe('racial questlines', () => {
+	const elfQuests = ['elf_01_withering_grove', 'elf_02_echoes', 'elf_03_unbroken_thread'];
+	const dwarfQuests = ['dwarf_01_sealed_gallery', 'dwarf_02_makers_grammar', 'dwarf_03_stone_remembers'];
+	const humanQuests = ['human_01_lights_in_mire', 'human_02_kings_folly', 'human_03_crown_of_depths'];
+	const allRacialQuests = [...elfQuests, ...dwarfQuests, ...humanQuests];
+
+	it('all 9 racial quests exist in catalog', () => {
+		for (const id of allRacialQuests) {
+			expect(QUEST_CATALOG[id], `${id} should exist`).toBeDefined();
+		}
+	});
+
+	it('all racial quests have objectives', () => {
+		for (const id of allRacialQuests) {
+			expect(QUEST_CATALOG[id].objectives.length, `${id} should have objectives`).toBeGreaterThan(0);
+		}
+	});
+
+	it('elf quests have elf raceRequirement', () => {
+		for (const id of elfQuests) {
+			expect(QUEST_CATALOG[id].raceRequirement).toBe('elf');
+		}
+	});
+
+	it('dwarf quests have dwarf raceRequirement', () => {
+		for (const id of dwarfQuests) {
+			expect(QUEST_CATALOG[id].raceRequirement).toBe('dwarf');
+		}
+	});
+
+	it('human quests have human raceRequirement', () => {
+		for (const id of humanQuests) {
+			expect(QUEST_CATALOG[id].raceRequirement).toBe('human');
+		}
+	});
+
+	it('elf quest chain has correct prerequisites', () => {
+		expect(QUEST_CATALOG.elf_01_withering_grove.prerequisiteQuestId).toBeUndefined();
+		expect(QUEST_CATALOG.elf_02_echoes.prerequisiteQuestId).toBe('elf_01_withering_grove');
+		expect(QUEST_CATALOG.elf_03_unbroken_thread.prerequisiteQuestId).toBe('elf_02_echoes');
+	});
+
+	it('dwarf quest chain has correct prerequisites', () => {
+		expect(QUEST_CATALOG.dwarf_01_sealed_gallery.prerequisiteQuestId).toBeUndefined();
+		expect(QUEST_CATALOG.dwarf_02_makers_grammar.prerequisiteQuestId).toBe('dwarf_01_sealed_gallery');
+		expect(QUEST_CATALOG.dwarf_03_stone_remembers.prerequisiteQuestId).toBe('dwarf_02_makers_grammar');
+	});
+
+	it('human quest chain has correct prerequisites', () => {
+		expect(QUEST_CATALOG.human_01_lights_in_mire.prerequisiteQuestId).toBeUndefined();
+		expect(QUEST_CATALOG.human_02_kings_folly.prerequisiteQuestId).toBe('human_01_lights_in_mire');
+		expect(QUEST_CATALOG.human_03_crown_of_depths.prerequisiteQuestId).toBe('human_02_kings_folly');
+	});
+
+	it('final quests have permanentBuff rewards', () => {
+		expect(QUEST_CATALOG.elf_03_unbroken_thread.rewards.permanentBuff).toBe('ley_resonance');
+		expect(QUEST_CATALOG.dwarf_03_stone_remembers.rewards.permanentBuff).toBe('runic_mastery');
+		expect(QUEST_CATALOG.human_03_crown_of_depths.rewards.permanentBuff).toBe('sovereigns_will');
+	});
+
+	it('race filter excludes quests for other races', () => {
+		const elfState = makeTestState({ playerRace: 'elf' as const });
+		const available = getAvailableQuests(elfState);
+		const ids = available.map(d => d.id);
+		expect(ids).toContain('elf_01_withering_grove');
+		expect(ids).not.toContain('dwarf_01_sealed_gallery');
+		expect(ids).not.toContain('human_01_lights_in_mire');
+	});
+
+	it('elf player can accept elf quest', () => {
+		const state = makeTestState({ playerRace: 'elf' as const });
+		const result = acceptQuest(state, 'elf_01_withering_grove');
+		expect(result.success).toBe(true);
+	});
+
+	it('dwarf player can accept dwarf quest', () => {
+		const state = makeTestState({ playerRace: 'dwarf' as const });
+		const result = acceptQuest(state, 'dwarf_01_sealed_gallery');
+		expect(result.success).toBe(true);
+	});
+
+	it('completing final quest grants permanent buff', () => {
+		const state = makeTestState({
+			playerRace: 'elf' as const,
+			completedQuestIds: ['elf_01_withering_grove', 'elf_02_echoes'],
+		});
+		acceptQuest(state, 'elf_03_unbroken_thread');
+		// Mark all objectives complete
+		for (const obj of state.quests[0].objectives) {
+			obj.current = obj.required;
+			obj.completed = true;
+		}
+		const result = completeQuest(state, 'elf_03_unbroken_thread');
+		expect(result.success).toBe(true);
+		expect(state.permanentBuffs.length).toBe(1);
+		expect(state.permanentBuffs[0].id).toBe('ley_resonance');
 	});
 });

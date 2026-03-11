@@ -9,8 +9,10 @@ import {
 	getRaceFlavorLine,
 	shiftNpcAttitude,
 	getEffectiveAttitude,
+	applyPermanentBuffs,
+	RACIAL_QUEST_BUFFS,
 } from './races';
-import type { CharacterRace } from './types';
+import type { CharacterRace, PermanentBuff } from './types';
 
 describe('Race Attributes', () => {
 	it('all races sum to 54 attribute points', () => {
@@ -334,5 +336,72 @@ describe('getEffectiveAttitude', () => {
 		const base = { elf: 1, dwarf: 0, human: 0 } as Record<CharacterRace, number>;
 		const shifts: Record<string, Record<CharacterRace, number>> = {};
 		expect(getEffectiveAttitude(base, shifts, 'NPC', 'elf')).toBe(1);
+	});
+});
+
+describe('applyPermanentBuffs', () => {
+	it('returns zero result for empty buffs', () => {
+		const result = applyPermanentBuffs({}, []);
+		expect(result.spellPowerBonus).toBe(0);
+		expect(result.physicalDefenseBonus).toBe(0);
+		expect(result.socialBonus).toBe(0);
+		expect(result.flags).toEqual([]);
+	});
+
+	it('accumulates stat bonuses from multiple buffs', () => {
+		const buffs: PermanentBuff[] = [
+			RACIAL_QUEST_BUFFS.ley_resonance,
+			RACIAL_QUEST_BUFFS.runic_mastery,
+		];
+		const result = applyPermanentBuffs({}, buffs);
+		expect(result.spellPowerBonus).toBe(3);
+		expect(result.physicalDefenseBonus).toBe(2);
+	});
+
+	it('collects flags from buffs', () => {
+		const result = applyPermanentBuffs({}, [RACIAL_QUEST_BUFFS.ley_resonance]);
+		expect(result.flags).toContain('leyLinesAlwaysVisible');
+	});
+
+	it('accumulates social bonus from sovereigns_will', () => {
+		const result = applyPermanentBuffs({}, [RACIAL_QUEST_BUFFS.sovereigns_will]);
+		expect(result.socialBonus).toBe(2);
+	});
+
+	it('handles all three racial buffs together', () => {
+		const buffs: PermanentBuff[] = [
+			RACIAL_QUEST_BUFFS.ley_resonance,
+			RACIAL_QUEST_BUFFS.runic_mastery,
+			RACIAL_QUEST_BUFFS.sovereigns_will,
+		];
+		const result = applyPermanentBuffs({}, buffs);
+		expect(result.spellPowerBonus).toBe(3);
+		expect(result.physicalDefenseBonus).toBe(2);
+		expect(result.socialBonus).toBe(2);
+		expect(result.flags).toContain('leyLinesAlwaysVisible');
+		expect(result.flags).toContain('runeEnhanceChance');
+	});
+});
+
+describe('RACIAL_QUEST_BUFFS', () => {
+	it('has ley_resonance buff for elves', () => {
+		expect(RACIAL_QUEST_BUFFS.ley_resonance).toBeDefined();
+		expect(RACIAL_QUEST_BUFFS.ley_resonance.source).toBe('elf_03_unbroken_thread');
+	});
+
+	it('has runic_mastery buff for dwarves', () => {
+		expect(RACIAL_QUEST_BUFFS.runic_mastery).toBeDefined();
+		expect(RACIAL_QUEST_BUFFS.runic_mastery.source).toBe('dwarf_03_stone_remembers');
+	});
+
+	it('has sovereigns_will buff for humans', () => {
+		expect(RACIAL_QUEST_BUFFS.sovereigns_will).toBeDefined();
+		expect(RACIAL_QUEST_BUFFS.sovereigns_will.source).toBe('human_03_crown_of_depths');
+	});
+
+	it('all buffs have at least one effect', () => {
+		for (const [key, buff] of Object.entries(RACIAL_QUEST_BUFFS)) {
+			expect(buff.effects.length, `${key} should have effects`).toBeGreaterThan(0);
+		}
 	});
 });
