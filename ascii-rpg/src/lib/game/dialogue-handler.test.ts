@@ -10,6 +10,7 @@ import {
 	npcMoodColor,
 	SOCIAL_CLASS_BONUS,
 	MOOD_DISPLAY,
+	injectRaceFlavorLine,
 } from './dialogue-handler';
 import type { GameState, Entity, DialogueCondition, DialogueContext, NPC, SocialCheck, NPCMood } from './types';
 import { Visibility } from './types';
@@ -1003,5 +1004,69 @@ describe('npcMoodColor', () => {
 	it('returns sad color for sad mood', () => {
 		const npc = makeNpc({ mood: 'sad' });
 		expect(npcMoodColor(npc)).toBe(MOOD_DISPLAY.sad.color);
+	});
+});
+
+describe('injectRaceFlavorLine', () => {
+	it('returns original text when npcRace is undefined', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', undefined, 'male', { elf: 0, dwarf: 0, human: 0 }, 'NPC1', 'elf', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('returns original text when baseAttitude is undefined', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', 'human', 'male', undefined, 'NPC1', 'elf', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('returns original text for same-race interaction', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', 'human', 'male', { elf: 0, dwarf: 0, human: 5 }, 'NPC1', 'human', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('returns original text for neutral attitude', () => {
+		const result = injectRaceFlavorLine('Hello traveler.', 'human', 'male', { elf: 0, dwarf: 0, human: 0 }, 'NPC1', 'elf', {});
+		expect(result).toBe('Hello traveler.');
+	});
+
+	it('prepends flavor line for hostile attitude', () => {
+		// Hostile = attitude <= -4
+		let found = false;
+		for (let i = 0; i < 30; i++) {
+			const result = injectRaceFlavorLine('Hello traveler.', 'elf', 'male', { elf: 0, dwarf: -5, human: 0 }, 'NPC1', 'dwarf', {});
+			if (result !== 'Hello traveler.' && result.endsWith('\n\nHello traveler.')) {
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('prepends flavor line for warm attitude', () => {
+		let found = false;
+		for (let i = 0; i < 30; i++) {
+			const result = injectRaceFlavorLine('Greetings.', 'dwarf', 'male', { elf: 3, dwarf: 0, human: 0 }, 'NPC1', 'elf', {});
+			if (result !== 'Greetings.' && result.endsWith('\n\nGreetings.')) {
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
+	});
+
+	it('accounts for attitude shifts', () => {
+		// Base attitude is 0 (neutral), shift pushes it to -5 (hostile)
+		let found = false;
+		for (let i = 0; i < 30; i++) {
+			const result = injectRaceFlavorLine(
+				'Hello.', 'human', 'male',
+				{ elf: 0, dwarf: 0, human: 0 }, 'NPC1', 'elf',
+				{ 'NPC1': { elf: -5, dwarf: 0, human: 0 } },
+			);
+			if (result !== 'Hello.' && result.endsWith('\n\nHello.')) {
+				found = true;
+				break;
+			}
+		}
+		expect(found).toBe(true);
 	});
 });

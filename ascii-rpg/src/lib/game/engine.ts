@@ -1517,7 +1517,7 @@ export function renderColored(state: GameState): { char: string; color: string }
 
 export { xpForLevel, xpReward, effectiveSightRadius, addMessage, isBlocked, handlePlayerDeath, checkLevelUp, applyXpMultiplier, processAchievements, detectAdjacentSecrets, tryDropLoot, tickEntityEffects, relocateNpc, tickNpcMoods } from './engine-utils';
 export { learnRitual, handleSpellTargeting, handleRitualChanneling, handleSpellMenu, tickTerrainEffects, checkRitualInterrupt } from './spell-handler';
-export { buildDialogueContext, checkCondition, rollSocialCheck, SOCIAL_SKILL_DISPLAY, handleDialogueChoice, canDetectLies, MOOD_DISPLAY, npcMoodColor, garbleText, closeDialogue, SOCIAL_CLASS_BONUS } from './dialogue-handler';
+export { buildDialogueContext, checkCondition, rollSocialCheck, SOCIAL_SKILL_DISPLAY, handleDialogueChoice, canDetectLies, MOOD_DISPLAY, npcMoodColor, garbleText, closeDialogue, SOCIAL_CLASS_BONUS, injectRaceFlavorLine } from './dialogue-handler';
 export { render, dimColor, renderLocationColored } from './renderer';
 export { moveEnemies, attemptPush, attemptFlee, processKill, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, ENVIRONMENTAL_KILL_BONUS } from './combat';
 export type { PushResult } from './combat';

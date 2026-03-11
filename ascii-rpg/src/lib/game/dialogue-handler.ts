@@ -1,5 +1,6 @@
 import type { GameState, Entity, CharacterClass, CharacterRace, NPC, NPCMood, DialogueContext, DialogueCondition, SocialSkill, SocialCheck } from './types';
 import { addMessage, handlePlayerDeath, relocateNpc } from './engine-utils';
+import { getEffectiveAttitude, getRaceFlavorLine } from './races';
 import { revealOverworldArea } from './overworld-handler';
 import { learnRitual } from './spell-handler';
 import { SPELL_CATALOG } from './spells';
@@ -407,6 +408,27 @@ export function garbleText(text: string, language: string): string {
 		}
 	}
 	return result;
+}
+
+/**
+ * Prepend a race flavor line to NPC dialogue text based on the NPC's
+ * effective attitude toward the player's race.
+ * Returns the original text unmodified if no flavor applies.
+ */
+export function injectRaceFlavorLine(
+	npcText: string,
+	npcRace: CharacterRace | undefined,
+	npcGender: 'male' | 'female' | undefined,
+	baseAttitude: Record<CharacterRace, number> | undefined,
+	npcId: string,
+	playerRace: CharacterRace,
+	shifts: Record<string, Record<CharacterRace, number>>,
+): string {
+	if (!npcRace || !baseAttitude) return npcText;
+	const attitude = getEffectiveAttitude(baseAttitude, shifts, npcId, playerRace);
+	const flavor = getRaceFlavorLine(npcRace, playerRace, attitude, npcGender);
+	if (!flavor) return npcText;
+	return `${flavor}\n\n${npcText}`;
 }
 
 export function closeDialogue(state: GameState): GameState {
