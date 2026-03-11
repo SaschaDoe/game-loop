@@ -87,6 +87,9 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		playerRace: 'human' as const,
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
 		learnedSpells: [],
 		spellCooldowns: {},
 		quickCastSlots: [null, null, null, null],
@@ -163,6 +166,8 @@ function makeDialogueContext(overrides?: Partial<DialogueContext>): DialogueCont
 		learnedRituals: [],
 		activeQuestIds: [],
 		completedQuestIds: [],
+		playerRace: 'human' as const,
+		raceAttitude: { elf: 0, dwarf: 0, human: 0 },
 		...overrides,
 	};
 }

@@ -195,6 +195,11 @@ export function createGame(config?: CharacterConfig): GameState {
 		academyState: null,
 		playerTitles: [],
 
+		// Race system
+		playerRace: 'human',
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
+
 		// Magic system (Epic 79)
 		learnedSpells: [],
 		spellCooldowns: {},
@@ -564,6 +569,10 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		stealth: { isHidden: false, noiseLevel: 0, lastNoisePos: null, backstabReady: false },
 		academyState: null,
 		playerTitles: [],
+		// Race system defaults
+		playerRace: 'human',
+		permanentBuffs: [],
+		npcAttitudeShifts: {},
 		// Magic system defaults
 		learnedSpells: [],
 		spellCooldowns: {},

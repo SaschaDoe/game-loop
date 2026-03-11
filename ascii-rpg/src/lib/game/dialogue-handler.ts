@@ -41,6 +41,8 @@ export function buildDialogueContext(state: GameState, npcMood: NPCMood = 'neutr
 		learnedRituals: state.learnedRituals,
 		activeQuestIds: state.quests.filter(q => q.status === 'active').map(q => q.id),
 		completedQuestIds: state.completedQuestIds,
+		playerRace: state.playerRace,
+		raceAttitude: { elf: 0, dwarf: 0, human: 0 },
 	};
 }
 
@@ -77,6 +79,10 @@ export function checkCondition(cond: DialogueCondition, ctx: DialogueContext): b
 		case 'hasRitual': return ctx.learnedRituals.includes(cond.value);
 		case 'hasQuest': return ctx.activeQuestIds.includes(cond.value);
 		case 'questCompleted': return ctx.completedQuestIds.includes(cond.value);
+		case 'race': return ctx.playerRace === cond.value;
+		case 'notRace': return ctx.playerRace !== cond.value;
+		case 'minRaceAttitude': return ctx.raceAttitude[cond.race] >= cond.value;
+		case 'maxRaceAttitude': return ctx.raceAttitude[cond.race] <= cond.value;
 		case 'allOf': return cond.conditions.every(c => checkCondition(c, ctx));
 	}
 }
