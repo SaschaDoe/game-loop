@@ -12,7 +12,6 @@ import { placeTraps, detectAdjacentTraps } from './traps';
 import { placeHazards } from './hazards';
 import { placeChests } from './chests';
 import { placeLandmarks } from './landmarks';
-import { tickSurvival, MAX_SURVIVAL } from './survival';
 import { tickAcademy, createAcademyState } from './academy';
 import { difficultySpawnCount, applyDifficultyToEnemy } from './difficulty';
 import { ITEM_CATALOG, addToInventory, createEmptyInventory, createEmptyEquipment, type WorldContainer, type Item } from './items';
@@ -723,9 +722,6 @@ export function enterDungeon(state: GameState, dungeon: DungeonEntrance, newLeve
 	next.stats = { ...state.stats };
 	next.unlockedAchievements = [...state.unlockedAchievements];
 	next.bestiary = { ...state.bestiary };
-	next.hunger = state.hunger;
-	next.thirst = state.thirst;
-	next.survivalEnabled = state.survivalEnabled;
 	next.turnCount = state.turnCount;
 	next.worldMap = state.worldMap;
 	next.overworldPos = state.overworldPos;
@@ -1102,14 +1098,6 @@ export function handleOverworldInput(
 	const finalTile = worldMap.tiles[state.overworldPos.y]?.[state.overworldPos.x];
 	if (finalTile?.signpost) {
 		showSignpostInfo(state, worldMap, state.overworldPos);
-	}
-
-	// Tick survival on overworld movement (extra tick for slow terrain)
-	if (state.survivalEnabled) {
-		const survivalResult = tickSurvival(state);
-		for (const msg of survivalResult.messages) {
-			addMessage(state, msg.text, msg.type);
-		}
 	}
 
 	state.turnCount += moveCost;

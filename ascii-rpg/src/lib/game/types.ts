@@ -188,6 +188,17 @@ export interface ActiveDialogue {
 	givenItems: boolean;
 	mood: NPCMood;
 	context: DialogueContext;
+	appearance?: NPCAppearance;
+}
+
+export interface NPCAppearance {
+	build: string;        // e.g. "Stocky", "Slender", "Average"
+	height: string;       // e.g. "Tall", "Short", "Average"
+	features: string;     // e.g. "Sharp ears, angular face", "Broad jaw, thick beard"
+	attire: string;       // e.g. "Worn robes", "Polished armor"
+	demeanor: string;     // e.g. "Calm and measured", "Fidgety"
+	healthStatus: string; // e.g. "Healthy", "Wounded", "Frail"
+	powerLevel: string;   // e.g. "Formidable", "Unremarkable", "Dangerous"
 }
 
 export interface NPC {
@@ -205,6 +216,7 @@ export interface NPC {
 	race?: CharacterRace;
 	gender?: 'male' | 'female';
 	raceAttitude?: Record<CharacterRace, number>;
+	appearance?: NPCAppearance;
 }
 
 export type StatusEffectType = 'poison' | 'stun' | 'regeneration' | 'sleep' | 'burn' | 'freeze' | 'blind' | 'curse' | 'inspire';
@@ -419,9 +431,6 @@ export interface GameState {
 	stats: GameStats;
 	unlockedAchievements: string[];
 	bestiary: Record<string, BestiaryEntry>;
-	hunger: number;
-	thirst: number;
-	survivalEnabled: boolean;
 	turnCount: number;
 	locationMode: LocationMode;
 	worldMap: unknown | null;      // WorldMap from overworld.ts (typed as unknown to avoid circular deps)

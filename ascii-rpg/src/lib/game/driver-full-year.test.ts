@@ -5,7 +5,7 @@
  *   1. Starts as adept (no combat spells, only Summon Light)
  *   2. Takes lessons between dungeon expeditions
  *   3. Explores the practice dungeon using heuristic combat AI
- *   4. Manages HP, mana, hunger, and retreat decisions
+ *   4. Manages HP, mana, and retreat decisions
  *   5. Levels up through combat XP
  *   6. Completes all 6 lessons over ~2500+ turns
  *   7. Passes the final exam (alchemy + Golem fight with 3-turn strategy)
@@ -699,9 +699,6 @@ describe('Full Academic Year — Adept to Mage', () => {
 		for (let dive = 0; dive < 5; dive++) {
 			// Full heal between sessions
 			game.setStats({ hp: game.state.player.maxHp });
-			game.state.hunger = 100;
-			game.state.thirst = 100;
-
 			const result = ai.combatSession(3 + dive, ['Rat', 'Bat', 'Spider']);
 			results.push({ killed: result.killed, retreated: result.retreated });
 

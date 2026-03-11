@@ -32,7 +32,7 @@ export interface Item {
 	slot?: EquipmentSlot;
 	stats?: ItemStats;
 	pages?: string[];
-	consumeEffect?: { hp?: number; hunger?: number; thirst?: number; mana?: number };
+	consumeEffect?: { hp?: number; mana?: number };
 	rarity?: ItemRarity;
 	enchantments?: Enchantment[];
 	weaponEffect?: WeaponEffect;
@@ -551,7 +551,7 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		color: '#cc9944',
 		type: 'consumable',
 		description: 'A hearty loaf of bread. Filling and simple.',
-		consumeEffect: { hunger: 20 },
+		consumeEffect: { hp: 5 },
 	},
 	water_flask: {
 		id: 'water_flask',
@@ -560,7 +560,7 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		color: '#4488ff',
 		type: 'consumable',
 		description: 'A flask of clean water.',
-		consumeEffect: { thirst: 25 },
+		consumeEffect: { hp: 3 },
 	},
 	antidote: {
 		id: 'antidote',
@@ -616,7 +616,7 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		color: '#ffe080',
 		type: 'consumable',
 		description: 'A tiny golden flower found only near Ley Line convergences. Fills the body with warmth.',
-		consumeEffect: { hp: 8, hunger: 10 },
+		consumeEffect: { hp: 8 },
 	},
 	thornberry: {
 		id: 'thornberry',
@@ -624,8 +624,8 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		char: 'o',
 		color: '#c04060',
 		type: 'consumable',
-		description: 'Dark red berries from the briar thickets. Tart and filling, but the thorns draw blood.',
-		consumeEffect: { hunger: 25 },
+		description: 'Dark red berries from the briar thickets. Tart but restorative.',
+		consumeEffect: { hp: 5 },
 	},
 	glowcap_mushroom: {
 		id: 'glowcap_mushroom',
@@ -634,7 +634,7 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		color: '#60ffa0',
 		type: 'consumable',
 		description: 'A bioluminescent fungus that grows at the base of ancient trees. Mildly restorative.',
-		consumeEffect: { hp: 5, hunger: 5 },
+		consumeEffect: { hp: 5 },
 	},
 	whispering_moss: {
 		id: 'whispering_moss',
@@ -659,7 +659,7 @@ export const ITEM_CATALOG: Record<string, Item> = {
 		color: '#e0d8a0',
 		type: 'consumable',
 		description: 'Thin golden bread baked by the Sylvan Elves. A single bite sustains for hours.',
-		consumeEffect: { hunger: 40, hp: 3 },
+		consumeEffect: { hp: 10 },
 	},
 	spider_silk: {
 		id: 'spider_silk',

@@ -17,7 +17,6 @@ import { placeLandmarks, getLandmarkDef, getAdjacentLandmarks, examineLandmark }
 import { shortRest, longRest } from './rest';
 import { createDefaultStats } from './achievements';
 import { recordSeen } from './bestiary';
-import { tickSurvival, getDehydrationPenalty, restoreHunger, restoreThirst, MAX_SURVIVAL } from './survival';
 import { tickTime, getTimePhase } from './day-night';
 import { generateWorld, type WorldMap } from './overworld';
 import { createEmptyInventory, createEmptyEquipment, addToInventory, removeFromInventory, equipItem, unequipItem, addToContainer, removeFromContainer, getEquipmentBonuses, type WorldContainer, type Item, type EquipmentSlot, ITEM_CATALOG } from './items';
@@ -184,9 +183,6 @@ export function createGame(config?: CharacterConfig): GameState {
 		stats: createDefaultStats(),
 		unlockedAchievements: [],
 		bestiary: {},
-		hunger: MAX_SURVIVAL,
-		thirst: MAX_SURVIVAL,
-		survivalEnabled: cfg.difficulty !== 'easy',
 		turnCount: 0,
 		locationMode: 'location',
 		worldMap,
@@ -567,9 +563,6 @@ function newLevel(level: number, difficulty: Difficulty = 'normal', worldSeed: s
 		stats: createDefaultStats(),
 		unlockedAchievements: [],
 		bestiary: {},
-		hunger: MAX_SURVIVAL,
-		thirst: MAX_SURVIVAL,
-		survivalEnabled: difficulty !== 'easy',
 		turnCount: 0,
 		locationMode: 'location' as const,
 		worldMap: null,
@@ -716,14 +709,6 @@ export function useInventoryItem(state: GameState, index: number): GameState {
 			} else {
 				addMessage(state, `Used ${item.name}. ${item.consumeEffect.hp} HP.`, 'damage_taken');
 			}
-		}
-		if (item.consumeEffect.hunger) {
-			state.hunger = Math.min(100, state.hunger + item.consumeEffect.hunger);
-			addMessage(state, `Ate ${item.name}. Hunger restored.`, 'info');
-		}
-		if (item.consumeEffect.thirst) {
-			state.thirst = Math.min(100, state.thirst + item.consumeEffect.thirst);
-			addMessage(state, `Drank ${item.name}. Thirst restored.`, 'info');
 		}
 		if (item.consumeEffect.mana) {
 			const maxMana = state.player.maxMana ?? 0;
@@ -1045,10 +1030,6 @@ export function handleInput(state: GameState, key: string): GameState {
 		if (result.rested) {
 			state.player.hp += result.hpRestored;
 			// Long rest restores hunger and thirst
-			const foodMsg = restoreHunger(state, 30);
-			if (foodMsg.text) addMessage(state, foodMsg.text, foodMsg.type);
-			const waterMsg = restoreThirst(state, 30);
-			if (waterMsg.text) addMessage(state, waterMsg.text, waterMsg.type);
 			if (result.ambush) {
 				// Spawn ambush enemies near player
 				const ambushCount = 1 + Math.floor(Math.random() * 2);
@@ -1153,6 +1134,7 @@ export function handleInput(state: GameState, key: string): GameState {
 				givenItems: npc.given,
 				mood: npc.mood,
 				context: buildDialogueContext(state, npc.mood, npc),
+				appearance: npc.appearance,
 			};
 			if (npc.dialogueIndex === 0) {
 				npc.dialogueIndex = 1;
@@ -1229,8 +1211,7 @@ export function handleInput(state: GameState, key: string): GameState {
 			target.statusEffects = target.statusEffects.filter((e) => e.type !== 'sleep');
 		}
 		const curseReduction = state.player.statusEffects.find((e) => e.type === 'curse')?.potency ?? 0;
-		const dehydrationPenalty = getDehydrationPenalty(state);
-		const baseDmg = Math.max(1, (state.player.attack - curseReduction - dehydrationPenalty) + Math.floor(Math.random() * 3));
+		const baseDmg = Math.max(1, (state.player.attack - curseReduction) + Math.floor(Math.random() * 3));
 
 		// Backstab check: if player is hidden and has backstab ready
 		const isBackstab = state.stealth.isHidden && state.stealth.backstabReady;
@@ -1347,9 +1328,6 @@ export function handleInput(state: GameState, key: string): GameState {
 		state.player.hp = Math.min(state.player.maxHp, state.player.hp + heal);
 		state.map.tiles[ny][nx] = '.';
 		addMessage(state, `Picked up a potion! Healed ${heal} HP.`, 'healing');
-		// Potions also restore some thirst
-		const thirstMsg = restoreThirst(state, 15);
-		if (thirstMsg.text) addMessage(state, thirstMsg.text, thirstMsg.type);
 	}
 
 	// pick up loot drop
@@ -1405,9 +1383,6 @@ export function handleInput(state: GameState, key: string): GameState {
 		next.stats.maxDungeonLevel = Math.max(next.stats.maxDungeonLevel, next.level);
 		next.unlockedAchievements = [...state.unlockedAchievements];
 		next.bestiary = { ...state.bestiary };
-		next.hunger = state.hunger;
-		next.thirst = state.thirst;
-		next.survivalEnabled = state.survivalEnabled;
 		next.turnCount = state.turnCount;
 		// Carry overworld state through dungeon levels
 		next.worldMap = state.worldMap;
@@ -1481,12 +1456,6 @@ export function handleInput(state: GameState, key: string): GameState {
 		state.messages.push(msg);
 	}
 
-	// Tick survival (hunger/thirst)
-	const survivalResult = tickSurvival(state);
-	for (const msg of survivalResult.messages) {
-		state.messages.push(msg);
-	}
-
 	// Process stealth detection per turn
 	if (state.stealth.isHidden) {
 		const equipBonuses = getEquipmentBonuses(state.equipment);
@@ -1522,3 +1491,5 @@ export { render, dimColor, renderLocationColored } from './renderer';
 export { moveEnemies, attemptPush, attemptFlee, processKill, DODGE_CHANCE, BLOCK_REDUCTION, PUSH_CHANCE, ENVIRONMENTAL_KILL_BONUS } from './combat';
 export type { PushResult } from './combat';
 export { handleOverworldInput, exitToOverworld, dangerDisplay, getOverworldInfo, renderOverworldColored, renderWorldMap, getWaypointIndicator, discoverPOI, revealOverworldArea, spawnRegionalNPCs, getOverworldSightRadius, cacheCurrentLocation, restoreFromCache, locationCacheKey } from './overworld-handler';
+export { parseDialogueSegments } from './npc-appearance';
+export type { DialogueSegment } from './npc-appearance';

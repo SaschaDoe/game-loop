@@ -69,9 +69,6 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
 		unlockedAchievements: [],
 		lieCount: 0,
 		bestiary: {},
-		hunger: 100,
-		thirst: 100,
-		survivalEnabled: true,
 		turnCount: 0,
 		locationMode: 'location' as const,
 		worldMap: null,
@@ -1983,41 +1980,6 @@ describe('achievement tracking', () => {
 		} finally {
 			Math.random = orig;
 		}
-	});
-});
-
-describe('survival integration', () => {
-	it('hunger and thirst decrease each turn', () => {
-		const state = makeTestState({ survivalEnabled: true, hunger: 100, thirst: 100 });
-		const result = handleInput(state, 'a');
-		expect(result.hunger).toBeLessThan(100);
-		expect(result.thirst).toBeLessThan(100);
-	});
-
-	it('survival is disabled on easy difficulty', () => {
-		const state = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'easy', startingLocation: 'cave', worldSeed: 'test' });
-		expect(state.survivalEnabled).toBe(false);
-	});
-
-	it('survival is enabled on normal difficulty', () => {
-		const state = createGame({ name: 'Hero', characterClass: 'warrior', difficulty: 'normal', startingLocation: 'cave', worldSeed: 'test' });
-		expect(state.survivalEnabled).toBe(true);
-	});
-
-	it('does not drain when survival is disabled', () => {
-		const state = makeTestState({ survivalEnabled: false, hunger: 100, thirst: 100 });
-		const result = handleInput(state, 'a');
-		expect(result.hunger).toBe(100);
-		expect(result.thirst).toBe(100);
-	});
-
-	it('survival persists through level transition', () => {
-		const state = makeTestState({ hunger: 60, thirst: 50, survivalEnabled: true });
-		state.map.tiles[5][6] = '>';
-		const result = handleInput(state, 'd');
-		expect(result.hunger).toBe(60);
-		expect(result.thirst).toBe(50);
-		expect(result.survivalEnabled).toBe(true);
 	});
 });
 

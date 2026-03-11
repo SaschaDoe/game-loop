@@ -48,9 +48,6 @@ interface SerializedState {
 	stats: GameStats;
 	unlockedAchievements: string[];
 	bestiary: GameState['bestiary'];
-	hunger: number;
-	thirst: number;
-	survivalEnabled: boolean;
 	turnCount: number;
 	locationMode: LocationMode;
 	overworldPos: { x: number; y: number } | null;
@@ -210,9 +207,6 @@ export function serializeState(state: GameState): string {
 			stats: state.stats,
 			unlockedAchievements: state.unlockedAchievements,
 			bestiary: state.bestiary,
-			hunger: state.hunger,
-			thirst: state.thirst,
-			survivalEnabled: state.survivalEnabled,
 			turnCount: state.turnCount,
 			locationMode: state.locationMode,
 			overworldPos: state.overworldPos,
@@ -306,9 +300,6 @@ export function deserializeState(json: string): GameState {
 		stats: s.stats ?? createDefaultStats(),
 		unlockedAchievements: s.unlockedAchievements ?? [],
 		bestiary: s.bestiary ?? {},
-		hunger: s.hunger ?? 100,
-		thirst: s.thirst ?? 100,
-		survivalEnabled: s.survivalEnabled ?? true,
 		turnCount: s.turnCount ?? 0,
 		activeDialogue: null,
 		locationMode: s.locationMode ?? 'location',
