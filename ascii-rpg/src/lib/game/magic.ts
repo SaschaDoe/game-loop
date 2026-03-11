@@ -58,8 +58,12 @@ export const CLASS_PROFILES: Record<CharacterClass, ClassProfile> = {
 /**
  * Recalculate all derived stats on an entity from its base attributes.
  * Call after any attribute change (level up, buff, equipment change).
+ *
+ * @param manaModifier - race/archetype mana scaling factor (default 1.0).
+ *   When provided, maxMana is recalculated; omit for monsters/NPCs that
+ *   don't use the mana system.
  */
-export function recalculateDerivedStats(entity: Entity, armorValue: number = 0, weaponBonus: number = 0, archetypeMod?: number): void {
+export function recalculateDerivedStats(entity: Entity, armorValue: number = 0, weaponBonus: number = 0, manaModifier?: number): void {
 	const vit = entity.vit ?? 10;
 	const str = entity.str ?? 10;
 	const int = entity.int ?? 10;
@@ -87,9 +91,9 @@ export function recalculateDerivedStats(entity: Entity, armorValue: number = 0, 
 	// physicalDefense = armorValue + floor(VIT / 4)
 	entity.physicalDefense = armorValue + Math.floor(vit / 4);
 
-	// maxMana = INT * 2 * archetypeModifier — purely attribute-driven
-	if (archetypeMod !== undefined) {
-		entity.maxMana = Math.floor(int * 2 * archetypeMod);
+	// maxMana = max(MANA_FLOOR, floor(INT * 2 * manaModifier))
+	if (manaModifier !== undefined) {
+		entity.maxMana = Math.max(5, Math.floor(int * 2 * manaModifier));
 	}
 
 	// Clamp HP and mana to max

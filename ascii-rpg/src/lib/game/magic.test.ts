@@ -65,11 +65,11 @@ describe('Derived Stats', () => {
 		expect(entity.maxMana).toBe(48);
 	});
 
-	it('Might archetype gets minimal mana', () => {
+	it('Might archetype gets minimal mana (mana floor)', () => {
 		const entity = makeEntity({ int: 8 });
 		recalculateDerivedStats(entity, 0, 0, 0.25);
-		// maxMana = floor(8 * 2 * 0.25) = 4
-		expect(entity.maxMana).toBe(4);
+		// maxMana = max(5, floor(8 * 2 * 0.25)) = max(5, 4) = 5 (mana floor)
+		expect(entity.maxMana).toBe(5);
 	});
 
 	it('calculates physicalDefense from armor + VIT', () => {
